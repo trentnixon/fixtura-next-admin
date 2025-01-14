@@ -1,6 +1,7 @@
-import { Team } from './team';
-import { Grade } from './grade';
-import { Download } from './download';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Team } from "./team";
+import { Grade } from "./grade";
+import { Download } from "./download";
 
 export interface GameDataAFLAttributes {
   round: string;

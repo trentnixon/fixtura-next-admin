@@ -1,4 +1,5 @@
-import { Account } from './account';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Account } from "./account";
 
 export interface DataCollectionAttributes {
   whenWasTheLastCollection: string;

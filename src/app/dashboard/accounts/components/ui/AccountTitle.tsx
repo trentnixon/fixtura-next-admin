@@ -12,6 +12,7 @@ export default function AccountTitle({
     Name: string;
     Sport: string;
     id: string;
+    accountType: string;
   };
 }) {
   return (
@@ -19,7 +20,9 @@ export default function AccountTitle({
       <Title>
         {titleProps.Name} ({titleProps.id})
       </Title>
-      <ByLine>{titleProps.Sport}</ByLine>
+      <ByLine>
+        {titleProps.Sport} - {titleProps.accountType}
+      </ByLine>
 
       <CheckBooleanStatus account={titleProps.account as Account} />
     </div>

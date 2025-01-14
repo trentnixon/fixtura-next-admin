@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface SubscriptionTierAttributes {
   Name: string;
   description: string;

@@ -36,6 +36,7 @@ export default function DisplayClub({ accountId }: { accountId: string }) {
     Sport: account?.attributes.clubs?.data[0].attributes.Sport || "",
     id: account?.attributes.clubs?.data[0].id?.toString() || "",
     account: account as Account,
+    accountType: account?.attributes.account_type?.data?.attributes?.Name || "",
   };
 
   console.log(

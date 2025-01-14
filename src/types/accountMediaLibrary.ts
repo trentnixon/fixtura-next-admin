@@ -1,4 +1,5 @@
 // src/types/accountMediaLibrary.ts
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface ImageDataAttributes {
   url: string;
 }
@@ -14,15 +15,15 @@ export interface AccountMediaLibraryAttributes {
   title: string;
   isActive: boolean;
   tags: any;
-  AgeGroup: 'Seniors' | 'Juniors' | 'Both';
+  AgeGroup: "Seniors" | "Juniors" | "Both";
   AssetType:
-    | 'ALL'
-    | 'Upcoming Fixtures'
-    | 'Weekend Results'
-    | 'Top 5 Run Scorers'
-    | 'Top 5 Bowlers'
-    | 'League Tables'
-    | 'Team List';
+    | "ALL"
+    | "Upcoming Fixtures"
+    | "Weekend Results"
+    | "Top 5 Run Scorers"
+    | "Top 5 Bowlers"
+    | "League Tables"
+    | "Team List";
 }
 
 export interface AccountMediaLibrary {

@@ -1,23 +1,27 @@
 // TODO: Add Association Basics
 
+import { Button } from "@/components/ui/button";
 import { Account } from "@/types";
+import Link from "next/link";
 
 export default function AccountBasics({ account }: { account: Account }) {
   return (
     <section>
       <h2 className="text-xl font-semibold mb-2">Basic Info</h2>
-      <p>
-        <strong>ID:</strong> Link to Account in Strapi {account?.id}
-      </p>
+
+      <Button variant="outline">
+        <Link
+          target="_blank"
+          href={`https://fixtura-backend.herokuapp.com/admin/content-manager/collection-types/api::account.account/${account?.id}`}>
+          View of Strapi
+        </Link>
+      </Button>
+
       <p>
         <strong>Account Holder:</strong> {account?.attributes.FirstName}
       </p>
       <p>
         <strong>Delivery Address:</strong> {account?.attributes.DeliveryAddress}
-      </p>
-      <p>
-        <strong>Account Type:</strong>{" "}
-        {account?.attributes.account_type?.data?.attributes?.Name || "N/A"}
       </p>
     </section>
   );

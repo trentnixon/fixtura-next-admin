@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Competition } from './competition';
 import { GameMetaData } from './gameMetaData';
 import { Team } from './team';

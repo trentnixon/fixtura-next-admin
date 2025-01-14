@@ -8,7 +8,6 @@ import SchedulerDetails from "../../../components/overview/Scheduler";
 import DisplaySubscriptionTier from "../../../components/overview/SubscriptionTier";
 import DisplaySponsors from "../../../components/overview/Sponsors";
 import TemplateAndTheme from "../../../components/overview/TemplateandTheme";
-import CheckBooleanStatus from "../../../components/overview/CheckBooleanStatus";
 import AccountTitle from "../../../components/ui/AccountTitle";
 
 export default function DisplayAssociation({
@@ -41,14 +40,14 @@ export default function DisplayAssociation({
     Sport: account?.attributes.associations?.data[0].attributes.Sport || "",
     id: account?.attributes.associations?.data[0].id?.toString() || "",
     account: account as Account,
+    accountType: account?.attributes.account_type?.data?.attributes?.Name || "",
   };
 
   return (
     <div className="p-6 space-y-6">
       <AccountTitle titleProps={titleProps} />
-
       <AssociationBasics account={account as Account} />
-      <CheckBooleanStatus account={account as Account} />
+
       <SchedulerDetails
         schedulerId={account?.attributes.scheduler.data.id}
         accountId={accountId}
