@@ -117,6 +117,7 @@ export default function SchedulerDetails({
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead className="text-left">Strapi</TableHead>
                       <TableHead className="text-left">Name</TableHead>
                       <TableHead className="text-center">Date</TableHead>
                       <TableHead className="text-center">Time</TableHead>
@@ -130,6 +131,14 @@ export default function SchedulerDetails({
                   <TableBody>
                     {sortedRenders?.map(render => (
                       <TableRow key={render.id}>
+                        <TableCell className="text-left">
+                          <Link
+                            href={`https://fixtura-backend.herokuapp.com/admin/content-manager/collection-types/api::render.render/${render.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer">
+                            <Button variant="outline">Strapi</Button>
+                          </Link>
+                        </TableCell>
                         <TableCell className="text-left">
                           {render.attributes.Name}
                         </TableCell>
@@ -189,7 +198,6 @@ export default function SchedulerDetails({
                             rel="noopener noreferrer">
                             <Button variant="outline">View</Button>
                           </Link>
-                          Link to Render in Strapi
                         </TableCell>
                       </TableRow>
                     )) || (
