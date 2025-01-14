@@ -44,43 +44,46 @@ export default function DisplayClub({ accountId }: { accountId: string }) {
     account?.attributes.scheduler.data.id
   );
   return (
-    <div className="p-2">
+    <>
       <AccountTitle titleProps={titleProps} />
+      <div className="p-2">
+        <AccountBasics account={account as Account} />
 
-      <AccountBasics account={account as Account} />
+        {/* Subscription Tier */}
+        <DisplaySubscriptionTier
+          subscriptionTier={
+            account?.attributes.subscription_tier?.data as SubscriptionTier
+          }
+        />
 
-      {/* Subscription Tier */}
-      <DisplaySubscriptionTier
-        subscriptionTier={
-          account?.attributes.subscription_tier?.data as SubscriptionTier
-        }
-      />
+        {/* Trial Instance */}
+        <DisplayTrialInstance
+          trialInstance={
+            account?.attributes?.trial_instance?.data as TrialInstance
+          }
+        />
+        <SchedulerDetails
+          schedulerId={account?.attributes.scheduler.data.id}
+          accountId={accountId}
+          sport={account?.attributes.clubs?.data[0].attributes.Sport || ""}
+        />
+        {/* Template and Theme */}
+        {/* Template and Theme */}
+        {account?.attributes.theme?.data &&
+          account?.attributes.template?.data && (
+            <TemplateAndTheme
+              theme={account.attributes.theme.data}
+              template={account.attributes.template.data}
+            />
+          )}
 
-      {/* Trial Instance */}
-      <DisplayTrialInstance
-        trialInstance={
-          account?.attributes?.trial_instance?.data as TrialInstance
-        }
-      />
-      <SchedulerDetails
-        schedulerId={account?.attributes.scheduler.data.id}
-        accountId={accountId}
-        sport={account?.attributes.clubs?.data[0].attributes.Sport || ""}
-      />
-      {/* Template and Theme */}
-      {/* Template and Theme */}
-      {account?.attributes.theme?.data &&
-        account?.attributes.template?.data && (
-          <TemplateAndTheme
-            theme={account.attributes.theme.data}
-            template={account.attributes.template.data}
-          />
-        )}
-
-      {/* Sponsors */}
-      <DisplaySponsors
-        sponsors={account?.attributes?.sponsors?.data as Sponsor[] | undefined}
-      />
-    </div>
+        {/* Sponsors */}
+        <DisplaySponsors
+          sponsors={
+            account?.attributes?.sponsors?.data as Sponsor[] | undefined
+          }
+        />
+      </div>
+    </>
   );
 }

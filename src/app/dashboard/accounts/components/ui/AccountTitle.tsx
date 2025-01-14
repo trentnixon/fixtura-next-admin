@@ -16,13 +16,15 @@ export default function AccountTitle({
   };
 }) {
   return (
-    <div className="flex flex-col gap-2 border-b border-slate-200 pb-2">
-      <Title>
-        {titleProps.Name} ({titleProps.id})
-      </Title>
-      <ByLine>
-        {titleProps.Sport} - {titleProps.accountType}
-      </ByLine>
+    <div className="flex flex-col gap-2 ">
+      <div className="border-b border-slate-200 pb-2 mb-2">
+        <Title>
+          {titleProps.Name} ({titleProps.id})
+        </Title>
+        <ByLine>
+          {titleProps.Sport} - {titleProps.accountType}
+        </ByLine>
+      </div>
 
       <CheckBooleanStatus account={titleProps.account as Account} />
     </div>

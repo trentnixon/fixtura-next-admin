@@ -1,14 +1,12 @@
+"use client";
 // TODO: Add Associations page
 
+import { useParams } from "next/navigation";
 import DisplayAssociation from "./components/DisplayAssociation";
 
-export default function AssociationPage({
-  params,
-}: {
-  params: { associationsID: string };
-}) {
+export default function AssociationPage() {
   // Directly use `params.associationsID` as it's not a Promise
-  console.log("resolvedParams", params);
+  const { associationsID } = useParams();
 
-  return <DisplayAssociation accountId={params.associationsID} />;
+  return <DisplayAssociation accountId={associationsID as string} />;
 }

@@ -1,13 +1,10 @@
 // TODO: Add Clubs page
 
+"use client";
+import { useParams } from "next/navigation";
 import DisplayClub from "./components/DisplayClub";
 
-export default async function ClubPage({
-  params,
-}: {
-  params: { clubID: string };
-}) {
-  const resolvedParams = await params;
-  console.log("resolvedParams", resolvedParams);
-  return <DisplayClub accountId={resolvedParams.clubID} />;
+export default function ClubPage() {
+  const { clubID } = useParams();
+  return <DisplayClub accountId={clubID as string} />;
 }
