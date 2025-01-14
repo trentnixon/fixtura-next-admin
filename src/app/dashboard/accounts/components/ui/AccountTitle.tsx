@@ -16,7 +16,7 @@ export default function AccountTitle({
   };
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 border-b border-slate-200 pb-2">
       <Title>
         {titleProps.Name} ({titleProps.id})
       </Title>

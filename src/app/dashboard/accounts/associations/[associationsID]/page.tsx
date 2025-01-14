@@ -2,12 +2,13 @@
 
 import DisplayAssociation from "./components/DisplayAssociation";
 
-export default async function AssociationPage({
+export default function AssociationPage({
   params,
 }: {
   params: { associationsID: string };
 }) {
-  const resolvedParams = await params;
-  console.log("resolvedParams", resolvedParams);
+  // Directly use `params.associationsID` as it's not a Promise
+  console.log("resolvedParams", params);
+
   return <DisplayAssociation accountId={params.associationsID} />;
 }
