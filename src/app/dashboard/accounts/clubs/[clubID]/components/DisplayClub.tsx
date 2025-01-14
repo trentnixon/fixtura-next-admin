@@ -10,6 +10,13 @@ import DisplaySubscriptionTier from "../../../components/overview/SubscriptionTi
 import DisplaySponsors from "../../../components/overview/Sponsors";
 import TemplateAndTheme from "../../../components/overview/TemplateandTheme";
 import AccountTitle from "../../../components/ui/AccountTitle";
+import {
+  Card,
+  CardDescription,
+  CardContent,
+  CardTitle,
+} from "@/components/ui/card";
+import { P } from "@/components/type/type";
 export default function DisplayClub({ accountId }: { accountId: string }) {
   const { data, isLoading, isError, error, refetch } =
     useAccountQuery(accountId);
@@ -39,35 +46,54 @@ export default function DisplayClub({ accountId }: { accountId: string }) {
     accountType: account?.attributes.account_type?.data?.attributes?.Name || "",
   };
 
-  console.log(
-    "account?.attributes.scheduler",
-    account?.attributes.scheduler.data.id
-  );
   return (
     <>
       <AccountTitle titleProps={titleProps} />
       <div className="p-2">
-        <AccountBasics account={account as Account} />
+        <div className="grid grid-cols-12 gap-4">
+          <div className="col-span-4 gap-4 space-y-4">
+            <Card>
+              <CardContent>
+                <CardTitle>
+                  <P>Overview</P>
+                </CardTitle>
+                <CardDescription>
+                  <AccountBasics account={account as Account} />
+                </CardDescription>
+              </CardContent>
+            </Card>
 
-        {/* Subscription Tier */}
-        <DisplaySubscriptionTier
-          subscriptionTier={
-            account?.attributes.subscription_tier?.data as SubscriptionTier
-          }
-        />
+            <Card>
+              <CardContent>
+                <CardTitle>
+                  <P>Subscription Tier</P>
+                </CardTitle>
+                <CardDescription>
+                  <DisplaySubscriptionTier
+                    subscriptionTier={
+                      account?.attributes.subscription_tier
+                        ?.data as SubscriptionTier
+                    }
+                  />
+                  {/* Trial Instance */}
+                  <DisplayTrialInstance
+                    trialInstance={
+                      account?.attributes?.trial_instance?.data as TrialInstance
+                    }
+                  />
+                </CardDescription>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="col-span-8">
+            <SchedulerDetails
+              schedulerId={account?.attributes.scheduler.data.id}
+              accountId={accountId}
+              sport={titleProps.Sport || ""}
+            />
+          </div>
+        </div>
 
-        {/* Trial Instance */}
-        <DisplayTrialInstance
-          trialInstance={
-            account?.attributes?.trial_instance?.data as TrialInstance
-          }
-        />
-        <SchedulerDetails
-          schedulerId={account?.attributes.scheduler.data.id}
-          accountId={accountId}
-          sport={account?.attributes.clubs?.data[0].attributes.Sport || ""}
-        />
-        {/* Template and Theme */}
         {/* Template and Theme */}
         {account?.attributes.theme?.data &&
           account?.attributes.template?.data && (

@@ -118,7 +118,7 @@ export default function SchedulerDetails({
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-left">Strapi</TableHead>
-                      <TableHead className="text-left">Name</TableHead>
+
                       <TableHead className="text-center">Date</TableHead>
                       <TableHead className="text-center">Time</TableHead>
                       <TableHead className="text-center">Complete</TableHead>
@@ -139,9 +139,7 @@ export default function SchedulerDetails({
                             <Button variant="outline">Strapi</Button>
                           </Link>
                         </TableCell>
-                        <TableCell className="text-left">
-                          {render.attributes.Name}
-                        </TableCell>
+
                         <TableCell className="text-center">
                           {new Date(
                             render.attributes.publishedAt

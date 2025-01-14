@@ -2,13 +2,20 @@
 
 import { useAccountQuery } from "@/hooks/accounts/useAccountQuery";
 import { Account, Sponsor, SubscriptionTier, TrialInstance } from "@/types";
-import AssociationBasics from "../../../components/overview/AccountBasics";
 import DisplayTrialInstance from "../../../components/overview/TrialInstance";
 import SchedulerDetails from "../../../components/overview/Scheduler";
 import DisplaySubscriptionTier from "../../../components/overview/SubscriptionTier";
 import DisplaySponsors from "../../../components/overview/Sponsors";
 import TemplateAndTheme from "../../../components/overview/TemplateandTheme";
 import AccountTitle from "../../../components/ui/AccountTitle";
+import { P } from "@/components/type/type";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardTitle,
+} from "@/components/ui/card";
+import AccountBasics from "../../../components/overview/AccountBasics";
 
 export default function DisplayAssociation({
   accountId,
@@ -46,46 +53,66 @@ export default function DisplayAssociation({
   return (
     <>
       <AccountTitle titleProps={titleProps} />
-      <div className="p-0">
-        <div className="p-2">
-          <AssociationBasics account={account as Account} />
+      <div className="p-2">
+        <div className="grid grid-cols-12 gap-4">
+          <div className="col-span-4 gap-4 space-y-4">
+            <Card>
+              <CardContent>
+                <CardTitle>
+                  <P>Overview</P>
+                </CardTitle>
+                <CardDescription>
+                  <AccountBasics account={account as Account} />
+                </CardDescription>
+              </CardContent>
+            </Card>
 
-          <SchedulerDetails
-            schedulerId={account?.attributes.scheduler.data.id}
-            accountId={accountId}
-            sport={
-              account?.attributes.associations?.data[0].attributes.Sport || ""
-            }
-          />
-          {/* Subscription Tier */}
-          <DisplaySubscriptionTier
-            subscriptionTier={
-              account?.attributes.subscription_tier?.data as SubscriptionTier
-            }
-          />
-          {/* Trial Instance */}
-          <DisplayTrialInstance
-            trialInstance={
-              account?.attributes?.trial_instance?.data as TrialInstance
-            }
-          />
-          {/* Sponsors */}
-          {/* Sponsors */}
-          <DisplaySponsors
-            sponsors={
-              account?.attributes?.sponsors?.data as Sponsor[] | undefined
-            }
-          />
-
-          {/* Template and Theme */}
-          {account?.attributes.theme?.data &&
-            account?.attributes.template?.data && (
-              <TemplateAndTheme
-                theme={account.attributes.theme.data}
-                template={account.attributes.template.data}
-              />
-            )}
+            <Card>
+              <CardContent>
+                <CardTitle>
+                  <P>Subscription Tier</P>
+                </CardTitle>
+                <CardDescription>
+                  <DisplaySubscriptionTier
+                    subscriptionTier={
+                      account?.attributes.subscription_tier
+                        ?.data as SubscriptionTier
+                    }
+                  />
+                  {/* Trial Instance */}
+                  <DisplayTrialInstance
+                    trialInstance={
+                      account?.attributes?.trial_instance?.data as TrialInstance
+                    }
+                  />
+                </CardDescription>
+              </CardContent>
+            </Card>
+          </div>
+          <div className="col-span-8">
+            <SchedulerDetails
+              schedulerId={account?.attributes.scheduler.data.id}
+              accountId={accountId}
+              sport={titleProps.Sport || ""}
+            />
+          </div>
         </div>
+
+        {/* Template and Theme */}
+        {account?.attributes.theme?.data &&
+          account?.attributes.template?.data && (
+            <TemplateAndTheme
+              theme={account.attributes.theme.data}
+              template={account.attributes.template.data}
+            />
+          )}
+
+        {/* Sponsors */}
+        <DisplaySponsors
+          sponsors={
+            account?.attributes?.sponsors?.data as Sponsor[] | undefined
+          }
+        />
       </div>
     </>
   );

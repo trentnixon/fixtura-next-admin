@@ -23,5 +23,5 @@ export const Xs = ({ children }: { children: React.ReactNode }) => {
 
 // bold
 export const Bold = ({ children }: { children: React.ReactNode }) => {
-  return <div className="my-2.5 font-bold">{children}</div>;
+  return <span className="my-2.5 font-bold inline-block">{children}</span>;
 };

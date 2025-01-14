@@ -1,5 +1,6 @@
 // TODO: Add Association Basics
 
+import { Bold, P } from "@/components/type/type";
 import { Button } from "@/components/ui/button";
 import { Account } from "@/types";
 import Link from "next/link";
@@ -7,6 +8,12 @@ import Link from "next/link";
 export default function AccountBasics({ account }: { account: Account }) {
   return (
     <section>
+      <P>
+        <Bold>Account Holder:</Bold> {account?.attributes.FirstName}
+      </P>
+      <P>
+        <Bold>Delivery Address:</Bold> {account?.attributes.DeliveryAddress}
+      </P>
       <Button variant="outline">
         <Link
           target="_blank"
@@ -14,13 +21,6 @@ export default function AccountBasics({ account }: { account: Account }) {
           View of Strapi
         </Link>
       </Button>
-
-      <p>
-        <strong>Account Holder:</strong> {account?.attributes.FirstName}
-      </p>
-      <p>
-        <strong>Delivery Address:</strong> {account?.attributes.DeliveryAddress}
-      </p>
     </section>
   );
 }
