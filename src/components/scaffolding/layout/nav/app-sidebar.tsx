@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { BookOpen, Bot, Settings2, SquareTerminal } from "lucide-react";
-import { NavMain } from "@/components/nav-main";
+import { NavMain } from "@/components/scaffolding/layout/nav/nav-main";
 /* import { NavProjects } from "@/components/nav-projects"; */
 /* import { NavSecondary } from "@/components/nav-secondary"; */
 /* import { NavUser } from "@/components/nav-user"; */
@@ -26,22 +26,24 @@ const data = {
   },
   navMain: [
     {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: SquareTerminal,
+      isActive: true,
+    },
+    {
       title: "Accounts",
       url: "/dashboard/accounts",
       icon: SquareTerminal,
-      isActive: true,
+      isActive: false,
       items: [
         {
-          title: "Users",
-          url: "/dashboard/users",
+          title: "Clubs",
+          url: "/dashboard/accounts/clubs",
         },
         {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
+          title: "Associations",
+          url: "/dashboard/accounts/associations",
         },
       ],
     },

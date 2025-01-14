@@ -1,25 +1,30 @@
 import { ClerkProvider } from "@clerk/nextjs";
-
+import { Heebo, Roboto, Roboto_Condensed } from "next/font/google";
 import { auth } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { SidebarInset } from "@/components/ui/sidebar";
-
 import { Separator } from "@/components/ui/separator";
-import { AppSidebar } from "@/components/app-sidebar";
+import { AppSidebar } from "@/components/scaffolding/layout/nav/app-sidebar";
 import CustomBreadcrumbs from "@/components/scaffolding/layout/Breadcrumbs";
-import QueryProvider from "@/components/QueryProvider";
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+import QueryProvider from "@/components/providers/QueryProvider";
+import "./globals.css";
+
+const heebo = Heebo({
+  variable: "--font-heebo",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const roboto = Roboto({
+  variable: "--font-roboto",
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
+const robotoCondensed = Roboto_Condensed({
+  variable: "--font-roboto-condensed",
   subsets: ["latin"],
 });
 
@@ -38,7 +43,7 @@ export default async function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`${geistSans.variable} ${geistMono.variable} antialiased `}>
+          className={`  ${heebo.variable} ${roboto.variable} ${robotoCondensed.variable} antialiased `}>
           <QueryProvider>
             <SidebarProvider>
               {userId && <AppSidebar />}
@@ -50,7 +55,7 @@ export default async function RootLayout({
                     <CustomBreadcrumbs />
                   </div>
                 </header>
-                <main className="flex flex-1 flex-col gap-4 p-4 pt-0">
+                <main className="flex flex-1 flex-col gap-4 p-4 pt-0 ">
                   {children}
                 </main>
               </SidebarInset>
