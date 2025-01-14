@@ -9,9 +9,5 @@ export default async function AssociationPage({
 }) {
   const resolvedParams = await params;
   console.log("resolvedParams", resolvedParams);
-  return (
-    <>
-      <DisplayAssociation accountId={params.associationsID} />
-    </>
-  );
+  return <DisplayAssociation accountId={params.associationsID} />;
 }

@@ -44,7 +44,7 @@ export default function DisplayAssociation({
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-2">
       <AccountTitle titleProps={titleProps} />
       <AssociationBasics account={account as Account} />
 

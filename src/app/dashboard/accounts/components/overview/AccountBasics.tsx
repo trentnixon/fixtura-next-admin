@@ -7,8 +7,6 @@ import Link from "next/link";
 export default function AccountBasics({ account }: { account: Account }) {
   return (
     <section>
-      <h2 className="text-xl font-semibold mb-2">Basic Info</h2>
-
       <Button variant="outline">
         <Link
           target="_blank"
