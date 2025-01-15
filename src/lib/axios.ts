@@ -31,10 +31,10 @@ axiosInstance.interceptors.request.use(
 // Response Interceptor
 axiosInstance.interceptors.response.use(
   response => {
-    console.log(
+    /* console.log(
       `[Response] ${response.status} ${response.config.url}`,
       response.data
-    );
+    ); */
     return response; // Forward successful responses
   },
   (error: AxiosError) => {

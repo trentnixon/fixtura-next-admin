@@ -90,6 +90,10 @@ export default function DisplayClub({ accountId }: { accountId: string }) {
               schedulerId={account?.attributes.scheduler.data.id}
               accountId={accountId}
               sport={titleProps.Sport || ""}
+              accountType={
+                account?.attributes.account_type?.data?.attributes?.Name.toLowerCase() ||
+                ""
+              }
             />
           </div>
         </div>

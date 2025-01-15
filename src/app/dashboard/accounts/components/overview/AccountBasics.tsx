@@ -18,7 +18,7 @@ export default function AccountBasics({ account }: { account: Account }) {
         <Link
           target="_blank"
           href={`https://fixtura-backend.herokuapp.com/admin/content-manager/collection-types/api::account.account/${account?.id}`}>
-          View of Strapi
+          View in Strapi
         </Link>
       </Button>
     </section>

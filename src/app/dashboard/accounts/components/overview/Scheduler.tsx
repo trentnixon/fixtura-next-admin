@@ -25,10 +25,12 @@ export default function SchedulerDetails({
   schedulerId,
   accountId,
   sport,
+  accountType,
 }: {
   schedulerId: string;
   accountId: string;
   sport: string;
+  accountType: string;
 }) {
   const {
     data: scheduler,
@@ -117,29 +119,18 @@ export default function SchedulerDetails({
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-left">Strapi</TableHead>
-
                       <TableHead className="text-center">Date</TableHead>
                       <TableHead className="text-center">Time</TableHead>
                       <TableHead className="text-center">Complete</TableHead>
                       <TableHead className="text-center">Processing</TableHead>
-                      <TableHead className="text-center">Email Sent</TableHead>
-
-                      <TableHead></TableHead>
+                      <TableHead className="text-center">View</TableHead>
+                      <TableHead className="text-left">Strapi</TableHead>
+                      <TableHead className="text-left">Content Hub</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {sortedRenders?.map(render => (
                       <TableRow key={render.id}>
-                        <TableCell className="text-left">
-                          <Link
-                            href={`https://fixtura-backend.herokuapp.com/admin/content-manager/collection-types/api::render.render/${render.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer">
-                            <Button variant="outline">Strapi</Button>
-                          </Link>
-                        </TableCell>
-
                         <TableCell className="text-center">
                           {new Date(
                             render.attributes.publishedAt
@@ -178,15 +169,19 @@ export default function SchedulerDetails({
                           </Badge>
                         </TableCell>
                         <TableCell className="text-center">
-                          <Badge variant="secondary" className="bg-slate-50">
-                            {render.attributes.sendEmail ? (
-                              <CheckIcon size="16" className="text-green-500" />
-                            ) : (
-                              <XIcon size="16" className="text-red-500" />
-                            )}
-                          </Badge>
+                          <Link
+                            href={`/dashboard/accounts/${accountType}/${accountId}/render/${render.id}`}>
+                            <Button variant="outline">View</Button>
+                          </Link>
                         </TableCell>
-
+                        <TableCell className="text-left">
+                          <Link
+                            href={`https://fixtura-backend.herokuapp.com/admin/content-manager/collection-types/api::render.render/${render.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer">
+                            <Button variant="outline">Strapi</Button>
+                          </Link>
+                        </TableCell>
                         <TableCell className="text-center">
                           <Link
                             href={`https://contentv2.fixtura.com.au/${accountId}/${sport.toLowerCase()}/${
@@ -194,7 +189,7 @@ export default function SchedulerDetails({
                             }`}
                             target="_blank"
                             rel="noopener noreferrer">
-                            <Button variant="outline">View</Button>
+                            <Button variant="outline">Content Hub</Button>
                           </Link>
                         </TableCell>
                       </TableRow>

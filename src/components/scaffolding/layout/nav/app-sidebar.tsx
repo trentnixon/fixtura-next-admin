@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { BookOpen, Bot, Settings2, SquareTerminal } from "lucide-react";
+import { SquareTerminal } from "lucide-react";
 import { NavMain } from "@/components/scaffolding/layout/nav/nav-main";
 /* import { NavProjects } from "@/components/nav-projects"; */
 /* import { NavSecondary } from "@/components/nav-secondary"; */
@@ -39,76 +39,11 @@ const data = {
       items: [
         {
           title: "Clubs",
-          url: "/dashboard/accounts/clubs",
+          url: "/dashboard/accounts/club",
         },
         {
           title: "Associations",
-          url: "/dashboard/accounts/associations",
-        },
-      ],
-    },
-    {
-      title: "Schedulers",
-      url: "/dashboard/schedulers",
-      icon: Bot,
-      items: [
-        {
-          title: "Genesis",
-          url: "/dashboard/schedulers/genesis",
-        },
-        {
-          title: "Explorer",
-          url: "/dashboard/schedulers/explorer",
-        },
-        {
-          title: "Quantum",
-          url: "/dashboard/schedulers/quantum",
-        },
-      ],
-    },
-    {
-      title: "Revenue",
-      url: "/dashboard/revenue",
-      icon: BookOpen,
-      items: [
-        {
-          title: "Introduction",
-          url: "/dashboard/revenue/introduction",
-        },
-        {
-          title: "Get Started",
-          url: "/dashboard/revenue/get-started",
-        },
-        {
-          title: "Tutorials",
-          url: "/dashboard/revenue/tutorials",
-        },
-        {
-          title: "Changelog",
-          url: "/dashboard/revenue/changelog",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "/dashboard/settings",
-      icon: Settings2,
-      items: [
-        {
-          title: "General",
-          url: "/dashboard/settings/general",
-        },
-        {
-          title: "Team",
-          url: "/dashboard/settings/team",
-        },
-        {
-          title: "Billing",
-          url: "/dashboard/settings/billing",
-        },
-        {
-          title: "Limits",
-          url: "/dashboard/settings/limits",
+          url: "/dashboard/accounts/association",
         },
       ],
     },
