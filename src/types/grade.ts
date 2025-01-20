@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Competition } from './competition';
-import { GameMetaData } from './gameMetaData';
-import { Team } from './team';
-import { Download } from './download';
+import { Competition } from "./competition";
+import { GameMetaData } from "./gameMetaData";
+import { Team } from "./team";
+import { Download } from "./download";
 
 export interface GradeAttributes {
   gradeName: string;
@@ -21,6 +21,8 @@ export interface GradeAttributes {
   game_data_netballs: { data: any[] };
   game_data_hockeys: { data: any[] };
   game_data_basketballs: { data: any[] };
+  game_results_in_renders: { data: any[] };
+  upcoming_games_in_renders: { data: any[] };
 }
 
 export interface Grade {
@@ -33,4 +35,8 @@ export interface GradeState {
   grades: Grade[];
   loading: boolean;
   error: string | null;
+}
+
+export interface GradeResponse {
+  data: Grade[];
 }

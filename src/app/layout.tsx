@@ -11,6 +11,7 @@ import { AppSidebar } from "@/components/scaffolding/layout/nav/app-sidebar";
 import CustomBreadcrumbs from "@/components/scaffolding/layout/Breadcrumbs";
 import QueryProvider from "@/components/providers/QueryProvider";
 import "./globals.css";
+import { GlobalProvider } from "@/components/providers/GlobalContext";
 
 const heebo = Heebo({
   variable: "--font-heebo",
@@ -45,21 +46,23 @@ export default async function RootLayout({
         <body
           className={`  ${heebo.variable} ${roboto.variable} ${robotoCondensed.variable} antialiased `}>
           <QueryProvider>
-            <SidebarProvider>
-              {userId && <AppSidebar />}
-              <SidebarInset>
-                <header className="flex h-16 shrink-0 items-center gap-2">
-                  <div className="flex items-center gap-2 px-4">
-                    {userId && <SidebarTrigger className="-ml-1" />}
-                    <Separator orientation="vertical" className="mr-2 h-4" />
-                    <CustomBreadcrumbs />
-                  </div>
-                </header>
-                <main className="flex flex-1 flex-col gap-4 p-4 pt-0 ">
-                  {children}
-                </main>
-              </SidebarInset>
-            </SidebarProvider>
+            <GlobalProvider>
+              <SidebarProvider>
+                {userId && <AppSidebar />}
+                <SidebarInset>
+                  <header className="flex h-16 shrink-0 items-center gap-2">
+                    <div className="flex items-center gap-2 px-4">
+                      {userId && <SidebarTrigger className="-ml-1" />}
+                      <Separator orientation="vertical" className="mr-2 h-4" />
+                      <CustomBreadcrumbs />
+                    </div>
+                  </header>
+                  <main className="flex flex-1 flex-col gap-4 p-4 pt-0 ">
+                    {children}
+                  </main>
+                </SidebarInset>
+              </SidebarProvider>
+            </GlobalProvider>
           </QueryProvider>
         </body>
       </html>

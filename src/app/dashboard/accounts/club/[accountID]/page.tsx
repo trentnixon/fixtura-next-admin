@@ -5,6 +5,6 @@ import { useParams } from "next/navigation";
 import DisplayClub from "./components/DisplayClub";
 
 export default function ClubPage() {
-  const { clubID } = useParams();
-  return <DisplayClub accountId={clubID as string} />;
+  const { accountID } = useParams();
+  return <DisplayClub accountId={accountID as string} />;
 }

@@ -1,11 +1,14 @@
 // TODO: Add Association Basics
 
+import { useGlobalContext } from "@/components/providers/GlobalContext";
 import { Bold, P } from "@/components/type/type";
 import { Button } from "@/components/ui/button";
 import { Account } from "@/types";
 import Link from "next/link";
 
 export default function AccountBasics({ account }: { account: Account }) {
+  const { strapiLocation } = useGlobalContext();
+
   return (
     <section>
       <P>
@@ -15,9 +18,7 @@ export default function AccountBasics({ account }: { account: Account }) {
         <Bold>Delivery Address:</Bold> {account?.attributes.DeliveryAddress}
       </P>
       <Button variant="outline">
-        <Link
-          target="_blank"
-          href={`https://fixtura-backend.herokuapp.com/admin/content-manager/collection-types/api::account.account/${account?.id}`}>
+        <Link target="_blank" href={`${strapiLocation.account}${account?.id}`}>
           View in Strapi
         </Link>
       </Button>

@@ -1,17 +1,26 @@
+// /lib/services/grades/fetchGradesByID.ts
+/* export async function fetchGradeFromService(
+    id: number
+  ): Promise<ApiResponse<Grade>> {
+    const response = await fetcher.get<ApiResponse<Grade>>(
+      `/grades/${id}?populate=*`
+    );
+    return response;
+  } */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import axiosInstance from "@/lib/axios";
 import { AxiosError } from "axios";
 import qs from "qs";
-import { Render } from "@/types/render";
+import { Grade } from "@/types";
 
 // Define the return type of the API response
-interface FetchRenderResponse {
-  data: Render;
+interface FetchGradeResponse {
+  data: Grade;
 }
 
-export async function fetchRenderById(renderId: string): Promise<Render> {
+export async function fetchGradeById(gradeId: string): Promise<Grade> {
   try {
     // Build query parameters using qs
     const query = qs.stringify(
@@ -27,8 +36,8 @@ export async function fetchRenderById(renderId: string): Promise<Render> {
     );
 
     // Send GET request with query string
-    const response = await axiosInstance.get<FetchRenderResponse>(
-      `/renders/${renderId}?${query}`
+    const response = await axiosInstance.get<FetchGradeResponse>(
+      `/grades/${gradeId}?${query}`
     );
 
     return response.data.data; // Return the actual `Render` object

@@ -28,7 +28,9 @@ export default function CheckBooleanStatus({ account }: { account: Account }) {
           className={`${
             account?.attributes.isUpdating ? "bg-red-500" : "bg-green-500"
           } text-white`}>
-          {account?.attributes.isUpdating ? "Is Updating" : "Not Updating"}
+          {account?.attributes.isUpdating
+            ? "Currently Updating"
+            : "Not Updating"}
         </Badge>
 
         <Badge

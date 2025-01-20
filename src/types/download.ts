@@ -26,6 +26,9 @@ export interface DownloadAttributes {
   };
 }
 
+export interface DownloadResponse {
+  data: Download[];
+}
 export interface Download {
   id: number;
   attributes: DownloadAttributes;

@@ -1,4 +1,5 @@
 import { Download } from "./download";
+import { GameMetaData } from "./gameMetaData";
 import { Scheduler } from "./scheduler";
 export interface RenderAttributes {
   Name: string;
@@ -20,10 +21,10 @@ export interface RenderAttributes {
     data: Scheduler;
   };
   game_results_in_renders: {
-    data: Render[];
+    data: GameMetaData[];
   };
   upcoming_games_in_renders: {
-    data: Render[];
+    data: GameMetaData[];
   };
   grades_in_renders: {
     data: Render[];

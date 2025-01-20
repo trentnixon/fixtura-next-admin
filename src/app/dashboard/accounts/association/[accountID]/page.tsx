@@ -6,7 +6,7 @@ import DisplayAssociation from "./components/DisplayAssociation";
 
 export default function AssociationPage() {
   // Directly use `params.associationsID` as it's not a Promise
-  const { associationsID } = useParams();
+  const { accountID } = useParams();
 
-  return <DisplayAssociation accountId={associationsID as string} />;
+  return <DisplayAssociation accountId={accountID as string} />;
 }
