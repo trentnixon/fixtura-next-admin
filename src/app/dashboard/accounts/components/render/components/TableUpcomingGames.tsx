@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useRendersQuery } from "@/hooks/renders/useRendersQuery";
@@ -39,7 +40,7 @@ export default function TableUpcomingGames() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {upcomingGames.map(game => {
+          {upcomingGames.map((game: any) => {
             const { id, attributes } = game;
             const { updatedAt, publishedAt } = attributes || {};
             return (
