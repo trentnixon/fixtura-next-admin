@@ -23,8 +23,9 @@ export default function AccountTitle({
           {titleProps.Sport} - {titleProps.accountType}
         </ByLine>
       </div>
-
       <CheckBooleanStatus account={titleProps.account as Account} />
+      [Go To PlayHQ Page] [Data scrape options | Competition | Club | Grade |
+      Fixtures ]
     </div>
   );
 }

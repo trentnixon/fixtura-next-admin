@@ -60,13 +60,15 @@ export default function ListRendersInTable({
 
   return (
     <div className="mt-8">
-      <div className="bg-slate-200 rounded-lg px-4 py-2">
+      <div className="bg-slate-50 rounded-lg px-4 py-2 shadow-none border ">
         <div className="flex justify-between items-center  py-2">
           <SectionTitle className="py-2 px-1">Renders</SectionTitle>
           {/* Input filter */}
-          <div className="flex items-center w-1/2">here</div>
+          <div className="flex items-center justify-end w-1/2">
+            Search Dates
+          </div>
         </div>
-        <div className="bg-white rounded-lg p-4">
+        <div className="bg-slate-50 rounded-md p-4 border">
           {scheduler?.attributes.renders.data.length ? (
             <Table>
               <TableHeader>

@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import React from "react";
 
 export type AccountType = {
@@ -7,21 +8,59 @@ export type AccountType = {
   };
 };
 
-export const P = ({ children }: { children: React.ReactNode }) => {
-  return <p className="my-2.5 text-gray-500 bodyCopy">{children}</p>;
+export const P = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <p className={cn("my-2.5 text-gray-500 bodyCopy", className)}>{children}</p>
+  );
 };
 
 // Small
-export const S = ({ children }: { children: React.ReactNode }) => {
-  return <p className="text-sm text-gray-500 bodyCopy">{children}</p>;
+export const S = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <p className={cn("text-sm text-gray-500 bodyCopy", className)}>
+      {children}
+    </p>
+  );
 };
 
 // Extra Small
-export const Xs = ({ children }: { children: React.ReactNode }) => {
-  return <p className="text-xs text-gray-500 bodyCopy">{children}</p>;
+export const Xs = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <p className={cn("text-xs text-gray-500 bodyCopy", className)}>
+      {children}
+    </p>
+  );
 };
 
 // bold
-export const Bold = ({ children }: { children: React.ReactNode }) => {
-  return <span className="my-2.5 font-bold inline-block">{children}</span>;
+export const Bold = ({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string;
+}) => {
+  return (
+    <span className={cn("my-2.5 font-bold inline-block", className)}>
+      {children}
+    </span>
+  );
 };

@@ -52,19 +52,10 @@ export default function DisplayClub({ accountId }: { accountId: string }) {
       <div className="p-2">
         <div className="grid grid-cols-12 gap-4">
           <div className="col-span-4 gap-4 space-y-4">
-            <Card>
-              <CardContent>
-                <CardTitle>
-                  <P>Overview</P>
-                </CardTitle>
-                <CardDescription>
-                  <AccountBasics account={account as Account} />
-                </CardDescription>
-              </CardContent>
-            </Card>
+            <AccountBasics account={account as Account} />
 
-            <Card>
-              <CardContent>
+            <Card className="w-full shadow-none bg-slate-50 border-b-4 border-b-emerald-500">
+              <CardContent className="p-2">
                 <CardTitle>
                   <P>Subscription Tier</P>
                 </CardTitle>

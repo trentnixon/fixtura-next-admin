@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import React from "react";
 
 export type AccountType = {
@@ -16,7 +17,7 @@ export const Title = ({
   className?: string;
 }) => {
   return (
-    <h1 className={`text-3xl text-slate-800 font-bold title ${className}`}>
+    <h1 className={cn("text-3xl text-slate-800 font-bold title", className)}>
       {children}
     </h1>
   );
@@ -31,7 +32,7 @@ export const Subtitle = ({
   className?: string;
 }) => {
   return (
-    <h2 className={`text-xl text-slate-700 font-bold title ${className}`}>
+    <h2 className={cn("text-xl text-slate-700 font-bold title", className)}>
       {children}
     </h2>
   );
@@ -45,7 +46,7 @@ export const ByLine = ({
   children: React.ReactNode;
   className?: string;
 }) => {
-  return <p className={`text-sm text-slate-700 ${className}`}>{children}</p>;
+  return <p className={cn("text-sm text-slate-700", className)}>{children}</p>;
 };
 
 // Section Title
@@ -57,7 +58,7 @@ export const SectionTitle = ({
   className?: string;
 }) => {
   return (
-    <h3 className={`text-lg text-slate-700 font-bold title ${className}`}>
+    <h3 className={cn("text-lg text-slate-700 font-bold title", className)}>
       {children}
     </h3>
   );
@@ -72,7 +73,7 @@ export const Label = ({
   className?: string;
 }) => {
   return (
-    <label className={`text-sm text-slate-700 font-bold ${className}`}>
+    <label className={cn("text-sm text-slate-700 font-bold", className)}>
       {children}
     </label>
   );
@@ -87,7 +88,7 @@ export const H1 = ({
   className?: string;
 }) => {
   return (
-    <h1 className={`text-2xl text-slate-700 font-bold title ${className}`}>
+    <h1 className={cn("text-2xl text-slate-700 font-bold title", className)}>
       {children}
     </h1>
   );
@@ -102,7 +103,7 @@ export const H2 = ({
   className?: string;
 }) => {
   return (
-    <h2 className={`text-xl text-slate-700 font-bold title ${className}`}>
+    <h2 className={cn("text-xl text-slate-700 font-bold title", className)}>
       {children}
     </h2>
   );
@@ -117,7 +118,7 @@ export const H3 = ({
   className?: string;
 }) => {
   return (
-    <h3 className={`text-lg text-slate-700 font-bold title ${className}`}>
+    <h3 className={cn("text-lg text-slate-700 font-bold title", className)}>
       {children}
     </h3>
   );
@@ -132,7 +133,7 @@ export const H4 = ({
   className?: string;
 }) => {
   return (
-    <h4 className={`text-base text-slate-700 font-bold title ${className}`}>
+    <h4 className={cn("text-base text-slate-700 font-bold title", className)}>
       {children}
     </h4>
   );

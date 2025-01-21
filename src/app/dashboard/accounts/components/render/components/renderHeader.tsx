@@ -40,6 +40,8 @@ export default function RenderHeader() {
 
       {/* Links */}
       <div className="flex justify-end gap-2 items-center">
+        <Label>Actions</Label>
+        [Queue] [Rendering]
         <Label>Links</Label>
         <Link
           href={`${contentHub}/${accountID}/${sport.toLowerCase()}/${renderID}`}

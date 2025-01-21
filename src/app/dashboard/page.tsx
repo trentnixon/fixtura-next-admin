@@ -16,6 +16,15 @@ export default async function DashboardPage() {
     <>
       <h1 className="text-xl font-bold">Fixtura Admin Dashboard</h1>
       OVERVIEW
+      <section>
+        [Check Scheduler] Check the status of the scheduler, to see if any are
+        still in the queue
+      </section>
+      <section>
+        [Check Scraper] Check the status of the scraper, to see if any are still
+        in the queue
+      </section>
+      <section>account stats and charts</section>
     </>
   );
 }
