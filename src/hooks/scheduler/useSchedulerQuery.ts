@@ -3,7 +3,7 @@ import { fetchSchedulerById } from "@/lib/services/scheduler/fetchSchedulerById"
 import { Scheduler } from "@/types/scheduler";
 
 export function useSchedulerQuery(
-  schedulerId: string
+  schedulerId: number
 ): UseQueryResult<Scheduler, Error> {
   return useQuery<Scheduler, Error>({
     queryKey: ["scheduler", schedulerId], // Unique key for this query

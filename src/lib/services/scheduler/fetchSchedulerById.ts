@@ -12,7 +12,7 @@ interface FetchSchedulerResponse {
 }
 
 export async function fetchSchedulerById(
-  schedulerId: string
+  schedulerId: number
 ): Promise<FetchSchedulerResponse> {
   try {
     // Build query parameters using qs

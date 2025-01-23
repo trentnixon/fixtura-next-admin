@@ -25,6 +25,8 @@ export default async function DashboardPage() {
         in the queue
       </section>
       <section>account stats and charts</section>
+      Endpoints /api/account/getAccountSummary api/account/getTodaysAccounts
+      api/account/fixturaContentHubAccountDetails/119
     </>
   );
 }

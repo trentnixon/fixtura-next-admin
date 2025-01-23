@@ -16,11 +16,14 @@ import { useSchedulerUpdate } from "@/hooks/scheduler/useSchedulerUpdate";
 import { Button } from "@/components/ui/button";
 import { useGlobalContext } from "@/components/providers/GlobalContext";
 import Link from "next/link";
+import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccountDetails";
 
 export default function SchedulerDetailsGrid({
   schedulerId,
+  accountData,
 }: {
-  schedulerId: string;
+  schedulerId: number;
+  accountData: fixturaContentHubAccountDetails;
 }) {
   const {
     data: scheduler,
@@ -78,7 +81,7 @@ export default function SchedulerDetailsGrid({
   return (
     <div className="grid grid-cols-3 gap-4">
       {/* Day of the Week Card */}
-      <Card className="w-full shadow-none bg-slate-50 border-b-4 border-b-emerald-500">
+      <Card className="w-full shadow-none bg-slate-50 border-b-4 border-b-slate-500">
         <CardContent className="p-2">
           <CardDescription className="flex items-center justify-between w-full">
             <P>{daysOfTheWeek || "N/A"}</P>
@@ -100,7 +103,7 @@ export default function SchedulerDetailsGrid({
         </CardHeader>
       </Card>
       {/* Queued Card */}
-      <Card className="w-full shadow-none bg-slate-50 border-b-4 border-b-emerald-500">
+      <Card className="w-full shadow-none bg-slate-50 border-b-4 border-b-slate-500">
         <CardContent className="p-2">
           <CardDescription className="flex items-center justify-between w-full">
             <div className="flex items-center space-x-2">
@@ -134,7 +137,7 @@ export default function SchedulerDetailsGrid({
         </CardHeader>
       </Card>
       {/* Is Rendering Card */}
-      <Card className="w-full shadow-none bg-slate-50 border-b-4 border-b-emerald-500">
+      <Card className="w-full shadow-none bg-slate-50 border-b-4 border-b-slate-500">
         <CardContent className="p-2">
           <CardDescription className="flex items-center justify-between w-full">
             <div className="flex items-center space-x-2">
@@ -158,6 +161,9 @@ export default function SchedulerDetailsGrid({
           <CardTitle>
             <P>Is Scheduler Rendering?</P>
           </CardTitle>
+          <CardDescription>
+            Total Renders: {accountData?.rollup.totalRenders || ""}
+          </CardDescription>
         </CardHeader>
       </Card>
     </div>

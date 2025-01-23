@@ -1,27 +1,19 @@
 "use client";
 
 import { useAccountQuery } from "@/hooks/accounts/useAccountQuery";
-
-import { Account, Sponsor, SubscriptionTier, TrialInstance } from "@/types";
-import DisplayTrialInstance from "../../../components/overview/TrialInstance";
 import AccountBasics from "../../../components/overview/AccountBasics";
-import SchedulerDetails from "../../../components/overview/Scheduler";
-import DisplaySubscriptionTier from "../../../components/overview/SubscriptionTier";
-import DisplaySponsors from "../../../components/overview/Sponsors";
-import TemplateAndTheme from "../../../components/overview/TemplateandTheme";
+
 import AccountTitle from "../../../components/ui/AccountTitle";
-import {
-  Card,
-  CardDescription,
-  CardContent,
-  CardTitle,
-} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { P } from "@/components/type/type";
+import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccountDetails";
+
+import OverviewTab from "../../../components/overview/tabs/overview";
 export default function DisplayClub({ accountId }: { accountId: string }) {
   const { data, isLoading, isError, error, refetch } =
     useAccountQuery(accountId);
 
-  if (isLoading) return <p>Loading account details...</p>;
+  if (isLoading) return <P>Loading account details...</P>;
 
   if (isError) {
     return (
@@ -36,74 +28,44 @@ export default function DisplayClub({ accountId }: { accountId: string }) {
     );
   }
 
-  const account = data?.data;
+  const accountData = data?.data;
 
-  const titleProps = {
-    Name: account?.attributes.clubs?.data[0].attributes.Name || "",
-    Sport: account?.attributes.clubs?.data[0].attributes.Sport || "",
-    id: account?.attributes.clubs?.data[0].id?.toString() || "",
-    account: account as Account,
-    accountType: account?.attributes.account_type?.data?.attributes?.Name || "",
-  };
+  console.log(accountData);
 
   return (
     <>
-      <AccountTitle titleProps={titleProps} />
+      {accountData && <AccountTitle titleProps={accountData} />}
       <div className="p-2">
         <div className="grid grid-cols-12 gap-4">
-          <div className="col-span-4 gap-4 space-y-4">
-            <AccountBasics account={account as Account} />
-
-            <Card className="w-full shadow-none bg-slate-50 border-b-4 border-b-emerald-500">
-              <CardContent className="p-2">
-                <CardTitle>
-                  <P>Subscription Tier</P>
-                </CardTitle>
-                <CardDescription>
-                  <DisplaySubscriptionTier
-                    subscriptionTier={
-                      account?.attributes.subscription_tier
-                        ?.data as SubscriptionTier
-                    }
-                  />
-                  {/* Trial Instance */}
-                  <DisplayTrialInstance
-                    trialInstance={
-                      account?.attributes?.trial_instance?.data as TrialInstance
-                    }
-                  />
-                </CardDescription>
-              </CardContent>
-            </Card>
+          <div className="col-span-9">
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-6">
+                <TabsTrigger value="overview">Overview</TabsTrigger>
+                <TabsTrigger value="renders">Renders</TabsTrigger>
+                <TabsTrigger value="competitions">Competitions</TabsTrigger>
+                <TabsTrigger value="grades">Grades</TabsTrigger>
+                <TabsTrigger value="fixtures">Fixtures</TabsTrigger>
+                <TabsTrigger value="data">Data</TabsTrigger>
+              </TabsList>
+              <TabsContent value="overview">
+                <OverviewTab
+                  accountData={accountData as fixturaContentHubAccountDetails}
+                  accountId={Number(accountId)}
+                />
+              </TabsContent>
+              <TabsContent value="renders">tab 2</TabsContent>
+              <TabsContent value="competitions">tab3</TabsContent>
+              <TabsContent value="grades">tab4</TabsContent>
+              <TabsContent value="fixtures">tab5</TabsContent>
+              <TabsContent value="data">tab6</TabsContent>
+            </Tabs>
           </div>
-          <div className="col-span-8">
-            <SchedulerDetails
-              schedulerId={account?.attributes.scheduler.data.id}
-              accountId={accountId}
-              sport={titleProps.Sport || ""}
-              accountType={
-                account?.attributes.account_type?.data?.attributes?.Name.toLowerCase() ||
-                ""
-              }
+          <div className="col-span-3 gap-4 space-y-4">
+            <AccountBasics
+              account={accountData as fixturaContentHubAccountDetails}
             />
           </div>
         </div>
-
-        {/* Template and Theme */}
-        {account?.attributes.theme?.data &&
-          account?.attributes.template?.data && (
-            <TemplateAndTheme
-              theme={account.attributes.theme.data}
-              template={account.attributes.template.data}
-            />
-          )}
-
-        {/* Sponsors */}
-        <DisplaySponsors
-          sponsors={
-            account?.attributes?.sponsors?.data as Sponsor[] | undefined
-          }
-        />
       </div>
     </>
   );

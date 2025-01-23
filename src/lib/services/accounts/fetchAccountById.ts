@@ -2,13 +2,12 @@
 "use server";
 
 import axiosInstance from "@/lib/axios";
-import qs from "qs";
 import { AxiosError } from "axios";
-import { Account } from "@/types/account";
+import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccountDetails";
 
 // Define the return type for the API response
 interface FetchAccountResponse {
-  data: Account;
+  data: fixturaContentHubAccountDetails;
 }
 
 export async function fetchAccountById(
@@ -16,35 +15,11 @@ export async function fetchAccountById(
 ): Promise<FetchAccountResponse> {
   try {
     // Build query parameters to populate relations
-    const query = qs.stringify(
-      {
-        populate: [
-          "account_type", // Example: populate the `account_type` relation
-          "orders", // Add other relations as needed
-          "clubs",
-          "associations",
-          "scheduler",
-          "account_type",
-          "user",
-          "trial_instance",
-          "subscription_tier",
-          "customers",
-          "orders",
-          "result_collections",
-          "data_collections",
-          "sports",
-          "sponsors",
-          "template",
-          "theme",
-          "account_media_libraries",
-        ],
-      },
-      { encodeValuesOnly: true }
-    );
 
     const response = await axiosInstance.get<FetchAccountResponse>(
-      `/accounts/${accountId}?${query}`
+      `/account/fixturaContentHubAccountDetails/${accountId}`
     );
+
     return response.data;
   } catch (error: any) {
     if (error instanceof AxiosError) {
