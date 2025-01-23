@@ -27,7 +27,7 @@ export default function RenderHeader() {
 
   // Extract account and render details
   const accountData = account?.data;
-  const sport = accountData?.attributes.clubs?.data[0]?.attributes.Sport || "";
+  const sport = accountData?.Sport || "";
 
   return (
     <div className="flex flex-col gap-2 border-b border-slate-200 pb-3 mb-2">
