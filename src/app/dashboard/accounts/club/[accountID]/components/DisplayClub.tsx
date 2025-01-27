@@ -4,7 +4,7 @@ import { useAccountQuery } from "@/hooks/accounts/useAccountQuery";
 import AccountBasics from "../../../components/overview/AccountBasics";
 
 import AccountTitle from "../../../components/ui/AccountTitle";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { P } from "@/components/type/type";
 import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccountDetails";
 
@@ -20,6 +20,9 @@ import {
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
 import OverviewTab from "../../../components/overview/tabs/overview";
+import RendersTab from "../../../components/overview/tabs/renders";
+import AccountTabList from "../../../components/overview/tabs/AccountTabList";
+import CompetitionsTab from "../../../components/overview/tabs/competitions";
 export default function DisplayClub({ accountId }: { accountId: string }) {
   const { data, isLoading, isError, error, refetch } =
     useAccountQuery(accountId);
@@ -67,22 +70,21 @@ export default function DisplayClub({ accountId }: { accountId: string }) {
         <div className="grid grid-cols-12 gap-4">
           <div className="col-span-9">
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="renders">Renders</TabsTrigger>
-                <TabsTrigger value="competitions">Competitions</TabsTrigger>
-                <TabsTrigger value="grades">Grades</TabsTrigger>
-                <TabsTrigger value="fixtures">Fixtures</TabsTrigger>
-                <TabsTrigger value="data">Data</TabsTrigger>
-              </TabsList>
+              <AccountTabList />
               <TabsContent value="overview">
                 <OverviewTab
+                  accountData={accountData as fixturaContentHubAccountDetails}
+                />
+              </TabsContent>
+              <TabsContent value="renders">
+                <RendersTab
                   accountData={accountData as fixturaContentHubAccountDetails}
                   accountId={Number(accountId)}
                 />
               </TabsContent>
-              <TabsContent value="renders">tab 2</TabsContent>
-              <TabsContent value="competitions">tab3</TabsContent>
+              <TabsContent value="competitions">
+                <CompetitionsTab />
+              </TabsContent>
               <TabsContent value="grades">tab4</TabsContent>
               <TabsContent value="fixtures">tab5</TabsContent>
               <TabsContent value="data">tab6</TabsContent>

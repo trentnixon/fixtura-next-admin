@@ -15,6 +15,7 @@ import { useParams } from "next/navigation";
 import { useAccountQuery } from "@/hooks/accounts/useAccountQuery";
 import Link from "next/link";
 import { useRendersQuery } from "@/hooks/renders/useRendersQuery";
+import DeleteRenderButton from "../../actions/button_delete_Render";
 
 export default function RenderHeader() {
   const { Domain, strapiLocation } = useGlobalContext();
@@ -41,8 +42,7 @@ export default function RenderHeader() {
       {/* Links */}
       <div className="flex justify-end gap-2 items-center">
         <Label>Actions</Label>
-        [Queue] [Rendering]
-        <Label>Links</Label>
+
         <Link
           href={`${contentHub}/${accountID}/${sport.toLowerCase()}/${renderID}`}
           target="_blank"
@@ -59,6 +59,7 @@ export default function RenderHeader() {
             <DatabaseIcon size="16" />
           </Button>
         </Link>
+        <DeleteRenderButton />
       </div>
       <StatusFlags
         flags={{

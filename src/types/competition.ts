@@ -1,7 +1,7 @@
-import { Association } from './association';
-import { Grade } from './grade';
-import { ClubToCompetition } from './clubToCompetition';
-import { Team } from './team';
+import { Association } from "./association";
+import { Grade } from "./grade";
+import { ClubToCompetition } from "./clubToCompetition";
+import { Team } from "./team";
 
 export interface CompetitionAttributes {
   competitionName: string;

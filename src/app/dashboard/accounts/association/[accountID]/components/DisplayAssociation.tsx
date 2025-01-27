@@ -6,6 +6,8 @@ import AccountBasics from "../../../components/overview/AccountBasics";
 import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccountDetails";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import OverviewTab from "../../../components/overview/tabs/overview";
+import RendersTab from "../../../components/overview/tabs/renders";
+import CompetitionsTab from "../../../components/overview/tabs/competitions";
 
 export default function DisplayAssociation({
   accountId,
@@ -52,11 +54,17 @@ export default function DisplayAssociation({
               <TabsContent value="overview">
                 <OverviewTab
                   accountData={accountData as fixturaContentHubAccountDetails}
+                />
+              </TabsContent>
+              <TabsContent value="renders">
+                <RendersTab
+                  accountData={accountData as fixturaContentHubAccountDetails}
                   accountId={Number(accountId)}
                 />
               </TabsContent>
-              <TabsContent value="renders">tab 2</TabsContent>
-              <TabsContent value="competitions">tab3</TabsContent>
+              <TabsContent value="competitions">
+                <CompetitionsTab />
+              </TabsContent>
               <TabsContent value="grades">tab4</TabsContent>
               <TabsContent value="fixtures">tab5</TabsContent>
               <TabsContent value="data">tab6</TabsContent>
