@@ -10,7 +10,8 @@ type FetchAccountCompetitionsResponse = {
 };
 
 export async function fetchAccountCompetitions(
-  organizationId: number
+  organizationId: number,
+  account_type: number
 ): Promise<ValidCompetitionsResponse> {
   try {
     if (!organizationId) {
@@ -19,7 +20,7 @@ export async function fetchAccountCompetitions(
 
     // Send GET request with query string
     const response = await axiosInstance.get<FetchAccountCompetitionsResponse>(
-      `/competition/find-account-competitions/${organizationId}`
+      `/competition/find-account-competitions/${organizationId}?account_type=${account_type}`
     );
 
     // Return the actual competition data

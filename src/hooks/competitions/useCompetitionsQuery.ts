@@ -9,11 +9,12 @@ import { ValidCompetitionsResponse } from "@/types/validCompetitions";
  * @returns UseQueryResult containing the competitions or an error.
  */
 export function useCompetitionsQuery(
-  organizationId: number
+  organizationId: number,
+  account_type: number
 ): UseQueryResult<ValidCompetitionsResponse, Error> {
   return useQuery<ValidCompetitionsResponse, Error>({
     queryKey: ["competitions", organizationId], // Cache key includes accountId
-    queryFn: () => fetchAccountCompetitions(organizationId), // Fetch competitions by accountId
+    queryFn: () => fetchAccountCompetitions(organizationId, account_type), // Fetch competitions by accountId
     enabled: !!organizationId, // Only fetch if accountId is provided
     retry: 3, // Retry failed requests up to 3 times
     retryDelay: attempt => Math.min(1000 * 2 ** attempt, 10000), // Exponential backoff for retries
