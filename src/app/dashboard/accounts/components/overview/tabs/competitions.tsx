@@ -13,12 +13,19 @@ import {
 } from "@/components/ui/table";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { CheckIcon, EyeIcon, XIcon } from "lucide-react";
+import {
+  CheckIcon,
+  DatabaseIcon,
+  ExternalLinkIcon,
+  EyeIcon,
+  XIcon,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useGlobalContext } from "@/components/providers/GlobalContext";
 
 export default function CompetitionsTab() {
   const { accountID } = useParams();
-
+  const { strapiLocation } = useGlobalContext();
   // Fetch account details
   const {
     data: accountData,
@@ -53,26 +60,34 @@ export default function CompetitionsTab() {
 
   return (
     <div>
-      <h1 className="text-xl font-bold mb-4">Competitions</h1>
+      <h1 className="text-xl font-bold mb-4">
+        Competitions ({competitions?.length})
+      </h1>
       <div className="bg-slate-50 rounded-lg px-4 py-2 shadow-none border ">
         {competitions?.length ? (
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Competition Name</TableHead>
-                <TableHead>Season</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Grades</TableHead>
-                <TableHead>Teams</TableHead>
-                <TableHead></TableHead>
+                <TableHead className="text-left">Competition Name</TableHead>
+                <TableHead className="text-center">Season</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="text-center">Grades</TableHead>
+                <TableHead className="text-center">Teams</TableHead>
+                <TableHead className="text-center"></TableHead>
+                <TableHead className="text-center"></TableHead>
+                <TableHead className="text-center"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {competitions.map(competition => (
                 <TableRow key={competition.competitionId}>
-                  <TableCell>{competition.competitionName}</TableCell>
-                  <TableCell>{competition.season}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-left">
+                    {competition.competitionName}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {competition.season}
+                  </TableCell>
+                  <TableCell className="text-center">
                     <Badge variant="secondary" className="bg-slate-50">
                       {competition.status === "Active" ? (
                         <CheckIcon size="16" className="text-green-500" />
@@ -81,10 +96,32 @@ export default function CompetitionsTab() {
                       )}
                     </Badge>
                   </TableCell>
-                  <TableCell>{competition.grades.length}</TableCell>
-                  <TableCell>{competition.teams.length}</TableCell>
-                  <TableCell>
-                    <Link href={competition.url}>
+                  <TableCell className="text-center">
+                    {competition.grades.length}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {competition.teams.length}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Link
+                      href={`${strapiLocation.competition}${competition.competitionId}`}
+                      target="_blank"
+                      rel="noopener noreferrer">
+                      <Button variant="outline">
+                        <DatabaseIcon size="16" />
+                      </Button>
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Link href={competition.url} target="_blank">
+                      <Button variant="outline">
+                        <ExternalLinkIcon size="16" />
+                      </Button>
+                    </Link>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Link
+                      href={`/dashboard/competitions/${competition.competitionId}`}>
                       <Button variant="outline">
                         <EyeIcon size="16" />
                       </Button>

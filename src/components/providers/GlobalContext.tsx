@@ -13,6 +13,9 @@ interface GlobalContextType {
     account: string;
     scheduler: string;
     download: string;
+    competition: string;
+    grade: string;
+    team: string;
   };
 }
 
@@ -37,9 +40,12 @@ const GlobalProvider = ({ children }: { children: ReactNode }) => {
 
   const strapiLocation = {
     render: `${Domain.strapi}/admin/content-manager/collection-types/api::render.render/`,
+    competition: `${Domain.strapi}/admin/content-manager/collection-types/api::competition.competition/`,
     account: `${Domain.strapi}/admin/content-manager/collection-types/api::account.account/`,
     scheduler: `${Domain.strapi}/admin/content-manager/collection-types/api::scheduler.scheduler/`,
     download: `${Domain.strapi}/admin/content-manager/collection-types/api::download.download/`,
+    grade: `${Domain.strapi}/admin/content-manager/collection-types/api::grade.grade/`,
+    team: `${Domain.strapi}/admin/content-manager/collection-types/api::team.team/`,
   };
 
   const value: GlobalContextType = {

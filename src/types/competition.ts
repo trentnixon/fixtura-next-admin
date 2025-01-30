@@ -16,6 +16,8 @@ export interface CompetitionAttributes {
   club_to_competitions: { data: ClubToCompetition[] };
   teams: { data: Team[] };
   isActive: boolean;
+  updatedAt: string;
+  createdAt: string;
 }
 
 export interface Competition {

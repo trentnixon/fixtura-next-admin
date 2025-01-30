@@ -13,40 +13,39 @@
 import axiosInstance from "@/lib/axios";
 import { AxiosError } from "axios";
 import qs from "qs";
-import { Grade } from "@/types";
+import { Competition } from "@/types";
 
 // Define the return type of the API response
-interface FetchGradeResponse {
-  data: Grade;
+interface FetchCompetitionResponse {
+  data: Competition;
 }
 
-// Create custom endpoint for this
-export async function fetchGradeById(gradeId: number): Promise<Grade> {
+export async function fetchCompetitionById(
+  competitionId: number
+): Promise<Competition> {
   try {
     // Build query parameters using qs
     const query = qs.stringify(
       {
         populate: [
-          "competition", // Example relation: template
-          "teams",
-          "downloads",
-          "grades_in_renders",
-          "competition.association.Logo",
+          "association", // Example relation: template
+          "grades",
+          "club_to_competitions",
         ],
       },
       { encodeValuesOnly: true } // Serialize parameters for Strapi
     );
 
     // Send GET request with query string
-    const response = await axiosInstance.get<FetchGradeResponse>(
-      `/grades/${gradeId}?${query}`
+    const response = await axiosInstance.get<FetchCompetitionResponse>(
+      `/competitions/${competitionId}?${query}`
     );
 
-    return response.data.data; // Return the actual `Render` object
+    return response.data.data; // Return the actual `Competition` object
   } catch (error: any) {
     if (error instanceof AxiosError) {
       // Axios-specific error handling
-      console.error("[Axios Error] Failed to fetch render by ID:", {
+      console.error("[Axios Error] Failed to fetch competition by ID:", {
         message: error.message,
         url: error.config?.url,
         method: error.config?.method,
@@ -58,11 +57,16 @@ export async function fetchGradeById(gradeId: number): Promise<Grade> {
       // Throw a standardized error
       throw new Error(
         error.response?.data?.message ||
-          `Failed to fetch render: ${error.response?.status || "Unknown error"}`
+          `Failed to fetch competition: ${
+            error.response?.status || "Unknown error"
+          }`
       );
     } else {
       // Handle non-Axios errors
-      console.error("[Unexpected Error] Failed to fetch render by ID:", error);
+      console.error(
+        "[Unexpected Error] Failed to fetch competition by ID:",
+        error
+      );
       throw new Error("An unexpected error occurred. Please try again.");
     }
   }

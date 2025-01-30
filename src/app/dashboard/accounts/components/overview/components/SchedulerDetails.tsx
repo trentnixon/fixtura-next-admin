@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { useGlobalContext } from "@/components/providers/GlobalContext";
 import Link from "next/link";
 import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccountDetails";
+import { formatDate } from "@/lib/utils";
 
 export default function SchedulerDetailsGrid({
   schedulerId,
@@ -91,14 +92,7 @@ export default function SchedulerDetailsGrid({
         <CardHeader className="p-2">
           <CardTitle>Day of the Week</CardTitle>
           <CardDescription>
-            Last Update:{" "}
-            {new Date(
-              scheduler?.attributes?.updatedAt || ""
-            ).toLocaleDateString("en-US", {
-              day: "numeric",
-              month: "short",
-              year: "2-digit",
-            })}
+            Last Update: {formatDate(scheduler?.attributes?.updatedAt || "")}
           </CardDescription>
         </CardHeader>
       </Card>

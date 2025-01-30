@@ -7,6 +7,7 @@ import { useParams } from "next/navigation";
 import { P } from "@/components/type/type";
 import { H4 } from "@/components/type/titles";
 import { useDownloadsQuery } from "@/hooks/downloads/useDownloadsQuery";
+import { formatDate } from "@/lib/utils";
 
 export default function RenderOverview() {
   const { renderID } = useParams();
@@ -76,25 +77,13 @@ export default function RenderOverview() {
               <div className="p-4 border border-gray-300 rounded-lg">
                 <H4>Updated At</H4>
                 <P>
-                  {render?.updatedAt
-                    ? new Date(render.updatedAt).toLocaleDateString("en-US", {
-                        day: "numeric",
-                        month: "short",
-                        year: "2-digit",
-                      })
-                    : "N/A"}
+                  {render?.updatedAt ? formatDate(render.updatedAt) : "N/A"}
                 </P>
               </div>
               <div className="p-4 border border-gray-300 rounded-lg">
                 <H4>Published At</H4>
                 <P>
-                  {render?.publishedAt
-                    ? new Date(render.publishedAt).toLocaleDateString("en-US", {
-                        day: "numeric",
-                        month: "short",
-                        year: "2-digit",
-                      })
-                    : "N/A"}
+                  {render?.publishedAt ? formatDate(render.publishedAt) : "N/A"}
                 </P>
               </div>
               <div className="p-4 border border-gray-300 rounded-lg">

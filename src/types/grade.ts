@@ -23,6 +23,8 @@ export interface GradeAttributes {
   game_data_basketballs: { data: any[] };
   game_results_in_renders: { data: any[] };
   upcoming_games_in_renders: { data: any[] };
+  updatedAt: string;
+  createdAt: string;
 }
 
 export interface Grade {
