@@ -1,8 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { SectionTitle } from "@/components/type/titles";
 import { useTeamByID } from "@/hooks/teams/useTeamsByID";
 import { useParams } from "next/navigation";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { DatabaseIcon } from "lucide-react";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ExternalLinkIcon } from "lucide-react";
+import { useGlobalContext } from "@/components/providers/GlobalContext";
 
 // TODO: Add Fixtures Tab
 export default function FixturesTab() {
@@ -40,11 +54,9 @@ export default function FixturesTab() {
 
   return (
     <div className="space-y-6 p-4">
-      <div className="bg-white rounded-lg shadow">
-        <div className="p-4 border-b">
-          <h2 className="text-xl font-bold">Upcoming Fixtures</h2>
-          <p className="text-sm text-gray-500">{sport}</p>
-        </div>
+      <SectionTitle>Completed Fixtures</SectionTitle>
+      <p className="text-sm text-gray-500">{sport}</p>
+      <div className="bg-slate-50 rounded-lg px-4 py-2 shadow-none border ">
         {renderFixtures()}
       </div>
     </div>
@@ -53,14 +65,21 @@ export default function FixturesTab() {
 
 // Sport-specific fixture components
 function CricketFixtures({ team }: { team: any }) {
-  const upcomingFixtures =
-    team.gameMetaData?.filter((game: any) => {
-      const gameDate = new Date(game.dayOne);
+  const { strapiLocation } = useGlobalContext();
+  const completedFixtures =
+    team.gameMetaData
+      ?.filter((game: any) => {
+        return game.status === "Final" || game.status === "Abandoned";
+      })
 
-      return gameDate >= new Date();
-    }) || [];
+      .sort((a: any, b: any) => {
+        return (
+          new Date(a.finalDaysPlay).getTime() -
+          new Date(b.finalDaysPlay).getTime()
+        );
+      }) || [];
 
-  if (upcomingFixtures.length === 0) {
+  if (completedFixtures.length === 0) {
     return (
       <div className="p-4 text-gray-500">
         No upcoming cricket fixtures scheduled
@@ -69,69 +88,81 @@ function CricketFixtures({ team }: { team: any }) {
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full divide-y divide-gray-200">
-        <thead className="bg-gray-50">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Date
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Time
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Round
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Opposition
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Ground
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-              Type
-            </th>
-          </tr>
-        </thead>
-        <tbody className="bg-white divide-y divide-gray-200">
-          {upcomingFixtures.map((game: any) => {
-            const attrs = game;
-            const isHomeTeam = attrs.teamHome === team.teamName;
-            const opposition = isHomeTeam ? attrs.teamAway : attrs.teamHome;
+    <Table className="min-w-full divide-y divide-gray-200">
+      <TableHeader className="bg-gray-50">
+        <TableRow>
+          <TableHead className="text-left">Type</TableHead>
+          <TableHead className="text-left">Date</TableHead>
+          <TableHead className="text-left">Time</TableHead>
+          <TableHead className="text-left">Round</TableHead>
+          <TableHead className="text-left">Opposition</TableHead>
+          <TableHead className="text-left">Ground</TableHead>
+          <TableHead className="text-center">PlayHQ</TableHead>
+          <TableHead className="text-center">Strapi</TableHead>
+          <TableHead className="text-center">View</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {completedFixtures.map((game: any) => {
+          const attrs = game;
+          const isHomeTeam = attrs.teamHome === team.teamName;
+          const opposition = isHomeTeam ? attrs.teamAway : attrs.teamHome;
 
-            return (
-              <tr key={attrs.gameID} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {attrs.date}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {attrs.time}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {attrs.round}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <div className="flex items-center">
-                    <span className="text-xs text-gray-500 mr-2">
-                      {isHomeTeam ? "vs" : "@"}
-                    </span>
-                    {opposition}
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {attrs.ground}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                    {attrs.type}
+          return (
+            <TableRow key={attrs.id} className="hover:bg-gray-50">
+              <TableCell className="text-left">
+                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                  {attrs.type}
+                </span>
+              </TableCell>
+              <TableCell className="text-left">{attrs.date}</TableCell>
+              <TableCell className="text-left">{attrs.time}</TableCell>
+
+              <TableCell className="text-left">{attrs.round}</TableCell>
+              <TableCell className="text-left">
+                <div className="flex items-center">
+                  <span className="text-xs text-gray-500 mr-2">
+                    {isHomeTeam ? "vs" : "@"}
                   </span>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </div>
+                  {opposition}
+                </div>
+              </TableCell>
+              <TableCell className="text-left">{attrs.ground}</TableCell>
+              <TableCell className="text-center">
+                <Link
+                  href={`https://www.playhq.com${game.urlToScoreCard}`}
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  <Button variant="outline">
+                    <ExternalLinkIcon size="16" />
+                  </Button>
+                </Link>
+              </TableCell>
+              <TableCell className="text-center">
+                <Link
+                  href={`${strapiLocation.fixture.cricket}${game.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  <Button variant="outline">
+                    <DatabaseIcon size="16" />
+                  </Button>
+                </Link>
+              </TableCell>
+              <TableCell className="text-center">
+                <Link
+                  href={`/dashboard/fixture/${game.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer">
+                  <Button variant="outline">
+                    <DatabaseIcon size="16" />
+                  </Button>
+                </Link>
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }
 

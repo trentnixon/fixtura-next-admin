@@ -16,6 +16,9 @@ interface GlobalContextType {
     competition: string;
     grade: string;
     team: string;
+    fixture: {
+      cricket: string;
+    };
   };
 }
 
@@ -46,6 +49,9 @@ const GlobalProvider = ({ children }: { children: ReactNode }) => {
     download: `${Domain.strapi}/admin/content-manager/collection-types/api::download.download/`,
     grade: `${Domain.strapi}/admin/content-manager/collection-types/api::grade.grade/`,
     team: `${Domain.strapi}/admin/content-manager/collection-types/api::team.team/`,
+    fixture: {
+      cricket: `${Domain.strapi}/admin/content-manager/collection-types/api::game-meta-data.game-meta-data/`,
+    },
   };
 
   const value: GlobalContextType = {

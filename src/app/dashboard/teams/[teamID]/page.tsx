@@ -16,9 +16,9 @@ import { daysFromToday } from "@/lib/utils";
 import Link from "next/link";
 import { useGlobalContext } from "@/components/providers/GlobalContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import HistoryTab from "./components/History";
 import FixturesTab from "./components/Fixtures";
 import OverviewTab from "./components/Overview";
+import UpcomingGames from "./components/UpcomingGames";
 
 // TODO: Add team page
 export default function TeamPage() {
@@ -96,17 +96,17 @@ export default function TeamPage() {
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
-          <TabsTrigger value="fixtures">Fixtures</TabsTrigger>
+          <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+          <TabsTrigger value="completed">Completed</TabsTrigger>
         </TabsList>
         <TabsContent value="overview">
           <OverviewTab />
         </TabsContent>
-        <TabsContent value="history">
-          <HistoryTab />
+        <TabsContent value="upcoming">
+          <UpcomingGames />
         </TabsContent>
 
-        <TabsContent value="fixtures">
+        <TabsContent value="completed">
           <FixturesTab />
         </TabsContent>
       </Tabs>
