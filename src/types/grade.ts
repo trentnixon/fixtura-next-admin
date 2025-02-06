@@ -42,3 +42,59 @@ export interface GradeState {
 export interface GradeResponse {
   data: Grade[];
 }
+
+///
+
+export type TopLineData = {
+  id: number;
+  gradeName: string;
+  daysPlayed: string;
+  gender: string;
+  ageGroup: string;
+  url: string;
+
+  gradeId: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+};
+
+export type CompetitionData = {
+  id: number;
+  competitionName: string;
+  season: string;
+  startDate: string;
+  endDate: string;
+  status: string;
+
+  href: string;
+  isActive: boolean;
+  association: {
+    id: number;
+    name: string;
+    url: string;
+    Logo: string;
+  };
+};
+
+export type TeamData = {
+  id: number;
+  teamName: string;
+  url?: string;
+  gender?: string;
+  age?: string;
+
+  href: string;
+  teamID: string;
+  gamesPlayed: number;
+  wins: number;
+  losses: number;
+  form: string;
+};
+
+export type GradeData = {
+  topLineData: TopLineData;
+
+  competitionData: CompetitionData;
+  teamData: TeamData[];
+};

@@ -25,8 +25,7 @@ export const GradeTeamsTable = () => {
     gradeID ? parseInt(gradeID as string) : 0
   );
 
-  const Grade = data?.attributes;
-  const teams = Grade?.teams?.data || [];
+  const teams = data?.teamData || [];
   const [searchQuery, setSearchQuery] = useState("");
 
   if (isLoading) return <p>Loading Teams...</p>;
@@ -34,7 +33,7 @@ export const GradeTeamsTable = () => {
 
   // Filter teams based on search query (case-insensitive)
   const filteredTeams = teams.filter(team =>
-    team.attributes.teamName.toLowerCase().includes(searchQuery.toLowerCase())
+    team.teamName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -82,17 +81,17 @@ export const GradeTeamsTable = () => {
                     filteredTeams.map(team => (
                       <TableRow key={team.id}>
                         <TableCell className="text-left">
-                          {team.attributes.teamName}
+                          {team.teamName}
                         </TableCell>
                         <TableCell className="text-center">
-                          {team.attributes.gamesPlayed}
+                          {team.gamesPlayed}
                         </TableCell>
 
                         <TableCell className="text-center">
-                          {team.attributes.wins}
+                          {team.wins}
                         </TableCell>
                         <TableCell className="text-center">
-                          {team.attributes.losses}
+                          {team.losses}
                         </TableCell>
                         <TableCell className="text-center">
                           <Link
@@ -106,7 +105,7 @@ export const GradeTeamsTable = () => {
                         </TableCell>
                         <TableCell className="text-center">
                           <Link
-                            href={`https://www.playhq.com${team.attributes.href}`}
+                            href={`https://www.playhq.com${team.href}`}
                             target="_blank">
                             <Button variant="outline">
                               <ExternalLinkIcon size="16" />

@@ -47,6 +47,24 @@ const data = {
         },
       ],
     },
+    {
+      title: "Teams",
+      url: "/dashboard/teams",
+      icon: SquareTerminal,
+      isActive: true,
+    },
+    {
+      title: "Competitions",
+      url: "/dashboard/competitions",
+      icon: SquareTerminal,
+      isActive: true,
+    },
+    {
+      title: "Grades",
+      url: "/dashboard/grades",
+      icon: SquareTerminal,
+      isActive: true,
+    },
   ],
 };
 

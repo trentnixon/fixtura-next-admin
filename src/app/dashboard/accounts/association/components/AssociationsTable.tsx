@@ -27,14 +27,7 @@ export default function DisplayAssociationsTable() {
     data!.associations;
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Accounts</h1>
-      <button
-        onClick={() => refetch()}
-        className="mb-6 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
-        Refresh Accounts
-      </button>
-
+    <>
       {/* Active Accounts Table */}
       <Tabs defaultValue="active">
         <TabsList>
@@ -61,6 +54,6 @@ export default function DisplayAssociationsTable() {
           />
         </TabsContent>
       </Tabs>
-    </div>
+    </>
   );
 }
