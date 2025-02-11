@@ -1,7 +1,14 @@
 "use client";
 
 import * as React from "react";
-import { SquareTerminal } from "lucide-react";
+import {
+  SquareTerminal,
+  CircleUser,
+  ShieldHalf,
+  Component,
+  ChartCandlestick,
+  CalendarSync,
+} from "lucide-react";
 import { NavMain } from "@/components/scaffolding/layout/nav/nav-main";
 /* import { NavProjects } from "@/components/nav-projects"; */
 /* import { NavSecondary } from "@/components/nav-secondary"; */
@@ -34,7 +41,7 @@ const data = {
     {
       title: "Accounts",
       url: "/dashboard/accounts",
-      icon: SquareTerminal,
+      icon: CircleUser,
       isActive: false,
       items: [
         {
@@ -50,19 +57,25 @@ const data = {
     {
       title: "Teams",
       url: "/dashboard/teams",
-      icon: SquareTerminal,
+      icon: ShieldHalf,
       isActive: true,
     },
     {
       title: "Competitions",
       url: "/dashboard/competitions",
-      icon: SquareTerminal,
+      icon: Component,
       isActive: true,
     },
     {
       title: "Grades",
       url: "/dashboard/grades",
-      icon: SquareTerminal,
+      icon: ChartCandlestick,
+      isActive: true,
+    },
+    {
+      title: "Schedulers",
+      url: "/dashboard/schedulers",
+      icon: CalendarSync,
       isActive: true,
     },
   ],

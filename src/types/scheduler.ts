@@ -20,6 +20,7 @@ export interface SchedulerAttributes {
 
 export interface Scheduler {
   id: number;
+  Name: string;
   attributes: SchedulerAttributes;
 }
 
@@ -28,4 +29,15 @@ export interface SchedulerState {
   schedulers: Scheduler[];
   loading: boolean;
   error: string | null;
+}
+
+export interface SchedulerRollup {
+  numberOfSchedulers: number;
+  numberOfSchedulersRendering: number;
+  ListOfSchedulersRenderingWithIDS: Scheduler[];
+  numberOfSchedulersQueued: number;
+  ListOfSchedulersQueuedWithIDS: Scheduler[];
+  DaysOfTheWeekGroupedByCount: {
+    [key: string]: number;
+  };
 }

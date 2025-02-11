@@ -10,33 +10,14 @@ export default function OverviewTab({
   // Metrics configuration array
   const metrics = [
     {
-      title: "Total Renders",
-      value: accountData?.metricsOverTime.totalRenders || "N/A",
-      icon: <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />,
-      lastUpdate: "Last Update: ",
-    },
-
-    {
-      title: "Total Complete Renders",
-      value: accountData?.metricsOverTime.totalCompleteRenders || "N/A",
+      title: "Total Downloads",
+      value: accountData?.metricsOverTime.totalDownloads || "N/A",
       icon: <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />,
       lastUpdate: "Last Update: ",
     },
     {
-      title: "Total Emails Sent",
-      value: accountData?.metricsOverTime.totalEmailsSent || "N/A",
-      icon: <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />,
-      lastUpdate: "Last Update: ",
-    },
-    {
-      title: "Total Game Results",
-      value: accountData?.metricsOverTime.totalGameResults || "N/A",
-      icon: <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />,
-      lastUpdate: "Last Update: ",
-    },
-    {
-      title: "Total Upcoming Games",
-      value: accountData?.metricsOverTime.totalUpcomingGames || "N/A",
+      title: "Total AI Articles",
+      value: accountData?.metricsOverTime.totalAiArticles || "N/A",
       icon: <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />,
       lastUpdate: "Last Update: ",
     },
@@ -47,14 +28,21 @@ export default function OverviewTab({
       lastUpdate: "Last Update: ",
     },
     {
-      title: "Total Downloads",
-      value: accountData?.metricsOverTime.totalDownloads || "N/A",
+      title: "Total Renders",
+      value: accountData?.metricsOverTime.totalCompleteRenders || "N/A",
+      icon: <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />,
+      lastUpdate: `Total Renders: ${accountData?.metricsOverTime.totalRenders}`,
+    },
+
+    {
+      title: "Total Game Results",
+      value: accountData?.metricsOverTime.totalGameResults || "N/A",
       icon: <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />,
       lastUpdate: "Last Update: ",
     },
     {
-      title: "Total AI Articles",
-      value: accountData?.metricsOverTime.totalAiArticles || "N/A",
+      title: "Total Upcoming Games",
+      value: accountData?.metricsOverTime.totalUpcomingGames || "N/A",
       icon: <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />,
       lastUpdate: "Last Update: ",
     },

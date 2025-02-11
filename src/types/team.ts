@@ -42,3 +42,28 @@ export interface TeamState {
   loading: boolean;
   error: string | null;
 }
+
+// create a type for the formatted teams
+
+export interface FormattedTeam {
+  age: string | null;
+  createdAt: string | null;
+  gamesPlayed: number | null;
+  gender: string | null;
+  href: string | null;
+  id: number | null;
+  publishedAt: string | null;
+  teamID: string | null;
+  teamName: string | null;
+  updatedAt: string | null;
+  club: string | null;
+  clubID: string | null;
+  clubHref: string | null;
+  clubSport: string | null;
+  clubLogo: string | null;
+  competition: string | null;
+  competitionSeason: string | null;
+  competitionURL: string | null;
+  competitionIsActive: boolean | null;
+  grades: number | null;
+}
