@@ -41,3 +41,22 @@ export interface SchedulerRollup {
     [key: string]: number;
   };
 }
+
+// new type getTodaysRenders
+export interface TodaysRenders {
+  schedulerId: number;
+  schedulerName: string;
+  scheduledTime: string;
+  isRendering: boolean;
+  accountId: number;
+  accountName: string;
+  accountSport: string;
+  accountType: string;
+  queued: boolean;
+  render: {
+    renderId: number;
+    renderName: string;
+    processing: boolean;
+    complete: boolean;
+  };
+}

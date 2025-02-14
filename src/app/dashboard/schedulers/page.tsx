@@ -4,6 +4,7 @@ import { SchedulerRollupData } from "@/app/dashboard/schedulers/components/Sched
 import { SchedulerRenderingTable } from "@/app/dashboard/schedulers/components/SchedulerRenderingTable";
 import { ByLine, SectionTitle, Title } from "@/components/type/titles";
 import SchedulerBarChartByDays from "@/app/dashboard/schedulers/components/schedulerBarChartByDays";
+import GetTodaysSchedulers from "./components/getTodaysSchedulers";
 
 export default function SchedulersPage() {
   return (
@@ -35,6 +36,7 @@ export default function SchedulersPage() {
         </section>
         <section className="flex flex-col gap-4 my-4">
           <SectionTitle>Recent Renders</SectionTitle>
+          <GetTodaysSchedulers />
         </section>
 
         <section className="flex flex-col gap-4 my-4">

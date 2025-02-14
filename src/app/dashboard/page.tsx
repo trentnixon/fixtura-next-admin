@@ -1,6 +1,7 @@
 import { SchedulerRollupData } from "@/app/dashboard/components/SchedulerRollupData";
 import { ByLine, SectionTitle, Title } from "@/components/type/titles";
 import { auth } from "@clerk/nextjs/server";
+import QuickView from "./components/quickView";
 
 //import { redirect } from "next/navigation";
 
@@ -28,6 +29,7 @@ export default async function DashboardPage() {
         <section className="flex flex-col gap-4 my-4">
           <SectionTitle>Account Stats</SectionTitle>
           account stats and charts
+          <QuickView />
         </section>
         <section className="flex flex-col gap-4 my-4">
           <SectionTitle>Schedulers</SectionTitle>
