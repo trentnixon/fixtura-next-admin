@@ -5,6 +5,7 @@ import { SchedulerRenderingTable } from "@/app/dashboard/schedulers/components/S
 import { ByLine, SectionTitle, Title } from "@/components/type/titles";
 import SchedulerBarChartByDays from "@/app/dashboard/schedulers/components/schedulerBarChartByDays";
 import GetTodaysSchedulers from "./components/getTodaysSchedulers";
+import GetTomorrowsSchedulers from "./components/getTomorrowsSchedulers";
 
 export default function SchedulersPage() {
   return (
@@ -41,6 +42,7 @@ export default function SchedulersPage() {
 
         <section className="flex flex-col gap-4 my-4">
           <SectionTitle>Expected Renders</SectionTitle>
+          <GetTomorrowsSchedulers />
         </section>
       </div>
     </div>
