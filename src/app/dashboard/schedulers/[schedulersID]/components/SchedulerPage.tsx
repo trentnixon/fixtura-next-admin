@@ -36,40 +36,6 @@ const SchedulerPage = () => {
           </p>
         )}
       </section>
-
-      <section>
-        <h2>Renders</h2>
-        {scheduler.renders?.data && scheduler.renders.data.length > 0 ? (
-          <ul>
-            {scheduler.renders.data.map(render => (
-              <li
-                key={render.id}
-                style={{
-                  marginBottom: "1rem",
-                  border: "1px solid #ccc",
-                  padding: "1rem",
-                }}>
-                <p>
-                  <strong>Render ID:</strong> {render.id}
-                </p>
-                <p>
-                  <strong>Name:</strong> {render.attributes.Name}
-                </p>
-                <p>
-                  <strong>Processing:</strong>{" "}
-                  {render.attributes.Processing ? "Yes" : "No"}
-                </p>
-                <p>
-                  <strong>Complete:</strong>{" "}
-                  {render.attributes.Complete ? "Yes" : "No"}
-                </p>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No renders available.</p>
-        )}
-      </section>
     </div>
   );
 };

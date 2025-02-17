@@ -14,6 +14,7 @@ export interface RenderAttributes {
   hasTeamRosterEmail: boolean;
   updatedAt: string;
   publishedAt: string;
+  isCreatingRoster: boolean;
   downloads: {
     data: Download[];
   };
