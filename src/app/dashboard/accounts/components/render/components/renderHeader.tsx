@@ -16,6 +16,7 @@ import { useAccountQuery } from "@/hooks/accounts/useAccountQuery";
 import Link from "next/link";
 import { useRendersQuery } from "@/hooks/renders/useRendersQuery";
 import DeleteRenderButton from "../../actions/button_delete_Render";
+import CreatePage from "@/components/scaffolding/containers/createPage";
 
 export default function RenderHeader() {
   const { Domain, strapiLocation } = useGlobalContext();
@@ -31,13 +32,11 @@ export default function RenderHeader() {
   const sport = accountData?.Sport || "";
 
   return (
-    <div className="flex flex-col gap-2 border-b border-slate-200 pb-3 mb-2">
-      <div className="border-b border-slate-200 pb-2 mb-2">
-        <Title>Render Details</Title>
-        <ByLine>
-          {render?.Name} - {renderID}
-        </ByLine>
-      </div>
+    <CreatePage>
+      <Title>Render Details</Title>
+      <ByLine>
+        {render?.Name} - {renderID}
+      </ByLine>
 
       {/* Links */}
       <div className="flex justify-end gap-2 items-center">
@@ -69,6 +68,6 @@ export default function RenderHeader() {
           EmailSent: render?.EmailSent || false,
         }}
       />
-    </div>
+    </CreatePage>
   );
 }
