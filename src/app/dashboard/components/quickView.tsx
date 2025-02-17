@@ -1,7 +1,9 @@
 // QuickView.tsx
 "use client";
 import { useGetTodaysRenders } from "@/hooks/scheduler/useGetTodaysRenders";
+import MetricCard from "../accounts/components/overview/tabs/components/metricCard";
 import { TodaysRenders } from "@/types/scheduler";
+import { CalendarIcon } from "lucide-react";
 
 export default function QuickView() {
   const { data } = useGetTodaysRenders();
@@ -18,8 +20,28 @@ export default function QuickView() {
           </div>
           <div className="col-span-4">
             <div className="grid grid-cols-2 gap-4">
-              <div>Rendering: {renderingCount}</div>
-              <div>Queued: {queuedCount}</div>
+              <div>
+                <MetricCard
+                  title={"Accounts Currently Rendering"}
+                  value={renderingCount}
+                  icon={
+                    <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />
+                  }
+                  lastUpdate={"today"}
+                  action={"metric.action"}
+                />
+              </div>
+              <div>
+                <MetricCard
+                  title={"Accounts Queued from Todays"}
+                  value={queuedCount}
+                  icon={
+                    <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />
+                  }
+                  lastUpdate={"today"}
+                  action={"metric.action"}
+                />
+              </div>
             </div>
           </div>
         </div>

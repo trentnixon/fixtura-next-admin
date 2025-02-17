@@ -11,8 +11,12 @@ export function SchedulerRollupData() {
   const { data } = useSchedulerRollup();
 
   const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(today.getDate() + 1);
   const dayOfWeekName = today.toLocaleDateString("en-US", { weekday: "long" });
-
+  const tomorrowDayOfTheWeekName = tomorrow.toLocaleDateString("en-US", {
+    weekday: "long",
+  });
   const metrics = [
     {
       title: `Expected Renders for ${dayOfWeekName}`,
@@ -28,8 +32,8 @@ export function SchedulerRollupData() {
       ),
     },
     {
-      title: "Number of Schedulers",
-      value: data?.numberOfSchedulers || 0,
+      title: `Expected Renders for ${tomorrowDayOfTheWeekName}`,
+      value: data?.DaysOfTheWeekGroupedByCount[tomorrowDayOfTheWeekName] || 0,
       icon: <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />,
       lastUpdate: "",
       action: (

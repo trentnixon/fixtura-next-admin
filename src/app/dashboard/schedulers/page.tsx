@@ -6,6 +6,7 @@ import { ByLine, SectionTitle, Title } from "@/components/type/titles";
 import SchedulerBarChartByDays from "@/app/dashboard/schedulers/components/schedulerBarChartByDays";
 import GetTodaysSchedulers from "./components/getTodaysSchedulers";
 import GetTomorrowsSchedulers from "./components/getTomorrowsSchedulers";
+import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
 
 export default function SchedulersPage() {
   return (
@@ -35,15 +36,27 @@ export default function SchedulersPage() {
             </div>
           </div>
         </section>
-        <section className="flex flex-col gap-4 my-4">
-          <SectionTitle>Recent Renders</SectionTitle>
-          <GetTodaysSchedulers />
-        </section>
 
-        <section className="flex flex-col gap-4 my-4">
-          <SectionTitle>Expected Renders</SectionTitle>
-          <GetTomorrowsSchedulers />
-        </section>
+        <Tabs defaultValue="today">
+          <TabsList className="">
+            <TabsTrigger value="today">Scheduled for Today</TabsTrigger>
+            <TabsTrigger value="tomorrow">Scheduled for Tomorrow</TabsTrigger>
+          </TabsList>
+          <div className="mt-4">
+            <div className=" px-4 py-2">
+              <TabsContent value="today">
+                <section className="flex flex-col gap-4 my-4">
+                  <GetTodaysSchedulers />
+                </section>
+              </TabsContent>
+              <TabsContent value="tomorrow">
+                <section className="flex flex-col gap-4 my-4">
+                  <GetTomorrowsSchedulers />
+                </section>
+              </TabsContent>
+            </div>
+          </div>
+        </Tabs>
       </div>
     </div>
   );
