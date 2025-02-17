@@ -4,6 +4,8 @@ import { useGetTodaysRenders } from "@/hooks/scheduler/useGetTodaysRenders";
 import MetricCard from "../accounts/components/overview/tabs/components/metricCard";
 import { TodaysRenders } from "@/types/scheduler";
 import { CalendarIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function QuickView() {
   const { data } = useGetTodaysRenders();
@@ -28,7 +30,11 @@ export default function QuickView() {
                     <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />
                   }
                   lastUpdate={"today"}
-                  action={"metric.action"}
+                  action={
+                    <Button variant="outline">
+                      <Link href="/dashboard/schedulers">Schedulers</Link>
+                    </Button>
+                  }
                 />
               </div>
               <div>
@@ -39,7 +45,11 @@ export default function QuickView() {
                     <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />
                   }
                   lastUpdate={"today"}
-                  action={"metric.action"}
+                  action={
+                    <Button variant="outline">
+                      <Link href="/dashboard/schedulers">Schedulers</Link>
+                    </Button>
+                  }
                 />
               </div>
             </div>
@@ -52,10 +62,10 @@ export default function QuickView() {
 
 // func to work out the number of items where isRendering is true
 function getRenderingCount(data: TodaysRenders[]) {
-  return data?.filter(item => item.isRendering).length;
+  return data?.filter(item => item.isRendering).length || 0;
 }
 
 // func to work out the number of items where queued is false
 function getQueuedCount(data: TodaysRenders[]) {
-  return data?.filter(item => item.queued).length;
+  return data?.filter(item => item.queued).length || 0;
 }
