@@ -117,7 +117,9 @@ export interface AccountSummary {
     uniqueSports: string[];
     sportsCount: { [key: string]: number };
     accountTypesCount: { [key: string]: number };
-    sportsPerAccountTypeCount: { [key: string]: number };
+    sportsPerAccountTypeCount: {
+      [key: string]: { [key: string]: number };
+    };
 
     trialInstanceStatus: {
       active: number;
