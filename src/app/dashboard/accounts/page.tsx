@@ -1,14 +1,12 @@
 // TODO: Add Accounts page
 
-import { SectionTitle, Title } from "@/components/type/titles";
-import { P } from "@/components/type/type";
+import CreatePage from "@/components/scaffolding/containers/createPage";
+import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 
 export default function AccountsPage() {
   return (
-    <section>
-      <Title>Accounts</Title>
-      <SectionTitle>Accounts</SectionTitle>
-      <P>Accounts</P>
-    </section>
+    <CreatePage>
+      <CreatePageTitle title="Accounts" byLine="Accounts" />
+    </CreatePage>
   );
 }

@@ -51,3 +51,113 @@ export interface AccountState {
   loading: boolean;
   error: string | null;
 }
+
+/*
+export interface AccountSummary {
+  data: {
+    Totals: {
+      count: number;
+      uniqueSports: string[];
+      sportsCount: { [key: string]: number };
+      accountTypesCount: { [key: string]: number };
+      sportsPerAccountTypeCount: { [key: string]: { [key: string]: number } };
+      trialInstanceStatus: {
+        active: number;
+        expired: number;
+      };
+      activeOrderCount: number;
+      activeFreeTierCount: number;
+      inactiveFreeTierCount: number;
+      isSetupCount: {
+        true: number;
+        false: number;
+      };
+      mediaLibraryUsage: {
+        id: number;
+        mediaLibraryCount: number;
+      }[];
+      longevityAndRetention: {
+        id: number;
+        createdAt: string;
+        updatedAt: string;
+        deliveryAddress: string;
+      }[];
+    };
+    BarChartData: {
+      accountTypesBarChart: { name: string; value: number }[];
+      sportsCountBarChart: { name: string; value: number }[];
+      engagementMetricsBarChart: { metric: string; count: number }[];
+      schedulingDayCountBarChart: { day: string; value: number }[];
+      isSetupBarChart: { name: string; value: number }[];
+      trialInstanceBarChart: { name: string; value: number }[];
+    };
+    AdditionalMetrics: {
+      activeOrderCount: number;
+      activeFreeTierCount: number;
+      inactiveFreeTierCount: number;
+      isSetupCount: {
+        true: number;
+        false: number;
+      };
+      trialInstanceStatus: {
+        active: number;
+        expired: number;
+      };
+    };
+  };
+}
+
+
+
+*/
+
+export interface AccountSummary {
+  Totals: {
+    count: number;
+    uniqueSports: string[];
+    sportsCount: { [key: string]: number };
+    accountTypesCount: { [key: string]: number };
+    sportsPerAccountTypeCount: { [key: string]: number };
+
+    trialInstanceStatus: {
+      active: number;
+      expired: number;
+    };
+    activeOrderCount: number;
+    activeFreeTierCount: number;
+    inactiveFreeTierCount: number;
+    isSetupCount: {
+      true: number;
+      false: number;
+    };
+    mediaLibraryUsage: {
+      id: number;
+      mediaLibraryCount: number;
+    }[];
+    longevityAndRetention: {
+      id: number;
+      createdAt: string;
+      updatedAt: string;
+      deliveryAddress: string;
+    }[];
+  };
+  BarChartData: {
+    accountTypesBarChart: { name: string; value: number }[];
+    sportsCountBarChart: { name: string; value: number }[];
+    engagementMetricsBarChart: { metric: string; count: number }[];
+    schedulingDayCountBarChart: { day: string; value: number }[];
+  };
+  AdditionalMetrics: {
+    activeOrderCount: number;
+    activeFreeTierCount: number;
+    inactiveFreeTierCount: number;
+    isSetupCount: {
+      true: number;
+      false: number;
+    };
+    trialInstanceStatus: {
+      active: number;
+      expired: number;
+    };
+  };
+}

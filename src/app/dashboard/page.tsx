@@ -20,9 +20,9 @@ export default async function DashboardPage() {
     <CreatePage>
       <CreatePageTitle title="Fixtura Admin Dashboard" byLine="Overview" />
 
-      <section className="flex flex-col gap-4 my-4">
-        <SectionTitle>Account Stats</SectionTitle>
-        account stats and charts
+      <section className="flex flex-col gap-8 my-8">
+        <SectionTitle>Account</SectionTitle>
+
         <QuickView />
       </section>
       <section className="flex flex-col gap-4 my-4">

@@ -1,5 +1,12 @@
 // TODO: Add Grade page
 
+import CreatePage from "@/components/scaffolding/containers/createPage";
+import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
+
 export default function GradePage() {
-  return <div>Grade Page</div>;
+  return (
+    <CreatePage>
+      <CreatePageTitle title="Grades" byLine="Grades" />
+    </CreatePage>
+  );
 }
