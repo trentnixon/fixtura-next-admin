@@ -27,7 +27,6 @@ export default function ListRendersInTable({
   renders,
   accountId,
   sport,
-  accountType,
 }: {
   schedulerId: number;
   accountId: number;
@@ -110,8 +109,7 @@ export default function ListRendersInTable({
                         </Link>
                       </TableCell>
                       <TableCell className="text-center">
-                        <Link
-                          href={`/dashboard/accounts/${accountType}/${accountId}/render/${render.id}`}>
+                        <Link href={`/dashboard/renders/${render.id}`}>
                           <Button variant="outline">
                             <EyeIcon size="16" />
                           </Button>

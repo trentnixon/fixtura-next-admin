@@ -1,9 +1,13 @@
-"use client";
-
-import { useParams } from "next/navigation";
-import DisplayRenderId from "./components/DisplayRenderId";
-
+import CreatePage from "@/components/scaffolding/containers/createPage";
+import RenderHeader from "./components/renderHeader";
+import RenderOverview from "./components/renderOverview";
+import { RenderTabs } from "./components/renderTabs";
 export default function RenderID() {
-  const { renderID } = useParams();
-  return renderID ? <DisplayRenderId renderID={renderID as string} /> : null;
+  return (
+    <CreatePage>
+      <RenderHeader />
+      <RenderOverview />
+      <RenderTabs />
+    </CreatePage>
+  );
 }

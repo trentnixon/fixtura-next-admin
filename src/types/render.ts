@@ -43,3 +43,43 @@ export interface RenderState {
   loading: boolean;
   error: string | null;
 }
+
+export interface GetAccountFromRender {
+  render: {
+    id: number;
+    Name: string;
+    createdAt: string;
+    updatedAt: string;
+    publishedAt: string;
+    Processing: boolean;
+    Complete: boolean;
+  };
+  scheduler: {
+    id: number;
+    Name: string;
+    createdAt: string;
+    updatedAt: string;
+    publishedAt: string;
+    Time: string | null;
+    isRendering: boolean;
+  };
+  account: {
+    id: number;
+    createdAt: string;
+    updatedAt: string;
+    publishedAt: string;
+    isActive: boolean;
+    FirstName: string;
+    LastName: string | null;
+    DeliveryAddress: string;
+    isSetup: boolean;
+    isUpdating: boolean;
+    hasCompletedStartSequence: boolean;
+    isRightsHolder: boolean;
+    isPermissionGiven: boolean;
+    group_assets_by: boolean;
+    Sport: string;
+    hasCustomTemplate: boolean;
+    include_junior_surnames: boolean;
+  };
+}

@@ -8,6 +8,7 @@ import {
   Component,
   ChartCandlestick,
   CalendarSync,
+  Pickaxe,
 } from "lucide-react";
 import { NavMain } from "@/components/scaffolding/layout/nav/nav-main";
 /* import { NavProjects } from "@/components/nav-projects"; */
@@ -76,6 +77,12 @@ const data = {
       title: "Schedulers",
       url: "/dashboard/schedulers",
       icon: CalendarSync,
+      isActive: true,
+    },
+    {
+      title: "Renders",
+      url: "/dashboard/renders",
+      icon: Pickaxe,
       isActive: true,
     },
   ],
