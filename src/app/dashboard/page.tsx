@@ -1,7 +1,7 @@
 import { SchedulerRollupData } from "@/app/dashboard/components/SchedulerRollupData";
 import { SectionTitle } from "@/components/type/titles";
 import { auth } from "@clerk/nextjs/server";
-import QuickView from "./components/quickView";
+import AccountOverview from "./components/AccountOverview";
 import CreatePage from "@/components/scaffolding/containers/createPage";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 //import { redirect } from "next/navigation";
@@ -21,9 +21,12 @@ export default async function DashboardPage() {
       <CreatePageTitle title="Fixtura Admin Dashboard" byLine="Overview" />
 
       <section className="flex flex-col gap-8 my-8">
+        <SectionTitle>LIVE</SectionTitle>
+        LIVE
+      </section>
+      <section className="flex flex-col gap-8 my-8">
         <SectionTitle>Account</SectionTitle>
-
-        <QuickView />
+        <AccountOverview />
       </section>
       <section className="flex flex-col gap-4 my-4">
         <SectionTitle>Schedulers</SectionTitle>
@@ -31,8 +34,6 @@ export default async function DashboardPage() {
       </section>
       <section className="flex flex-col gap-4 my-4">
         <SectionTitle>Renders</SectionTitle>
-        [Check Scraper] Check the status of the scraper, to see if any are still
-        in the queue
       </section>
     </CreatePage>
   );

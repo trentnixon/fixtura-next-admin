@@ -7,7 +7,7 @@ import { CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useAccountSummaryQuery } from "@/hooks/accounts/useAccountSummaryQuery";
-export default function QuickView() {
+export default function AccountOverview() {
   const { data } = useGetTodaysRenders();
   const { data: accountSummary } = useAccountSummaryQuery();
 

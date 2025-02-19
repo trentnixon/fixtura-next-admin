@@ -25,13 +25,9 @@ import {
 } from "@/components/ui/sidebar";
 import { UserButton } from "@clerk/nextjs";
 import { SignedIn } from "@clerk/nextjs";
+import { S } from "@/components/type/type";
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   navMain: [
     {
       title: "Dashboard",
@@ -55,6 +51,22 @@ const data = {
         },
       ],
     },
+  ],
+  renderNav: [
+    {
+      title: "Schedulers",
+      url: "/dashboard/schedulers",
+      icon: CalendarSync,
+      isActive: true,
+    },
+    {
+      title: "Renders",
+      url: "/dashboard/renders",
+      icon: Pickaxe,
+      isActive: true,
+    },
+  ],
+  dataNav: [
     {
       title: "Teams",
       url: "/dashboard/teams",
@@ -71,18 +83,6 @@ const data = {
       title: "Grades",
       url: "/dashboard/grades",
       icon: ChartCandlestick,
-      isActive: true,
-    },
-    {
-      title: "Schedulers",
-      url: "/dashboard/schedulers",
-      icon: CalendarSync,
-      isActive: true,
-    },
-    {
-      title: "Renders",
-      url: "/dashboard/renders",
-      icon: Pickaxe,
       isActive: true,
     },
   ],
@@ -109,11 +109,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        {/* <NavProjects projects={data.projects} /> */}
-        {/* <NavSecondary items={data.navSecondary} className="mt-auto" /> */}
+        <NavMain items={data.navMain} title="Platform" />
+        <NavMain items={data.renderNav} title="Renders" />
+        <NavMain items={data.dataNav} title="Data" />
       </SidebarContent>
-      <SidebarFooter>{/* <NavUser user={data.user} /> */}Fixtura</SidebarFooter>
+      <SidebarFooter>
+        <S className="text-center">Fixtura</S>
+      </SidebarFooter>
     </Sidebar>
   );
 }

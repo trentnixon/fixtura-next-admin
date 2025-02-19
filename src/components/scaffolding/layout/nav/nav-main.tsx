@@ -22,7 +22,9 @@ import {
 
 export function NavMain({
   items,
+  title,
 }: {
+  title: string;
   items: {
     title: string;
     url: string;
@@ -38,7 +40,7 @@ export function NavMain({
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel>{title}</SidebarGroupLabel>
       <SidebarMenu>
         {items.map(item => {
           // Determine if this item or its children match the current path
@@ -49,7 +51,11 @@ export function NavMain({
           return (
             <Collapsible key={item.title} asChild defaultOpen={isCurrent}>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild tooltip={item.title}>
+                <SidebarMenuButton
+                  asChild
+                  tooltip={item.title}
+                  isActive={isCurrent}
+                  className={`${isCurrent ? "active" : " isActive"}`}>
                   <a href={item.url}>
                     <item.icon />
                     <span>{item.title}</span>
@@ -67,7 +73,7 @@ export function NavMain({
                       <SidebarMenuSub>
                         {item.items?.map(subItem => (
                           <SidebarMenuSubItem key={subItem.title}>
-                            <SidebarMenuSubButton asChild>
+                            <SidebarMenuSubButton asChild isActive={isCurrent}>
                               <a
                                 href={subItem.url}
                                 className={
