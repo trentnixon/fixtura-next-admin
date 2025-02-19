@@ -2,7 +2,6 @@
 
 import { useDownloadQuery } from "@/hooks/downloads/useDownloadsQuery";
 import { useParams } from "next/navigation";
-import { H4 } from "@/components/type/titles";
 import { P } from "@/components/type/type";
 
 export default function DisplayDownload() {
@@ -34,9 +33,7 @@ export default function DisplayDownload() {
   } = downloadData.attributes;
 
   return (
-    <div className="p-6">
-      <H4 className="mb-4">Download Details</H4>
-
+    <div>
       <div className="mb-6">
         <h5 className="text-lg font-semibold">General Information</h5>
         <P>

@@ -5,8 +5,6 @@ import { AccountTable } from "@/components/modules/tables/AccountTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 export default function DisplayAssociationsTable() {
   const { data, isLoading, isError, error, refetch } = useAccountsQuery();
-
-  console.log("[data]", data);
   if (isLoading) return <p>Loading accounts...</p>;
 
   if (isError) {

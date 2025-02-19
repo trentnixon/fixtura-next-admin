@@ -23,9 +23,12 @@ import OverviewTab from "../../../components/overview/tabs/overview";
 import RendersTab from "../../../components/overview/tabs/renders";
 import AccountTabList from "../../../components/overview/tabs/AccountTabList";
 import CompetitionsTab from "../../../components/overview/tabs/competitions";
-export default function DisplayClub({ accountId }: { accountId: string }) {
-  const { data, isLoading, isError, error, refetch } =
-    useAccountQuery(accountId);
+import { useParams } from "next/navigation";
+export default function DisplayClub() {
+  const { accountID } = useParams();
+  const { data, isLoading, isError, error, refetch } = useAccountQuery(
+    accountID as string
+  );
 
   if (isLoading) return <P>Loading account details...</P>;
 
@@ -66,7 +69,7 @@ export default function DisplayClub({ accountId }: { accountId: string }) {
   return (
     <>
       {accountData && <AccountTitle titleProps={accountData} />}
-      <div className="p-2">
+      <div>
         <div className="grid grid-cols-12 gap-4">
           <div className="col-span-9">
             <Tabs defaultValue="overview" className="w-full">
@@ -79,7 +82,7 @@ export default function DisplayClub({ accountId }: { accountId: string }) {
               <TabsContent value="renders">
                 <RendersTab
                   accountData={accountData as fixturaContentHubAccountDetails}
-                  accountId={Number(accountId)}
+                  accountId={Number(accountID)}
                 />
               </TabsContent>
               <TabsContent value="competitions">

@@ -2,7 +2,6 @@
 
 import CheckBooleanStatus from "../overview/CheckBooleanStatus";
 import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccountDetails";
-import CreatePage from "@/components/scaffolding/containers/createPage";
 import SyncCTABar from "./SyncCTABar";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 
@@ -12,7 +11,7 @@ type AccountTitleProps = {
 
 export default function AccountTitle({ titleProps }: AccountTitleProps) {
   return (
-    <CreatePage>
+    <>
       <CreatePageTitle
         title={titleProps.accountOrganisationDetails.Name}
         byLine={`${titleProps.accountOrganisationDetails.Sport} - ${
@@ -23,6 +22,6 @@ export default function AccountTitle({ titleProps }: AccountTitleProps) {
 
       <CheckBooleanStatus titleProps={titleProps} />
       <SyncCTABar titleProps={titleProps} />
-    </CreatePage>
+    </>
   );
 }

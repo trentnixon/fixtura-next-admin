@@ -1,12 +1,9 @@
-"use client";
-// TODO: Add Associations page
-
-import { useParams } from "next/navigation";
 import DisplayAssociation from "./components/DisplayAssociation";
-
+import CreatePage from "@/components/scaffolding/containers/createPage";
 export default function AssociationPage() {
-  // Directly use `params.associationsID` as it's not a Promise
-  const { accountID } = useParams();
-
-  return <DisplayAssociation accountId={accountID as string} />;
+  return (
+    <CreatePage>
+      <DisplayAssociation />
+    </CreatePage>
+  );
 }
