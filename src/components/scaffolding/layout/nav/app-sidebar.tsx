@@ -40,16 +40,18 @@ const data = {
       url: "/dashboard/accounts",
       icon: CircleUser,
       isActive: false,
-      items: [
-        {
-          title: "Clubs",
-          url: "/dashboard/accounts/club",
-        },
-        {
-          title: "Associations",
-          url: "/dashboard/accounts/association",
-        },
-      ],
+    },
+    {
+      title: "Clubs",
+      url: "/dashboard/accounts/club",
+      icon: CircleUser,
+      isActive: false,
+    },
+    {
+      title: "Associations",
+      url: "/dashboard/accounts/association",
+      icon: CircleUser,
+      isActive: false,
     },
   ],
   renderNav: [

@@ -1,7 +1,7 @@
 import { SchedulerRollupData } from "@/app/dashboard/components/SchedulerRollupData";
 import { SectionTitle } from "@/components/type/titles";
 import { auth } from "@clerk/nextjs/server";
-import AccountOverview from "./components/AccountOverview";
+import LiveOverview from "./components/LiveOverview";
 import CreatePage from "@/components/scaffolding/containers/createPage";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 //import { redirect } from "next/navigation";
@@ -22,12 +22,9 @@ export default async function DashboardPage() {
 
       <section className="flex flex-col gap-8 my-8">
         <SectionTitle>LIVE</SectionTitle>
-        LIVE
+        <LiveOverview />
       </section>
-      <section className="flex flex-col gap-8 my-8">
-        <SectionTitle>Account</SectionTitle>
-        <AccountOverview />
-      </section>
+
       <section className="flex flex-col gap-4 my-4">
         <SectionTitle>Schedulers</SectionTitle>
         <SchedulerRollupData />

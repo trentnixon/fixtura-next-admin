@@ -1,17 +1,9 @@
 // schedulerBarChartByDays.tsx
 "use client";
-import { SectionTitle } from "@/components/type/titles";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  type ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-} from "@/components/ui/chart";
+import BarChartComponent from "@/components/modules/charts/BarChartComponent";
+import { ChartConfig } from "@/components/ui/chart";
+
 import { useSchedulerRollup } from "@/hooks/scheduler/useSchedulerRollup";
-import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
 export default function SchedulerBarChartByDays() {
   const { data } = useSchedulerRollup();
@@ -54,30 +46,16 @@ export default function SchedulerBarChartByDays() {
 
   return (
     <div className="flex flex-col gap-4">
-      <Card className="w-full shadow-none bg-slate-50 border-b-4 border-b-slate-500 rounded-md">
-        <CardTitle className="flex items-center justify-between w-full p-2">
-          <SectionTitle>Renders by Day</SectionTitle>
-        </CardTitle>
-        <CardContent className="p-2">
-          <ChartContainer config={chartConfig} className="h-[200px] w-full">
-            <BarChart accessibilityLayer data={chartData}>
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="month"
-                tickLine={false}
-                tickMargin={10}
-                axisLine={false}
-                tickFormatter={value => value.slice(0, 3)}
-              />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <ChartLegend content={<ChartLegendContent />} />
-              <Bar dataKey="renders" fill="var(--color-renders)" radius={4} />
-            </BarChart>
-          </ChartContainer>
-          {/* Conditionally render the action component if provided */}
-        </CardContent>
-        <CardHeader className="p-2"></CardHeader>
-      </Card>
+      <BarChartComponent
+        title="Renders by Day"
+        data={chartData}
+        xAxisKey="month"
+        barKey="renders"
+        barColor="var(--color-renders)"
+        config={chartConfig}
+        height={200}
+        width="100%"
+      />
     </div>
   );
 }

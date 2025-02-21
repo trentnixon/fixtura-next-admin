@@ -148,6 +148,7 @@ export interface AccountSummary {
     sportsCountBarChart: { name: string; value: number }[];
     engagementMetricsBarChart: { metric: string; count: number }[];
     schedulingDayCountBarChart: { day: string; value: number }[];
+    trialInstanceStatusBarChart: { name: string; value: number }[];
   };
   AdditionalMetrics: {
     activeOrderCount: number;
