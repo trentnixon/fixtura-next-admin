@@ -60,9 +60,6 @@ export function DiscrepanciesTable({ data }: DiscrepanciesTableProps) {
     }
   };
 
-  const formatTimestamp = (timestamp: string) => {
-    return new Date(timestamp).toLocaleString();
-  };
 
   if (allDiscrepancies.length === 0) {
     return (

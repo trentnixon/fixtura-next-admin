@@ -32,13 +32,6 @@ export function TestStatsCards({ data }: TestStatsCardsProps) {
       : "0";
 
   const memoryPeak = data.performanceMetrics.systemMetrics.memoryPeak;
-  const avgMemory =
-    data.performanceMetrics.systemMetrics.memorySnapshots.length > 0
-      ? data.performanceMetrics.systemMetrics.memorySnapshots.reduce(
-          (acc, snapshot) => acc + snapshot.heapUsed,
-          0
-        ) / data.performanceMetrics.systemMetrics.memorySnapshots.length
-      : 0;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
