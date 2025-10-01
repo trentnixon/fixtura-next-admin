@@ -3,6 +3,7 @@
 import { useAccountsQuery } from "@/hooks/accounts/useAccountsQuery";
 import { AccountTable } from "@/components/modules/tables/AccountTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AssociationEmails from "./associationEmails";
 export default function DisplayAssociationsTable() {
   const { data, isLoading, isError, error, refetch } = useAccountsQuery();
   if (isLoading) return <p>Loading accounts...</p>;
@@ -14,7 +15,8 @@ export default function DisplayAssociationsTable() {
         <pre>{JSON.stringify(error, null, 2)}</pre>
         <button
           onClick={() => refetch()}
-          className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+          className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+        >
           Retry
         </button>
       </div>
@@ -35,6 +37,9 @@ export default function DisplayAssociationsTable() {
           <TabsTrigger value="inactive">
             Inactive Associations ({inactiveAssociations.length})
           </TabsTrigger>
+          <TabsTrigger value="all">
+            Associations Contact Information
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="active">
@@ -50,6 +55,9 @@ export default function DisplayAssociationsTable() {
             accounts={inactiveAssociations}
             emptyMessage="No inactive accounts available."
           />
+        </TabsContent>
+        <TabsContent value="all">
+          <AssociationEmails />
         </TabsContent>
       </Tabs>
     </>

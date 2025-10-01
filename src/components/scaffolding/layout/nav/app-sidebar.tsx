@@ -9,6 +9,7 @@ import {
   ChartCandlestick,
   CalendarSync,
   Pickaxe,
+  TestTube,
 } from "lucide-react";
 import { NavMain } from "@/components/scaffolding/layout/nav/nav-main";
 /* import { NavProjects } from "@/components/nav-projects"; */
@@ -85,6 +86,12 @@ const data = {
       title: "Grades",
       url: "/dashboard/grades",
       icon: ChartCandlestick,
+      isActive: true,
+    },
+    {
+      title: "Result Scraper Tests",
+      url: "/dashboard/fetchTests",
+      icon: TestTube,
       isActive: true,
     },
   ],

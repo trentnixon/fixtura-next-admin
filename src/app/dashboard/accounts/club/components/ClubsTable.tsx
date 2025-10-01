@@ -3,6 +3,7 @@
 import { useAccountsQuery } from "@/hooks/accounts/useAccountsQuery";
 import { AccountTable } from "@/components/modules/tables/AccountTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ClubEmails from "./clubEmails";
 
 export default function DisplayClubsTable() {
   const { data, isLoading, isError, error, refetch } = useAccountsQuery();
@@ -17,7 +18,8 @@ export default function DisplayClubsTable() {
         <pre>{JSON.stringify(error, null, 2)}</pre>
         <button
           onClick={() => refetch()}
-          className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+          className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+        >
           Retry
         </button>
       </div>
@@ -37,6 +39,7 @@ export default function DisplayClubsTable() {
           <TabsTrigger value="inactive">
             Inactive Clubs ({inactiveClubs.length})
           </TabsTrigger>
+          <TabsTrigger value="all">Clubs Contact Information</TabsTrigger>
         </TabsList>
 
         <TabsContent value="active">
@@ -52,6 +55,9 @@ export default function DisplayClubsTable() {
             accounts={inactiveClubs}
             emptyMessage="No inactive clubs available."
           />
+        </TabsContent>
+        <TabsContent value="all">
+          <ClubEmails />
         </TabsContent>
       </Tabs>
     </>
