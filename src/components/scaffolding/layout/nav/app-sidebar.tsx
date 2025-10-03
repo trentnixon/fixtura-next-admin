@@ -89,6 +89,12 @@ const data = {
       isActive: true,
     },
     {
+      title: "Account Scraper Tests",
+      url: "/dashboard/fetchAccountTests",
+      icon: TestTube,
+      isActive: true,
+    },
+    {
       title: "Result Scraper Tests",
       url: "/dashboard/fetchTests",
       icon: TestTube,
