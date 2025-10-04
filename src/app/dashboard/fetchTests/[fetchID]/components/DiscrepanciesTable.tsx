@@ -36,10 +36,11 @@ export function DiscrepanciesTable({ data }: DiscrepanciesTableProps) {
   const filteredDiscrepancies = allDiscrepancies.filter((discrepancy) => {
     const searchLower = search.toLowerCase();
     return (
-      discrepancy.fieldPath.toLowerCase().includes(searchLower) ||
-      discrepancy.fieldType.toLowerCase().includes(searchLower) ||
-      discrepancy.severity.toLowerCase().includes(searchLower) ||
-      discrepancy.gameId.toLowerCase().includes(searchLower) ||
+      discrepancy.fieldPath?.toLowerCase().includes(searchLower) ||
+      discrepancy.fieldType?.toLowerCase().includes(searchLower) ||
+      (discrepancy.severity &&
+        discrepancy.severity.toLowerCase().includes(searchLower)) ||
+      discrepancy.gameId?.toLowerCase().includes(searchLower) ||
       (discrepancy.expected &&
         discrepancy.expected.toLowerCase().includes(searchLower)) ||
       (discrepancy.actual &&
@@ -47,7 +48,11 @@ export function DiscrepanciesTable({ data }: DiscrepanciesTableProps) {
     );
   });
 
-  const getSeverityColor = (severity: string) => {
+  const getSeverityColor = (severity: string | undefined) => {
+    if (!severity) {
+      return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+
     switch (severity.toLowerCase()) {
       case "error":
         return "bg-red-100 text-red-800 border-red-200";
@@ -59,7 +64,6 @@ export function DiscrepanciesTable({ data }: DiscrepanciesTableProps) {
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
-
 
   if (allDiscrepancies.length === 0) {
     return (
@@ -143,7 +147,7 @@ export function DiscrepanciesTable({ data }: DiscrepanciesTableProps) {
                     </TableCell>
                     <TableCell className="text-center">
                       <Badge className={getSeverityColor(discrepancy.severity)}>
-                        {discrepancy.severity}
+                        {discrepancy.severity || "unknown"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-center max-w-xs">
