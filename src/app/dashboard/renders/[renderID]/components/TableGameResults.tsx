@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useParams } from "next/navigation";
@@ -10,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useRendersQuery } from "@/hooks/renders/useRendersQuery";
 import { useFetchGamesCricket } from "@/hooks/games/useFetchGamesCricket";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -19,38 +17,41 @@ import { EyeIcon } from "lucide-react";
 export default function TableGamesResults() {
   const { renderID } = useParams();
 
-  // Fetch render details, including game IDs
-  const {
-    gameResults: gameIDs,
-    isLoading: isRenderLoading,
-    isError: isRenderError,
-    error: renderError,
-  } = useRendersQuery(renderID as string);
-
-  // Use the game IDs to fetch detailed game data
-  console.log("[gameIDs]", gameIDs);
+  // Fetch game fixtures directly using render ID
   const {
     data: gameData,
     isLoading: isGameLoading,
     isError: isGameError,
     error: gameError,
-  } = useFetchGamesCricket(gameIDs);
-
-  // Handle loading and error states for render
-  if (isRenderLoading) return <p>Loading render details...</p>;
-  if (isRenderError) return <p>Error loading render: {renderError?.message}</p>;
+  } = useFetchGamesCricket(renderID as string);
 
   // Handle loading and error states for games
   if (isGameLoading) return <p>Loading games...</p>;
   if (isGameError)
     return <p>Error loading games: {(gameError as Error)?.message}</p>;
 
-  // Check for game data
-  if (!gameData || gameData.length === 0) {
-    return <p>No games available.</p>;
-  }
+  // Debug game data
+  console.log("[gameData]", gameData);
+  console.log("[gameData length]", gameData?.length);
+  console.log("[gameData type]", typeof gameData);
+  console.log("[gameData isArray]", Array.isArray(gameData));
 
-  console.log(gameData);
+  // Check for game data
+  if (!gameData || !Array.isArray(gameData) || gameData.length === 0) {
+    return (
+      <div className="p-6">
+        <h4 className="mb-4 text-lg font-semibold">Games</h4>
+        <p>No games available.</p>
+        <div className="mt-4 text-sm text-gray-500">
+          <p>Debug info:</p>
+          <p>renderID: {renderID}</p>
+          <p>gameData: {JSON.stringify(gameData)}</p>
+          <p>isGameLoading: {isGameLoading.toString()}</p>
+          <p>isGameError: {isGameError.toString()}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -58,7 +59,7 @@ export default function TableGamesResults() {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Grade Name</TableHead>
+            <TableHead>Round</TableHead>
             <TableHead>Ground</TableHead>
             <TableHead>Teams</TableHead>
             <TableHead>Status</TableHead>
@@ -66,19 +67,12 @@ export default function TableGamesResults() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {gameData.map((game: any) => {
-            const { id, attributes } = game;
-
-            if (!attributes) return null; // Safeguard for missing attributes
-
-            const { grade, ground, teamHome, teamAway, status } = attributes;
-
-            // Extract gradeName safely
-            const gradeName = grade?.data?.gradeName || "N/A";
+          {gameData.map((fixture) => {
+            const { id, ground, teamHome, teamAway, status, round } = fixture;
 
             return (
               <TableRow key={id}>
-                <TableCell>{gradeName}</TableCell>
+                <TableCell>{round || "N/A"}</TableCell>
                 <TableCell>{ground || "N/A"}</TableCell>
                 <TableCell>
                   {teamHome || "N/A"} vs {teamAway || "N/A"}

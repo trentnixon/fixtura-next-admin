@@ -24,21 +24,21 @@ export function useRendersQuery(renderId: string): UseRendersQueryResult {
       const response = await fetchRenderById(renderId);
 
       // Transform grades to be an array of strings
-      const grades = response.attributes.grades_in_renders.data.map(grade =>
+      const grades = response.attributes.grades_in_renders.data.map((grade) =>
         grade.id.toString()
       );
 
       const gameResults =
-        response.attributes.game_results_in_renders?.data?.map(result =>
+        response.attributes.game_results_in_renders?.data?.map((result) =>
           result.id.toString()
-        );
+        ) || [];
       const upcomingGames =
-        response?.attributes.upcoming_games_in_renders?.data?.map(game =>
+        response?.attributes.upcoming_games_in_renders?.data?.map((game) =>
           game.id.toString()
-        );
+        ) || [];
       // Extract and format nested data
       const downloads =
-        response?.attributes.downloads?.data?.map(download => ({
+        response?.attributes.downloads?.data?.map((download) => ({
           ...download,
         })) || [];
 
@@ -53,7 +53,7 @@ export function useRendersQuery(renderId: string): UseRendersQueryResult {
     },
     enabled: !!renderId,
     retry: 3,
-    retryDelay: attempt => Math.min(1000 * 2 ** attempt, 10000), // Exponential backoff
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10000), // Exponential backoff
   });
 
   const { data } = queryResult;

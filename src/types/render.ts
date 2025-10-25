@@ -1,6 +1,22 @@
 import { Download } from "./download";
 import { GameMetaData } from "./gameMetaData";
 import { Scheduler } from "./scheduler";
+import { Fixture } from "./fixture";
+export interface RenderResponse {
+  render: RenderData;
+  fixtures: Fixture[];
+}
+
+export interface RenderData {
+  id: number;
+  name: string;
+  complete: boolean;
+  processing: boolean;
+  emailSent: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface RenderAttributes {
   Name: string;
   Processing: boolean;

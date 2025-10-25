@@ -1,38 +1,33 @@
 "use server";
 
 import axiosInstance from "@/lib/axios";
-import qs from "qs";
+import { RenderResponse } from "@/types/render";
+import { Fixture } from "@/types/fixture";
 
-import { GameMetaDataAttributes } from "@/types";
+export async function fetchGamesCricket(renderId: string): Promise<Fixture[]> {
+  console.log("[fetchGamesCricket] Input renderId:", renderId);
 
-export async function fetchGamesCricket(
-  gameMetaDataAttributes: string[]
-): Promise<GameMetaDataAttributes[]> {
-  if (!gameMetaDataAttributes.length) {
-    throw new Error(
-      "gameMetaDataAttributes array is empty. Provide valid IDs."
-    );
+  if (!renderId) {
+    throw new Error("renderId is required.");
   }
 
   try {
-    const query = qs.stringify(
-      {
-        filters: {
-          id: {
-            $in: gameMetaDataAttributes,
-          },
-        },
-      },
-      { encodeValuesOnly: true }
+    console.log(
+      "[fetchGamesCricket] Full URL:",
+      `/render/adminGetResultFixturesFromRender/${renderId}`
     );
 
-    const response = await axiosInstance.get<{
-      data: GameMetaDataAttributes[];
-    }>(`/game-meta-datas?${query}`);
+    const response = await axiosInstance.get<{ data: RenderResponse }>(
+      `/render/adminGetResultFixturesFromRender/${renderId}`
+    );
 
     console.log("[fetchGamesCricket] Response:", response.data);
+    console.log(
+      "[fetchGamesCricket] Fixtures length:",
+      response.data.data.fixtures?.length
+    );
 
-    return response.data.data;
+    return response.data.data.fixtures || [];
   } catch (error) {
     console.error("[Error] fetchGamesCricket failed:", error);
     throw new Error("Failed to fetch games cricket.");
