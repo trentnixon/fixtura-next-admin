@@ -14,10 +14,11 @@ import { fetchAccountAnalytics } from "@/lib/services/analytics/fetchAccountAnal
  */
 export async function GET(
   _request: unknown,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const accountId = params.id;
+    const resolvedParams = await params;
+    const accountId = resolvedParams.id;
     console.log("[API] GET /api/analytics/account/[id]", { accountId });
 
     if (!accountId) {
