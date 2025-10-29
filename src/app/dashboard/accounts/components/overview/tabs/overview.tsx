@@ -1,3 +1,5 @@
+"use client";
+
 import { CalendarIcon } from "lucide-react";
 import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccountDetails";
 import MetricCard from "./components/metricCard";
@@ -6,6 +8,7 @@ export default function OverviewTab({
   accountData,
 }: {
   accountData: fixturaContentHubAccountDetails;
+  accountId?: number;
 }) {
   // Metrics configuration array
   const metrics = [

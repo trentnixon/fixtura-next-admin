@@ -40,7 +40,6 @@ Detailed overview sub-components:
 
 Tab-based account information:
 
-- `AccountTabList.tsx`: Main tab list component
 - `competitions.tsx`: Competitions tab component
 - `overview.tsx`: Overview tab component
 - `renders.tsx`: Renders tab component

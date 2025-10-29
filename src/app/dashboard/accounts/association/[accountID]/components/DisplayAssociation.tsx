@@ -9,6 +9,68 @@ import OverviewTab from "../../../components/overview/tabs/overview";
 import RendersTab from "../../../components/overview/tabs/renders";
 import CompetitionsTab from "../../../components/overview/tabs/competitions";
 import { useParams } from "next/navigation";
+import AccountAnalyticsCards from "../../../components/overview/tabs/components/AccountAnalyticsCards";
+
+// Loading component
+const LoadingState = () => <p>Loading account details...</p>;
+
+// Error component
+const ErrorState = ({
+  error,
+  onRetry,
+}: {
+  error: Error | null;
+  onRetry: () => void;
+}) => (
+  <div>
+    <p>Error loading account: {error?.message}</p>
+    <button
+      onClick={onRetry}
+      className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+    >
+      Retry
+    </button>
+  </div>
+);
+
+// Tab labels configuration
+const TAB_LABELS = [
+  { id: "overview", label: "Overview" },
+  { id: "account", label: "Account" },
+  { id: "renders", label: "Renders" },
+  { id: "competitions", label: "Competitions" },
+  { id: "grades", label: "Grades" },
+  { id: "fixtures", label: "Fixtures" },
+  { id: "data", label: "Data" },
+] as const;
+
+// Render tab content based on id
+const renderTabContent = (
+  tabId: string,
+  accountData: fixturaContentHubAccountDetails,
+  accountID: string
+) => {
+  const accountId = Number(accountID);
+
+  switch (tabId) {
+    case "overview":
+      return <OverviewTab accountData={accountData} accountId={accountId} />;
+    case "account":
+      return <AccountAnalyticsCards accountId={accountId} />;
+    case "renders":
+      return <RendersTab accountData={accountData} accountId={accountId} />;
+    case "competitions":
+      return <CompetitionsTab />;
+    case "grades":
+      return <div>Coming soon: Grades</div>;
+    case "fixtures":
+      return <div>Coming soon: Fixtures</div>;
+    case "data":
+      return <div>Coming soon: Data</div>;
+    default:
+      return null;
+  }
+};
 
 export default function DisplayAssociation() {
   const { accountID } = useParams();
@@ -16,19 +78,10 @@ export default function DisplayAssociation() {
     accountID as string
   );
 
-  if (isLoading) return <p>Loading account details...</p>;
+  if (isLoading) return <LoadingState />;
 
   if (isError) {
-    return (
-      <div>
-        <p>Error loading account: {error?.message}</p>
-        <button
-          onClick={() => refetch()}
-          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-          Retry
-        </button>
-      </div>
-    );
+    return <ErrorState error={error} onRetry={refetch} />;
   }
 
   const accountData = data?.data;
@@ -42,31 +95,22 @@ export default function DisplayAssociation() {
         <div className="grid grid-cols-12 gap-4">
           <div className="col-span-9">
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="renders">Renders</TabsTrigger>
-                <TabsTrigger value="competitions">Competitions</TabsTrigger>
-                <TabsTrigger value="grades">Grades</TabsTrigger>
-                <TabsTrigger value="fixtures">Fixtures</TabsTrigger>
-                <TabsTrigger value="data">Data</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-7">
+                {TAB_LABELS.map((tab) => (
+                  <TabsTrigger key={tab.id} value={tab.id}>
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
               </TabsList>
-              <TabsContent value="overview">
-                <OverviewTab
-                  accountData={accountData as fixturaContentHubAccountDetails}
-                />
-              </TabsContent>
-              <TabsContent value="renders">
-                <RendersTab
-                  accountData={accountData as fixturaContentHubAccountDetails}
-                  accountId={Number(accountID)}
-                />
-              </TabsContent>
-              <TabsContent value="competitions">
-                <CompetitionsTab />
-              </TabsContent>
-              <TabsContent value="grades">tab4</TabsContent>
-              <TabsContent value="fixtures">tab5</TabsContent>
-              <TabsContent value="data">tab6</TabsContent>
+              {TAB_LABELS.map((tab) => (
+                <TabsContent key={tab.id} value={tab.id}>
+                  {renderTabContent(
+                    tab.id,
+                    accountData as fixturaContentHubAccountDetails,
+                    accountID as string
+                  )}
+                </TabsContent>
+              ))}
             </Tabs>
           </div>
           <div className="col-span-3 gap-4 space-y-4">

@@ -10,6 +10,7 @@ import {
   CalendarSync,
   Pickaxe,
   TestTube,
+  TrendingUp,
 } from "lucide-react";
 import { NavMain } from "@/components/scaffolding/layout/nav/nav-main";
 /* import { NavProjects } from "@/components/nav-projects"; */
@@ -70,6 +71,12 @@ const data = {
     },
   ],
   dataNav: [
+    {
+      title: "Analytics",
+      url: "/dashboard/analytics",
+      icon: TrendingUp,
+      isActive: true,
+    },
     {
       title: "Teams",
       url: "/dashboard/teams",

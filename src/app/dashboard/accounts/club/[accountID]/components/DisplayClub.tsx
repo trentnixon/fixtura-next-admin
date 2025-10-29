@@ -21,28 +21,82 @@ import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
 import OverviewTab from "../../../components/overview/tabs/overview";
 import RendersTab from "../../../components/overview/tabs/renders";
-import AccountTabList from "../../../components/overview/tabs/AccountTabList";
 import CompetitionsTab from "../../../components/overview/tabs/competitions";
 import { useParams } from "next/navigation";
+import AccountAnalyticsCards from "../../../components/overview/tabs/components/AccountAnalyticsCards";
+import { TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+// Loading component
+const LoadingState = () => <P>Loading account details...</P>;
+
+// Error component
+const ErrorState = ({
+  error,
+  onRetry,
+}: {
+  error: Error | null;
+  onRetry: () => void;
+}) => (
+  <div>
+    <p>Error loading account: {error?.message}</p>
+    <button
+      onClick={onRetry}
+      className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+    >
+      Retry
+    </button>
+  </div>
+);
+
+// Tab labels configuration
+const TAB_LABELS = [
+  { id: "overview", label: "Overview" },
+  { id: "account", label: "Account" },
+  { id: "renders", label: "Renders" },
+  { id: "competitions", label: "Competitions" },
+  { id: "grades", label: "Grades" },
+  { id: "fixtures", label: "Fixtures" },
+  { id: "data", label: "Data" },
+] as const;
+
+// Render tab content based on id
+const renderTabContent = (
+  tabId: string,
+  accountData: fixturaContentHubAccountDetails,
+  accountID: string
+) => {
+  const accountId = Number(accountID);
+
+  switch (tabId) {
+    case "overview":
+      return <OverviewTab accountData={accountData} />;
+    case "account":
+      return <AccountAnalyticsCards accountId={accountId} />;
+    case "renders":
+      return <RendersTab accountData={accountData} accountId={accountId} />;
+    case "competitions":
+      return <CompetitionsTab />;
+    case "grades":
+      return <div>Coming soon: Grades</div>;
+    case "fixtures":
+      return <div>Coming soon: Fixtures</div>;
+    case "data":
+      return <div>Coming soon: Data</div>;
+    default:
+      return null;
+  }
+};
+
 export default function DisplayClub() {
   const { accountID } = useParams();
   const { data, isLoading, isError, error, refetch } = useAccountQuery(
     accountID as string
   );
 
-  if (isLoading) return <P>Loading account details...</P>;
+  if (isLoading) return <LoadingState />;
 
   if (isError) {
-    return (
-      <div>
-        <p>Error loading account: {error?.message}</p>
-        <button
-          onClick={() => refetch()}
-          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-          Retry
-        </button>
-      </div>
-    );
+    return <ErrorState error={error} onRetry={refetch} />;
   }
 
   const accountData = data?.data;
@@ -57,6 +111,7 @@ export default function DisplayClub() {
       color: "#60a5fa",
     },
   } satisfies ChartConfig;
+
   const chartData = [
     { month: "January", desktop: 186, mobile: 80 },
     { month: "February", desktop: 305, mobile: 200 },
@@ -73,24 +128,22 @@ export default function DisplayClub() {
         <div className="grid grid-cols-12 gap-4">
           <div className="col-span-9">
             <Tabs defaultValue="overview" className="w-full">
-              <AccountTabList />
-              <TabsContent value="overview">
-                <OverviewTab
-                  accountData={accountData as fixturaContentHubAccountDetails}
-                />
-              </TabsContent>
-              <TabsContent value="renders">
-                <RendersTab
-                  accountData={accountData as fixturaContentHubAccountDetails}
-                  accountId={Number(accountID)}
-                />
-              </TabsContent>
-              <TabsContent value="competitions">
-                <CompetitionsTab />
-              </TabsContent>
-              <TabsContent value="grades">tab4</TabsContent>
-              <TabsContent value="fixtures">tab5</TabsContent>
-              <TabsContent value="data">tab6</TabsContent>
+              <TabsList className="grid w-full grid-cols-7">
+                {TAB_LABELS.map((tab) => (
+                  <TabsTrigger key={tab.id} value={tab.id}>
+                    {tab.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              {TAB_LABELS.map((tab) => (
+                <TabsContent key={tab.id} value={tab.id}>
+                  {renderTabContent(
+                    tab.id,
+                    accountData as fixturaContentHubAccountDetails,
+                    accountID as string
+                  )}
+                </TabsContent>
+              ))}
             </Tabs>
           </div>
           <div className="col-span-3 gap-4 space-y-4">
@@ -105,7 +158,7 @@ export default function DisplayClub() {
                   tickLine={false}
                   tickMargin={10}
                   axisLine={false}
-                  tickFormatter={value => value.slice(0, 3)}
+                  tickFormatter={(value) => value.slice(0, 3)}
                 />
                 <ChartTooltip content={<ChartTooltipContent />} />
                 <ChartLegend content={<ChartLegendContent />} />
