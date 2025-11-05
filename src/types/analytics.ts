@@ -961,7 +961,7 @@ export interface OverallChurnMetrics {
 /**
  * Performance metrics for cohort
  */
-export interface PerformanceMetrics {
+export interface CohortPerformanceMetrics {
   totalAccounts: number;
   convertedAccounts: number;
   conversionRate: number;
@@ -1114,7 +1114,7 @@ export interface CohortAnalysis {
 
   // Cohort Performance Metrics
   cohortPerformanceMetrics: {
-    performanceMetrics: Record<string, PerformanceMetrics>;
+    performanceMetrics: Record<string, CohortPerformanceMetrics>;
     overallPerformance: OverallPerformanceMetrics;
   };
 
