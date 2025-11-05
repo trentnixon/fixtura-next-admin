@@ -24,6 +24,9 @@ Layout and structural components for page organization:
 
 - `containers/createPage.tsx`: Page container with consistent spacing and layout
 - `containers/createPageTitle.tsx`: Title container component
+- `containers/SectionContainer.tsx`: Reusable card-based container for organizing components into logical sections
+- `containers/ComponentContainer.tsx`: Flexible wrapper component for individual components with styling variants
+- `containers/SectionWrapper.tsx`: Semantic wrapper for page sections with consistent spacing
 - `layout/Breadcrumbs.tsx`: Breadcrumb navigation component
 - `layout/Header.tsx`: Application header with authentication integration
 - `layout/nav/app-sidebar.tsx`: Main application sidebar navigation
@@ -34,8 +37,30 @@ Layout and structural components for page organization:
 
 Typography and text styling components:
 
-- `titles.tsx`: Comprehensive typography components (Title, Subtitle, SectionTitle, H1-H4, Label, ByLine)
+- `titles.tsx`: Comprehensive typography components (Title, PageTitle, Subtitle, SectionTitle, SubsectionTitle, H1-H4, Label, ByLine)
 - `type.tsx`: Additional type-related components
+
+### ui-library/
+
+Reusable UI component library for common patterns and states:
+
+- `states/LoadingState.tsx`: Standardized loading state display with multiple variants
+- `states/ErrorState.tsx`: Standardized error state with retry functionality
+- `states/EmptyState.tsx`: Standardized empty state display
+- `badges/StatusBadge.tsx`: Boolean status badge with automatic color coding
+- `metrics/StatCard.tsx`: Enhanced metric card with optional trend indicator
+- `metrics/MetricGrid.tsx`: Responsive grid container for metric cards
+
+Showcase: `/dashboard/ui` for interactive component testing with examples for:
+
+- Foundation (Typography, Colors, Icons, Layout)
+- Forms & Inputs
+- Feedback & States
+- Status & Indicators
+- Data Display
+- Overlays & Modals
+- Actions & Controls
+- Navigation (Breadcrumbs, Tabs, Sidebar, Pagination)
 
 ### ui/
 

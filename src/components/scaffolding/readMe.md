@@ -8,6 +8,11 @@ This folder contains layout and structural components that provide consistent pa
 
 - `createPage.tsx`: Page container component with consistent spacing, layout, and border styling
 - `createPageTitle.tsx`: Title container component for page headers and section titles
+- `PageContainer.tsx`: Top-level container for page content with configurable padding and spacing, no visual styling (borders/backgrounds)
+- `SectionContainer.tsx`: Card-based container for organizing components into logical sections with title, description, and optional action button. Used as a child of PageContainer
+- `ElementContainer.tsx`: Flexible container for individual UI elements, designed as a child of SectionContainer. Supports light/dark variants, optional border, and configurable padding/margin with optional title/subtitle
+- `ComponentContainer.tsx`: Flexible wrapper component for individual components with consistent spacing, borders, or background styling variants
+- `SectionWrapper.tsx`: Semantic wrapper for page sections that provides consistent spacing and layout, commonly used with SectionTitle
 
 ### layout/
 

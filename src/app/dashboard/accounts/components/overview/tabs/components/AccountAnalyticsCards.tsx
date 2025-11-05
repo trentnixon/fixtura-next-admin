@@ -34,12 +34,6 @@ export default function AccountAnalyticsCards({
     error: analyticsError,
   } = useAccountAnalytics(accountId.toString());
 
-  // Debug logging
-  console.log("[AccountAnalyticsCards] accountId:", accountId);
-  console.log("[AccountAnalyticsCards] analyticsData:", analyticsData);
-  console.log("[AccountAnalyticsCards] isLoading:", isAnalyticsLoading);
-  console.log("[AccountAnalyticsCards] error:", analyticsError);
-
   if (isAnalyticsLoading) {
     return (
       <div className="space-y-6">

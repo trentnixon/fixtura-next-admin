@@ -1,18 +1,5 @@
 # Development Roadmap – Dashboard Application
 
-## ✅ Completed
-
-- [x] Core dashboard structure with sidebar navigation and breadcrumbs
-- [x] Account management pages with overview, association, and club sections
-- [x] Competition management with grade and team associations
-- [x] Render management with comprehensive data visualization
-- [x] Scheduler management with rollup data and charting
-- [x] Team management with fixtures and upcoming games
-- [x] Download management for file operations
-- [x] Grade management for competition divisions
-- [x] Authentication integration with Clerk
-- [x] Responsive design and mobile-friendly layouts
-
 ## ⏳ To Do (easy → hard)
 
 1. **Page Enhancement**

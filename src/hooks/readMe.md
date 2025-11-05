@@ -9,6 +9,8 @@ This folder contains custom React hooks that provide data fetching, state manage
 - `useAccountQuery.ts`: Fetches individual account details by ID with caching
 - `useAccountsQuery.ts`: Retrieves paginated list of accounts with filtering
 - `useAccountSummaryQuery.ts`: Gets aggregated account statistics and analytics
+- `useUpdateAccountOnly.ts`: Mutation hook for triggering lightweight account metadata updates
+- `useAccountDataCollectionQuery.ts`: Fetches comprehensive account-specific data collection statistics including entity statistics, performance metrics, error analysis, temporal patterns, and time series data
 
 ### competitions/
 

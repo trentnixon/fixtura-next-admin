@@ -15,6 +15,11 @@ This folder contains API service functions that handle all external data fetchin
 - `fetchCompetitionByID.ts`: Retrieves single competition details with populated relations
 - `fetchCompetitions.ts`: Fetches account-specific competitions with organization filtering
 
+### data-collection/
+
+- `updateAccountOnly.ts`: Triggers lightweight account metadata updates via Redis Bull queue
+- `fetchAccountDataCollection.ts`: Fetches comprehensive account-specific data collection statistics including entity statistics, performance metrics, error analysis, temporal patterns, account health scoring, and time series data
+
 ### downloads/
 
 - `fetchDownloadByID.ts`: Gets download details by ID

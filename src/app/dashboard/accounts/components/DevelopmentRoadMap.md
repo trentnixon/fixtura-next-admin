@@ -15,35 +15,42 @@
 
 ## ⏳ To Do (easy → hard)
 
-1. **Component Enhancement**
+1. **Account Sync On-Demand** _(see TKT-2025-007 for details)_
+
+   - Implement `/api/data-collection/update-account-only` endpoint
+   - Create TanStack Query mutation hook for account sync
+   - Add sync button to Data tab component
+   - Implement error handling and user feedback
+
+2. **Component Enhancement**
 
    - Add loading states and skeleton components for all data components
    - Implement error handling and retry mechanisms
    - Add data validation and form validation
    - Create bulk action components for multiple account operations
 
-2. **User Experience Improvements**
+3. **User Experience Improvements**
 
    - Add keyboard shortcuts for common actions
    - Implement drag-and-drop functionality for account organization
    - Create customizable dashboard layouts
    - Add real-time notifications and updates
 
-3. **Data Visualization**
+4. **Data Visualization**
 
    - Enhance chart components with more chart types
    - Add interactive data exploration features
    - Implement data export functionality (CSV, PDF, Excel)
    - Create advanced analytics and reporting
 
-4. **Performance Optimizations**
+5. **Performance Optimizations**
 
    - Implement component lazy loading and code splitting
    - Add memoization for expensive components
    - Optimize data fetching and caching
    - Create virtual scrolling for large data sets
 
-5. **Advanced Features**
+6. **Advanced Features**
    - Add real-time data synchronization
    - Implement offline support with local caching
    - Create advanced user permissions and role management

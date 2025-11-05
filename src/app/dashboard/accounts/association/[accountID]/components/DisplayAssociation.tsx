@@ -5,9 +5,9 @@ import AccountTitle from "../../../components/ui/AccountTitle";
 import AccountBasics from "../../../components/overview/AccountBasics";
 import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccountDetails";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import OverviewTab from "../../../components/overview/tabs/overview";
 import RendersTab from "../../../components/overview/tabs/renders";
 import CompetitionsTab from "../../../components/overview/tabs/competitions";
+import DataTab from "../../../components/overview/tabs/Data";
 import { useParams } from "next/navigation";
 import AccountAnalyticsCards from "../../../components/overview/tabs/components/AccountAnalyticsCards";
 
@@ -35,13 +35,12 @@ const ErrorState = ({
 
 // Tab labels configuration
 const TAB_LABELS = [
-  { id: "overview", label: "Overview" },
   { id: "account", label: "Account" },
   { id: "renders", label: "Renders" },
+  { id: "data", label: "Data" },
   { id: "competitions", label: "Competitions" },
   { id: "grades", label: "Grades" },
   { id: "fixtures", label: "Fixtures" },
-  { id: "data", label: "Data" },
 ] as const;
 
 // Render tab content based on id
@@ -53,8 +52,6 @@ const renderTabContent = (
   const accountId = Number(accountID);
 
   switch (tabId) {
-    case "overview":
-      return <OverviewTab accountData={accountData} accountId={accountId} />;
     case "account":
       return <AccountAnalyticsCards accountId={accountId} />;
     case "renders":
@@ -66,7 +63,7 @@ const renderTabContent = (
     case "fixtures":
       return <div>Coming soon: Fixtures</div>;
     case "data":
-      return <div>Coming soon: Data</div>;
+      return <DataTab accountData={accountData} accountId={accountId} />;
     default:
       return null;
   }
@@ -94,7 +91,7 @@ export default function DisplayAssociation() {
       <div>
         <div className="grid grid-cols-12 gap-4">
           <div className="col-span-9">
-            <Tabs defaultValue="overview" className="w-full">
+            <Tabs defaultValue="account" className="w-full">
               <TabsList className="grid w-full grid-cols-7">
                 {TAB_LABELS.map((tab) => (
                   <TabsTrigger key={tab.id} value={tab.id}>

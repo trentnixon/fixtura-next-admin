@@ -4,6 +4,7 @@ import {
 } from "@/types/fixturaContentHubAccountDetails";
 import SchedulerDetailsGrid from "../components/SchedulerDetails";
 import ListRendersInTable from "../components/ListRendersInTable";
+import MetricsTable from "./components/MetricsTable";
 // TODO: Add Overview Tab
 export default function RendersTab({
   accountData,
@@ -18,7 +19,7 @@ export default function RendersTab({
         schedulerId={accountData?.scheduler.id as number}
         accountData={accountData as fixturaContentHubAccountDetails}
       />
-
+      <MetricsTable accountData={accountData} />
       <ListRendersInTable
         schedulerId={accountData?.scheduler.id as number}
         accountId={accountId}

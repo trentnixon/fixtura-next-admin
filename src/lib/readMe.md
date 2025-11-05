@@ -31,10 +31,10 @@ This folder contains core utilities, configurations, and shared functionality fo
 
 ### HTTP Client (`axios.ts`)
 
-- **Base Configuration**: 5-second timeout, JSON content type
+- **Base Configuration**: 60-second timeout, JSON content type
 - **Authentication**: Automatic Bearer token injection from environment variables
 - **Interceptors**: Request/response logging and error standardization
-- **Error Handling**: Enhanced error logging with status codes and response data
+- **Error Handling**: Enhanced error logging with status codes, response data, and timeout-specific error handling
 
 ### Query Management (`tanstack-query.ts`)
 

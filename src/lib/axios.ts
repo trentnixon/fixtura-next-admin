@@ -3,7 +3,7 @@ import axios, { AxiosError } from "axios";
 // Create an Axios instance
 const axiosInstance = axios.create({
   baseURL: process.env.NEXT_APP_API_BASE_URL, // Base URL for your CMS
-  timeout: 5000, // Timeout in milliseconds
+  timeout: 60000, // Timeout in milliseconds (60 seconds) - increased for slow API responses
   headers: {
     "Content-Type": "application/json",
   },
@@ -11,7 +11,7 @@ const axiosInstance = axios.create({
 
 // Request Interceptor
 axiosInstance.interceptors.request.use(
-  config => {
+  (config) => {
     const apiKey = process.env.APP_API_KEY; // Fetch the API key from .env
     if (apiKey) {
       config.headers["Authorization"] = `Bearer ${apiKey}`;
@@ -22,7 +22,7 @@ axiosInstance.interceptors.request.use(
     ); */
     return config;
   },
-  error => {
+  (error) => {
     console.error("[Request Error]", error);
     return Promise.reject(error); // Forward the error
   }
@@ -30,7 +30,7 @@ axiosInstance.interceptors.request.use(
 
 // Response Interceptor
 axiosInstance.interceptors.response.use(
-  response => {
+  (response) => {
     /* console.log(
       `[Response] ${response.status} ${response.config.url}`,
       response.data
@@ -48,7 +48,20 @@ axiosInstance.interceptors.response.use(
         }
       );
     } else if (error.request) {
-      console.error("[Request Error] No response received", error.request);
+      // Handle timeout errors specifically
+      if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {
+        console.error(
+          `[Request Timeout] ${error.config?.method?.toUpperCase()} ${
+            error.config?.url
+          }`,
+          {
+            timeout: error.config?.timeout,
+            message: error.message,
+          }
+        );
+      } else {
+        console.error("[Request Error] No response received", error.request);
+      }
     } else {
       console.error("[Axios Error] Configuration issue", error.message);
     }
@@ -56,6 +69,7 @@ axiosInstance.interceptors.response.use(
     // Throw a standardized error
     return Promise.reject({
       message: error.message,
+      code: error.code,
       ...(error.response && {
         status: error.response.status,
         data: error.response.data,

@@ -4,8 +4,9 @@ This folder contains typography and text styling components that provide consist
 
 ## Files
 
-- `titles.tsx`: Comprehensive typography components including Title, Subtitle, SectionTitle, H1-H4, Label, and ByLine with consistent styling
+- `titles.tsx`: Comprehensive typography components including Title, PageTitle, Subtitle, SectionTitle, SubsectionTitle, H1-H4, Label, and ByLine with consistent styling and JSDoc documentation
 - `type.tsx`: Additional type-related components and text styling utilities
+- `types.ts`: Shared TypeScript types and interfaces for typography components (TypographyProps, PolymorphicTypographyProps, TextVariant, TextWeight, HeadingLevel)
 
 ## Relations
 

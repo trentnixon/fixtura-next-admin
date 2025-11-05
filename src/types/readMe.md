@@ -13,7 +13,7 @@ This folder contains TypeScript type definitions and interfaces for the Fixtura 
 - `clubToCompetition.ts`: Junction table types for club-competition relationships
 - `competition.ts`: Competition entity types including CompetitionAttributes and CompetitionState
 - `customer.ts`: Customer-related types and interfaces
-- `dataCollection.ts`: Data collection and analytics type definitions
+- `dataCollection.ts`: Data collection and analytics type definitions including UpdateAccountOnlyRequest and UpdateAccountOnlyResponse interfaces
 - `download.ts`: Download entity types for file downloads and media assets
 - `fixturaContentHubAccountDetails.ts`: Specialized account details for content hub integration
 - `gameDataAFL.ts`: Australian Football League specific game data types
