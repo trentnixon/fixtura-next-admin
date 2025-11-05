@@ -67,12 +67,26 @@ Metric and statistic display components:
 
 Navigation components for page and content navigation:
 
-- **Breadcrumbs**: Navigation hierarchy with icons and ellipsis support
-- **Tabs**: Tab navigation with icons and variants
-- **Sidebar**: Sidebar navigation component with collapsible support
-- **Pagination**: Page navigation controls with multiple variants
+- **Tabs**: Tab navigation with brand color variants and fully rounded styling
+  - `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` components
+  - Variants: default, primary, secondary, accent
+  - Container: Fully rounded with brand color backgrounds
+  - Triggers: White background with rounded-full styling
+
+- **Pagination**: Complete pagination system with state management
+  - `Pagination`: Main wrapper with context-based state
+  - `PaginationPrevious`: Auto-disabled previous button
+  - `PaginationNext`: Auto-disabled next button
+  - `PaginationPages`: Smart page number buttons with ellipsis
+  - `PaginationPage`: Individual page button
+  - `PaginationEllipsis`: Ellipsis separator
+  - `PaginationInfo`: Page information with short/long formats
+  - Variants: default, primary, secondary, accent
+  - Fully rounded buttons and container
 
 Showcase examples available at `/dashboard/ui/navigation` with code snippets and usage guidelines.
+
+See `src/app/dashboard/ui/navigation/readMe.md` for detailed component documentation.
 
 ### Forms & Inputs
 

@@ -2,7 +2,7 @@
 
 import SectionWrapper from "@/components/scaffolding/containers/SectionWrapper";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
-import TypographyShowcase from "./_components/TypographyShowcase";
+import TypographyShowcase from "../type/_components/TypographyShowcase";
 import ColorSystemShowcase from "../colors/_components/ColorSystemShowcase";
 import IconSystemShowcase from "./_components/IconSystemShowcase";
 import SpacingSystemShowcase from "../layout/_components/SpacingSystemShowcase";

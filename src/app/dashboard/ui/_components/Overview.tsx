@@ -34,7 +34,7 @@ import Link from "next/link";
 export default function UIOverviewPage() {
   const stats = {
     total: 150,
-    completed: 52,
+    completed: 54,
     inProgress: 0,
   };
 
@@ -123,11 +123,11 @@ export default function UIOverviewPage() {
     },
     {
       title: "Navigation",
-      description: "Breadcrumbs, Tabs, Sidebar, Pagination",
+      description: "Tabs, Pagination (reusable components)",
       href: "/dashboard/ui/navigation",
       icon: Navigation,
       status: "partial",
-      completed: 4,
+      completed: 2,
     },
   ];
 
