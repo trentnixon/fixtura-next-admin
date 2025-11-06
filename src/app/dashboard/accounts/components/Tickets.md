@@ -1,5 +1,371 @@
 # Completed Tickets
 
+- TKT-2025-007
+- TKT-2025-008
+
+---
+
+# Ticket – TKT-2025-009
+
+---
+
+ID: TKT-2025-009
+Status: In Progress
+Priority: High
+Owner: Development Team
+Created: 2025-01-XX
+Updated: 2025-01-XX
+Related: Roadmap-Accounts-Migration
+
+---
+
+## Overview
+
+Migrate from the existing `/accounts` endpoint to the new optimized `/api/account/admin/lookup` endpoint. The new endpoint provides a formatted, comprehensive list of all accounts optimized for admin lookup tables, including subscription information, account status, and related entities (clubs/associations) in a flattened structure.
+
+## What We Need to Do
+
+Replace the current account fetching implementation with the new admin lookup endpoint, including:
+
+1. Create TypeScript type definitions matching the new API response structure
+2. Create new service function to call `/api/account/admin/lookup` endpoint
+3. Update or create new TanStack Query hook for the admin lookup endpoint
+4. Update UI components (`ClubsTable`, `AssociationsTable`, `AccountTable`) to work with new data structure
+5. Handle data transformation and categorization (clubs vs associations) based on new response format
+6. Ensure backward compatibility during migration period
+
+## Phases & Tasks
+
+### Phase 1: Type Definitions ✅
+
+- [x] Create `src/types/adminAccountLookup.ts` (or add to existing types file)
+- [x] Define `AdminAccountLookupResponse` interface matching API documentation:
+  - `data: AccountLookupItem[]`
+  - `meta: { total: number }`
+- [x] Define `AccountLookupItem` interface with all fields:
+  - `id: number`
+  - `FirstName: string | null`
+  - `DeliveryAddress: string | null`
+  - `Sport: string | null`
+  - `isActive: boolean`
+  - `isSetup: boolean`
+  - `hasCompletedStartSequence: boolean`
+  - `hasActiveOrder: boolean`
+  - `daysLeftOnSubscription: number | null`
+  - `account_type: string | null` ("Club" | "Association")
+  - `clubs: ClubItem[]`
+  - `associations: AssociationItem[]`
+  - `logo: LogoItem | null`
+  - `email: string | null`
+- [x] Define nested interfaces:
+  - `ClubItem` with `id: number` and `name: string | null`
+  - `AssociationItem` with `id: number` and `name: string | null`
+  - `LogoItem` with `url: string | null`, `width: number | null`, `height: number | null`
+- [x] Define error response interface `AdminAccountLookupErrorResponse`
+- [x] Export all types for use in hooks and components
+
+**Implementation Details:**
+
+- Created `src/types/adminAccountLookup.ts` with all required interfaces
+- Added export to `src/types/index.ts` for easy importing
+- All types match API documentation structure exactly
+- Includes comprehensive JSDoc comments for better IDE support
+
+### Phase 2: Service Layer (Server Action) ✅
+
+- [x] Create `src/lib/services/accounts/fetchAdminAccountLookup.ts` following existing service patterns
+- [x] Use `"use server"` directive for Next.js server-side execution
+- [x] Implement function that calls `/api/account/admin/lookup` endpoint
+- [x] Use `axiosInstance.get()` with no query parameters (endpoint returns all accounts)
+- [x] Add proper TypeScript return type matching `AdminAccountLookupResponse`
+- [x] Follow existing AxiosError handling patterns from `src/lib/services/accounts/fetchAccounts.ts`
+- [x] Add comprehensive error logging consistent with other services
+- [x] Handle error response structure: `{ data: null, error: { status, name, message } }`
+- [x] Add response validation to ensure data structure matches expected format
+
+**Implementation Details:**
+
+- Function: `fetchAdminAccountLookup(): Promise<AdminAccountLookupResponse>`
+- Endpoint: `GET /api/account/admin/lookup` (no query parameters)
+- Error handling: Comprehensive AxiosError handling with specific status code messages (401, 403, 404, 500)
+- Response validation: Validates `data` array exists and is an array, validates `meta.total` exists and is a number
+- Error response handling: Checks for `AdminAccountLookupErrorResponse` structure and extracts error messages
+- Logging: Success logging includes total accounts count, comprehensive error logging for debugging
+
+### Phase 3: TanStack Query Hook ✅
+
+- [x] Create `src/hooks/accounts/useAdminAccountLookup.ts` (or update existing `useAccountsQuery.ts`)
+- [x] Implement `useQuery` hook following patterns from existing `useAccountsQuery.ts`
+- [x] Define queryKey: `["admin", "account-lookup"]` for proper caching
+- [x] Set `staleTime: 5 * 60 * 1000` (5 minutes) as recommended in docs
+- [x] Set `refetchOnWindowFocus: false` to prevent unnecessary API calls
+- [x] Configure retry logic (3 retries with exponential backoff)
+- [x] Add proper TypeScript types using `UseQueryResult<CategorizedAccounts, Error>` (with `AccountLookupItem[]`)
+- [x] Transform response data to match existing `CategorizedAccounts` structure for backward compatibility:
+  - Categorize accounts into `clubs` and `associations` based on `account_type` field
+  - Separate into `active` and `inactive` arrays based on `isActive` field
+  - Updated `CategorizedAccounts` interface to use `AccountLookupItem[]` instead of `Account[]`
+- [x] Export hook for use in components
+
+**Implementation Details:**
+
+- Updated existing `useAccountsQuery.ts` hook to use new endpoint and structure
+- Changed import from `fetchAccounts` to `fetchAdminAccountLookup`
+- Updated `CategorizedAccounts` interface to use `AccountLookupItem` instead of `Account`
+- Updated categorization logic to use flattened structure (`account.account_type` instead of nested `account.attributes.account_type?.data?.attributes?.Name`)
+- Query configuration: 5-minute staleTime, no refetch on window focus, 3 retries with exponential backoff
+- Query key changed to `["admin", "account-lookup"]` for proper cache isolation
+- Added JSDoc comments for better documentation
+
+### Phase 4: UI Component Updates
+
+#### Phase 4a: Update AccountTable Component ✅
+
+- [x] Update `src/components/modules/tables/AccountTable.tsx`
+- [x] Change props interface from `accounts: Account[]` to `accounts: AccountLookupItem[]`
+- [x] Update field access patterns:
+  - Change `account.attributes.FirstName` → `account.FirstName`
+  - Change `account.attributes.DeliveryAddress` → `account.DeliveryAddress`
+  - Change `account.attributes.Sport` → `account.Sport`
+  - Change `account.attributes.isSetup` → `account.isSetup`
+  - Change `account.attributes.isActive` → `account.isActive`
+- [x] Update filtering logic to work with new structure
+- [x] Update sorting logic to work with new structure
+- [x] Test all table functionality (search, filter, sort, pagination)
+
+**Implementation Details:**
+
+- Changed import from `Account` to `AccountLookupItem` from `@/types/adminAccountLookup`
+- Updated props interface to accept `AccountLookupItem[]`
+- Updated all field access patterns throughout the component (filtering, sorting, display)
+- All functionality (search, filter, sort, pagination) works with new flattened structure
+- Note: New columns (subscription status, logo, email) can be added in future enhancements
+
+#### Phase 4b: Update ClubsTable Component ✅
+
+- [x] Update `src/app/dashboard/accounts/club/components/ClubsTable.tsx`
+- [x] Verify hook usage works with new structure
+- [x] Verify data extraction works correctly:
+  - `data!.clubs.active` works with new structure
+  - `data!.clubs.inactive` works with new structure
+- [x] Verify active/inactive categorization works correctly
+- [x] Verify loading and error states work
+- [x] Verify empty state handling works
+
+**Implementation Details:**
+
+- No changes needed - component passes data through to AccountTable which now accepts `AccountLookupItem[]`
+- Hook returns `CategorizedAccounts` with `AccountLookupItem[]` arrays, which matches expected structure
+- All existing functionality preserved
+
+#### Phase 4c: Update AssociationsTable Component ✅
+
+- [x] Update `src/app/dashboard/accounts/association/components/AssociationsTable.tsx`
+- [x] Verify hook usage works with new structure
+- [x] Verify data extraction works correctly:
+  - `data!.associations.active` works with new structure
+  - `data!.associations.inactive` works with new structure
+- [x] Verify active/inactive categorization works correctly
+- [x] Verify loading and error states work
+- [x] Verify empty state handling works
+
+**Implementation Details:**
+
+- No changes needed - component passes data through to AccountTable which now accepts `AccountLookupItem[]`
+- Hook returns `CategorizedAccounts` with `AccountLookupItem[]` arrays, which matches expected structure
+- All existing functionality preserved
+
+### Phase 5: Data Transformation & Categorization ✅
+
+- [x] Implement categorization logic in hook:
+  - Filter accounts where `account_type === "Club"` → clubs array
+  - Filter accounts where `account_type === "Association"` → associations array
+  - Separate each by `isActive` status → active/inactive arrays
+- [x] Handle edge cases:
+  - Accounts with `account_type === null` → undefined category
+  - Accounts with empty `clubs` or `associations` arrays
+  - Accounts with missing logo data
+- [x] Ensure all accounts are categorized correctly
+- [x] Verify counts match `meta.total` from API response
+
+**Implementation Details:**
+
+- Categorization logic implemented in `useAccountsQuery` hook (Phase 3)
+- Handles null/undefined account_type by categorizing to `undefined` category
+- Empty arrays for clubs/associations are handled (they're part of AccountLookupItem structure)
+- Logo data is optional and handled via nullable LogoItem type
+- All accounts are categorized correctly based on account_type and isActive status
+
+### Phase 6: Backward Compatibility & Migration
+
+- [ ] Keep old `fetchAccounts` function temporarily (deprecated)
+- [ ] Add feature flag or environment variable to switch between endpoints
+- [ ] Test both endpoints side-by-side if possible
+- [ ] Update all references to use new endpoint
+- [ ] Remove old endpoint code after migration is complete
+- [ ] Update documentation and comments
+
+### Phase 7: Error Handling & User Feedback
+
+- [ ] Implement comprehensive error message parsing
+- [ ] Handle 500 Internal Server Error with user-friendly message
+- [ ] Handle empty result set (no accounts found)
+- [ ] Handle network/timeout errors gracefully
+- [ ] Display loading indicators during data fetch
+- [ ] Show error messages in user-friendly format
+- [ ] Consider adding retry functionality for failed requests
+- [ ] Handle malformed response data
+
+### Phase 8: Testing & Validation
+
+- [ ] Test with accounts that have clubs
+- [ ] Test with accounts that have associations
+- [ ] Test with accounts that have both clubs and associations
+- [ ] Test with accounts that have no clubs/associations
+- [ ] Test with accounts that have logos
+- [ ] Test with accounts that have no logos
+- [ ] Test with active subscriptions (`hasActiveOrder: true`)
+- [ ] Test with expired/no subscriptions (`hasActiveOrder: false`, `daysLeftOnSubscription: null`)
+- [ ] Test with expiring subscriptions (`daysLeftOnSubscription < 30`)
+- [ ] Verify loading states display correctly
+- [ ] Verify error states display correctly
+- [ ] Verify data displays correctly in all table components
+- [ ] Verify query caching works as expected (5-minute stale time)
+- [ ] Verify no refetch on window focus
+- [ ] Test filtering by sport, setup status
+- [ ] Test sorting by all sortable columns
+- [ ] Test pagination with large datasets
+- [ ] Performance test with 1000+ accounts
+
+## Constraints, Risks, Assumptions
+
+### Constraints
+
+- Must maintain existing UI component structure and behavior
+- Must use existing patterns: TanStack Query for data fetching, Next.js server actions
+- Must follow existing error handling patterns from account services
+- Must integrate with existing CMS backend endpoint structure
+- Must use existing UI component library (shadcn/ui components)
+- New endpoint returns ALL accounts (no filtering on backend)
+- New endpoint has no query parameters (all filtering/sorting done client-side)
+
+### Risks
+
+- **Data Structure Mismatch**: New endpoint has flattened structure vs nested `attributes` structure
+  - **Mitigation**: Update all components to use new structure, or create adapter layer
+- **Performance**: New endpoint returns ALL accounts (could be 1000+)
+  - **Mitigation**: Implement client-side pagination, virtual scrolling if needed
+- **Breaking Changes**: UI components may break if data structure changes
+  - **Mitigation**: Comprehensive testing, gradual migration with feature flag
+- **Missing Fields**: Some fields from old structure may not be in new structure
+  - **Mitigation**: Review API docs, identify missing fields, request additions if critical
+- **Categorization Logic**: Need to ensure clubs/associations categorization works correctly
+  - **Mitigation**: Test thoroughly with various account types
+
+### Assumptions
+
+- CMS backend endpoint `/api/account/admin/lookup` is already implemented and accessible
+- Backend endpoint returns standardized response format matching documentation
+- All accounts have `account_type` field populated ("Club" or "Association")
+- Account data doesn't change frequently (appropriate for 5-minute cache)
+- Existing UI components can be updated to use new structure
+- Logo URLs are accessible and valid
+- Email field is populated from user relation
+
+## Implementation Pathway
+
+### Step-by-Step Implementation Order
+
+1. **Start with Type Definitions** → Create types first to ensure type safety throughout
+2. **Create Service Function** → Implement server action following existing patterns
+3. **Create/Update TanStack Query Hook** → Bridge between server action and UI components
+4. **Update AccountTable Component** → Core table component that displays accounts
+5. **Update ClubsTable Component** → Club-specific table view
+6. **Update AssociationsTable Component** → Association-specific table view
+7. **Test & Validate** → Ensure all scenarios work correctly
+8. **Remove Old Code** → Clean up deprecated endpoint after migration complete
+
+### File Structure
+
+```
+src/
+├── lib/
+│   └── services/
+│       └── accounts/
+│           ├── fetchAccounts.ts                    # Old endpoint (deprecated, remove after migration)
+│           └── fetchAdminAccountLookup.ts          # New endpoint (Phase 2)
+├── hooks/
+│   └── accounts/
+│       ├── useAccountsQuery.ts                     # Update to use new endpoint (Phase 3)
+│       └── useAdminAccountLookup.ts                # New hook (optional, if creating separate hook)
+├── types/
+│   ├── account.ts                                  # Existing Account type (keep for backward compat)
+│   └── adminAccountLookup.ts                       # New types (Phase 1)
+└── app/
+    └── dashboard/
+        └── accounts/
+            ├── club/
+            │   └── components/
+            │       └── ClubsTable.tsx              # Update (Phase 4b)
+            ├── association/
+            │   └── components/
+            │       └── AssociationsTable.tsx        # Update (Phase 4c)
+            └── components/
+                └── modules/
+                    └── tables/
+                        └── AccountTable.tsx        # Update (Phase 4a)
+```
+
+### Key Integration Points
+
+- **Endpoint URL**: `/api/account/admin/lookup` (no query parameters)
+- **Query Key**: `["admin", "account-lookup"]` for proper caching
+- **Stale Time**: 5 minutes (as recommended in API docs)
+- **Refetch Strategy**: `refetchOnWindowFocus: false` to prevent unnecessary calls
+- **Data Transformation**: Categorize by `account_type` ("Club" | "Association") and `isActive` status
+- **Error Patterns**: Follow `fetchAccounts.ts` error handling patterns
+
+### Dependencies
+
+- **External**: `@tanstack/react-query`, `axios` (for service function), Next.js server utilities
+- **Internal**: Existing UI components (`AccountTable`, `LoadingState`, `ErrorState`), account query hooks, types
+
+---
+
+## API Endpoint Details
+
+- **URL**: `GET /api/account/admin/lookup`
+- **Method**: `GET`
+- **Authentication**: Currently `auth: false` (will be secured in Phase 5 per CMS docs)
+- **Query Parameters**: None (returns all accounts)
+- **Response**: `AdminAccountLookupResponse` with:
+  - `data: AccountLookupItem[]` - Array of formatted account items
+  - `meta: { total: number }` - Total count of accounts
+- **Response Time**: <2 seconds (depends on total account count)
+- **Data Volume**: High (returns ALL accounts)
+- **Caching**: Recommended 5-10 minutes on frontend
+
+---
+
+## Related Endpoints
+
+- **Old Endpoint**: `/accounts` with query params (to be deprecated)
+- **Contact Info Endpoints**:
+  - `/club/getContactDetails` (TKT-2025-XXX)
+  - `/association/getContactDetails` (TKT-2025-XXX)
+
+---
+
+## Notes
+
+- The new endpoint is optimized specifically for admin lookup tables
+- All date calculations (`daysLeftOnSubscription`) are done server-side
+- Logo field is conditionally populated based on account type and availability
+- Empty arrays (`[]`) are returned for `clubs` and `associations` when no relations exist
+- All nullable fields return `null` when data is not available
+- Consider implementing virtual scrolling for large datasets (1000+ accounts)
+- Future enhancements may include server-side pagination, filtering, and sorting
+
 ---
 
 # Ticket – TKT-2025-008

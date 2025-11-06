@@ -3,6 +3,7 @@
 import { useAccountsQuery } from "@/hooks/accounts/useAccountsQuery";
 import { AccountTable } from "@/components/modules/tables/AccountTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import AccountStats from "@/app/dashboard/accounts/components/AccountStats";
 import AssociationEmails from "./associationEmails";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
@@ -31,6 +32,7 @@ export default function DisplayAssociationsTable() {
 
   const { active: activeAssociations, inactive: inactiveAssociations } =
     data!.associations;
+  const allAssociations = [...activeAssociations, ...inactiveAssociations];
 
   return (
     <>
@@ -38,10 +40,10 @@ export default function DisplayAssociationsTable() {
       <Tabs defaultValue="active">
         <TabsList variant="secondary" className="mb-4">
           <TabsTrigger value="active">
-            Active Associations ({activeAssociations.length})
+            Active Subscriptions ({activeAssociations.length})
           </TabsTrigger>
           <TabsTrigger value="inactive">
-            Inactive Associations ({inactiveAssociations.length})
+            Inactive Subscriptions ({inactiveAssociations.length})
           </TabsTrigger>
           <TabsTrigger value="all">
             Associations Contact Information
@@ -55,13 +57,13 @@ export default function DisplayAssociationsTable() {
           <TabsContent value="active">
             <AccountTable
               accounts={activeAssociations}
-              emptyMessage="No active associations available."
+              emptyMessage="No associations with active subscriptions available."
             />
           </TabsContent>
           <TabsContent value="inactive">
             <AccountTable
               accounts={inactiveAssociations}
-              emptyMessage="No inactive associations available."
+              emptyMessage="No associations with inactive subscriptions available."
             />
           </TabsContent>
           <TabsContent value="all">
@@ -69,6 +71,14 @@ export default function DisplayAssociationsTable() {
           </TabsContent>
         </SectionContainer>
       </Tabs>
+
+      {/* Stats Cards & Charts */}
+      <SectionContainer
+        title="Association Statistics"
+        description="Overview of association accounts and subscription status"
+      >
+        <AccountStats accounts={allAssociations} />
+      </SectionContainer>
     </>
   );
 }

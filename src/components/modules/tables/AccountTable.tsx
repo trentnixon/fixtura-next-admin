@@ -10,16 +10,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Account } from "@/types";
+import { AccountLookupItem } from "@/types/adminAccountLookup";
 import {
-  CheckIcon,
-  XIcon,
   Search,
   X,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  ImageIcon,
 } from "lucide-react";
+import { SubscriptionBadge } from "./SubscriptionBadge";
+import Image from "next/image";
 import { useRouter, usePathname } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import {
@@ -39,11 +40,11 @@ import {
 import EmptyState from "@/components/ui-library/states/EmptyState";
 
 interface AccountsTableProps {
-  accounts: Account[];
+  accounts: AccountLookupItem[];
   emptyMessage: string;
 }
 
-type SortField = "firstName" | "deliveryAddress" | "sport" | "isSetup" | null;
+type SortField = "firstName" | "sport" | "email" | "subscription" | null;
 type SortDirection = "asc" | "desc" | null;
 
 export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
@@ -53,7 +54,8 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
   // State for search, filters, sorting, and pagination
   const [searchQuery, setSearchQuery] = useState("");
   const [sportFilter, setSportFilter] = useState<string>("all");
-  const [setupFilter, setSetupFilter] = useState<string>("all");
+  const [clubFilter, setClubFilter] = useState<string>("all");
+  const [associationFilter, setAssociationFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -63,40 +65,81 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
   const uniqueSports = useMemo(() => {
     const sports = new Set<string>();
     accounts.forEach((account) => {
-      if (account.attributes.Sport) {
-        sports.add(account.attributes.Sport);
+      if (account.Sport) {
+        sports.add(account.Sport);
       }
     });
     return Array.from(sports).sort();
+  }, [accounts]);
+
+  // Get unique clubs for filter dropdown
+  const uniqueClubs = useMemo(() => {
+    const clubs = new Set<string>();
+    accounts.forEach((account) => {
+      account.clubs.forEach((club) => {
+        if (club.name) {
+          clubs.add(club.name);
+        }
+      });
+    });
+    return Array.from(clubs).sort();
+  }, [accounts]);
+
+  // Get unique associations for filter dropdown
+  const uniqueAssociations = useMemo(() => {
+    const associations = new Set<string>();
+    accounts.forEach((account) => {
+      account.associations.forEach((assoc) => {
+        if (assoc.name) {
+          associations.add(assoc.name);
+        }
+      });
+    });
+    return Array.from(associations).sort();
   }, [accounts]);
 
   // Filter data
   const filteredData = useMemo(() => {
     return accounts.filter((account) => {
       const id = account.id.toString();
-      const firstName = account.attributes.FirstName?.toLowerCase() || "";
-      const deliveryAddress =
-        account.attributes.DeliveryAddress?.toLowerCase() || "";
-      const sport = account.attributes.Sport?.toLowerCase() || "";
+      const firstName = account.FirstName?.toLowerCase() || "";
+      const sport = account.Sport?.toLowerCase() || "";
+      const email = account.email?.toLowerCase() || "";
 
+      // Get club names
+      const clubNames = account.clubs
+        .map((club) => club.name?.toLowerCase() || "")
+        .join(" ");
+
+      // Get association names
+      const associationNames = account.associations
+        .map((assoc) => assoc.name?.toLowerCase() || "")
+        .join(" ");
+
+      const searchLower = searchQuery.toLowerCase();
       const matchesSearch =
         searchQuery === "" ||
-        id.includes(searchQuery.toLowerCase()) ||
-        firstName.includes(searchQuery.toLowerCase()) ||
-        deliveryAddress.includes(searchQuery.toLowerCase()) ||
-        sport.includes(searchQuery.toLowerCase());
+        id.includes(searchLower) ||
+        firstName.includes(searchLower) ||
+        sport.includes(searchLower) ||
+        email.includes(searchLower) ||
+        clubNames.includes(searchLower) ||
+        associationNames.includes(searchLower);
 
       const matchesSport =
-        sportFilter === "all" || account.attributes.Sport === sportFilter;
+        sportFilter === "all" || account.Sport === sportFilter;
 
-      const matchesSetup =
-        setupFilter === "all" ||
-        (setupFilter === "setup" && account.attributes.isSetup === true) ||
-        (setupFilter === "not-setup" && account.attributes.isSetup === false);
+      const matchesClub =
+        clubFilter === "all" ||
+        account.clubs.some((club) => club.name === clubFilter);
 
-      return matchesSearch && matchesSport && matchesSetup;
+      const matchesAssociation =
+        associationFilter === "all" ||
+        account.associations.some((assoc) => assoc.name === associationFilter);
+
+      return matchesSearch && matchesSport && matchesClub && matchesAssociation;
     });
-  }, [accounts, searchQuery, sportFilter, setupFilter]);
+  }, [accounts, searchQuery, sportFilter, clubFilter, associationFilter]);
 
   // Sort data
   const sortedData = useMemo(() => {
@@ -108,20 +151,34 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
 
       switch (sortField) {
         case "firstName":
-          aValue = (a.attributes.FirstName || "").toLowerCase();
-          bValue = (b.attributes.FirstName || "").toLowerCase();
-          break;
-        case "deliveryAddress":
-          aValue = (a.attributes.DeliveryAddress || "").toLowerCase();
-          bValue = (b.attributes.DeliveryAddress || "").toLowerCase();
+          aValue = (a.FirstName || "").toLowerCase();
+          bValue = (b.FirstName || "").toLowerCase();
           break;
         case "sport":
-          aValue = (a.attributes.Sport || "").toLowerCase();
-          bValue = (b.attributes.Sport || "").toLowerCase();
+          aValue = (a.Sport || "").toLowerCase();
+          bValue = (b.Sport || "").toLowerCase();
           break;
-        case "isSetup":
-          aValue = a.attributes.isSetup ? 1 : 0;
-          bValue = b.attributes.isSetup ? 1 : 0;
+        case "email":
+          aValue = (a.email || "").toLowerCase();
+          bValue = (b.email || "").toLowerCase();
+          break;
+        case "subscription":
+          // Sort by hasActiveOrder first, then by daysLeftOnSubscription
+          if (a.hasActiveOrder !== b.hasActiveOrder) {
+            aValue = a.hasActiveOrder ? 1 : 0;
+            bValue = b.hasActiveOrder ? 1 : 0;
+            // For subscription sorting, we want active subscriptions first
+            // So we need to handle this differently in the comparison
+            if (sortDirection === "asc") {
+              return a.hasActiveOrder ? -1 : 1;
+            } else {
+              return a.hasActiveOrder ? 1 : -1;
+            }
+          } else {
+            // Both have same active status, sort by days left
+            aValue = a.daysLeftOnSubscription ?? -1;
+            bValue = b.daysLeftOnSubscription ?? -1;
+          }
           break;
         default:
           return 0;
@@ -181,14 +238,19 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
   const handleResetFilters = () => {
     setSearchQuery("");
     setSportFilter("all");
-    setSetupFilter("all");
+    setClubFilter("all");
+    setAssociationFilter("all");
     setSortField(null);
     setSortDirection(null);
     setCurrentPage(1);
   };
 
   const hasActiveFilters =
-    searchQuery || sportFilter !== "all" || setupFilter !== "all" || sortField;
+    searchQuery ||
+    sportFilter !== "all" ||
+    clubFilter !== "all" ||
+    associationFilter !== "all" ||
+    sortField;
 
   const handleNavigate = (accountId: number, type: string) => {
     router.push(`/dashboard/accounts/${type}/${accountId}`);
@@ -205,7 +267,7 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search by ID, Name, Address, or Sport..."
+            placeholder="Search by ID, Name, Email, Sport, Club, or Association..."
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
@@ -251,23 +313,51 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
           </Select>
         )}
 
-        {/* Setup Status Filter */}
-        <Select
-          value={setupFilter}
-          onValueChange={(value) => {
-            setSetupFilter(value);
-            setCurrentPage(1);
-          }}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Filter by setup" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="setup">Setup Complete</SelectItem>
-            <SelectItem value="not-setup">Not Setup</SelectItem>
-          </SelectContent>
-        </Select>
+        {/* Club Filter */}
+        {uniqueClubs.length > 0 && (
+          <Select
+            value={clubFilter}
+            onValueChange={(value) => {
+              setClubFilter(value);
+              setCurrentPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by club" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Clubs</SelectItem>
+              {uniqueClubs.map((club) => (
+                <SelectItem key={club} value={club}>
+                  {club}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
+
+        {/* Association Filter */}
+        {uniqueAssociations.length > 0 && (
+          <Select
+            value={associationFilter}
+            onValueChange={(value) => {
+              setAssociationFilter(value);
+              setCurrentPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by association" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Associations</SelectItem>
+              {uniqueAssociations.map((association) => (
+                <SelectItem key={association} value={association}>
+                  {association}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
 
         {/* Reset Filters */}
         {hasActiveFilters && (
@@ -294,6 +384,7 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[60px]">Logo</TableHead>
                 <TableHead>
                   <Button
                     variant="ghost"
@@ -309,13 +400,15 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleSort("deliveryAddress")}
+                    onClick={() => handleSort("email")}
                     className="h-auto p-0 font-semibold hover:bg-transparent"
                   >
-                    Delivery Address
-                    {getSortIcon("deliveryAddress")}
+                    Email
+                    {getSortIcon("email")}
                   </Button>
                 </TableHead>
+                <TableHead>Club</TableHead>
+                <TableHead>Association</TableHead>
                 <TableHead>
                   <Button
                     variant="ghost"
@@ -331,48 +424,119 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => handleSort("isSetup")}
+                    onClick={() => handleSort("subscription")}
                     className="h-auto p-0 font-semibold hover:bg-transparent"
                   >
-                    Is Setup
-                    {getSortIcon("isSetup")}
+                    Subscription
+                    {getSortIcon("subscription")}
                   </Button>
                 </TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginatedData.map((account) => (
-                <TableRow key={account.id}>
-                  <TableCell className="font-medium">
-                    {account.attributes.FirstName}
-                  </TableCell>
-                  <TableCell>{account.attributes.DeliveryAddress}</TableCell>
-                  <TableCell>{account.attributes.Sport}</TableCell>
-                  <TableCell>
-                    <div className="flex justify-center items-center">
-                      {account.attributes.isSetup ? (
-                        <CheckIcon className="w-4 h-4 text-success-500" />
+              {paginatedData.map((account) => {
+                // Check if account is expiring soon (<30 days)
+                const isExpiringSoon =
+                  account.hasActiveOrder &&
+                  account.daysLeftOnSubscription !== null &&
+                  account.daysLeftOnSubscription <= 30;
+
+                return (
+                  <TableRow
+                    key={account.id}
+                    className={
+                      isExpiringSoon
+                        ? "bg-yellow-50/50 hover:bg-yellow-100/50 border-l-4 border-l-yellow-500"
+                        : ""
+                    }
+                  >
+                    <TableCell>
+                      {account.logo?.url ? (
+                        <div className="flex items-center justify-center">
+                          <Image
+                            src={account.logo.url}
+                            alt={`${account.FirstName || "Account"} logo`}
+                            width={40}
+                            height={40}
+                            className="rounded object-contain"
+                            style={{
+                              maxWidth: "40px",
+                              maxHeight: "40px",
+                            }}
+                            unoptimized
+                          />
+                        </div>
                       ) : (
-                        <XIcon className="w-4 h-4 text-error-500" />
+                        <div className="flex items-center justify-center">
+                          <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                        </div>
                       )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      variant="primary"
-                      onClick={() =>
-                        handleNavigate(
-                          account.id,
-                          lastItemInPathname || "clubs"
-                        )
-                      }
-                    >
-                      View Account
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell className="font-medium">
+                      {account.FirstName}
+                    </TableCell>
+                    <TableCell>
+                      {account.email ? (
+                        <a
+                          href={`mailto:${account.email}`}
+                          className="text-primary hover:underline"
+                        >
+                          {account.email}
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {account.clubs.length > 0 ? (
+                        <div className="flex flex-col gap-1">
+                          {account.clubs.map((club) => (
+                            <span key={club.id} className="text-sm">
+                              {club.name || "—"}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {account.associations.length > 0 ? (
+                        <div className="flex flex-col gap-1">
+                          {account.associations.map((assoc) => (
+                            <span key={assoc.id} className="text-sm">
+                              {assoc.name || "—"}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">—</span>
+                      )}
+                    </TableCell>
+                    <TableCell>{account.Sport}</TableCell>
+                    <TableCell>
+                      <SubscriptionBadge
+                        hasActiveOrder={account.hasActiveOrder}
+                        daysLeftOnSubscription={account.daysLeftOnSubscription}
+                      />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="primary"
+                        onClick={() =>
+                          handleNavigate(
+                            account.id,
+                            lastItemInPathname || "clubs"
+                          )
+                        }
+                      >
+                        View Account
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
 
@@ -404,12 +568,18 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
       ) : (
         <EmptyState
           title={
-            searchQuery || sportFilter !== "all" || setupFilter !== "all"
+            searchQuery ||
+            sportFilter !== "all" ||
+            clubFilter !== "all" ||
+            associationFilter !== "all"
               ? "No results found"
               : "No accounts"
           }
           description={
-            searchQuery || sportFilter !== "all" || setupFilter !== "all"
+            searchQuery ||
+            sportFilter !== "all" ||
+            clubFilter !== "all" ||
+            associationFilter !== "all"
               ? "No accounts match your filters. Try adjusting your search or filters."
               : emptyMessage
           }

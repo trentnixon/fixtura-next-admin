@@ -46,6 +46,7 @@ Each category folder contains its own `readMe.md` with detailed documentation. F
 ### Data Display
 
 - **[`data/`](./data/readMe.md)**: Stat cards, metric grids, base cards
+- **[`charts/`](./charts/readMe.md)**: Chart containers, layouts, and visualization components
 - **[`tables/`](./tables/readMe.md)**: Data tables with pagination, search, filtering, sorting
 - **[`lists/`](./lists/readMe.md)**: List patterns including checklists, avatars, timelines, expandable lists
 
@@ -79,6 +80,7 @@ Each category folder contains its own `readMe.md` with detailed documentation. F
 - **Buttons**: [`actions/`](./actions/readMe.md) - Button variants, sizes, states
 - **Form Inputs**: [`forms/`](./forms/readMe.md) - All form input types
 - **Cards**: [`data/`](./data/readMe.md) - Stat cards, metric grids, base cards
+- **Charts**: [`charts/`](./charts/readMe.md) - Chart containers and layouts
 - **Tables**: [`tables/`](./tables/readMe.md) - Basic and advanced tables
 - **Lists**: [`lists/`](./lists/readMe.md) - Various list patterns
 - **Badges & Avatars**: [`status/`](./status/readMe.md) - Status indicators

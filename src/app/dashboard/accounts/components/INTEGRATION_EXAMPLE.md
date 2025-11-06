@@ -1,3 +1,10 @@
+# Integration Example: Adding Stats & Charts to Clubs Table
+
+## Example: Enhanced ClubsTable.tsx
+
+Here's how to integrate the new `AccountStats` component and enhanced subscription badges:
+
+```typescript
 "use client";
 
 import { useAccountsQuery } from "@/hooks/accounts/useAccountsQuery";
@@ -33,6 +40,14 @@ export default function DisplayClubsTable() {
 
   return (
     <>
+      {/* Stats Cards & Charts */}
+      <SectionContainer
+        title="Club Statistics"
+        description="Overview of club accounts and subscription status"
+      >
+        <AccountStats accounts={allClubs} title="Club Accounts" />
+      </SectionContainer>
+
       {/* Active Accounts Table */}
       <Tabs defaultValue="active">
         <TabsList variant="secondary" className="mb-4">
@@ -42,7 +57,6 @@ export default function DisplayClubsTable() {
           <TabsTrigger value="inactive">
             Inactive Subscriptions ({inactiveClubs.length})
           </TabsTrigger>
-          {/* <TabsTrigger value="all">Clubs Contact Information</TabsTrigger> */}
         </TabsList>
 
         <SectionContainer
@@ -66,14 +80,41 @@ export default function DisplayClubsTable() {
           </TabsContent>
         </SectionContainer>
       </Tabs>
-
-      {/* Stats Cards & Charts */}
-      <SectionContainer
-        title="Club Statistics"
-        description="Overview of club accounts and subscription status"
-      >
-        <AccountStats accounts={allClubs} />
-      </SectionContainer>
     </>
   );
 }
+```
+
+## Example: Using SubscriptionBadge in AccountTable
+
+Update the subscription cell in `AccountTable.tsx`:
+
+```typescript
+import { SubscriptionBadge } from "@/components/modules/tables/SubscriptionBadge";
+
+// In the table body, replace the subscription cell:
+<TableCell>
+  <SubscriptionBadge
+    hasActiveOrder={account.hasActiveOrder}
+    daysLeftOnSubscription={account.daysLeftOnSubscription}
+  />
+</TableCell>;
+```
+
+## Quick Start Checklist
+
+- [ ] Import `AccountStats` component
+- [ ] Add stats section above the table tabs
+- [ ] Pass all accounts (active + inactive) to `AccountStats`
+- [ ] Import `SubscriptionBadge` component
+- [ ] Replace subscription cell content with `SubscriptionBadge`
+- [ ] Test with different subscription statuses
+- [ ] Verify charts render correctly
+- [ ] Check responsive design on mobile
+
+## Notes
+
+- Stats are calculated client-side from existing data (no extra API calls)
+- Charts use `recharts` library (already in project)
+- All components follow existing design patterns
+- Stats update automatically when accounts data changes

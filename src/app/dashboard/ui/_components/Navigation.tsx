@@ -19,6 +19,7 @@ import {
   Sparkles,
   List,
   SquareStack,
+  BarChart3,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -90,6 +91,13 @@ const categories = [
     icon: SquareStack,
     path: "/dashboard/ui/data",
     description: "Stat Cards, Metric Grids, Base Cards",
+  },
+  {
+    id: "charts",
+    label: "Charts",
+    icon: BarChart3,
+    path: "/dashboard/ui/charts",
+    description: "Chart containers, layouts, and visualization",
   },
   {
     id: "tables",

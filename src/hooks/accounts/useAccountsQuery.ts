@@ -1,27 +1,38 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { fetchAccounts } from "@/lib/services/accounts/fetchAccounts";
-import { Account } from "@/types/account";
+import { fetchAdminAccountLookup } from "@/lib/services/accounts/fetchAdminAccountLookup";
+import { AccountLookupItem } from "@/types/adminAccountLookup";
 
 interface CategorizedAccounts {
   clubs: {
-    active: Account[];
-    inactive: Account[];
+    active: AccountLookupItem[];
+    inactive: AccountLookupItem[];
   };
   associations: {
-    active: Account[];
-    inactive: Account[];
+    active: AccountLookupItem[];
+    inactive: AccountLookupItem[];
   };
   undefined: {
-    active: Account[];
-    inactive: Account[];
+    active: AccountLookupItem[];
+    inactive: AccountLookupItem[];
   };
 }
 
+/**
+ * React Query hook for fetching and categorizing all accounts from the admin lookup endpoint.
+ *
+ * Fetches all accounts and categorizes them into clubs/associations and active/inactive groups.
+ * Active accounts have an active subscription (hasActiveOrder === true).
+ * Inactive accounts have no active subscription (hasActiveOrder === false).
+ * Uses the optimized admin lookup endpoint which provides formatted account data including
+ * subscription information, account status, and related entities.
+ *
+ * @returns UseQueryResult with categorized accounts data
+ */
 export function useAccountsQuery(): UseQueryResult<CategorizedAccounts, Error> {
   return useQuery<CategorizedAccounts, Error>({
-    queryKey: ["accounts"], // Cache key for the query
+    queryKey: ["admin", "account-lookup"], // Cache key for the query
     queryFn: async () => {
-      const { data: accounts } = await fetchAccounts();
+      const response = await fetchAdminAccountLookup();
 
       const categorizedAccounts: CategorizedAccounts = {
         clubs: { active: [], inactive: [] },
@@ -29,25 +40,26 @@ export function useAccountsQuery(): UseQueryResult<CategorizedAccounts, Error> {
         undefined: { active: [], inactive: [] },
       };
 
-      // Categorize accounts
-      accounts.forEach(account => {
-        const accountType =
-          account.attributes.account_type?.data?.attributes?.Name;
+      // Categorize accounts based on account_type and subscription status (hasActiveOrder)
+      response.data.forEach((account) => {
+        const accountType = account.account_type;
+        const hasActiveSubscription = account.hasActiveOrder;
 
         if (accountType === "Club") {
-          if (account.attributes.isActive) {
+          if (hasActiveSubscription) {
             categorizedAccounts.clubs.active.push(account);
           } else {
             categorizedAccounts.clubs.inactive.push(account);
           }
         } else if (accountType === "Association") {
-          if (account.attributes.isActive) {
+          if (hasActiveSubscription) {
             categorizedAccounts.associations.active.push(account);
           } else {
             categorizedAccounts.associations.inactive.push(account);
           }
         } else {
-          if (account.attributes.isActive) {
+          // Handle accounts with null or undefined account_type
+          if (hasActiveSubscription) {
             categorizedAccounts.undefined.active.push(account);
           } else {
             categorizedAccounts.undefined.inactive.push(account);
@@ -57,6 +69,9 @@ export function useAccountsQuery(): UseQueryResult<CategorizedAccounts, Error> {
 
       return categorizedAccounts;
     },
-    // Global `staleTime` and `cacheTime` from `queryClient` apply here
+    staleTime: 5 * 60 * 1000, // 5 minutes - as recommended in API docs
+    refetchOnWindowFocus: false, // Prevent unnecessary API calls on window focus
+    retry: 3, // Retry failed requests
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff (up to 10 seconds)
   });
 }
