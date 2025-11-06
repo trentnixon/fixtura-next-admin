@@ -26,7 +26,7 @@ export interface ChartCardProps {
   chartClassName?: string;
   cardClassName?: string;
   variant?: "default" | "elevated";
-  children: React.ReactNode;
+  children: React.ReactElement;
 }
 
 /**
