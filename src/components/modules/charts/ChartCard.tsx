@@ -26,7 +26,7 @@ export interface ChartCardProps {
   chartClassName?: string;
   cardClassName?: string;
   variant?: "default" | "elevated";
-  children: React.ReactElement;
+  children?: React.ReactElement | null;
 }
 
 /**
@@ -68,7 +68,7 @@ export default function ChartCard({
   variant = "default",
   children,
 }: ChartCardProps) {
-  const hasData = React.Children.count(children) > 0;
+  const hasData = children != null && React.Children.count(children) > 0;
 
   return (
     <Card
@@ -107,7 +107,7 @@ export default function ChartCard({
               variant={variant}
               className={cn("h-[300px] w-full", chartClassName)}
             >
-              {children}
+              {children!}
             </ChartContainer>
           </>
         )}
