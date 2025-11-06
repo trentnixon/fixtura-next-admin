@@ -12,6 +12,7 @@ import RecentCollectionsTable from "./collections/RecentCollectionsTable";
 import PerformanceOverTimeChart from "./charts/PerformanceOverTimeChart";
 import ErrorsOverTimeChart from "./charts/ErrorsOverTimeChart";
 import CollectionsFrequencyChart from "./charts/CollectionsFrequencyChart";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 
 interface GlobalInsightsDashboardProps {
   data: GlobalInsightsData;
@@ -29,11 +30,16 @@ export default function GlobalInsightsDashboard({
   return (
     <div className="space-y-6">
       {/* Summary Cards - Always Visible */}
-      <SummaryCards data={data} />
+      <SectionContainer
+        title="Data Collection Insights"
+        description="Global insights into data collection performance and metrics"
+      >
+        <SummaryCards data={data} />
+      </SectionContainer>
 
       {/* Tabbed Sections */}
       <Tabs defaultValue="accounts" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList variant="primary" className="">
           <TabsTrigger value="accounts">Accounts</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="temporal">Temporal</TabsTrigger>

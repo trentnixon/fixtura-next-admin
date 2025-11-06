@@ -1,64 +1,45 @@
-// QuickView.tsx
 "use client";
 import { useGetTodaysRenders } from "@/hooks/scheduler/useGetTodaysRenders";
-import MetricCard from "../accounts/components/overview/tabs/components/metricCard";
+import StatCard from "@/components/ui-library/metrics/StatCard";
+import MetricGrid from "@/components/ui-library/metrics/MetricGrid";
 import { TodaysRenders } from "@/types/scheduler";
-import { CalendarIcon } from "lucide-react";
+import { PlayCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useAccountSummaryQuery } from "@/hooks/accounts/useAccountSummaryQuery";
+
 export default function LiveOverview() {
   const { data } = useGetTodaysRenders();
-  const { data: accountSummary } = useAccountSummaryQuery();
 
-  const useAccountSummary = accountSummary?.data;
-  console.log(useAccountSummary);
   const renderingCount = getRenderingCount(data ?? []);
   const queuedCount = getQueuedCount(data ?? []);
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="col-span-12 gap-4 space-y-4">
-        <div className="grid grid-cols-12 gap-4">
-          <div className="col-span-8">here</div>
-          {/* Right Side */}
-          <div className=" grid col-span-4 gap-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <MetricCard
-                  title={"Accounts Still Rendering"}
-                  value={renderingCount}
-                  icon={
-                    <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />
-                  }
-                  lastUpdate={"From today"}
-                  action={
-                    <Button variant="outline">
-                      <Link href="/dashboard/schedulers">Schedulers</Link>
-                    </Button>
-                  }
-                />
-              </div>
-              <div>
-                <MetricCard
-                  title={"Accounts Still Queued"}
-                  value={queuedCount}
-                  icon={
-                    <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />
-                  }
-                  lastUpdate={"From today"}
-                  action={
-                    <Button variant="outline">
-                      <Link href="/dashboard/schedulers">Schedulers</Link>
-                    </Button>
-                  }
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <MetricGrid columns={2} gap="lg">
+      <StatCard
+        title="Accounts Still Rendering"
+        value={renderingCount}
+        description="From today"
+        icon={<PlayCircle className="h-5 w-5" />}
+        variant="primary"
+        action={
+          <Button variant="primary" asChild>
+            <Link href="/dashboard/schedulers">View Schedulers</Link>
+          </Button>
+        }
+      />
+      <StatCard
+        title="Accounts Still Queued"
+        value={queuedCount}
+        description="From today"
+        icon={<Clock className="h-5 w-5" />}
+        variant="secondary"
+        action={
+          <Button variant="primary" asChild>
+            <Link href="/dashboard/schedulers">View Schedulers</Link>
+          </Button>
+        }
+      />
+    </MetricGrid>
   );
 }
 

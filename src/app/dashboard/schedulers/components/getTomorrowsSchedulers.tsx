@@ -1,6 +1,4 @@
-// getTodaysSchedulers.tsx
 "use client";
-import { SectionTitle } from "@/components/type/titles";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -13,9 +11,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGetTomorrowsRenders } from "@/hooks/scheduler/useGetTomorrowsRenders";
 import { TodaysRenders } from "@/types";
-import { EyeIcon, XIcon } from "lucide-react";
-import { CheckIcon } from "lucide-react";
+import { EyeIcon, XIcon, CheckIcon } from "lucide-react";
 import Link from "next/link";
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
 
 export default function GetTomorrowsSchedulers() {
   const { data } = useGetTomorrowsRenders();
@@ -25,40 +23,39 @@ export default function GetTomorrowsSchedulers() {
     if (a.accountSport > b.accountSport) return 1;
     return 0;
   });
-  // form two objs filkter on accountType (Club and Association)
+  // form two objs filter on accountType (Club and Association)
   const clubSchedulers =
-    sortedData?.filter(scheduler => scheduler.accountType === "Club") ?? [];
+    sortedData?.filter((scheduler) => scheduler.accountType === "Club") ?? [];
   const associationSchedulers =
-    sortedData?.filter(scheduler => scheduler.accountType === "Association") ??
-    [];
+    sortedData?.filter(
+      (scheduler) => scheduler.accountType === "Association"
+    ) ?? [];
   return (
-    <Tabs defaultValue="club">
-      <div className="flex flex-row justify-between items-center">
-        <SectionTitle>Tomorrows Schedulers ({data?.length || 0})</SectionTitle>
-        <TabsList>
+    <ElementContainer
+      title={`Tomorrow's Schedulers (${data?.length || 0})`}
+      subtitle="View schedulers scheduled for tomorrow by account type"
+    >
+      <Tabs defaultValue="club">
+        <TabsList variant="secondary" className="mb-4">
           <TabsTrigger value="club">Club ({clubSchedulers.length})</TabsTrigger>
           <TabsTrigger value="association">
             Association ({associationSchedulers.length})
           </TabsTrigger>
         </TabsList>
-      </div>
-      <div className="mt-4">
-        <div className="bg-slate-50 rounded-lg px-4 py-2 shadow-none border">
-          <TabsContent value="club">
-            <Table className="mt-2">
-              <SchedulerTableHeader />
-              <SchedulerTableBody data={clubSchedulers} />
-            </Table>
-          </TabsContent>
-          <TabsContent value="association">
-            <Table className="mt-2">
-              <SchedulerTableHeader />
-              <SchedulerTableBody data={associationSchedulers} />
-            </Table>
-          </TabsContent>
-        </div>
-      </div>
-    </Tabs>
+        <TabsContent value="club">
+          <Table>
+            <SchedulerTableHeader />
+            <SchedulerTableBody data={clubSchedulers} />
+          </Table>
+        </TabsContent>
+        <TabsContent value="association">
+          <Table>
+            <SchedulerTableHeader />
+            <SchedulerTableBody data={associationSchedulers} />
+          </Table>
+        </TabsContent>
+      </Tabs>
+    </ElementContainer>
   );
 }
 
@@ -80,49 +77,51 @@ const SchedulerTableHeader = () => {
 const SchedulerTableBody = ({ data }: { data: TodaysRenders[] }) => {
   return (
     <TableBody>
-      {data?.map(scheduler => (
+      {data?.map((scheduler) => (
         <TableRow key={scheduler.schedulerId}>
-          <TableCell className="text-left">{scheduler.accountName}</TableCell>
+          <TableCell className="text-left font-medium">
+            {scheduler.accountName}
+          </TableCell>
           <TableCell className="text-center">
             {scheduler.accountSport}
           </TableCell>
           <TableCell className="text-center">
             {!scheduler.isRendering ? (
               <div className="flex justify-center items-center">
-                <CheckIcon className="text-green-500 w-4 h-4" />
+                <CheckIcon className="text-success-500 w-4 h-4" />
               </div>
             ) : (
               <div className="flex justify-center items-center">
-                <XIcon className="text-red-500 w-4 h-4" />
+                <XIcon className="text-error-500 w-4 h-4" />
               </div>
             )}
           </TableCell>
           <TableCell className="text-center">
             {!scheduler.queued ? (
               <div className="flex justify-center items-center">
-                <CheckIcon className="text-green-500 w-4 h-4" />
+                <CheckIcon className="text-success-500 w-4 h-4" />
               </div>
             ) : (
               <div className="flex justify-center items-center">
-                <XIcon className="text-red-500 w-4 h-4" />
+                <XIcon className="text-error-500 w-4 h-4" />
               </div>
             )}
           </TableCell>
-
           <TableCell className="text-center">
             <Link
               href={`/dashboard/accounts/${scheduler.accountType.toLowerCase()}/${
                 scheduler.accountId
-              }`}>
-              <Button variant="outline">
-                <EyeIcon size="16" />
+              }`}
+            >
+              <Button variant="primary" size="icon">
+                <EyeIcon className="h-4 w-4" />
               </Button>
             </Link>
           </TableCell>
           <TableCell className="text-center">
             <Link href={`/dashboard/schedulers/${scheduler.schedulerId}`}>
-              <Button variant="outline">
-                <EyeIcon size="16" />
+              <Button variant="secondary" size="icon">
+                <EyeIcon className="h-4 w-4" />
               </Button>
             </Link>
           </TableCell>

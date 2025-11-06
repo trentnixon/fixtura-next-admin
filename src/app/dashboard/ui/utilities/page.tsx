@@ -1,10 +1,8 @@
 "use client";
 
-import SectionWrapper from "@/components/scaffolding/containers/SectionWrapper";
-import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
-import EmptyState from "@/components/ui-library/states/EmptyState";
-import { Clock } from "lucide-react";
+import UtilitiesShowcase from "./_components/UtilitiesShowcase";
 
 /**
  * Utilities Category Page
@@ -20,20 +18,9 @@ export default function UtilitiesPage() {
         byLineBottom="Utility and helper components"
       />
 
-      <SectionWrapper spacing="lg" title="Coming Soon">
-        <SectionContainer
-          title="Utility Components"
-          description="Copy to clipboard, time formatting, currency, number formatting, and search components"
-        >
-          <EmptyState
-            title="Utility Components"
-            description="Utility components are being built. Check back soon!"
-            icon={<Clock className="h-12 w-12 text-muted-foreground" />}
-            variant="card"
-          />
-        </SectionContainer>
-      </SectionWrapper>
+      <PageContainer padding="xs" spacing="lg">
+        <UtilitiesShowcase />
+      </PageContainer>
     </>
   );
 }
-

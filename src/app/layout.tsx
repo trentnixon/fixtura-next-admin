@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { AppSidebar } from "@/components/scaffolding/layout/nav/app-sidebar";
 import CustomBreadcrumbs from "@/components/scaffolding/layout/Breadcrumbs";
 import QueryProvider from "@/components/providers/QueryProvider";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { GlobalProvider } from "@/components/providers/GlobalContext";
 
@@ -44,7 +45,8 @@ export default async function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body
-          className={`  ${heebo.variable} ${roboto.variable} ${robotoCondensed.variable} antialiased `}>
+          className={`  ${heebo.variable} ${roboto.variable} ${robotoCondensed.variable} antialiased `}
+        >
           <QueryProvider>
             <GlobalProvider>
               <SidebarProvider>
@@ -62,6 +64,7 @@ export default async function RootLayout({
                   </main>
                 </SidebarInset>
               </SidebarProvider>
+              <Toaster />
             </GlobalProvider>
           </QueryProvider>
         </body>

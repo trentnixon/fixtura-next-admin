@@ -1,11 +1,10 @@
 import { SchedulerRollupData } from "@/app/dashboard/components/SchedulerRollupData";
-import { SectionTitle } from "@/components/type/titles";
 import { auth } from "@clerk/nextjs/server";
 import LiveOverview from "./components/LiveOverview";
-import CreatePage from "@/components/scaffolding/containers/createPage";
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { GlobalDataCollectionInsights } from "./components/GlobalDataCollectionInsights";
-//import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
   // Retrieve the user's authentication details
@@ -18,25 +17,38 @@ export default async function DashboardPage() {
   }
 
   return (
-    <CreatePage>
-      <CreatePageTitle title="Fixtura Admin Dashboard" byLine="Overview" />
+    <>
+      <CreatePageTitle
+        title="Fixtura Admin Dashboard"
+        byLine="Overview and monitoring"
+        byLineBottom="Real-time insights into schedulers, renders, and data collection"
+      />
+      <PageContainer padding="xs" spacing="lg">
+        <SectionContainer
+          title="Live Overview"
+          description="Current status of rendering and queued accounts"
+        >
+          <LiveOverview />
+        </SectionContainer>
 
-      <section className="flex flex-col gap-8 my-8">
-        <SectionTitle>LIVE</SectionTitle>
-        <LiveOverview />
-      </section>
+        <SectionContainer
+          title="Schedulers"
+          description="Scheduler metrics and expected renders"
+        >
+          <SchedulerRollupData />
+        </SectionContainer>
 
-      <section className="flex flex-col gap-4 my-4">
-        <SectionTitle>Schedulers</SectionTitle>
-        <SchedulerRollupData />
-      </section>
-      <section className="flex flex-col gap-4 my-4">
-        <SectionTitle>Data Collection Insights</SectionTitle>
         <GlobalDataCollectionInsights />
-      </section>
-      <section className="flex flex-col gap-4 my-4">
-        <SectionTitle>Renders</SectionTitle>
-      </section>
-    </CreatePage>
+
+        <SectionContainer
+          title="Renders"
+          description="Render statistics and analytics"
+        >
+          <div className="text-sm text-muted-foreground">
+            Render details coming soon...
+          </div>
+        </SectionContainer>
+      </PageContainer>
+    </>
   );
 }

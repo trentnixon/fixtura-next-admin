@@ -1,14 +1,8 @@
 "use client";
 
 import { useGlobalInsights } from "@/hooks/data-collection/useGlobalInsights";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import LoadingState from "@/components/ui-library/states/LoadingState";
+import ErrorState from "@/components/ui-library/states/ErrorState";
 import GlobalInsightsDashboard from "./global-insights/GlobalInsightsDashboard";
 
 /**
@@ -21,46 +15,25 @@ export function GlobalDataCollectionInsights() {
   const { data, isLoading, error } = useGlobalInsights();
 
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <Skeleton className="h-6 w-64" />
-            <Skeleton className="h-4 w-96 mt-2" />
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {[...Array(4)].map((_, i) => (
-                <Skeleton key={i} className="h-24 w-full" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <LoadingState variant="default" />;
   }
 
   if (error) {
     return (
-      <Card className="border-destructive">
-        <CardHeader>
-          <CardTitle className="text-destructive">
-            Error Loading Global Insights
-          </CardTitle>
-          <CardDescription>{error.message}</CardDescription>
-        </CardHeader>
-      </Card>
+      <ErrorState
+        error={
+          error instanceof Error
+            ? error
+            : new Error("Failed to load global insights")
+        }
+        variant="default"
+      />
     );
   }
 
   if (!data) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Global Data Collection Insights</CardTitle>
-          <CardDescription>No data available</CardDescription>
-        </CardHeader>
-      </Card>
+      <div className="text-sm text-muted-foreground">No data available</div>
     );
   }
 

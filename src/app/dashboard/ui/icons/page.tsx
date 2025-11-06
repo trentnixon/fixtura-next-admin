@@ -1,8 +1,8 @@
 "use client";
 
-import SectionWrapper from "@/components/scaffolding/containers/SectionWrapper";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
-import IconSystemShowcase from "../foundation/_components/IconSystemShowcase";
+import IconSystemShowcase from "./_components/IconSystemShowcase";
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
 
 /**
  * Icons Category Page
@@ -18,10 +18,9 @@ export default function IconsPage() {
         byLineBottom="Lucide React icons, sizes, and variants"
       />
 
-      <SectionWrapper spacing="lg" title="Icon System">
+      <PageContainer padding="xs" spacing="lg">
         <IconSystemShowcase />
-      </SectionWrapper>
+      </PageContainer>
     </>
   );
 }
-

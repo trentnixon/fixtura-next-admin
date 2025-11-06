@@ -1,8 +1,7 @@
-// schedulerBarChartByDays.tsx
 "use client";
 import BarChartComponent from "@/components/modules/charts/BarChartComponent";
 import { ChartConfig } from "@/components/ui/chart";
-
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
 import { useSchedulerRollup } from "@/hooks/scheduler/useSchedulerRollup";
 
 export default function SchedulerBarChartByDays() {
@@ -45,9 +44,11 @@ export default function SchedulerBarChartByDays() {
   ];
 
   return (
-    <div className="flex flex-col gap-4">
+    <ElementContainer
+      title="Renders by Day"
+      subtitle="Distribution of renders across days of the week"
+    >
       <BarChartComponent
-        title="Renders by Day"
         data={chartData}
         xAxisKey="month"
         barKey="renders"
@@ -56,6 +57,6 @@ export default function SchedulerBarChartByDays() {
         height={200}
         width="100%"
       />
-    </div>
+    </ElementContainer>
   );
 }

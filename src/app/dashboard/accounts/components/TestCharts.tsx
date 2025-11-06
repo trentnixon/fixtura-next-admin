@@ -15,40 +15,35 @@ export default function TestCharts() {
   const BarCharts = accountSummary?.data?.BarChartData;
 
   return (
-    <section className="flex flex-col gap-8 my-8">
-      <div className="grid grid-cols-3 gap-8">
-        <BarChartComponent
-          title="Account Types"
-          data={BarCharts?.accountTypesBarChart ?? []}
-          xAxisKey="name"
-          barKey="value"
-          barColor="var(--color-renders)"
-          config={chartConfig}
-          height={200}
-          width="100%"
-        />
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <BarChartComponent
+        data={BarCharts?.accountTypesBarChart ?? []}
+        xAxisKey="name"
+        barKey="value"
+        barColor="var(--color-renders)"
+        config={chartConfig}
+        height={200}
+        width="100%"
+      />
 
-        <BarChartComponent
-          title="Sports Count"
-          data={BarCharts?.sportsCountBarChart ?? []}
-          xAxisKey="name"
-          barKey="value"
-          barColor="var(--color-renders)"
-          config={chartConfig}
-          height={200}
-          width="100%"
-        />
-        <BarChartComponent
-          title="Engagement Metrics"
-          data={BarCharts?.engagementMetricsBarChart ?? []}
-          xAxisKey="metric"
-          barKey="count"
-          barColor="var(--color-renders)"
-          config={chartConfig}
-          height={200}
-          width="100%"
-        />
-      </div>
-    </section>
+      <BarChartComponent
+        data={BarCharts?.sportsCountBarChart ?? []}
+        xAxisKey="name"
+        barKey="value"
+        barColor="var(--color-renders)"
+        config={chartConfig}
+        height={200}
+        width="100%"
+      />
+      <BarChartComponent
+        data={BarCharts?.engagementMetricsBarChart ?? []}
+        xAxisKey="metric"
+        barKey="count"
+        barColor="var(--color-renders)"
+        config={chartConfig}
+        height={200}
+        width="100%"
+      />
+    </div>
   );
 }

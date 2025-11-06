@@ -1,10 +1,8 @@
 "use client";
 
-import SectionWrapper from "@/components/scaffolding/containers/SectionWrapper";
-import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
-import EmptyState from "@/components/ui-library/states/EmptyState";
-import { Clock } from "lucide-react";
+import MediaShowcase from "./_components/MediaShowcase";
 
 /**
  * Media Category Page
@@ -20,20 +18,9 @@ export default function MediaPage() {
         byLineBottom="Media and content display components"
       />
 
-      <SectionWrapper spacing="lg" title="Coming Soon">
-        <SectionContainer
-          title="Media Components"
-          description="Image galleries, video players, code blocks, and markdown renderers"
-        >
-          <EmptyState
-            title="Media Components"
-            description="Media components are being built. Check back soon!"
-            icon={<Clock className="h-12 w-12 text-muted-foreground" />}
-            variant="card"
-          />
-        </SectionContainer>
-      </SectionWrapper>
+      <PageContainer padding="xs" spacing="lg">
+        <MediaShowcase />
+      </PageContainer>
     </>
   );
 }
-

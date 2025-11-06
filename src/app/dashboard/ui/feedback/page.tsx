@@ -1,8 +1,8 @@
 "use client";
 
-import SectionWrapper from "@/components/scaffolding/containers/SectionWrapper";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
-import FeedbackShowcase from "../foundation/_components/FeedbackShowcase";
+import FeedbackShowcase from "./_components/FeedbackShowcase";
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
 
 /**
  * Feedback Category Page
@@ -18,10 +18,9 @@ export default function FeedbackPage() {
         byLineBottom="User feedback and state management components"
       />
 
-      <SectionWrapper spacing="lg" title="Feedback Components">
+      <PageContainer padding="xs" spacing="lg">
         <FeedbackShowcase />
-      </SectionWrapper>
+      </PageContainer>
     </>
   );
 }
-

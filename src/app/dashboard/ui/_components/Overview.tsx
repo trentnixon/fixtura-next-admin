@@ -23,6 +23,8 @@ import {
   MousePointer2,
   Wand2,
   Navigation,
+  List,
+  SquareStack,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -34,7 +36,7 @@ import Link from "next/link";
 export default function UIOverviewPage() {
   const stats = {
     total: 150,
-    completed: 54,
+    completed: 55,
     inProgress: 0,
   };
 
@@ -83,11 +85,11 @@ export default function UIOverviewPage() {
     },
     {
       title: "Feedback",
-      description: "Loading, Error, Empty states",
+      description: "Loading, Error, Empty states, Toast notifications",
       href: "/dashboard/ui/feedback",
       icon: AlertCircle,
       status: "partial",
-      completed: 3,
+      completed: 4,
     },
     {
       title: "Status",
@@ -98,12 +100,28 @@ export default function UIOverviewPage() {
       completed: 4,
     },
     {
-      title: "Data Display",
-      description: "Tables, Lists, Cards, Charts",
+      title: "Cards",
+      description: "Stat Cards, Metric Grids, Base Cards",
       href: "/dashboard/ui/data",
+      icon: SquareStack,
+      status: "partial",
+      completed: 3,
+    },
+    {
+      title: "Tables",
+      description: "Data tables for structured information",
+      href: "/dashboard/ui/tables",
       icon: TableIcon,
       status: "partial",
-      completed: 6,
+      completed: 3,
+    },
+    {
+      title: "Lists",
+      description: "Ordered, unordered, and description lists",
+      href: "/dashboard/ui/lists",
+      icon: List,
+      status: "partial",
+      completed: 4,
     },
     {
       title: "Actions",

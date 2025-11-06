@@ -1,48 +1,32 @@
-// SchedulerRollupData.ts
 "use client";
-import MetricCard from "@/app/dashboard/accounts/components/overview/tabs/components/metricCard";
+import StatCard from "@/components/ui-library/metrics/StatCard";
+import MetricGrid from "@/components/ui-library/metrics/MetricGrid";
 import { useSchedulerRollup } from "@/hooks/scheduler/useSchedulerRollup";
-import { CalendarIcon } from "lucide-react";
+import { Calendar, PlayCircle, Clock } from "lucide-react";
 
 export function SchedulerRollupData() {
   const { data } = useSchedulerRollup();
 
-  const metrics = [
-    {
-      title: "Number of Schedulers",
-      value: data?.numberOfSchedulers,
-      icon: <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />,
-      lastUpdate: "",
-    },
-
-    {
-      title: "Number of Schedulers Rendering",
-      value: data?.numberOfSchedulersRendering,
-      icon: <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />,
-    },
-
-    {
-      title: "Number of Schedulers Queued",
-      value: data?.numberOfSchedulersQueued,
-      icon: <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />,
-    },
-  ];
-
   return (
-    <div className="flex flex-col gap-4 mb-4">
-      <div className="col-span-12 gap-4 space-y-4">
-        <div className="grid grid-cols-3 gap-4">
-          {metrics.map((metric, index) => (
-            <MetricCard
-              key={index}
-              title={metric.title}
-              value={metric.value}
-              icon={metric.icon}
-              lastUpdate={metric.lastUpdate}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
+    <MetricGrid columns={3} gap="lg">
+      <StatCard
+        title="Number of Schedulers"
+        value={data?.numberOfSchedulers || 0}
+        icon={<Calendar className="h-5 w-5" />}
+        variant="primary"
+      />
+      <StatCard
+        title="Number of Schedulers Rendering"
+        value={data?.numberOfSchedulersRendering || 0}
+        icon={<PlayCircle className="h-5 w-5" />}
+        variant="secondary"
+      />
+      <StatCard
+        title="Number of Schedulers Queued"
+        value={data?.numberOfSchedulersQueued || 0}
+        icon={<Clock className="h-5 w-5" />}
+        variant="accent"
+      />
+    </MetricGrid>
   );
 }

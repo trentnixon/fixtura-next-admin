@@ -1,16 +1,18 @@
-// TODO: Add Associations page
-import DisplayAssociationsTable from "./components/AssociationsTable";
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
-import CreatePage from "@/components/scaffolding/containers/createPage";
+import DisplayAssociationsTable from "./components/AssociationsTable";
 
 export default function AssociationsPage() {
   return (
-    <CreatePage>
+    <>
       <CreatePageTitle
-        title="Associations"
-        byLine="A list of all associations"
+        title="Association Accounts"
+        byLine="View, manage, and search all association accounts"
+        byLineBottom="Includes association status, contact info, and management tools"
       />
-      <DisplayAssociationsTable />
-    </CreatePage>
+      <PageContainer padding="xs" spacing="lg">
+        <DisplayAssociationsTable />
+      </PageContainer>
+    </>
   );
 }

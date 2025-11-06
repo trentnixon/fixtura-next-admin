@@ -1,8 +1,8 @@
 "use client";
 
-import SectionWrapper from "@/components/scaffolding/containers/SectionWrapper";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
-import OverlaysShowcase from "../foundation/_components/OverlaysShowcase";
+import OverlaysShowcase from "./_components/OverlaysShowcase";
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
 
 /**
  * Overlays Category Page
@@ -18,10 +18,9 @@ export default function OverlaysPage() {
         byLineBottom="Overlay and modal components"
       />
 
-      <SectionWrapper spacing="lg" title="Overlay Components">
+      <PageContainer padding="xs" spacing="lg">
         <OverlaysShowcase />
-      </SectionWrapper>
+      </PageContainer>
     </>
   );
 }
-

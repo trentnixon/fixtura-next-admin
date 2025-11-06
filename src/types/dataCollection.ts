@@ -431,6 +431,7 @@ export interface IncompleteCollections {
 export interface AccountTimeSummary {
   accountId: number;
   accountName: string;
+  accountType?: string; // "Club" or "Association" (optional until API is updated)
   totalTimeTaken: number; // Total seconds across all collections
   averageTimeTaken: number; // Average seconds per collection
   collectionCount: number; // Number of collections for this account
@@ -443,6 +444,7 @@ export interface RecentCollection {
   id: number;
   accountId: number;
   accountName: string;
+  accountType?: string; // "Club" or "Association" (optional until API is updated)
   whenWasTheLastCollection: string; // ISO 8601 date
   timeTaken: number; // Seconds
   memoryUsage: number; // MB

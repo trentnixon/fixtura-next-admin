@@ -91,37 +91,35 @@ export default function SummaryCards({ data }: SummaryCardsProps) {
   ];
 
   return (
-    <div className="shadow-none bg-slate-50 border-b-4 border-b-slate-500 rounded-md">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="">Metric</TableHead>
-            <TableHead>Details</TableHead>
-            <TableHead>Value</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {metrics.map((metric, index) => {
-            const IconComponent = metric.icon;
-            return (
-              <TableRow key={index}>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <IconComponent className={`w-5 h-5 ${metric.iconColor}`} />
-                    <span className="font-medium">{metric.title}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="text-muted-foreground">
-                  {metric.details}
-                </TableCell>
-                <TableCell className="font-semibold text-right">
-                  {metric.value}
-                </TableCell>
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Metric</TableHead>
+          <TableHead>Details</TableHead>
+          <TableHead className="text-right">Value</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {metrics.map((metric, index) => {
+          const IconComponent = metric.icon;
+          return (
+            <TableRow key={index}>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  <IconComponent className={`w-5 h-5 ${metric.iconColor}`} />
+                  <span className="font-medium">{metric.title}</span>
+                </div>
+              </TableCell>
+              <TableCell className="text-muted-foreground">
+                {metric.details}
+              </TableCell>
+              <TableCell className="font-semibold text-right">
+                {metric.value}
+              </TableCell>
+            </TableRow>
+          );
+        })}
+      </TableBody>
+    </Table>
   );
 }

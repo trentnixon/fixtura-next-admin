@@ -12,176 +12,318 @@ This library serves as the single source of truth for all UI components, ensurin
 - **Type Safety**: Full TypeScript support with proper interfaces
 - **Documentation**: Live examples and usage guides via the showcase page
 
-## Structure
+## Component Architecture
 
-Components are organized into logical categories:
+Components are organized into three main locations:
 
-### foundation/
+1. **`ui-library/`** (this folder): Custom built components
+2. **`ui/`**: Radix UI primitives with Tailwind styling
+3. **`type/`**: Typography components (titles, headings)
+4. **`scaffolding/`**: Layout containers and structure
 
-Foundation components for typography, colors, icons, and spacing:
+## Custom Components (ui-library/)
 
-- `Text.tsx`: Flexible text component with size and weight variants (uses `TypographyProps` from `@/components/type/types`)
-- `Code.tsx`: Inline and block code display component (uses `TypographyProps`)
-- `Link.tsx`: Styled link component for navigation with variants
-- `Paragraph.tsx`: Styled paragraph component with consistent spacing (uses `TypographyProps`)
-- `Blockquote.tsx`: Styled blockquote component for quotes (uses `TypographyProps`)
+### Foundation Components (`foundation/`)
 
-### states/
+Typography and text components:
+
+- **`Text.tsx`**: Flexible text component with size and weight variants
+
+  - Variants: `body`, `small`, `tiny`
+  - Uses `TypographyProps` from `@/components/type/types`
+  - Showcase: [`/dashboard/ui/type`](../../app/dashboard/ui/type/readMe.md)
+
+- **`Code.tsx`**: Inline and block code display component
+
+  - Variants: `inline`, `block`
+  - Uses `TypographyProps`
+  - Showcase: [`/dashboard/ui/type`](../../app/dashboard/ui/type/readMe.md)
+
+- **`Link.tsx`**: Styled link component for navigation
+
+  - Variants: `default`, `primary`, `secondary`, `accent`
+  - Showcase: [`/dashboard/ui/type`](../../app/dashboard/ui/type/readMe.md)
+
+- **`Paragraph.tsx`**: Styled paragraph component with consistent spacing
+
+  - Uses `TypographyProps`
+  - Showcase: [`/dashboard/ui/type`](../../app/dashboard/ui/type/readMe.md)
+
+- **`Blockquote.tsx`**: Styled blockquote component for quotes
+  - Uses `TypographyProps`
+  - Showcase: [`/dashboard/ui/type`](../../app/dashboard/ui/type/readMe.md)
+
+### State Components (`states/`)
 
 Components for handling application states:
 
-- `LoadingState.tsx`: Standardized loading state display with multiple variants
-- `ErrorState.tsx`: Standardized error state with retry functionality
-- `EmptyState.tsx`: Standardized empty state display
+- **`LoadingState.tsx`**: Standardized loading state display
 
-### badges/
+  - Variants: `default`, `minimal`, `skeleton`
+  - Showcase: [`/dashboard/ui/feedback`](../../app/dashboard/ui/feedback/readMe.md)
+
+- **`ErrorState.tsx`**: Standardized error state with retry functionality
+
+  - Variants: `default`, `card`, `minimal`
+  - Supports error objects and string messages
+  - Optional retry functionality
+  - Showcase: [`/dashboard/ui/feedback`](../../app/dashboard/ui/feedback/readMe.md)
+
+- **`EmptyState.tsx`**: Standardized empty state display
+  - Variants: `default`, `card`, `minimal`
+  - Custom icons and actions support
+  - Showcase: [`/dashboard/ui/feedback`](../../app/dashboard/ui/feedback/readMe.md)
+
+### Badge Components (`badges/`)
 
 Status and indicator components:
 
-- `StatusBadge.tsx`: Boolean status badge component with automatic color coding
+- **`StatusBadge.tsx`**: Boolean status badge component with automatic color coding
+  - Automatically colors based on boolean value
+  - Showcase: [`/dashboard/ui/status`](../../app/dashboard/ui/status/readMe.md)
 
-### metrics/
+### Metric Components (`metrics/`)
 
 Metric and statistic display components:
 
-- `StatCard.tsx`: Enhanced metric card with optional trend indicator
-- `MetricGrid.tsx`: Responsive grid container for metric cards
+- **`StatCard.tsx`**: Enhanced metric card with optional trend indicator
 
----
+  - Variants: `primary`, `secondary`, `accent`, `light`, `dark`
+  - Features: Top accent stripe, trend indicators, icon containers
+  - Showcase: [`/dashboard/ui/data`](../../app/dashboard/ui/data/readMe.md)
 
-## Categories
+- **`MetricGrid.tsx`**: Responsive grid container for metric cards
+  - Automatic responsive grid layout
+  - Showcase: [`/dashboard/ui/data`](../../app/dashboard/ui/data/readMe.md)
 
-- **Typography**: Text components, headings, labels
-- **Colors**: Color system, theme tokens, variants
-- **Icons**: Icon library integration and icon components
-- **Spacing**: Layout utilities and spacing system
+## Radix UI Components (`ui/`)
 
-### Layout & Structure
+These components are built on Radix UI primitives with Tailwind CSS styling. Full documentation and examples available in the showcase pages:
 
-- **Containers**: Page containers, section wrappers, content grids
-- **Grids**: Responsive grid systems
-- **Flex**: Flexbox utilities and components
-- **Dividers**: Visual separators and dividers
+### Foundation & Design System
 
-### Navigation
-
-Navigation components for page and content navigation:
-
-- **Tabs**: Tab navigation with brand color variants and fully rounded styling
-  - `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` components
-  - Variants: default, primary, secondary, accent
-  - Container: Fully rounded with brand color backgrounds
-  - Triggers: White background with rounded-full styling
-
-- **Pagination**: Complete pagination system with state management
-  - `Pagination`: Main wrapper with context-based state
-  - `PaginationPrevious`: Auto-disabled previous button
-  - `PaginationNext`: Auto-disabled next button
-  - `PaginationPages`: Smart page number buttons with ellipsis
-  - `PaginationPage`: Individual page button
-  - `PaginationEllipsis`: Ellipsis separator
-  - `PaginationInfo`: Page information with short/long formats
-  - Variants: default, primary, secondary, accent
-  - Fully rounded buttons and container
-
-Showcase examples available at `/dashboard/ui/navigation` with code snippets and usage guidelines.
-
-See `src/app/dashboard/ui/navigation/readMe.md` for detailed component documentation.
-
-### Forms & Inputs
-
-- **Inputs**: Text inputs, textareas, selects
-- **Checkboxes**: Checkbox inputs
-- **Radio**: Radio button groups
-- **Switches**: Toggle switches
-- **Date Pickers**: Date and time selection
-- **File Upload**: File upload components
-- **Form Groups**: Form layout and validation
-
-### Feedback & States
-
-- **Loading States**: Loading indicators and skeletons
-- **Error States**: Error displays with retry
-- **Empty States**: Empty data states
-- **Success States**: Success confirmations
-- **Alerts**: Alert messages and notifications
-- **Toasts**: Toast notifications
-- **Progress**: Progress bars and indicators
-
-### Status & Indicators
-
-- **Badges**: Status badges and labels
-- **Status Indicators**: Status dots and indicators
-- **Avatars**: User avatars and initials
-- **Tags**: Tag components for categorization
-
-### Data Display
-
-- **Tables**: Data tables with sorting, filtering, pagination
-- **Lists**: List components (ordered, unordered, description)
-- **Cards**: Card components for content display
-- **Stat Cards**: Metric and statistic displays
-- **Charts**: Chart components and wrappers
-- **Timelines**: Timeline components
-- **Tree Views**: Hierarchical data display
-
-### Overlays & Modals
-
-- **Dialogs**: Modal dialogs
-- **Sheets**: Slide-out panels
-- **Popovers**: Popover components
-- **Tooltips**: Tooltip components
-- **Dropdowns**: Dropdown menus
-- **Context Menus**: Right-click menus
+- **Colors**: See [`/dashboard/ui/colors`](../../app/dashboard/ui/colors/readMe.md) for color system reference
+- **Icons**: See [`/dashboard/ui/icons`](../../app/dashboard/ui/icons/readMe.md) for icon library browser
+- **Typography**: See [`/dashboard/ui/type`](../../app/dashboard/ui/type/readMe.md) for typography components
+  - Title components (`PageTitle`, `Title`, `Subtitle`, `SectionTitle`, etc.) are in `src/components/type/`
+- **Layout**: See [`/dashboard/ui/layout`](../../app/dashboard/ui/layout/readMe.md) for containers, grids, flex, dividers
+  - Container components (`PageContainer`, `SectionContainer`, etc.) are in `src/components/scaffolding/`
 
 ### Actions & Controls
 
-- **Buttons**: Button variants and sizes
-- **Button Groups**: Button groups and toolbars
-- **Icon Buttons**: Icon-only buttons
-- **Floating Actions**: Floating action buttons
+- **`button.tsx`**: Button component with variants and sizes
+  - Variants: `default`, `destructive`, `outline`, `secondary`, `ghost`, `link`, `primary`, `secondary`, `accent`
+  - Sizes: `default`, `sm`, `lg`, `icon`
+  - Showcase: [`/dashboard/ui/actions`](../../app/dashboard/ui/actions/readMe.md)
+
+### Forms & Inputs
+
+- **`input.tsx`**: Text input component
+
+  - Various input types: text, email, password, number, tel, url, search
+  - Showcase: [`/dashboard/ui/forms`](../../app/dashboard/ui/forms/readMe.md)
+
+- **`label.tsx`**: Form label component
+
+  - Showcase: [`/dashboard/ui/forms`](../../app/dashboard/ui/forms/readMe.md)
+
+- **`select.tsx`**: Select dropdown component
+
+  - Showcase: [`/dashboard/ui/forms`](../../app/dashboard/ui/forms/readMe.md)
+
+- **`switch.tsx`**: Toggle switch component
+
+  - Showcase: [`/dashboard/ui/forms`](../../app/dashboard/ui/forms/readMe.md)
+
+- **Checkboxes & Radios**: Native HTML styled components
+
+  - Showcase: [`/dashboard/ui/forms`](../../app/dashboard/ui/forms/readMe.md)
+
+- **Textarea**: Native HTML styled component
+  - Showcase: [`/dashboard/ui/forms`](../../app/dashboard/ui/forms/readMe.md)
+
+### Navigation
+
+- **`tabs.tsx`**: Tab navigation component
+
+  - Components: `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent`
+  - Variants: `default`, `primary`, `secondary`, `accent`
+  - Fully rounded container with brand color backgrounds
+  - Showcase: [`/dashboard/ui/navigation`](../../app/dashboard/ui/navigation/readMe.md)
+
+- **`pagination.tsx`**: Complete pagination system
+
+  - Components: `Pagination`, `PaginationPrevious`, `PaginationNext`, `PaginationPages`, `PaginationPage`, `PaginationEllipsis`, `PaginationInfo`
+  - Variants: `default`, `primary`, `secondary`, `accent`
+  - Context-based state management
+  - Showcase: [`/dashboard/ui/navigation`](../../app/dashboard/ui/navigation/readMe.md)
+
+- **`breadcrumb.tsx`**: Breadcrumb navigation component
+
+  - Showcase: [`/dashboard/ui/navigation`](../../app/dashboard/ui/navigation/readMe.md)
+
+- **`sidebar.tsx`**: Sidebar navigation component
+  - Showcase: [`/dashboard/ui/navigation`](../../app/dashboard/ui/navigation/readMe.md)
+
+### Data Display
+
+- **`card.tsx`**: Card component for content display
+
+  - Components: `Card`, `CardHeader`, `CardTitle`, `CardDescription`, `CardContent`, `CardFooter`
+  - Showcase: [`/dashboard/ui/data`](../../app/dashboard/ui/data/readMe.md)
+
+- **`table.tsx`**: Data table component
+
+  - Components: `Table`, `TableHeader`, `TableBody`, `TableFooter`, `TableHead`, `TableRow`, `TableCell`, `TableCaption`
+  - Used with pagination, search, filtering, sorting
+  - Showcase: [`/dashboard/ui/tables`](../../app/dashboard/ui/tables/readMe.md)
+
+- **Lists**: HTML list components with creative patterns
+  - Showcase: [`/dashboard/ui/lists`](../../app/dashboard/ui/lists/readMe.md)
+
+### Status & Indicators
+
+- **`badge.tsx`**: Badge component
+
+  - Variants: `default`, `destructive`, `secondary`, `outline`, `primary`, `secondary`, `accent`
+  - Showcase: [`/dashboard/ui/status`](../../app/dashboard/ui/status/readMe.md)
+
+- **`avatar.tsx`**: Avatar component
+  - Components: `Avatar`, `AvatarImage`, `AvatarFallback`
+  - Showcase: [`/dashboard/ui/status`](../../app/dashboard/ui/status/readMe.md)
+
+### Feedback & States
+
+- **`sonner.tsx`**: Toast notification component (wrapper for Sonner)
+
+  - `Toaster` component (global, added to root layout)
+  - `toast` API from `sonner` package
+  - Variants: success, error, info, warning
+  - Features: descriptions, actions, custom duration, promise support
+  - Showcase: [`/dashboard/ui/feedback`](../../app/dashboard/ui/feedback/readMe.md)
+
+- **`progress.tsx`**: Progress bar component
+
+  - Showcase: [`/dashboard/ui/feedback`](../../app/dashboard/ui/feedback/readMe.md)
+
+- **`skeleton.tsx`**: Skeleton loading component
+  - Showcase: [`/dashboard/ui/feedback`](../../app/dashboard/ui/feedback/readMe.md)
+
+### Overlays & Modals
+
+- **`dialog.tsx`**: Modal dialog component
+
+  - Components: `Dialog`, `DialogTrigger`, `DialogContent`, `DialogHeader`, `DialogTitle`, `DialogDescription`, `DialogFooter`
+  - Showcase: [`/dashboard/ui/overlays`](../../app/dashboard/ui/overlays/readMe.md)
+
+- **`sheet.tsx`**: Slide-out panel component
+
+  - Components: `Sheet`, `SheetTrigger`, `SheetContent`, `SheetHeader`, `SheetTitle`, `SheetDescription`, `SheetFooter`
+  - Showcase: [`/dashboard/ui/overlays`](../../app/dashboard/ui/overlays/readMe.md)
+
+- **`tooltip.tsx`**: Tooltip component
+
+  - Components: `Tooltip`, `TooltipTrigger`, `TooltipContent`, `TooltipProvider`
+  - Showcase: [`/dashboard/ui/overlays`](../../app/dashboard/ui/overlays/readMe.md)
+
+- **`dropdown-menu.tsx`**: Dropdown menu component
+
+  - Components: `DropdownMenu`, `DropdownMenuTrigger`, `DropdownMenuContent`, `DropdownMenuItem`, `DropdownMenuLabel`, `DropdownMenuSeparator`, etc.
+  - Showcase: [`/dashboard/ui/overlays`](../../app/dashboard/ui/overlays/readMe.md)
+
+- **`collapsible.tsx`**: Collapsible component
+  - Showcase: [`/dashboard/ui/overlays`](../../app/dashboard/ui/overlays/readMe.md)
 
 ### Media & Content
 
-- **Images**: Image components with loading states
-- **Videos**: Video player components
-- **Code Blocks**: Code display components
-- **Markdown**: Markdown renderer
+- **`chart.tsx`**: Chart component wrapper
+
+  - Showcase: [`/dashboard/ui/media`](../../app/dashboard/ui/media/readMe.md)
+
+- **Code Blocks**: See `Code.tsx` in foundation components
+  - Showcase: [`/dashboard/ui/media`](../../app/dashboard/ui/media/readMe.md)
 
 ### Utilities
 
-- **Copy to Clipboard**: Copy functionality
-- **Relative Time**: Time formatting components
-- **Currency**: Currency formatting
-- **Number Formatting**: Number formatting utilities
-- **Search**: Search input components
+- **`scroll-area.tsx`**: Scrollable area component
 
-## Showcase
+  - Showcase: [`/dashboard/ui/utilities`](../../app/dashboard/ui/utilities/readMe.md)
 
-Visit `/dashboard/ui` to see all components in action with:
+- **`separator.tsx`**: Separator component
+  - Horizontal and vertical separators
+  - Showcase: [`/dashboard/ui/layout`](../../app/dashboard/ui/layout/readMe.md)
 
-- Interactive examples
-- Prop variations
-- Usage code snippets
-- Accessibility features
-- Responsive behavior
+## Showcase Pages
 
-**Available Categories:**
+All components have interactive examples, code snippets, and usage guidelines available in the showcase pages:
 
-- Foundation: Typography, Colors, Icons, Layout
-- Forms & Inputs: Inputs, Selects, Checkboxes, Switches
-- Feedback: Loading, Error, Empty states
-- Status: Badges, Indicators, Avatars
-- Data Display: Tables, Lists, Cards, Metrics
-- Overlays: Dialogs, Sheets, Tooltips, Dropdowns
-- Actions: Buttons and Button Groups
-- Navigation: Breadcrumbs, Tabs, Sidebar, Pagination
+- **Foundation**: [`/dashboard/ui/colors`](../../app/dashboard/ui/colors/readMe.md), [`/dashboard/ui/type`](../../app/dashboard/ui/type/readMe.md), [`/dashboard/ui/icons`](../../app/dashboard/ui/icons/readMe.md), [`/dashboard/ui/layout`](../../app/dashboard/ui/layout/readMe.md)
+- **Actions**: [`/dashboard/ui/actions`](../../app/dashboard/ui/actions/readMe.md)
+- **Forms**: [`/dashboard/ui/forms`](../../app/dashboard/ui/forms/readMe.md)
+- **Feedback**: [`/dashboard/ui/feedback`](../../app/dashboard/ui/feedback/readMe.md)
+- **Status**: [`/dashboard/ui/status`](../../app/dashboard/ui/status/readMe.md)
+- **Data Display**: [`/dashboard/ui/data`](../../app/dashboard/ui/data/readMe.md), [`/dashboard/ui/tables`](../../app/dashboard/ui/tables/readMe.md), [`/dashboard/ui/lists`](../../app/dashboard/ui/lists/readMe.md)
+- **Overlays**: [`/dashboard/ui/overlays`](../../app/dashboard/ui/overlays/readMe.md)
+- **Navigation**: [`/dashboard/ui/navigation`](../../app/dashboard/ui/navigation/readMe.md)
+- **Utilities**: [`/dashboard/ui/utilities`](../../app/dashboard/ui/utilities/readMe.md)
+- **Media**: [`/dashboard/ui/media`](../../app/dashboard/ui/media/readMe.md)
+
+Visit [`/dashboard/ui`](../../app/dashboard/ui/readMe.md) for the main overview page with quick links to all categories.
 
 ## Usage
 
+### Importing Custom Components
+
 ```tsx
-import { LoadingState, ErrorState, StatCard } from "@/components/ui-library";
+import {
+  LoadingState,
+  ErrorState,
+  EmptyState,
+  StatusBadge,
+  StatCard,
+  MetricGrid,
+  Text,
+  Code,
+  StyledLink,
+  Paragraph,
+  Blockquote,
+} from "@/components/ui-library";
 ```
+
+### Importing Radix UI Components
+
+```tsx
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+// etc.
+```
+
+### Importing Typography Components
+
+```tsx
+import {
+  PageTitle,
+  SectionTitle,
+  Title,
+  Subtitle,
+} from "@/components/type/titles";
+```
+
+### Importing Layout Components
+
+```tsx
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+```
+
+## Component Locations
+
+- **Custom Components**: `src/components/ui-library/` (this folder)
+- **Radix UI Components**: `src/components/ui/`
+- **Typography Components**: `src/components/type/`
+- **Layout Containers**: `src/components/scaffolding/`
+- **Showcase Pages**: `src/app/dashboard/ui/`
 
 ## Contributing
 
@@ -191,8 +333,9 @@ When adding new components:
 2. Include TypeScript types
 3. Add JSDoc documentation
 4. Include accessibility features
-5. Add examples to the showcase page
+5. Add examples to the showcase page (`src/app/dashboard/ui/[category]/`)
 6. Update this readMe and the roadmap
+7. Update the category readMe if applicable
 
 ## Roadmap
 

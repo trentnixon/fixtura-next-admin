@@ -1,55 +1,55 @@
-// TODO: Add schedulers page
-
 import { SchedulerRollupData } from "@/app/dashboard/schedulers/components/SchedulerRollupData";
 import { SchedulerRenderingTable } from "@/app/dashboard/schedulers/components/SchedulerRenderingTable";
-import { SectionTitle } from "@/components/type/titles";
 import SchedulerBarChartByDays from "@/app/dashboard/schedulers/components/schedulerBarChartByDays";
 import GetTodaysSchedulers from "./components/getTodaysSchedulers";
 import GetTomorrowsSchedulers from "./components/getTomorrowsSchedulers";
 import { Tabs, TabsList, TabsContent, TabsTrigger } from "@/components/ui/tabs";
-import CreatePage from "@/components/scaffolding/containers/createPage";
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 
 export default function SchedulersPage() {
   return (
-    <CreatePage>
-      <CreatePageTitle title="Schedulers" byLine="Fixtura Schedulers" />
-      <section className="flex flex-col gap-4 my-4">
-        <SectionTitle>Schedulers</SectionTitle>
-
-        <div className="col-span-12 gap-4 space-y-4">
-          <div className="grid grid-cols-12 gap-4">
-            <div className="col-span-9 gap-4">
+    <>
+      <CreatePageTitle
+        title="Schedulers"
+        byLine="Monitor and manage scheduler performance"
+        byLineBottom="View rendering status, queue, and scheduled renders"
+      />
+      <PageContainer padding="xs" spacing="lg">
+        <SectionContainer
+          title="Scheduler Overview"
+          description="Current status and metrics for all schedulers"
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-9 space-y-6">
               <SchedulerRollupData />
               <SchedulerRenderingTable />
             </div>
-            <div className="col-span-3 gap-4">
+            <div className="lg:col-span-3">
               <SchedulerBarChartByDays />
             </div>
           </div>
-        </div>
-      </section>
+        </SectionContainer>
 
-      <Tabs defaultValue="today">
-        <TabsList className="">
-          <TabsTrigger value="today">Scheduled for Today</TabsTrigger>
-          <TabsTrigger value="tomorrow">Scheduled for Tomorrow</TabsTrigger>
-        </TabsList>
-        <div className="mt-4">
-          <div className=" px-4 py-2">
+        <SectionContainer
+          title="Scheduled Renders"
+          description="View schedulers scheduled for today and tomorrow"
+        >
+          <Tabs defaultValue="today">
+            <TabsList variant="primary" className="mb-4">
+              <TabsTrigger value="today">Scheduled for Today</TabsTrigger>
+              <TabsTrigger value="tomorrow">Scheduled for Tomorrow</TabsTrigger>
+            </TabsList>
             <TabsContent value="today">
-              <section className="flex flex-col gap-4 my-4">
-                <GetTodaysSchedulers />
-              </section>
+              <GetTodaysSchedulers />
             </TabsContent>
             <TabsContent value="tomorrow">
-              <section className="flex flex-col gap-4 my-4">
-                <GetTomorrowsSchedulers />
-              </section>
+              <GetTomorrowsSchedulers />
             </TabsContent>
-          </div>
-        </div>
-      </Tabs>
-    </CreatePage>
+          </Tabs>
+        </SectionContainer>
+      </PageContainer>
+    </>
   );
 }

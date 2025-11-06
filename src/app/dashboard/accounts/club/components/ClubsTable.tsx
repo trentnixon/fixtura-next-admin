@@ -4,25 +4,26 @@ import { useAccountsQuery } from "@/hooks/accounts/useAccountsQuery";
 import { AccountTable } from "@/components/modules/tables/AccountTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ClubEmails from "./clubEmails";
+import LoadingState from "@/components/ui-library/states/LoadingState";
+import ErrorState from "@/components/ui-library/states/ErrorState";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 
 export default function DisplayClubsTable() {
   const { data, isLoading, isError, error, refetch } = useAccountsQuery();
 
-  console.log("[data]", data);
-  if (isLoading) return <p>Loading accounts...</p>;
+  if (isLoading) {
+    return <LoadingState variant="default" />;
+  }
 
   if (isError) {
     return (
-      <div className="p-6">
-        <p>Error loading accounts: {error?.message}</p>
-        <pre>{JSON.stringify(error, null, 2)}</pre>
-        <button
-          onClick={() => refetch()}
-          className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-        >
-          Retry
-        </button>
-      </div>
+      <ErrorState
+        error={
+          error instanceof Error ? error : new Error("Failed to load clubs")
+        }
+        onRetry={refetch}
+        variant="default"
+      />
     );
   }
 
@@ -32,33 +33,36 @@ export default function DisplayClubsTable() {
     <>
       {/* Active Accounts Table */}
       <Tabs defaultValue="active">
-        <TabsList>
+        <TabsList variant="secondary" className="mb-4">
           <TabsTrigger value="active">
             Active Clubs ({activeClubs.length})
           </TabsTrigger>
           <TabsTrigger value="inactive">
             Inactive Clubs ({inactiveClubs.length})
           </TabsTrigger>
-          <TabsTrigger value="all">Clubs Contact Information</TabsTrigger>
+          {/* <TabsTrigger value="all">Clubs Contact Information</TabsTrigger> */}
         </TabsList>
 
-        <TabsContent value="active">
-          <AccountTable
-            title="Active Clubs"
-            accounts={activeClubs}
-            emptyMessage="No active clubs available."
-          />
-        </TabsContent>
-        <TabsContent value="inactive">
-          <AccountTable
-            title="Inactive Clubs"
-            accounts={inactiveClubs}
-            emptyMessage="No inactive clubs available."
-          />
-        </TabsContent>
-        <TabsContent value="all">
-          <ClubEmails />
-        </TabsContent>
+        <SectionContainer
+          title="Club Accounts"
+          description="View, manage, and search all club accounts"
+        >
+          <TabsContent value="active">
+            <AccountTable
+              accounts={activeClubs}
+              emptyMessage="No active clubs available."
+            />
+          </TabsContent>
+          <TabsContent value="inactive">
+            <AccountTable
+              accounts={inactiveClubs}
+              emptyMessage="No inactive clubs available."
+            />
+          </TabsContent>
+          <TabsContent value="all">
+            <ClubEmails />
+          </TabsContent>
+        </SectionContainer>
       </Tabs>
     </>
   );

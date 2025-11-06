@@ -17,6 +17,8 @@ import {
   Wand2,
   BookOpen,
   Sparkles,
+  List,
+  SquareStack,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -84,10 +86,24 @@ const categories = [
   },
   {
     id: "data",
-    label: "Data Display",
-    icon: Table,
+    label: "Cards",
+    icon: SquareStack,
     path: "/dashboard/ui/data",
-    description: "Tables, Lists, Cards, Charts, Timelines",
+    description: "Stat Cards, Metric Grids, Base Cards",
+  },
+  {
+    id: "tables",
+    label: "Tables",
+    icon: Table,
+    path: "/dashboard/ui/tables",
+    description: "Data tables for structured information",
+  },
+  {
+    id: "lists",
+    label: "Lists",
+    icon: List,
+    path: "/dashboard/ui/lists",
+    description: "Ordered, unordered, and description lists",
   },
   {
     id: "overlays",

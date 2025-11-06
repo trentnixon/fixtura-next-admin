@@ -1,8 +1,8 @@
 "use client";
 
-import SectionWrapper from "@/components/scaffolding/containers/SectionWrapper";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
-import FormsShowcase from "../foundation/_components/FormsShowcase";
+import FormsShowcase from "./_components/FormsShowcase";
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
 
 /**
  * Forms Category Page
@@ -18,9 +18,9 @@ export default function FormsPage() {
         byLineBottom="Form components and input controls"
       />
 
-      <SectionWrapper spacing="lg" title="Form Components">
+      <PageContainer padding="xs" spacing="lg">
         <FormsShowcase />
-      </SectionWrapper>
+      </PageContainer>
     </>
   );
 }
