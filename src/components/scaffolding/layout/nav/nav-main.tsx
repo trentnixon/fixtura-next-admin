@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { ChevronRight, type LucideIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 import {
   Collapsible,
@@ -30,6 +31,7 @@ export function NavMain({
     url: string;
     icon: LucideIcon;
     isActive?: boolean;
+    badge?: number;
     items?: {
       title: string;
       url: string;
@@ -42,11 +44,11 @@ export function NavMain({
     <SidebarGroup>
       <SidebarGroupLabel>{title}</SidebarGroupLabel>
       <SidebarMenu>
-        {items.map(item => {
+        {items.map((item) => {
           // Determine if this item or its children match the current path
           const isCurrent =
             pathname === item.url ||
-            item.items?.some(subItem => pathname?.startsWith(subItem.url));
+            item.items?.some((subItem) => pathname?.startsWith(subItem.url));
 
           return (
             <Collapsible key={item.title} asChild defaultOpen={isCurrent}>
@@ -55,10 +57,19 @@ export function NavMain({
                   asChild
                   tooltip={item.title}
                   isActive={isCurrent}
-                  className={`${isCurrent ? "active" : " isActive"}`}>
+                  className={`${isCurrent ? "active" : " isActive"}`}
+                >
                   <a href={item.url}>
                     <item.icon />
                     <span>{item.title}</span>
+                    {item.badge !== undefined && item.badge > 0 && (
+                      <Badge
+                        variant="default"
+                        className="ml-auto h-5 min-w-5 px-1.5 text-xs rounded-full bg-green-600 hover:bg-green-700 text-white border-0"
+                      >
+                        {item.badge}
+                      </Badge>
+                    )}
                   </a>
                 </SidebarMenuButton>
                 {item.items?.length ? (
@@ -71,7 +82,7 @@ export function NavMain({
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <SidebarMenuSub>
-                        {item.items?.map(subItem => (
+                        {item.items?.map((subItem) => (
                           <SidebarMenuSubItem key={subItem.title}>
                             <SidebarMenuSubButton asChild isActive={isCurrent}>
                               <a
@@ -80,7 +91,8 @@ export function NavMain({
                                   pathname === subItem.url
                                     ? "font-semibold text-blue-500"
                                     : ""
-                                }>
+                                }
+                              >
                                 <span>{subItem.title}</span>
                               </a>
                             </SidebarMenuSubButton>

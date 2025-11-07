@@ -2,14 +2,12 @@
 
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Mail } from "lucide-react";
+import { useContactFormSubmissionsData } from "@/hooks/contact-form/useContactFormSubmissions";
+import ContactFormTable from "./components/ContactFormTable";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import LoadingState from "@/components/ui-library/states/LoadingState";
+import ErrorState from "@/components/ui-library/states/ErrorState";
+import EmptyState from "@/components/ui-library/states/EmptyState";
 
 /**
  * Contact Forms Page
@@ -17,6 +15,9 @@ import { Mail } from "lucide-react";
  * View and manage contact form submissions from the CMS.
  */
 export default function ContactPage() {
+  const { data, total, isLoading, isError, error, refetch } =
+    useContactFormSubmissionsData();
+
   return (
     <>
       <CreatePageTitle
@@ -26,26 +27,43 @@ export default function ContactPage() {
       />
 
       <PageContainer padding="xs" spacing="lg">
-        <Card>
-          <CardHeader>
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-slate-100 rounded-md">
-                <Mail className="h-5 w-5 text-slate-700" />
-              </div>
-              <div>
-                <CardTitle>Coming Soon</CardTitle>
-                <CardDescription>
-                  Contact form submissions dashboard will be available here
-                </CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center h-64 text-muted-foreground">
-              <p>Contact form submissions dashboard coming soon...</p>
-            </div>
-          </CardContent>
-        </Card>
+        <SectionContainer
+          title="Contact Form Submissions"
+          description={
+            !isLoading && !isError
+              ? `${total} total submission${total !== 1 ? "s" : ""}`
+              : "View and manage contact form submissions from the CMS"
+          }
+        >
+          {isLoading && (
+            <LoadingState
+              variant="skeleton"
+              message="Loading contact form submissions..."
+            />
+          )}
+
+          {isError && (
+            <ErrorState
+              variant="card"
+              error={error}
+              title="Error Loading Contact Forms"
+              description="Failed to fetch contact form submissions. Please try again."
+              onRetry={refetch}
+            />
+          )}
+
+          {!isLoading && !isError && data.length === 0 && (
+            <EmptyState
+              variant="card"
+              title="No Contact Form Submissions"
+              description="There are no contact form submissions to display at this time."
+            />
+          )}
+
+          {!isLoading && !isError && data.length > 0 && (
+            <ContactFormTable submissions={data} />
+          )}
+        </SectionContainer>
       </PageContainer>
     </>
   );
