@@ -1,13 +1,7 @@
 "use client";
 
 import { AccountStatsResponse } from "@/types/dataCollection";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
 import {
   Table,
   TableBody,
@@ -17,6 +11,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Label, H4, SubsectionTitle, ByLine } from "@/components/type/titles";
+import { formatPercentage } from "@/utils/chart-formatters";
 import {
   Database,
   Trophy,
@@ -41,26 +37,33 @@ export default function EntityStatisticsTable({
 }: EntityStatisticsTableProps) {
   const entityStats = data.data.entityStatistics;
 
-  // Helper function to format percentages
-  const formatPercent = (value: number): string => {
-    return `${(value * 100).toFixed(1)}%`;
-  };
-
-  // Helper function to get error rate color
+  // Helper function to get error rate color (errorRate is 0-100 range)
   const getErrorRateColor = (errorRate: number): string => {
-    if (errorRate > 0.1) return "text-red-600 font-semibold";
-    if (errorRate > 0.05) return "text-yellow-600";
-    return "text-emerald-600";
+    if (errorRate > 10) return "text-error-600 font-semibold";
+    if (errorRate > 5) return "text-warning-600";
+    return "text-success-600";
   };
 
-  // Helper function to get rate badge variant
-  const getRateBadgeVariant = (
-    rate: number
-  ): "default" | "secondary" | "destructive" | "outline" => {
-    if (rate >= 0.8) return "default";
-    if (rate >= 0.5) return "secondary";
-    if (rate >= 0.2) return "outline";
-    return "destructive";
+  // Helper function to get rate badge color (rate is 0-100 range)
+  const getRateBadgeColor = (rate: number): string => {
+    if (rate >= 80) return "bg-success-500";
+    if (rate >= 50) return "bg-info-500";
+    if (rate >= 20) return "bg-warning-500";
+    return "bg-error-500";
+  };
+
+  // Helper function to get new item rate badge color (rate is 0-100 range)
+  const getNewItemRateBadgeColor = (rate: number): string => {
+    if (rate > 20) return "bg-success-500";
+    if (rate > 10) return "bg-info-500";
+    return "bg-slate-500";
+  };
+
+  // Helper function to get error rate badge color (errorRate is 0-100 range)
+  const getErrorRateBadgeColor = (errorRate: number): string => {
+    if (errorRate > 10) return "bg-error-500";
+    if (errorRate > 5) return "bg-warning-500";
+    return "bg-success-500";
   };
 
   // Entity type configuration with icons and labels
@@ -86,197 +89,173 @@ export default function EntityStatisticsTable({
   ];
 
   return (
-    <Card className="shadow-none bg-slate-50 border-b-4 border-b-slate-500 rounded-md">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Database className="w-5 h-5 text-slate-600" />
-          <CardTitle className="text-lg font-semibold">
-            Entity Statistics
-          </CardTitle>
-        </div>
-        <CardDescription>
-          Breakdown of data collection statistics by entity type
-        </CardDescription>
-      </CardHeader>
+    <ElementContainer variant="dark" border padding="md">
+      <div className="flex items-center gap-2 mb-2">
+        <Database className="w-5 h-5 text-slate-600" />
+        <SubsectionTitle className="m-0">Entity Statistics</SubsectionTitle>
+      </div>
+      <ByLine className="mb-4">
+        Breakdown of data collection statistics by entity type
+      </ByLine>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[150px]">Entity Type</TableHead>
+              <TableHead className="text-right">Items Found</TableHead>
+              <TableHead className="text-right">Items Updated</TableHead>
+              <TableHead className="text-right">Items New</TableHead>
+              <TableHead className="text-right">Errors</TableHead>
+              <TableHead className="text-center">Update Rate</TableHead>
+              <TableHead className="text-center">New Item Rate</TableHead>
+              <TableHead className="text-center">Error Rate</TableHead>
+              <TableHead className="text-right">Avg Items/Collection</TableHead>
+              <TableHead className="text-right">Collections</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {entityTypes.map((entityType) => {
+              const stats = entityStats[entityType.key];
+              const IconComponent = entityType.icon;
 
-      <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[150px]">Entity Type</TableHead>
-                <TableHead className="text-right">Items Found</TableHead>
-                <TableHead className="text-right">Items Updated</TableHead>
-                <TableHead className="text-right">Items New</TableHead>
-                <TableHead className="text-right">Errors</TableHead>
-                <TableHead className="text-center">Update Rate</TableHead>
-                <TableHead className="text-center">New Item Rate</TableHead>
-                <TableHead className="text-center">Error Rate</TableHead>
-                <TableHead className="text-right">
-                  Avg Items/Collection
-                </TableHead>
-                <TableHead className="text-right">Collections</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {entityTypes.map((entityType) => {
-                const stats = entityStats[entityType.key];
-                const IconComponent = entityType.icon;
+              return (
+                <TableRow key={entityType.key}>
+                  {/* Entity Type */}
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      <IconComponent
+                        className={`w-4 h-4 ${entityType.iconColor}`}
+                      />
+                      <span>{entityType.label}</span>
+                    </div>
+                  </TableCell>
 
-                return (
-                  <TableRow key={entityType.key}>
-                    {/* Entity Type */}
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <IconComponent
-                          className={`w-4 h-4 ${entityType.iconColor}`}
-                        />
-                        <span>{entityType.label}</span>
-                      </div>
-                    </TableCell>
+                  {/* Items Found */}
+                  <TableCell className="text-right font-semibold">
+                    {stats.totalItemsFound.toLocaleString()}
+                  </TableCell>
 
-                    {/* Items Found */}
-                    <TableCell className="text-right font-semibold">
-                      {stats.totalItemsFound.toLocaleString()}
-                    </TableCell>
-
-                    {/* Items Updated */}
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <span>{stats.totalItemsUpdated.toLocaleString()}</span>
-                        {stats.totalItemsUpdated > 0 && (
-                          <TrendingUp className="w-3 h-3 text-blue-500" />
-                        )}
-                      </div>
-                    </TableCell>
-
-                    {/* Items New */}
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <span className="text-emerald-600 font-medium">
-                          {stats.totalItemsNew.toLocaleString()}
-                        </span>
-                        {stats.totalItemsNew > 0 && (
-                          <TrendingUp className="w-3 h-3 text-emerald-500" />
-                        )}
-                      </div>
-                    </TableCell>
-
-                    {/* Errors */}
-                    <TableCell className="text-right">
-                      {stats.totalErrors > 0 ? (
-                        <div className="flex items-center justify-end gap-1">
-                          <AlertCircle className="w-4 h-4 text-red-500" />
-                          <span className="text-red-600 font-semibold">
-                            {stats.totalErrors.toLocaleString()}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-emerald-600">0</span>
+                  {/* Items Updated */}
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <span>{stats.totalItemsUpdated.toLocaleString()}</span>
+                      {stats.totalItemsUpdated > 0 && (
+                        <TrendingUp className="w-3 h-3 text-blue-500" />
                       )}
-                    </TableCell>
+                    </div>
+                  </TableCell>
 
-                    {/* Update Rate */}
-                    <TableCell className="text-center">
-                      <Badge
-                        variant={getRateBadgeVariant(stats.updateRate)}
-                        className="text-xs"
-                      >
-                        {formatPercent(stats.updateRate)}
-                      </Badge>
-                    </TableCell>
+                  {/* Items New */}
+                  <TableCell className="text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <span className="text-success-600 font-medium">
+                        {stats.totalItemsNew.toLocaleString()}
+                      </span>
+                      {stats.totalItemsNew > 0 && (
+                        <TrendingUp className="w-3 h-3 text-success-500" />
+                      )}
+                    </div>
+                  </TableCell>
 
-                    {/* New Item Rate */}
-                    <TableCell className="text-center">
-                      <Badge
-                        variant={
-                          stats.newItemRate > 0.2
-                            ? "default"
-                            : stats.newItemRate > 0.1
-                            ? "secondary"
-                            : "outline"
-                        }
-                        className="text-xs"
-                      >
-                        {formatPercent(stats.newItemRate)}
-                      </Badge>
-                    </TableCell>
+                  {/* Errors */}
+                  <TableCell className="text-right">
+                    {stats.totalErrors > 0 ? (
+                      <div className="flex items-center justify-end gap-1">
+                        <AlertCircle className="w-4 h-4 text-error-500" />
+                        <span className="text-error-600 font-semibold">
+                          {stats.totalErrors.toLocaleString()}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-success-600">0</span>
+                    )}
+                  </TableCell>
 
-                    {/* Error Rate */}
-                    <TableCell className="text-center">
-                      <Badge
-                        variant={
-                          stats.errorRate > 0.1
-                            ? "destructive"
-                            : stats.errorRate > 0.05
-                            ? "secondary"
-                            : "default"
-                        }
-                        className={`text-xs ${getErrorRateColor(
-                          stats.errorRate
-                        )}`}
-                      >
-                        {formatPercent(stats.errorRate)}
-                      </Badge>
-                    </TableCell>
+                  {/* Update Rate */}
+                  <TableCell className="text-center">
+                    <Badge
+                      className={`${getRateBadgeColor(
+                        stats.updateRate
+                      )} text-white border-0 rounded-full text-xs`}
+                    >
+                      {formatPercentage(stats.updateRate)}
+                    </Badge>
+                  </TableCell>
 
-                    {/* Average Items Per Collection */}
-                    <TableCell className="text-right text-muted-foreground">
-                      {stats.averageItemsPerCollection.toFixed(1)}
-                    </TableCell>
+                  {/* New Item Rate */}
+                  <TableCell className="text-center">
+                    <Badge
+                      className={`${getNewItemRateBadgeColor(
+                        stats.newItemRate
+                      )} text-white border-0 rounded-full text-xs`}
+                    >
+                      {formatPercentage(stats.newItemRate)}
+                    </Badge>
+                  </TableCell>
 
-                    {/* Collections Processed */}
-                    <TableCell className="text-right">
-                      {stats.collectionsProcessed.toLocaleString()}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                  {/* Error Rate */}
+                  <TableCell className="text-center">
+                    <Badge
+                      className={`${getErrorRateBadgeColor(
+                        stats.errorRate
+                      )} text-white border-0 rounded-full text-xs ${getErrorRateColor(
+                        stats.errorRate
+                      )}`}
+                    >
+                      {formatPercentage(stats.errorRate)}
+                    </Badge>
+                  </TableCell>
+
+                  {/* Average Items Per Collection */}
+                  <TableCell className="text-right text-muted-foreground">
+                    {stats.averageItemsPerCollection.toFixed(1)}
+                  </TableCell>
+
+                  {/* Collections Processed */}
+                  <TableCell className="text-right">
+                    {stats.collectionsProcessed.toLocaleString()}
+                  </TableCell>
+                </TableRow>
+              );
+            })}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Summary Footer */}
+      <div className="mt-4 pt-4 border-t grid grid-cols-3 gap-4">
+        <div className="space-y-1">
+          <Label className="text-xs m-0">Total Items Found</Label>
+          <H4 className="text-lg font-semibold m-0">
+            {(
+              entityStats.competitions.totalItemsFound +
+              entityStats.teams.totalItemsFound +
+              entityStats.games.totalItemsFound
+            ).toLocaleString()}
+          </H4>
         </div>
-
-        {/* Summary Footer */}
-        <div className="mt-4 pt-4 border-t grid grid-cols-3 gap-4 text-sm">
-          <div>
-            <div className="text-xs text-muted-foreground mb-1">
-              Total Items Found
-            </div>
-            <div className="text-lg font-semibold">
-              {(
-                entityStats.competitions.totalItemsFound +
-                entityStats.teams.totalItemsFound +
-                entityStats.games.totalItemsFound
-              ).toLocaleString()}
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-muted-foreground mb-1">
-              Total Errors
-            </div>
-            <div className="text-lg font-semibold text-red-600">
-              {(
-                entityStats.competitions.totalErrors +
-                entityStats.teams.totalErrors +
-                entityStats.games.totalErrors
-              ).toLocaleString()}
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-muted-foreground mb-1">
-              Avg Error Rate
-            </div>
-            <div className="text-lg font-semibold">
-              {formatPercent(
-                (entityStats.competitions.errorRate +
-                  entityStats.teams.errorRate +
-                  entityStats.games.errorRate) /
-                  3
-              )}
-            </div>
-          </div>
+        <div className="space-y-1">
+          <Label className="text-xs m-0">Total Errors</Label>
+          <H4 className="text-lg font-semibold m-0 text-error-600">
+            {(
+              entityStats.competitions.totalErrors +
+              entityStats.teams.totalErrors +
+              entityStats.games.totalErrors
+            ).toLocaleString()}
+          </H4>
         </div>
-      </CardContent>
-    </Card>
+        <div className="space-y-1">
+          <Label className="text-xs m-0">Avg Error Rate</Label>
+          <H4 className="text-lg font-semibold m-0">
+            {formatPercentage(
+              (entityStats.competitions.errorRate +
+                entityStats.teams.errorRate +
+                entityStats.games.errorRate) /
+                3
+            )}
+          </H4>
+        </div>
+      </div>
+    </ElementContainer>
   );
 }

@@ -1,18 +1,15 @@
 "use client";
 
 import { AccountStatsResponse } from "@/types/dataCollection";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
 import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { Label, H4, SubsectionTitle, ByLine } from "@/components/type/titles";
+import { EmptyState } from "@/components/ui-library";
+import { formatPercentage } from "@/utils/chart-formatters";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Layers, AlertCircle } from "lucide-react";
 import { ChartConfig } from "@/components/ui/chart";
@@ -60,22 +57,19 @@ export default function StageDistributionChart({
 
   if (sortedStages.length === 0 && mostCommonPendingStages.length === 0) {
     return (
-      <Card className="shadow-none bg-slate-50 border rounded-md">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <Layers className="w-5 h-5 text-blue-500" />
-            Stage Distribution
-          </CardTitle>
-          <CardDescription>
-            Current stage distribution and pending stages
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            No stage distribution data available
-          </div>
-        </CardContent>
-      </Card>
+      <ElementContainer variant="dark" border padding="md">
+        <div className="flex items-center gap-2 mb-2">
+          <Layers className="w-5 h-5 text-blue-500" />
+          <SubsectionTitle className="m-0">Stage Distribution</SubsectionTitle>
+        </div>
+        <ByLine className="mb-4">
+          Current stage distribution and pending stages
+        </ByLine>
+        <EmptyState
+          variant="minimal"
+          description="No stage distribution data available"
+        />
+      </ElementContainer>
     );
   }
 
@@ -94,30 +88,26 @@ export default function StageDistributionChart({
   };
 
   return (
-    <Card className="shadow-none bg-slate-50 border rounded-md">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Layers className="w-5 h-5 text-blue-500" />
-          <CardTitle className="text-lg font-semibold">
-            Stage Distribution
-          </CardTitle>
-        </div>
-        <CardDescription>
-          Current stage distribution and most common pending stages
-        </CardDescription>
-      </CardHeader>
+    <ElementContainer variant="dark" border padding="md">
+      <div className="flex items-center gap-2 mb-2">
+        <Layers className="w-5 h-5 text-blue-500" />
+        <SubsectionTitle className="m-0">Stage Distribution</SubsectionTitle>
+      </div>
+      <ByLine className="mb-4">
+        Current stage distribution and most common pending stages
+      </ByLine>
 
-      <CardContent className="space-y-6">
+      <div className="space-y-6">
         {/* Stage Distribution Chart */}
         {sortedStages.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-muted-foreground">
+              <Label className="text-sm font-medium m-0">
                 Collections by Current Stage
-              </div>
-              <div className="text-sm text-muted-foreground">
+              </Label>
+              <ByLine className="text-sm m-0">
                 Total: {totalCollections.toLocaleString()} collections
-              </div>
+              </ByLine>
             </div>
 
             <ChartContainer config={chartConfig} className="h-[300px] w-full">
@@ -153,10 +143,10 @@ export default function StageDistributionChart({
                   formatter={(value: number) => {
                     const percentage =
                       totalCollections > 0
-                        ? ((value / totalCollections) * 100).toFixed(1)
-                        : "0.0";
+                        ? formatPercentage((value / totalCollections) * 100)
+                        : "0.0%";
                     return [
-                      `${value.toLocaleString()} (${percentage}%)`,
+                      `${value.toLocaleString()} (${percentage})`,
                       "Collections",
                     ];
                   }}
@@ -174,47 +164,39 @@ export default function StageDistributionChart({
             {/* Stage Summary Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t">
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">
-                  Total Stages
-                </div>
-                <div className="text-lg font-semibold">
+                <Label className="text-xs m-0">Total Stages</Label>
+                <H4 className="text-lg font-semibold m-0">
                   {sortedStages.length}
-                </div>
+                </H4>
               </div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">
-                  Most Common Stage
-                </div>
-                <div className="text-lg font-semibold text-indigo-600">
+                <Label className="text-xs m-0">Most Common Stage</Label>
+                <H4 className="text-lg font-semibold m-0 text-indigo-600">
                   {sortedStages.length > 0
                     ? formatStageName(sortedStages[0].stage)
                     : "N/A"}
-                </div>
+                </H4>
                 {sortedStages.length > 0 && (
-                  <div className="text-xs text-muted-foreground">
+                  <ByLine className="text-xs m-0">
                     {sortedStages[0].count.toLocaleString()} collections
-                  </div>
+                  </ByLine>
                 )}
               </div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">
-                  Average per Stage
-                </div>
-                <div className="text-lg font-semibold">
+                <Label className="text-xs m-0">Average per Stage</Label>
+                <H4 className="text-lg font-semibold m-0">
                   {sortedStages.length > 0
                     ? (totalCollections / sortedStages.length).toFixed(0)
                     : "0"}
-                </div>
+                </H4>
               </div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">
-                  Max Collections
-                </div>
-                <div className="text-lg font-semibold text-purple-600">
+                <Label className="text-xs m-0">Max Collections</Label>
+                <H4 className="text-lg font-semibold m-0 text-purple-600">
                   {sortedStages.length > 0
                     ? sortedStages[0].count.toLocaleString()
                     : "0"}
-                </div>
+                </H4>
               </div>
             </div>
           </div>
@@ -224,28 +206,26 @@ export default function StageDistributionChart({
         {mostCommonPendingStages.length > 0 && (
           <div className="space-y-3 pt-4 border-t">
             <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-amber-500" />
-              <div className="text-sm font-medium text-muted-foreground">
+              <AlertCircle className="w-4 h-4 text-warning-500" />
+              <SubsectionTitle className="text-sm m-0">
                 Most Common Pending Stages
-              </div>
+              </SubsectionTitle>
             </div>
             <div className="space-y-2">
               {mostCommonPendingStages.map((stage, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between p-3 bg-amber-50 border border-amber-200 rounded-md"
+                  className="flex items-center justify-between p-3 bg-warning-50 border border-warning-200 rounded-md"
                 >
                   <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-semibold flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full bg-warning-500 text-white text-xs font-semibold flex items-center justify-center">
                       {index + 1}
                     </div>
-                    <span className="text-sm font-medium">
+                    <Label className="text-sm font-medium m-0">
                       {formatStageName(stage)}
-                    </span>
+                    </Label>
                   </div>
-                  <div className="text-xs text-muted-foreground">
-                    Needs attention
-                  </div>
+                  <ByLine className="text-xs m-0">Needs attention</ByLine>
                 </div>
               ))}
             </div>
@@ -255,12 +235,13 @@ export default function StageDistributionChart({
         {/* Empty state if no pending stages */}
         {mostCommonPendingStages.length === 0 && sortedStages.length > 0 && (
           <div className="pt-4 border-t">
-            <div className="text-center py-4 text-sm text-muted-foreground">
-              No common pending stages identified
-            </div>
+            <EmptyState
+              variant="minimal"
+              description="No common pending stages identified"
+            />
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </ElementContainer>
   );
 }

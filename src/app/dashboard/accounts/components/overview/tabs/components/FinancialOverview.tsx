@@ -1,14 +1,11 @@
 "use client";
 
 import { AccountAnalytics } from "@/types/analytics";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import StatCard from "@/components/ui-library/metrics/StatCard";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { LoadingState } from "@/components/ui-library";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SectionTitle, Label, H4 } from "@/components/type/titles";
 import { TrendingUp, DollarSign, Calendar, CreditCard } from "lucide-react";
 
 import { formatDate } from "@/lib/utils";
@@ -28,166 +25,132 @@ export default function FinancialOverview({
 }) {
   if (!analytics) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
-            <CardHeader>
-              <Skeleton className="h-4 w-32" />
-            </CardHeader>
-            <CardContent>
+      <LoadingState variant="skeleton" message="Loading financial overview...">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="border rounded-lg p-6">
+              <Skeleton className="h-4 w-32 mb-4" />
               <Skeleton className="h-10 w-40" />
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+            </div>
+          ))}
+        </div>
+      </LoadingState>
     );
   }
 
   const financialSummary = analytics?.financialSummary;
   const paymentStatus = analytics?.paymentStatus;
 
-  // Debug logging
-  console.log("[FinancialOverview] analytics:", analytics);
-  console.log("[FinancialOverview] financialSummary:", financialSummary);
-
   return (
-    <div className="space-y-4">
-      <h3 className="text-lg font-semibold flex items-center gap-2">
+    <div className="space-y-6">
+      <SectionTitle className="flex items-center gap-2">
         <TrendingUp className="w-5 h-5 text-blue-500" />
         Financial Overview
-      </h3>
+      </SectionTitle>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Season Revenue */}
-        <Card className="shadow-none bg-slate-50 border-b-4 border-b-slate-500 rounded-md">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-emerald-500" />
-              Total Season Revenue
-            </CardTitle>
-            <CardDescription>All-time customer value</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-blue-600">
-              $
-              {(
-                (financialSummary?.totalLifetimeValue || 0) / 100
-              ).toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {analytics?.orderHistory?.totalOrders || 0} season pass
-              {analytics?.orderHistory?.totalOrders !== 1 ? "es" : ""} purchased
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Total Season Revenue"
+          value={`$${(
+            (financialSummary?.totalLifetimeValue || 0) / 100
+          ).toLocaleString("en-AU", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`}
+          icon={<DollarSign className="h-5 w-5" />}
+          description={`${
+            analytics?.orderHistory?.totalOrders || 0
+          } season pass${
+            analytics?.orderHistory?.totalOrders !== 1 ? "es" : ""
+          } purchased`}
+          variant="primary"
+        />
 
         {/* Annual Season Pass Value */}
-        <Card className="shadow-none bg-slate-50 border-b-4 border-b-slate-500 rounded-md">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-emerald-500" />
-              Season Pass Value
-            </CardTitle>
-            <CardDescription>Current season rate</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold text-green-600">
-              $
-              {(
-                (financialSummary?.monthlyRecurringRevenue || 0) / 100
-              ).toLocaleString()}
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Annual billing cycle
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Season Pass Value"
+          value={`$${(
+            financialSummary?.monthlyRecurringRevenue || 0
+          ).toLocaleString("en-AU", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`}
+          icon={<TrendingUp className="h-5 w-5" />}
+          description="Annual billing cycle"
+          variant="secondary"
+        />
 
         {/* Renewal Status */}
-        <Card className="shadow-none bg-slate-50 border-b-4 border-b-slate-500 rounded-md">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-emerald-500" />
-              Renewal Status
-            </CardTitle>
-            <CardDescription>Season pass timeline</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {analytics?.currentSubscription?.isActive ? "Active" : "Inactive"}
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {analytics?.orderHistory?.totalOrders || 0} season
-              {analytics?.orderHistory?.totalOrders !== 1 ? "s" : ""} subscribed
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Renewal Status"
+          value={
+            analytics?.currentSubscription?.isActive ? "Active" : "Inactive"
+          }
+          icon={<Calendar className="h-5 w-5" />}
+          description={`${analytics?.orderHistory?.totalOrders || 0} season${
+            analytics?.orderHistory?.totalOrders !== 1 ? "s" : ""
+          } subscribed`}
+          variant="accent"
+        />
 
         {/* Last Season Pass Purchase */}
-        <Card className="shadow-none bg-slate-50 border-b-4 border-b-slate-500 rounded-md">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium flex items-center gap-2">
-              <CreditCard className="w-4 h-4 text-emerald-500" />
-              Last Season Pass
-            </CardTitle>
-            <CardDescription>Most recent purchase</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">
-              {paymentStatus?.lastPaymentDate
-                ? formatDate(paymentStatus.lastPaymentDate)
-                : "Never"}
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {analytics?.orderHistory?.totalOrders || 0} season
-              {analytics?.orderHistory?.totalOrders !== 1 ? "s" : ""} total
-            </p>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Last Season Pass"
+          value={
+            paymentStatus?.lastPaymentDate
+              ? formatDate(paymentStatus.lastPaymentDate)
+              : "Never"
+          }
+          icon={<CreditCard className="h-5 w-5" />}
+          description={`${analytics?.orderHistory?.totalOrders || 0} season${
+            analytics?.orderHistory?.totalOrders !== 1 ? "s" : ""
+          } total`}
+          variant="light"
+        />
       </div>
 
       {/* Payment Status */}
-      <Card className="shadow-none bg-slate-50 border-b-4 border-b-slate-500 rounded-md mt-4">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold">
-            Payment Status
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-5 gap-4">
-            <div>
-              <p className="text-xs text-muted-foreground">Success Rate</p>
-              <p className="text-lg font-bold">
-                {paymentStatus?.successRate?.toFixed(1) || 0}%
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Total Payments</p>
-              <p className="text-lg font-bold">
-                {paymentStatus?.totalPayments || 0}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Successful</p>
-              <p className="text-lg font-bold text-green-600">
-                {paymentStatus?.successfulPayments || 0}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Failed</p>
-              <p className="text-lg font-bold text-red-600">
-                {paymentStatus?.failedPayments || 0}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Avg Payment</p>
-              <p className="text-lg font-bold">
-                ${((paymentStatus?.averagePaymentAmount || 0) / 100).toFixed(2)}
-              </p>
-            </div>
+      <SectionContainer title="Payment Status" variant="compact">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+          <div className="space-y-1">
+            <Label className="text-xs">Success Rate</Label>
+            <H4 className="text-lg font-bold m-0">
+              {paymentStatus?.successRate?.toFixed(1) || 0}%
+            </H4>
           </div>
-        </CardContent>
-      </Card>
+          <div className="space-y-1">
+            <Label className="text-xs">Total Payments</Label>
+            <H4 className="text-lg font-bold m-0">
+              {paymentStatus?.totalPayments || 0}
+            </H4>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Successful</Label>
+            <H4 className="text-lg font-bold m-0 text-success-600">
+              {paymentStatus?.successfulPayments || 0}
+            </H4>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Failed</Label>
+            <H4 className="text-lg font-bold m-0 text-error-600">
+              {paymentStatus?.failedPayments || 0}
+            </H4>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs">Avg Payment</Label>
+            <H4 className="text-lg font-bold m-0">
+              $
+              {(
+                (paymentStatus?.averagePaymentAmount || 0) / 100
+              ).toLocaleString("en-AU", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </H4>
+          </div>
+        </div>
+      </SectionContainer>
     </div>
   );
 }

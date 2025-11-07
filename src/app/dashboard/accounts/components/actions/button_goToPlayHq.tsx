@@ -10,7 +10,7 @@ export default function Button_GoToPlayHQ({
   LinktoPlayHQ: string;
 }) {
   return (
-    <Button variant="outline">
+    <Button variant="primary">
       <Link target="_blank" rel="noopener noreferrer" href={LinktoPlayHQ}>
         <P>Go To PlayHQ</P>
       </Link>

@@ -1,14 +1,18 @@
 "use client";
 
 import { useRevenueAnalytics } from "@/hooks/analytics/useRevenueAnalytics";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import LoadingState from "@/components/ui-library/states/LoadingState";
+import ErrorState from "@/components/ui-library/states/ErrorState";
+import EmptyState from "@/components/ui-library/states/EmptyState";
+import ChartCard, {
+  ChartSummaryStat,
+} from "@/components/modules/charts/ChartCard";
+import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { BarChart, Bar, CartesianGrid, XAxis, YAxis } from "recharts";
+import { formatCurrency } from "@/utils/chart-formatters";
+import { DollarSign, TrendingUp, Calendar } from "lucide-react";
+import type { ChartConfig } from "@/components/ui/chart";
 
 /**
  * RevenueChart Component
@@ -16,84 +20,107 @@ import { Skeleton } from "@/components/ui/skeleton";
  * Displays monthly/quarterly revenue trends with visual representation of revenue patterns.
  */
 export function RevenueChart() {
-  const { data, isLoading, error } = useRevenueAnalytics();
+  const { data, isLoading, error, refetch } = useRevenueAnalytics();
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-48" />
-        </CardHeader>
-        <CardContent>
+      <LoadingState variant="skeleton">
+        <div className="bg-slate-50 border rounded-md p-6">
+          <Skeleton className="h-6 w-48 mb-4" />
           <Skeleton className="h-64 w-full" />
-        </CardContent>
-      </Card>
+        </div>
+      </LoadingState>
     );
   }
 
   if (error) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Error Loading Revenue Data</CardTitle>
-          <CardDescription>{error.message}</CardDescription>
-        </CardHeader>
-      </Card>
+      <ErrorState
+        variant="card"
+        title="Error Loading Revenue Data"
+        error={error}
+        onRetry={() => refetch()}
+      />
     );
   }
 
   if (!data) {
-    return null;
+    return (
+      <EmptyState
+        variant="card"
+        title="No Revenue Data"
+        description="Revenue data will appear here once available"
+        icon={<DollarSign className="h-12 w-12 text-muted-foreground" />}
+      />
+    );
   }
 
   const analytics = data;
   const monthlyRevenue = analytics.monthlyQuarterlyRevenueTrends.monthlyRevenue;
   const revenueEntries = Object.entries(monthlyRevenue).sort();
 
+  // Transform data for BarChart
+  const chartData = revenueEntries.map(([month, revenue]) => ({
+    month,
+    revenue: revenue / 100, // Convert cents to dollars
+  }));
+
+  const totalRevenue =
+    analytics.monthlyQuarterlyRevenueTrends.totalRevenue / 100;
+  const avgRevenue =
+    analytics.monthlyQuarterlyRevenueTrends.averageMonthlyRevenue / 100;
+  const periods = revenueEntries.length;
+
+  const chartConfig = {
+    revenue: {
+      label: "Revenue",
+      color: "hsl(var(--chart-1))",
+    },
+  } satisfies ChartConfig;
+
+  const summaryStats: ChartSummaryStat[] = [
+    {
+      icon: DollarSign,
+      label: "Total Revenue",
+      value: formatCurrency(totalRevenue),
+    },
+    {
+      icon: TrendingUp,
+      label: "Average Monthly",
+      value: formatCurrency(avgRevenue),
+    },
+    {
+      icon: Calendar,
+      label: "Periods",
+      value: `${periods} months`,
+    },
+  ];
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Monthly Revenue Trends</CardTitle>
-        <CardDescription>
-          Total: $
-          {(
-            analytics.monthlyQuarterlyRevenueTrends.totalRevenue / 100
-          ).toLocaleString()}{" "}
-          | Avg: $
-          {(
-            analytics.monthlyQuarterlyRevenueTrends.averageMonthlyRevenue / 100
-          ).toLocaleString()}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {revenueEntries.map(([month, revenue]) => (
-            <div key={month} className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium min-w-[100px]">
-                  {month}
-                </span>
-                <div className="flex-1 bg-secondary h-2 rounded-full overflow-hidden">
-                  <div
-                    className="bg-primary h-full transition-all"
-                    style={{
-                      width: `${
-                        (revenue /
-                          analytics.monthlyQuarterlyRevenueTrends
-                            .totalRevenue) *
-                        100
-                      }%`,
-                    }}
-                  />
-                </div>
-              </div>
-              <div className="text-sm font-bold min-w-[80px] text-right">
-                ${(revenue / 100).toLocaleString()}
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <ChartCard
+      title="Monthly Revenue Trends"
+      description="Revenue breakdown by month"
+      icon={DollarSign}
+      chartConfig={chartConfig}
+      summaryStats={summaryStats}
+      variant="elevated"
+    >
+      <BarChart data={chartData}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis
+          dataKey="month"
+          angle={-45}
+          textAnchor="end"
+          height={80}
+          fontSize={12}
+        />
+        <YAxis tickFormatter={(value) => formatCurrency(value)} fontSize={12} />
+        <ChartTooltip
+          content={<ChartTooltipContent />}
+          formatter={(value) => formatCurrency(Number(value))}
+        />
+        <Bar dataKey="revenue" fill="var(--color-revenue)" />
+      </BarChart>
+    </ChartCard>
   );
 }

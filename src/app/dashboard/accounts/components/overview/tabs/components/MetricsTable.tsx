@@ -1,14 +1,8 @@
 "use client";
 
-import { Download, Sparkles, Image, BarChart3 } from "lucide-react";
+import { Download, Sparkles, Image } from "lucide-react";
 import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccountDetails";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import {
   Table,
   TableBody,
@@ -48,44 +42,37 @@ export default function MetricsTable({ accountData }: MetricsTableProps) {
   ];
 
   return (
-    <Card className="shadow-none bg-slate-50 border-b-4 border-b-slate-500 rounded-md">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-slate-600" />
-          <CardTitle className="text-lg font-semibold">
-            Account Metrics
-          </CardTitle>
-        </div>
-        <CardDescription>
-          Overview of key account metrics and performance indicators
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[50px]">Icon</TableHead>
-                <TableHead>Metric</TableHead>
-                <TableHead className="text-right">Value</TableHead>
-                <TableHead className="text-right">Last Update</TableHead>
+    <SectionContainer
+      title="Account Metrics"
+      description="Overview of key account metrics and performance indicators"
+      variant="compact"
+    >
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[50px]">Icon</TableHead>
+              <TableHead>Metric</TableHead>
+              <TableHead className="text-right">Value</TableHead>
+              <TableHead className="text-right">Last Update</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {metrics.map((metric, index) => (
+              <TableRow key={index}>
+                <TableCell>{metric.icon}</TableCell>
+                <TableCell className="font-medium">{metric.title}</TableCell>
+                <TableCell className="text-right font-semibold">
+                  {metric.value}
+                </TableCell>
+                <TableCell className="text-right text-muted-foreground">
+                  {metric.lastUpdate}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {metrics.map((metric, index) => (
-                <TableRow key={index}>
-                  <TableCell>{metric.icon}</TableCell>
-                  <TableCell className="font-medium">{metric.title}</TableCell>
-                  <TableCell className="text-right">{metric.value}</TableCell>
-                  <TableCell className="text-right text-muted-foreground">
-                    {metric.lastUpdate}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      </CardContent>
-    </Card>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </SectionContainer>
   );
 }

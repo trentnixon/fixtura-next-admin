@@ -12,10 +12,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, Database } from "lucide-react";
+import { Clock } from "lucide-react";
 import { formatDate, formatRelativeTime } from "../utils/formatters";
-import { H3 } from "@/components/type/titles";
-import { P } from "@/components/type/type";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { EmptyState } from "@/components/ui-library";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import AccountSyncButton from "../../AccountSyncButton";
 
 interface CollectionsTableProps {
@@ -47,14 +48,12 @@ export default function CollectionsTable({
     return dateB - dateA;
   });
 
-  // Get status badge variant based on days since last collection
-  const getStatusBadgeVariant = (
-    days: number
-  ): "default" | "secondary" | "destructive" | "outline" => {
-    if (days <= 1) return "default";
-    if (days <= 7) return "default";
-    if (days <= 30) return "secondary";
-    return "destructive";
+  // Get status badge color based on days since last collection
+  const getStatusBadgeColor = (days: number): string => {
+    if (days <= 1) return "bg-success-500";
+    if (days <= 7) return "bg-success-500";
+    if (days <= 30) return "bg-warning-500";
+    return "bg-error-500";
   };
 
   // Get status label
@@ -67,110 +66,92 @@ export default function CollectionsTable({
   };
 
   return (
-    <div className="">
-      <div className="p-6 pb-4">
-        <div className="flex items-center gap-2 mb-2">
-          <Database className="w-5 h-5 text-indigo-500" />
-          <H3 className="text-lg font-semibold">Data Collection</H3>
-        </div>
-        <P className="text-sm text-muted-foreground">
-          Complete list of all data collections for this account, sorted by most
-          recent first.
-        </P>
-      </div>
-      <div className="px-6 pb-2 space-y-2">
-        {/* Sync Button Section */}
-        <div className="pb-0">
-          <div className="flex items-center justify-end">
-            <AccountSyncButton
-              accountId={accountId}
-              accountType={accountType}
-            />
-          </div>
-        </div>
-
-        {/* Table Section */}
-        {sortedCollections.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p>No collections found for this account.</p>
-          </div>
-        ) : (
-          <div className="rounded-md border">
-            <div className="max-h-[400px] overflow-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-left">
-                      Last Collection Date
-                    </TableHead>
-                    <TableHead className="text-center">Relative Time</TableHead>
-                    <TableHead className="text-center">Days Since</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
-                    <TableHead className="w-[100px] text-center">
-                      Actions
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedCollections.map((collection) => (
-                    <TableRow key={collection.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-muted-foreground" />
-                          <span>
-                            {formatDate(collection.whenWasTheLastCollection, {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center text-sm text-muted-foreground">
-                        {formatRelativeTime(
-                          collection.whenWasTheLastCollection
-                        )}
-                      </TableCell>
-                      <TableCell className="text-center font-medium">
-                        {collection.daysSinceLastCollection === 0
-                          ? "Today"
-                          : `${collection.daysSinceLastCollection} ${
-                              collection.daysSinceLastCollection === 1
-                                ? "day"
-                                : "days"
-                            }`}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Badge
-                          variant={getStatusBadgeVariant(
-                            collection.daysSinceLastCollection
-                          )}
-                          className="text-xs"
-                        >
-                          {getStatusLabel(collection.daysSinceLastCollection)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Button variant="outline" size="sm" asChild>
-                          <Link href={`/dashboard/data/${collection.id}`}>
-                            View
-                          </Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        )}
-        {sortedCollections.length > 0 && (
-          <div className="mt-4 text-xs text-muted-foreground text-center">
-            Showing {sortedCollections.length} collection
-            {sortedCollections.length !== 1 ? "s" : ""}
-          </div>
-        )}
-      </div>
-    </div>
+    <SectionContainer
+      title="Data Collection"
+      description={`Complete list of all data collections for this account, sorted by most recent first. ${
+        sortedCollections.length > 0
+          ? `Showing ${sortedCollections.length} collection${
+              sortedCollections.length !== 1 ? "s" : ""
+            }.`
+          : ""
+      }`}
+      variant="compact"
+      action={
+        <AccountSyncButton
+          accountId={accountId}
+          accountType={accountType}
+          variant="accent"
+        />
+      }
+    >
+      {sortedCollections.length === 0 ? (
+        <EmptyState
+          title="No collections found"
+          description="This account has no data collections yet."
+          variant="minimal"
+        />
+      ) : (
+        <ScrollArea className="h-[400px] w-full">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-left">
+                  Last Collection Date
+                </TableHead>
+                <TableHead className="text-center">Relative Time</TableHead>
+                <TableHead className="text-center">Days Since</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="w-[100px] text-center">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {sortedCollections.map((collection) => (
+                <TableRow key={collection.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      <span>
+                        {formatDate(collection.whenWasTheLastCollection, {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center text-sm text-muted-foreground">
+                    {formatRelativeTime(collection.whenWasTheLastCollection)}
+                  </TableCell>
+                  <TableCell className="text-center font-semibold">
+                    {collection.daysSinceLastCollection === 0
+                      ? "Today"
+                      : `${collection.daysSinceLastCollection} ${
+                          collection.daysSinceLastCollection === 1
+                            ? "day"
+                            : "days"
+                        }`}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Badge
+                      className={`${getStatusBadgeColor(
+                        collection.daysSinceLastCollection
+                      )} text-white border-0 rounded-full text-xs`}
+                    >
+                      {getStatusLabel(collection.daysSinceLastCollection)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <Button variant="primary" asChild>
+                      <Link href={`/dashboard/data/${collection.id}`}>
+                        View
+                      </Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollArea>
+      )}
+    </SectionContainer>
   );
 }

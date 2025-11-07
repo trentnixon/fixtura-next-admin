@@ -22,6 +22,9 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useGlobalContext } from "@/components/providers/GlobalContext";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { LoadingState, ErrorState, EmptyState } from "@/components/ui-library";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function CompetitionsTab() {
   const { accountID } = useParams();
@@ -47,24 +50,36 @@ export default function CompetitionsTab() {
   } = useCompetitionsQuery(organizationId as number, account_type as number);
 
   if (isAccountLoading || isCompetitionsLoading) {
-    return <div>Loading...</div>;
+    return <LoadingState variant="skeleton" />;
   }
 
   if (isAccountError) {
-    return <div>Error fetching account details: {accountError?.message}</div>;
+    return (
+      <ErrorState
+        variant="card"
+        error={accountError}
+        title="Error fetching account details"
+      />
+    );
   }
 
   if (isCompetitionsError) {
-    return <div>Error fetching competitions: {competitionsError?.message}</div>;
+    return (
+      <ErrorState
+        variant="card"
+        error={competitionsError}
+        title="Error fetching competitions"
+      />
+    );
   }
 
   return (
-    <div>
-      <h1 className="text-xl font-bold mb-4">
-        Competitions ({competitions?.length})
-      </h1>
-      <div className="bg-slate-50 rounded-lg px-4 py-2 shadow-none border ">
-        {competitions?.length ? (
+    <SectionContainer
+      title={`Competitions (${competitions?.length || 0})`}
+      variant="compact"
+    >
+      {competitions?.length ? (
+        <ScrollArea className="h-[600px]">
           <Table>
             <TableHeader>
               <TableRow>
@@ -79,62 +94,75 @@ export default function CompetitionsTab() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {competitions.map(competition => (
+              {competitions.map((competition) => (
                 <TableRow key={competition.competitionId}>
-                  <TableCell className="text-left">
+                  <TableCell className="text-left font-medium">
                     {competition.competitionName}
                   </TableCell>
                   <TableCell className="text-center">
                     {competition.season}
                   </TableCell>
                   <TableCell className="text-center">
-                    <Badge variant="secondary" className="bg-slate-50">
-                      {competition.status === "Active" ? (
-                        <CheckIcon size="16" className="text-green-500" />
-                      ) : (
-                        <XIcon size="16" className="text-red-500" />
-                      )}
-                    </Badge>
+                    <div className="flex justify-center">
+                      <Badge
+                        className={`${
+                          competition.status === "Active"
+                            ? "bg-success-500"
+                            : "bg-slate-500"
+                        } text-white border-0 rounded-full w-6 h-6 p-0 flex items-center justify-center`}
+                      >
+                        {competition.status === "Active" ? (
+                          <CheckIcon size="12" />
+                        ) : (
+                          <XIcon size="12" />
+                        )}
+                      </Badge>
+                    </div>
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-center font-semibold">
                     {competition.grades.length}
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell className="text-center font-semibold">
                     {competition.teams.length}
                   </TableCell>
                   <TableCell className="text-center">
-                    <Link
-                      href={`${strapiLocation.competition}${competition.competitionId}`}
-                      target="_blank"
-                      rel="noopener noreferrer">
-                      <Button variant="outline">
+                    <Button variant="primary" asChild>
+                      <Link
+                        href={`${strapiLocation.competition}${competition.competitionId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <DatabaseIcon size="16" />
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   </TableCell>
                   <TableCell className="text-center">
-                    <Link href={competition.url} target="_blank">
-                      <Button variant="outline">
+                    <Button variant="primary" asChild>
+                      <Link href={competition.url} target="_blank">
                         <ExternalLinkIcon size="16" />
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   </TableCell>
                   <TableCell className="text-center">
-                    <Link
-                      href={`/dashboard/competitions/${competition.competitionId}`}>
-                      <Button variant="outline">
+                    <Button variant="primary" asChild>
+                      <Link
+                        href={`/dashboard/competitions/${competition.competitionId}`}
+                      >
                         <EyeIcon size="16" />
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
-        ) : (
-          <p>No competitions found for this account.</p>
-        )}
-      </div>
-    </div>
+        </ScrollArea>
+      ) : (
+        <EmptyState
+          variant="minimal"
+          description="No competitions found for this account."
+        />
+      )}
+    </SectionContainer>
   );
 }

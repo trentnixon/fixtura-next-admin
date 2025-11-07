@@ -1,13 +1,9 @@
 "use client";
 import { useSchedulerQuery } from "@/hooks/scheduler/useSchedulerQuery";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { P } from "@/components/type/type";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { LoadingState, ErrorState } from "@/components/ui-library";
+import { Skeleton } from "@/components/ui/skeleton";
+import { H4, ByLine } from "@/components/type/titles";
 import { CalendarIcon, GitPullRequestArrow, PickaxeIcon } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -46,22 +42,60 @@ export default function SchedulerDetailsGrid({
     }
   }, [scheduler]);
 
-  if (isLoading) return <p>Loading scheduler...</p>;
+  if (isLoading) {
+    return (
+      <LoadingState variant="skeleton" message="Loading scheduler details...">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <SectionContainer title="Day of the Week" variant="compact">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Skeleton className="h-6 w-24" />
+                <Skeleton className="h-6 w-6 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-full" />
+            </div>
+          </SectionContainer>
+          <SectionContainer title="Scheduler Queued?" variant="compact">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-10 rounded-full" />
+                  <Skeleton className="h-4 w-8" />
+                </div>
+                <Skeleton className="h-6 w-6 rounded-full" />
+              </div>
+              <Skeleton className="h-9 w-32" />
+            </div>
+          </SectionContainer>
+          <SectionContainer title="Is Scheduler Rendering?" variant="compact">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-5 w-10 rounded-full" />
+                  <Skeleton className="h-4 w-8" />
+                </div>
+                <Skeleton className="h-6 w-6 rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-full" />
+            </div>
+          </SectionContainer>
+        </div>
+      </LoadingState>
+    );
+  }
+
   if (isError) {
     return (
-      <div>
-        <p>Error loading scheduler: {error?.message}</p>
-        <pre>{JSON.stringify(error, null, 2)}</pre>
-      </div>
+      <ErrorState
+        error={error}
+        title="Error Loading Scheduler"
+        variant="card"
+      />
     );
   }
 
   const handleRenderingSwitchChange = (newState: boolean) => {
     setIsRendering(newState);
-    console.log({
-      schedulerId: Number(scheduler?.id) || 0,
-      payload: { isRendering: newState },
-    });
     updateScheduler({
       schedulerId: Number(scheduler?.id) || 0,
       payload: { isRendering: newState },
@@ -80,86 +114,76 @@ export default function SchedulerDetailsGrid({
     scheduler?.attributes.days_of_the_week?.data?.attributes.Name;
 
   return (
-    <div className="grid grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Day of the Week Card */}
-      <Card className="w-full shadow-none bg-slate-50 border-b-4 border-b-slate-500">
-        <CardContent className="p-2">
-          <CardDescription className="flex items-center justify-between w-full">
-            <P>{daysOfTheWeek || "N/A"}</P>
-            <CalendarIcon className="w-6 h-6 ml-2 text-emerald-500" />
-          </CardDescription>
-        </CardContent>
-        <CardHeader className="p-2">
-          <CardTitle>Day of the Week</CardTitle>
-          <CardDescription>
-            Last Update: {formatDate(scheduler?.attributes?.updatedAt || "")}
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <SectionContainer title="Day of the Week" variant="compact">
+        <div className="flex items-center justify-between">
+          <H4 className="text-lg font-semibold m-0">
+            {daysOfTheWeek || "N/A"}
+          </H4>
+          <CalendarIcon className="w-6 h-6 text-emerald-500 flex-shrink-0" />
+        </div>
+        <ByLine className="mt-2 mb-0">
+          Last Update: {formatDate(scheduler?.attributes?.updatedAt || "")}
+        </ByLine>
+      </SectionContainer>
+
       {/* Queued Card */}
-      <Card className="w-full shadow-none bg-slate-50 border-b-4 border-b-slate-500">
-        <CardContent className="p-2">
-          <CardDescription className="flex items-center justify-between w-full">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="scheduler-queued"
-                checked={queued}
-                onCheckedChange={handleQueuedSwitchChange}
-                disabled={isUpdating}
-                className={
-                  queued
-                    ? "data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                    : "data-[state=checked]:bg-gray-900 data-[state=checked]:border-gray-900"
-                }
-              />
-              <Label htmlFor="scheduler-queued">{queued ? "Yes" : "No"}</Label>
-            </div>
-            <GitPullRequestArrow className="w-6 h-6 ml-2 text-emerald-500" />
-          </CardDescription>
-        </CardContent>
-        <CardHeader className="p-2">
-          <CardTitle>
-            <P>Scheduler Queued?</P>
-          </CardTitle>
-          <Button variant="outline">
-            <Link
-              target="_blank"
-              href={`${strapiLocation.scheduler}${scheduler?.id}`}>
-              Go To Scheduler
-            </Link>
-          </Button>
-        </CardHeader>
-      </Card>
+      <SectionContainer title="Scheduler Queued?" variant="compact">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="scheduler-queued"
+              checked={queued}
+              onCheckedChange={handleQueuedSwitchChange}
+              disabled={isUpdating}
+              className={
+                queued
+                  ? "data-[state=checked]:bg-success-500 data-[state=checked]:border-success-500"
+                  : "data-[state=checked]:bg-slate-500 data-[state=checked]:border-slate-500"
+              }
+            />
+            <Label htmlFor="scheduler-queued" className="m-0">
+              {queued ? "Yes" : "No"}
+            </Label>
+          </div>
+          <GitPullRequestArrow className="w-6 h-6 text-emerald-500 flex-shrink-0" />
+        </div>
+        <Button variant="outline" size="sm" asChild>
+          <Link
+            target="_blank"
+            href={`${strapiLocation.scheduler}${scheduler?.id}`}
+          >
+            Go To Scheduler
+          </Link>
+        </Button>
+      </SectionContainer>
+
       {/* Is Rendering Card */}
-      <Card className="w-full shadow-none bg-slate-50 border-b-4 border-b-slate-500">
-        <CardContent className="p-2">
-          <CardDescription className="flex items-center justify-between w-full">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="is-rendering"
-                checked={isRendering}
-                onCheckedChange={handleRenderingSwitchChange}
-                disabled={isUpdating}
-                className={
-                  isRendering
-                    ? "data-[state=checked]:bg-green-500 data-[state=checked]:border-green-500"
-                    : "data-[state=checked]:bg-gray-900 data-[state=checked]:border-gray-900"
-                }
-              />
-              <Label htmlFor="is-rendering">{isRendering ? "Yes" : "No"}</Label>
-            </div>
-            <PickaxeIcon className="w-6 h-6 ml-2 text-emerald-500" />
-          </CardDescription>
-        </CardContent>
-        <CardHeader className="p-2">
-          <CardTitle>
-            <P>Is Scheduler Rendering?</P>
-          </CardTitle>
-          <CardDescription>
-            Total Renders: {accountData?.rollup.totalRenders || ""}
-          </CardDescription>
-        </CardHeader>
-      </Card>
+      <SectionContainer title="Is Scheduler Rendering?" variant="compact">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Switch
+              id="is-rendering"
+              checked={isRendering}
+              onCheckedChange={handleRenderingSwitchChange}
+              disabled={isUpdating}
+              className={
+                isRendering
+                  ? "data-[state=checked]:bg-success-500 data-[state=checked]:border-success-500"
+                  : "data-[state=checked]:bg-slate-500 data-[state=checked]:border-slate-500"
+              }
+            />
+            <Label htmlFor="is-rendering" className="m-0">
+              {isRendering ? "Yes" : "No"}
+            </Label>
+          </div>
+          <PickaxeIcon className="w-6 h-6 text-emerald-500 flex-shrink-0" />
+        </div>
+        <ByLine className="m-0">
+          Total Renders: {accountData?.rollup.totalRenders || "0"}
+        </ByLine>
+      </SectionContainer>
     </div>
   );
 }

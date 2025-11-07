@@ -22,11 +22,11 @@ export default function SchedulersPage() {
           description="Current status and metrics for all schedulers"
         >
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-9 space-y-6">
+            <div className="lg:col-span-8 space-y-6">
               <SchedulerRollupData />
               <SchedulerRenderingTable />
             </div>
-            <div className="lg:col-span-3">
+            <div className="lg:col-span-4">
               <SchedulerBarChartByDays />
             </div>
           </div>

@@ -1,16 +1,12 @@
 "use client";
 
 import { AccountAnalytics } from "@/types/analytics";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
+import { LoadingState } from "@/components/ui-library";
 import { Badge } from "@/components/ui/badge";
-import { FlaskConical, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Label, H4, SubsectionTitle } from "@/components/type/titles";
+import { Clock, CheckCircle, XCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 /**
@@ -28,31 +24,33 @@ export default function TrialPerformancePanel({
 }) {
   if (!analytics?.trialUsage) {
     return (
-      <Card className="shadow-none bg-slate-50 border-b-4 border-b-slate-500 rounded-md">
-        <CardHeader>
-          <Skeleton className="h-6 w-48" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-32 w-full" />
-        </CardContent>
-      </Card>
+      <LoadingState variant="skeleton" message="Loading trial performance...">
+        <SectionContainer title="Free Trial Status" variant="compact">
+          <div className="h-32" />
+        </SectionContainer>
+      </LoadingState>
     );
   }
 
-  const { hasActiveTrial, trialHistory } = analytics.trialUsage;
+  const { hasActiveTrial, trialInstance, trialHistory } = analytics.trialUsage;
 
-  // Get the trial (there should only be one)
-  const trial =
+  // Use trialInstance (current/active trial) if available, otherwise use most recent from history
+  const activeTrial = trialInstance;
+  const historicalTrial =
     trialHistory && trialHistory.length > 0 ? trialHistory[0] : null;
+
+  // Determine which trial data to use
+  const trial = activeTrial || historicalTrial;
+  const isFromHistory = !activeTrial && historicalTrial;
 
   // Get trial status
   const getTrialStatus = () => {
-    if (hasActiveTrial)
-      return { text: "Active", color: "bg-emerald-500", icon: CheckCircle };
-    if (trial?.converted)
-      return { text: "Converted", color: "bg-green-500", icon: CheckCircle };
-    if (trial && !hasActiveTrial)
-      return { text: "Expired", color: "bg-gray-500", icon: XCircle };
+    if (hasActiveTrial && activeTrial)
+      return { text: "Active", color: "bg-success-500", icon: CheckCircle };
+    if (historicalTrial?.converted)
+      return { text: "Converted", color: "bg-success-500", icon: CheckCircle };
+    if (historicalTrial && !hasActiveTrial)
+      return { text: "Expired", color: "bg-slate-500", icon: XCircle };
     return { text: "Never Activated", color: "bg-slate-500", icon: Clock };
   };
 
@@ -71,97 +69,101 @@ export default function TrialPerformancePanel({
 
   const duration = getDuration();
 
-  return (
-    <Card className="shadow-none bg-slate-50 border-b-4 border-b-slate-500 rounded-md">
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold flex items-center gap-2">
-          <FlaskConical className="w-5 h-5 text-emerald-500" />
-          Free Trial Status
-        </CardTitle>
-        <CardDescription>
-          {trial
-            ? hasActiveTrial
-              ? "Currently active"
-              : trial.converted
-              ? "Converted to paid subscription"
-              : "Trial completed"
-            : "No trial activated"}
-        </CardDescription>
-      </CardHeader>
+  // Check if trial was converted (only available in trialHistory)
+  const trialConverted = historicalTrial?.converted || false;
 
-      <CardContent className="space-y-4">
+  return (
+    <SectionContainer
+      title="Free Trial Status"
+      description={
+        trial
+          ? hasActiveTrial && activeTrial
+            ? "Currently active"
+            : trialConverted
+            ? "Converted to paid subscription"
+            : "Trial completed"
+          : "No trial activated"
+      }
+      variant="compact"
+    >
+      <div className="space-y-4">
         {/* Status Badge */}
-        <div className="p-4 bg-slate-100 border border-slate-300 rounded-lg">
+        <ElementContainer variant="dark" border padding="md">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <StatusIcon className="w-5 h-5 text-emerald-500" />
-              <span className="text-sm font-medium">Status:</span>
+              <Label className="text-sm m-0">Status:</Label>
             </div>
-            <Badge variant="default" className={`${status.color} text-white`}>
+            <Badge
+              className={`${status.color} text-white border-0 rounded-full`}
+            >
               {status.text}
             </Badge>
           </div>
 
           {trial && (
-            <div className="space-y-2 pt-2 border-t border-slate-300">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Activated:</span>
-                <span className="font-semibold">
+            <div className="space-y-2 pt-3 border-t border-slate-200">
+              <div className="flex justify-between items-center">
+                <Label className="text-sm m-0">Activated:</Label>
+                <H4 className="text-sm font-semibold m-0">
                   {formatDate(trial.startDate)}
-                </span>
+                </H4>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Completed:</span>
-                <span className="font-semibold">
+              <div className="flex justify-between items-center">
+                <Label className="text-sm m-0">Completed:</Label>
+                <H4 className="text-sm font-semibold m-0">
                   {formatDate(trial.endDate)}
-                </span>
+                </H4>
               </div>
               {duration !== null && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Duration:</span>
-                  <span className="font-semibold">
+                <div className="flex justify-between items-center">
+                  <Label className="text-sm m-0">Duration:</Label>
+                  <H4 className="text-sm font-semibold m-0">
                     {duration} day{duration !== 1 ? "s" : ""}
-                  </span>
+                  </H4>
                 </div>
               )}
             </div>
           )}
-        </div>
+        </ElementContainer>
 
         {/* Conversion Information */}
-        {trial && !hasActiveTrial && (
-          <div
-            className={`p-4 rounded-lg border ${
-              trial.converted
-                ? "bg-green-50 border-green-300"
-                : "bg-gray-50 border-gray-300"
-            }`}
+        {trial && !hasActiveTrial && isFromHistory && (
+          <ElementContainer
+            variant="light"
+            border
+            padding="md"
+            className={
+              trialConverted
+                ? "bg-success-50 border-success-300"
+                : "bg-slate-50 border-slate-300"
+            }
           >
             <div className="flex items-center gap-2 mb-2">
-              {trial.converted ? (
+              {trialConverted ? (
                 <>
-                  <CheckCircle className="w-4 h-4 text-green-600" />
-                  <p className="text-sm font-semibold text-green-900">
+                  <CheckCircle className="w-4 h-4 text-success-600" />
+                  <SubsectionTitle className="text-sm m-0 text-success-900">
                     Trial Converted
-                  </p>
+                  </SubsectionTitle>
                 </>
               ) : (
                 <>
-                  <XCircle className="w-4 h-4 text-gray-600" />
-                  <p className="text-sm font-semibold text-gray-900">
+                  <XCircle className="w-4 h-4 text-slate-600" />
+                  <SubsectionTitle className="text-sm m-0 text-slate-900">
                     Trial Not Converted
-                  </p>
+                  </SubsectionTitle>
                 </>
               )}
             </div>
             <p className="text-xs text-muted-foreground">
-              {trial.converted
+              {trialConverted
                 ? "The free trial was successfully converted to a paid subscription."
                 : "The free trial expired without conversion to a paid subscription."}
             </p>
-          </div>
+          </ElementContainer>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </SectionContainer>
   );
 }

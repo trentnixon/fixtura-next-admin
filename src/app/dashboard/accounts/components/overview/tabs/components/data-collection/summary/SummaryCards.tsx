@@ -10,6 +10,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  formatDuration,
+  formatMemory,
+  formatPercentage,
+} from "@/utils/chart-formatters";
+import {
   Database,
   AlertCircle,
   CheckCircle,
@@ -33,25 +38,6 @@ export default function SummaryCards({ data }: SummaryCardsProps) {
   const summary = data.data.summary;
   const { earliest, latest } = summary.dateRange;
 
-  // Format time taken from milliseconds to readable format
-  const formatDuration = (milliseconds: number): string => {
-    if (milliseconds < 1000) {
-      return `${milliseconds.toFixed(0)}ms`;
-    }
-    if (milliseconds < 60000) {
-      return `${(milliseconds / 1000).toFixed(1)}s`;
-    }
-    const minutes = Math.floor(milliseconds / 60000);
-    const seconds = ((milliseconds % 60000) / 1000).toFixed(0);
-    return `${minutes}m ${seconds}s`;
-  };
-
-  // Format memory usage from bytes to MB
-  const formatMemory = (bytes: number): string => {
-    const mb = bytes / (1024 * 1024);
-    return `${mb.toFixed(2)} MB`;
-  };
-
   // Format date to readable format
   const formatDate = (dateString: string): string => {
     try {
@@ -66,16 +52,6 @@ export default function SummaryCards({ data }: SummaryCardsProps) {
     }
   };
 
-  // Calculate error rate percentage
-  const errorRatePercent = summary.errorRate
-    ? (summary.errorRate * 100).toFixed(1)
-    : "0.0";
-
-  // Format completion rate as percentage
-  const completionRatePercent = summary.averageCompletionRate
-    ? (summary.averageCompletionRate * 100).toFixed(1)
-    : "0.0";
-
   const metrics = [
     {
       title: "Total Collections",
@@ -85,7 +61,7 @@ export default function SummaryCards({ data }: SummaryCardsProps) {
     },
     {
       title: "Error Rate",
-      value: `${errorRatePercent}%`,
+      value: formatPercentage((summary.errorRate || 0) * 100),
       icon: <AlertCircle className="w-5 h-5 text-red-500" />,
       lastUpdate: `${
         summary.collectionsWithErrors || 0
@@ -93,19 +69,19 @@ export default function SummaryCards({ data }: SummaryCardsProps) {
     },
     {
       title: "Completion Rate",
-      value: `${completionRatePercent}%`,
+      value: formatPercentage((summary.averageCompletionRate || 0) * 100),
       icon: <CheckCircle className="w-5 h-5 text-green-500" />,
       lastUpdate: `Average across ${summary.totalCollections || 0} collections`,
     },
     {
       title: "Average Time Taken",
-      value: formatDuration(summary.averageTimeTaken || 0),
+      value: formatDuration(summary.averageTimeTaken || 0, "milliseconds"),
       icon: <Clock className="w-5 h-5 text-purple-500" />,
       lastUpdate: "Per collection",
     },
     {
       title: "Average Memory Usage",
-      value: formatMemory(summary.averageMemoryUsage || 0),
+      value: formatMemory(summary.averageMemoryUsage || 0, "bytes"),
       icon: <MemoryStick className="w-5 h-5 text-orange-500" />,
       lastUpdate: "Per collection",
     },
@@ -129,35 +105,32 @@ export default function SummaryCards({ data }: SummaryCardsProps) {
   ];
 
   return (
-    <div className="rounded-lg border bg-slate-50">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[60px]">Icon</TableHead>
-            <TableHead className="text-left">Metric</TableHead>
-            <TableHead className="text-left">Details</TableHead>
-            <TableHead className="text-right">Value</TableHead>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead className="text-left">Metric</TableHead>
+          <TableHead className="text-left">Details</TableHead>
+          <TableHead className="text-right">Value</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {metrics.map((metric, index) => (
+          <TableRow key={index}>
+            <TableCell>
+              <div className="flex items-center gap-2">
+                {metric.icon}
+                <span className="font-medium">{metric.title}</span>
+              </div>
+            </TableCell>
+            <TableCell className="text-sm text-muted-foreground">
+              {metric.lastUpdate}
+            </TableCell>
+            <TableCell className="text-right font-semibold">
+              {metric.value}
+            </TableCell>
           </TableRow>
-        </TableHeader>
-        <TableBody>
-          {metrics.map((metric, index) => (
-            <TableRow key={index}>
-              <TableCell className="w-[60px]">
-                <div className="flex items-center justify-center">
-                  {metric.icon}
-                </div>
-              </TableCell>
-              <TableCell className="font-medium">{metric.title}</TableCell>
-              <TableCell className="text-sm text-muted-foreground">
-                {metric.lastUpdate}
-              </TableCell>
-              <TableCell className="text-right font-semibold">
-                {metric.value}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

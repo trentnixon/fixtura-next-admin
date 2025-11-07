@@ -1,14 +1,15 @@
 "use client";
 
 import { AccountStatsResponse } from "@/types/dataCollection";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
 import { Badge } from "@/components/ui/badge";
+import { Label, H4, SubsectionTitle, ByLine } from "@/components/type/titles";
+import {
+  formatDuration,
+  formatPercentage,
+  formatRelativeTime,
+  formatDate,
+} from "@/utils/chart-formatters";
 import {
   Heart,
   AlertTriangle,
@@ -38,46 +39,6 @@ export default function AccountHealthCard({ data }: AccountHealthCardProps) {
   const healthScore = insights.healthScore || 0;
   const needsAttention = insights.needsAttention || false;
 
-  // Format date to relative time (e.g., "2 days ago")
-  const formatRelativeTime = (dateString: string): string => {
-    try {
-      const date = new Date(dateString);
-      const now = new Date();
-      const diffInMs = now.getTime() - date.getTime();
-      const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-      const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
-
-      if (diffInDays > 0) {
-        return `${diffInDays} day${diffInDays > 1 ? "s" : ""} ago`;
-      } else if (diffInHours > 0) {
-        return `${diffInHours} hour${diffInHours > 1 ? "s" : ""} ago`;
-      } else if (diffInMinutes > 0) {
-        return `${diffInMinutes} minute${diffInMinutes > 1 ? "s" : ""} ago`;
-      } else {
-        return "Just now";
-      }
-    } catch {
-      return dateString;
-    }
-  };
-
-  // Format date to readable format
-  const formatDate = (dateString: string): string => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return dateString;
-    }
-  };
-
   // Get health level and color
   const getHealthLevel = (
     score: number
@@ -85,35 +46,35 @@ export default function AccountHealthCard({ data }: AccountHealthCardProps) {
     level: string;
     color: string;
     borderColor: string;
-    badgeVariant: "default" | "secondary" | "destructive" | "outline";
+    badgeColor: string;
   } => {
     if (score >= 90) {
       return {
         level: "Excellent",
         color: "text-emerald-600",
         borderColor: "border-emerald-500",
-        badgeVariant: "default",
+        badgeColor: "bg-success-500",
       };
     } else if (score >= 70) {
       return {
         level: "Good",
         color: "text-blue-600",
         borderColor: "border-blue-500",
-        badgeVariant: "default",
+        badgeColor: "bg-info-500",
       };
     } else if (score >= 50) {
       return {
         level: "Fair",
         color: "text-yellow-600",
         borderColor: "border-yellow-500",
-        badgeVariant: "secondary",
+        badgeColor: "bg-warning-500",
       };
     } else {
       return {
         level: "Poor",
         color: "text-red-600",
         borderColor: "border-red-500",
-        badgeVariant: "destructive",
+        badgeColor: "bg-error-500",
       };
     }
   };
@@ -168,8 +129,10 @@ export default function AccountHealthCard({ data }: AccountHealthCardProps) {
 
   const temporalAnalysis = data.data.temporalAnalysis;
   const healthLevel = getHealthLevel(healthScore);
-  const errorRatePercent = (insights.errorRate * 100).toFixed(1);
-  const completionRatePercent = (insights.completionRate * 100).toFixed(1);
+  const errorRatePercent = formatPercentage((insights.errorRate || 0) * 100);
+  const completionRatePercent = formatPercentage(
+    (insights.completionRate || 0) * 100
+  );
   const lastCollectionRelative = formatRelativeTime(
     insights.lastCollectionDate
   );
@@ -185,45 +148,46 @@ export default function AccountHealthCard({ data }: AccountHealthCardProps) {
   const progressColorClass = getProgressColor(healthScore);
 
   return (
-    <Card
-      className={`shadow-none bg-slate-50 border-b-4 ${healthLevel.borderColor} rounded-md`}
+    <ElementContainer
+      variant="dark"
+      border
+      padding="md"
+      className={`border-b-4 ${healthLevel.borderColor}`}
     >
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Heart className={`w-5 h-5 ${healthLevel.color}`} />
-            <CardTitle className="text-lg font-semibold">
-              Account Health Score
-            </CardTitle>
-          </div>
-          <div className="flex items-center gap-2">
-            {needsAttention && (
-              <Badge variant="destructive" className="text-xs">
-                <AlertTriangle className="w-3 h-3 mr-1" />
-                Needs Attention
-              </Badge>
-            )}
-            <Badge variant={healthLevel.badgeVariant} className="text-sm">
-              {healthLevel.level}
-            </Badge>
-          </div>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Heart className={`w-5 h-5 ${healthLevel.color}`} />
+          <SubsectionTitle className="m-0">
+            Account Health Score
+          </SubsectionTitle>
         </div>
-        <CardDescription>
-          Overall account data collection health assessment
-        </CardDescription>
-      </CardHeader>
+        <div className="flex items-center gap-2">
+          {needsAttention && (
+            <Badge className="bg-error-500 text-white border-0 rounded-full text-xs flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" />
+              Needs Attention
+            </Badge>
+          )}
+          <Badge
+            className={`${healthLevel.badgeColor} text-white border-0 rounded-full text-sm`}
+          >
+            {healthLevel.level}
+          </Badge>
+        </div>
+      </div>
+      <ByLine className="mb-4">
+        Overall account data collection health assessment
+      </ByLine>
 
-      <CardContent className="space-y-6">
+      <div className="space-y-6">
         {/* Health Score with Progress Bar */}
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">
-              Health Score
-            </span>
-            <span className={`text-3xl font-bold ${healthLevel.color}`}>
+            <Label className="text-sm m-0">Health Score</Label>
+            <H4 className={`text-3xl font-bold m-0 ${healthLevel.color}`}>
               {healthScore}
               <span className="text-lg text-muted-foreground">/100</span>
-            </span>
+            </H4>
           </div>
           <div className="relative w-full">
             <div className="relative h-4 w-full overflow-hidden rounded-full bg-secondary">
@@ -238,108 +202,94 @@ export default function AccountHealthCard({ data }: AccountHealthCardProps) {
         {/* Key Health Indicators */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Label className="text-sm m-0 flex items-center gap-2">
               <Activity className="w-4 h-4" />
-              <span>Error Rate</span>
-            </div>
+              Error Rate
+            </Label>
             <div className="flex items-baseline gap-2">
-              <span
-                className={`text-2xl font-bold ${
+              <H4
+                className={`text-2xl font-bold m-0 ${
                   insights.errorRate > 0.1
-                    ? "text-red-600"
+                    ? "text-error-600"
                     : insights.errorRate > 0.05
-                    ? "text-yellow-600"
-                    : "text-emerald-600"
+                    ? "text-warning-600"
+                    : "text-success-600"
                 }`}
               >
-                {errorRatePercent}%
-              </span>
+                {errorRatePercent}
+              </H4>
               {insights.errorRate > 0.1 ? (
-                <TrendingDown className="w-4 h-4 text-red-500" />
+                <TrendingDown className="w-4 h-4 text-error-500" />
               ) : (
-                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                <TrendingUp className="w-4 h-4 text-success-500" />
               )}
             </div>
           </div>
 
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Label className="text-sm m-0 flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
-              <span>Completion Rate</span>
-            </div>
+              Completion Rate
+            </Label>
             <div className="flex items-baseline gap-2">
-              <span
-                className={`text-2xl font-bold ${
+              <H4
+                className={`text-2xl font-bold m-0 ${
                   insights.completionRate >= 0.9
-                    ? "text-emerald-600"
+                    ? "text-success-600"
                     : insights.completionRate >= 0.7
-                    ? "text-blue-600"
-                    : "text-yellow-600"
+                    ? "text-info-600"
+                    : "text-warning-600"
                 }`}
               >
-                {completionRatePercent}%
-              </span>
+                {completionRatePercent}
+              </H4>
               {insights.completionRate >= 0.9 ? (
-                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                <TrendingUp className="w-4 h-4 text-success-500" />
               ) : (
-                <TrendingDown className="w-4 h-4 text-yellow-500" />
+                <TrendingDown className="w-4 h-4 text-warning-500" />
               )}
             </div>
           </div>
 
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Label className="text-sm m-0 flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              <span>Last Collection</span>
-            </div>
-            <div className="text-2xl font-bold text-muted-foreground">
+              Last Collection
+            </Label>
+            <H4 className="text-2xl font-bold m-0 text-muted-foreground">
               {lastCollectionRelative}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {lastCollectionFormatted}
-            </div>
+            </H4>
+            <ByLine className="text-xs m-0">{lastCollectionFormatted}</ByLine>
           </div>
         </div>
 
         {/* Additional Stats */}
         <div className="grid grid-cols-2 gap-4 pt-2 border-t">
-          <div>
-            <div className="text-xs text-muted-foreground mb-1">
-              Total Collections
-            </div>
-            <div className="text-lg font-semibold">
+          <div className="space-y-1">
+            <Label className="text-xs m-0">Total Collections</Label>
+            <H4 className="text-lg font-semibold m-0">
               {insights.totalCollections?.toLocaleString() || "0"}
-            </div>
+            </H4>
           </div>
-          <div>
-            <div className="text-xs text-muted-foreground mb-1">
-              Avg Time Taken
-            </div>
-            <div className="text-lg font-semibold">
-              {insights.averageTimeTaken < 1000
-                ? `${insights.averageTimeTaken.toFixed(0)}ms`
-                : insights.averageTimeTaken < 60000
-                ? `${(insights.averageTimeTaken / 1000).toFixed(1)}s`
-                : `${Math.floor(
-                    insights.averageTimeTaken / 60000
-                  )}m ${Math.floor(
-                    (insights.averageTimeTaken % 60000) / 1000
-                  )}s`}
-            </div>
+          <div className="space-y-1">
+            <Label className="text-xs m-0">Avg Time Taken</Label>
+            <H4 className="text-lg font-semibold m-0">
+              {formatDuration(insights.averageTimeTaken || 0, "milliseconds")}
+            </H4>
           </div>
         </div>
 
         {/* Recommendations */}
         {recommendations.length > 0 && (
           <div className="pt-4 border-t space-y-2">
-            <h4 className="text-sm font-semibold flex items-center gap-2">
+            <SubsectionTitle className="text-sm m-0 flex items-center gap-2">
               <AlertTriangle
                 className={`w-4 h-4 ${
-                  needsAttention ? "text-red-500" : "text-yellow-500"
+                  needsAttention ? "text-error-500" : "text-warning-500"
                 }`}
               />
               Recommendations
-            </h4>
+            </SubsectionTitle>
             <ul className="space-y-1">
               {recommendations.map((recommendation, index) => (
                 <li
@@ -353,7 +303,7 @@ export default function AccountHealthCard({ data }: AccountHealthCardProps) {
             </ul>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </ElementContainer>
   );
 }

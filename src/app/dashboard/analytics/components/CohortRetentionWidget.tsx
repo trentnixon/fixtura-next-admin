@@ -9,6 +9,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import LoadingState from "@/components/ui-library/states/LoadingState";
+import ErrorState from "@/components/ui-library/states/ErrorState";
+import EmptyState from "@/components/ui-library/states/EmptyState";
+import { formatCurrency, formatPercentage } from "@/utils/chart-formatters";
+import StatCard from "@/components/ui-library/metrics/StatCard";
+import { Users, Shield, CheckCircle, X } from "lucide-react";
 
 /**
  * CohortRetentionWidget Component
@@ -16,34 +22,47 @@ import { Skeleton } from "@/components/ui/skeleton";
  * Displays cohort retention analysis showing customer acquisition and retention patterns by cohort.
  */
 export function CohortRetentionWidget() {
-  const { data, isLoading, error } = useCohortAnalysis();
+  const { data, isLoading, error, refetch } = useCohortAnalysis();
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-48" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-48 w-full" />
-        </CardContent>
-      </Card>
+      <LoadingState variant="skeleton">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(5)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-20 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </LoadingState>
     );
   }
 
   if (error) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Error Loading Cohort Analysis</CardTitle>
-          <CardDescription>{error.message}</CardDescription>
-        </CardHeader>
-      </Card>
+      <ErrorState
+        variant="card"
+        title="Error Loading Cohort Analysis"
+        error={error}
+        onRetry={() => refetch()}
+      />
     );
   }
 
   if (!data) {
-    return null;
+    return (
+      <EmptyState
+        variant="card"
+        title="No Cohort Data"
+        description="Cohort retention data will appear here once available"
+        icon={<Users className="h-12 w-12 text-muted-foreground" />}
+      />
+    );
   }
 
   const analytics = data;
@@ -53,67 +72,37 @@ export function CohortRetentionWidget() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Total Cohorts</CardTitle>
-          <CardDescription>Acquisition groups</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {acquisition?.totalCohorts || 0}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {acquisition?.totalAccounts || 0} accounts
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Total Cohorts"
+        value={acquisition?.totalCohorts || 0}
+        icon={<Users className="h-5 w-5" />}
+        description={`${acquisition?.totalAccounts || 0} accounts`}
+        variant="primary"
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Retention Rate</CardTitle>
-          <CardDescription>Average across cohorts</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {(retention?.averageRetentionRate || 0).toFixed(1)}%
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {retention?.totalAccounts || 0} tracked
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Retention Rate"
+        value={formatPercentage(retention?.averageRetentionRate || 0)}
+        icon={<Shield className="h-5 w-5" />}
+        description={`${retention?.totalAccounts || 0} tracked`}
+        variant="accent"
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Active Accounts</CardTitle>
-          <CardDescription>Currently active</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {lifecycle.active?.count || 0}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {(lifecycle.active?.percentage || 0).toFixed(1)}%
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Active Accounts"
+        value={lifecycle.active?.count || 0}
+        icon={<CheckCircle className="h-5 w-5" />}
+        description={`${formatPercentage(lifecycle.active?.percentage || 0)}`}
+        variant="primary"
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">
-            Churned Accounts
-          </CardTitle>
-          <CardDescription>Lost customers</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {lifecycle.churned?.count || 0}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {(lifecycle.churned?.percentage || 0).toFixed(1)}%
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Churned Accounts"
+        value={lifecycle.churned?.count || 0}
+        icon={<X className="h-5 w-5" />}
+        description={`${formatPercentage(lifecycle.churned?.percentage || 0)}`}
+        variant="secondary"
+      />
 
       <Card className="md:col-span-4">
         <CardHeader>
@@ -122,17 +111,16 @@ export function CohortRetentionWidget() {
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            $
-            {(
+            {formatCurrency(
               (analytics?.cohortRevenuePatterns?.totalRevenue || 0) / 100
-            ).toLocaleString()}
+            )}
           </div>
           <p className="text-sm text-muted-foreground">
-            Average: $
-            {(
+            Average:{" "}
+            {formatCurrency(
               (analytics?.cohortRevenuePatterns?.averageRevenuePerCohort || 0) /
-              100
-            ).toLocaleString()}{" "}
+                100
+            )}{" "}
             per cohort
           </p>
         </CardContent>

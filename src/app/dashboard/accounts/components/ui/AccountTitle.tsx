@@ -19,9 +19,8 @@ export default function AccountTitle({ titleProps }: AccountTitleProps) {
         }`}
         image={titleProps.accountOrganisationDetails.ParentLogo}
       />
-
-      <CheckBooleanStatus titleProps={titleProps} />
       <SyncCTABar titleProps={titleProps} />
+      <CheckBooleanStatus titleProps={titleProps} />
     </>
   );
 }

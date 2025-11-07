@@ -1,6 +1,6 @@
-import CreatePage from "@/components/scaffolding/containers/createPage";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
-import { SectionTitle } from "@/components/type/titles";
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 
 import { SubscriptionTrendsWidget } from "./components/SubscriptionTrendsWidget";
 import { GlobalAnalyticsWidget } from "./components/GlobalAnalyticsWidget";
@@ -16,36 +16,47 @@ import { CohortRetentionWidget } from "./components/CohortRetentionWidget";
  */
 export default function AnalyticsPage() {
   return (
-    <CreatePage>
+    <>
       <CreatePageTitle
         title="Analytics Dashboard"
         byLine="Business Intelligence"
       />
+      <PageContainer padding="lg" spacing="lg">
+        <SectionContainer
+          title="Global Overview"
+          description="System-wide metrics and comprehensive analysis"
+        >
+          <GlobalAnalyticsWidget />
+        </SectionContainer>
 
-      <section className="flex flex-col gap-8 my-8">
-        <SectionTitle>Global Overview</SectionTitle>
-        <GlobalAnalyticsWidget />
-      </section>
+        <SectionContainer
+          title="Revenue Trends"
+          description="Monthly and quarterly revenue patterns"
+        >
+          <RevenueChart />
+        </SectionContainer>
 
-      <section className="flex flex-col gap-8 my-8">
-        <SectionTitle>Revenue Trends</SectionTitle>
-        <RevenueChart />
-      </section>
+        <SectionContainer
+          title="Trial Conversion"
+          description="Trial progression and conversion funnel analysis"
+        >
+          <TrialConversionWidget />
+        </SectionContainer>
 
-      <section className="flex flex-col gap-8 my-8">
-        <SectionTitle>Trial Conversion</SectionTitle>
-        <TrialConversionWidget />
-      </section>
+        <SectionContainer
+          title="Subscription Lifecycle"
+          description="Subscription stages, renewals, and churn patterns"
+        >
+          <SubscriptionTrendsWidget />
+        </SectionContainer>
 
-      <section className="flex flex-col gap-8 my-8">
-        <SectionTitle>Subscription Lifecycle</SectionTitle>
-        <SubscriptionTrendsWidget />
-      </section>
-
-      <section className="flex flex-col gap-8 my-8">
-        <SectionTitle>Cohort Retention</SectionTitle>
-        <CohortRetentionWidget />
-      </section>
-    </CreatePage>
+        <SectionContainer
+          title="Cohort Retention"
+          description="Customer acquisition and retention by cohort"
+        >
+          <CohortRetentionWidget />
+        </SectionContainer>
+      </PageContainer>
+    </>
   );
 }

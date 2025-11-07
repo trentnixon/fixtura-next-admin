@@ -1,14 +1,11 @@
 "use client";
 
 import { AccountStatsResponse } from "@/types/dataCollection";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
 import { Progress } from "@/components/ui/progress";
+import { Label, H4, SubsectionTitle, ByLine } from "@/components/type/titles";
+import { EmptyState } from "@/components/ui-library";
+import { formatPercentage } from "@/utils/chart-formatters";
 import { Database } from "lucide-react";
 
 interface DataVolumeCardProps {
@@ -30,22 +27,17 @@ export default function DataVolumeCard({ data }: DataVolumeCardProps) {
 
   if (!volume) {
     return (
-      <Card className="shadow-none bg-slate-50 border rounded-md">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <Database className="w-5 h-5 text-indigo-500" />
-            Data Volume
-          </CardTitle>
-          <CardDescription>
-            Data volume statistics and breakdown
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            No data volume information available
-          </div>
-        </CardContent>
-      </Card>
+      <ElementContainer variant="dark" border padding="md">
+        <div className="flex items-center gap-2 mb-2">
+          <Database className="w-5 h-5 text-indigo-500" />
+          <SubsectionTitle className="m-0">Data Volume</SubsectionTitle>
+        </div>
+        <ByLine className="mb-4">Data volume statistics and breakdown</ByLine>
+        <EmptyState
+          variant="minimal"
+          description="No data volume information available"
+        />
+      </ElementContainer>
     );
   }
 
@@ -69,100 +61,90 @@ export default function DataVolumeCard({ data }: DataVolumeCardProps) {
   const remaining = totalItemsProcessed - estimatedUpdated - estimatedNew;
 
   return (
-    <Card className="shadow-none bg-slate-50 border rounded-md">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Database className="w-5 h-5 text-indigo-500" />
-          <CardTitle className="text-lg font-semibold">Data Volume</CardTitle>
-        </div>
-        <CardDescription>
-          Data volume statistics and processing breakdown
-        </CardDescription>
-      </CardHeader>
+    <ElementContainer variant="dark" border padding="md">
+      <div className="flex items-center gap-2 mb-2">
+        <Database className="w-5 h-5 text-indigo-500" />
+        <SubsectionTitle className="m-0">Data Volume</SubsectionTitle>
+      </div>
+      <ByLine className="mb-4">
+        Data volume statistics and processing breakdown
+      </ByLine>
 
-      <CardContent className="space-y-6">
+      <div className="space-y-6">
         {/* Primary Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <div className="text-sm text-muted-foreground">
-              Total Items Processed
-            </div>
-            <div className="text-3xl font-bold text-indigo-600">
+          <div className="space-y-1">
+            <Label className="text-sm m-0">Total Items Processed</Label>
+            <H4 className="text-3xl font-bold m-0 text-indigo-600">
               {totalItemsProcessed.toLocaleString()}
-            </div>
-            <div className="text-xs text-muted-foreground">
-              Across all collections
-            </div>
+            </H4>
+            <ByLine className="text-xs m-0">Across all collections</ByLine>
           </div>
 
-          <div className="space-y-2">
-            <div className="text-sm text-muted-foreground">
-              Average Items Per Collection
-            </div>
-            <div className="text-3xl font-bold text-purple-600">
+          <div className="space-y-1">
+            <Label className="text-sm m-0">Average Items Per Collection</Label>
+            <H4 className="text-3xl font-bold m-0 text-purple-600">
               {averageItemsPerCollection.toFixed(0)}
-            </div>
-            <div className="text-xs text-muted-foreground">
+            </H4>
+            <ByLine className="text-xs m-0">
               Mean items per collection run
-            </div>
+            </ByLine>
           </div>
         </div>
 
         {/* Ratio Metrics */}
         <div className="space-y-4 pt-4 border-t">
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Update Ratio</span>
-              <span className="font-semibold text-emerald-600">
-                {updateRatio.toFixed(1)}%
-              </span>
+            <div className="flex items-center justify-between">
+              <Label className="text-sm m-0">Update Ratio</Label>
+              <H4 className="text-sm font-semibold m-0 text-success-600">
+                {formatPercentage(updateRatio)}
+              </H4>
             </div>
             <Progress value={updateRatio} className="h-2" />
-            <div className="text-xs text-muted-foreground">
+            <ByLine className="text-xs m-0">
               ~{estimatedUpdated.toLocaleString()} items updated
-            </div>
+            </ByLine>
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">New Item Ratio</span>
-              <span className="font-semibold text-blue-600">
-                {newItemRatio.toFixed(1)}%
-              </span>
+            <div className="flex items-center justify-between">
+              <Label className="text-sm m-0">New Item Ratio</Label>
+              <H4 className="text-sm font-semibold m-0 text-info-600">
+                {formatPercentage(newItemRatio)}
+              </H4>
             </div>
             <Progress value={newItemRatio} className="h-2" />
-            <div className="text-xs text-muted-foreground">
+            <ByLine className="text-xs m-0">
               ~{estimatedNew.toLocaleString()} new items
-            </div>
+            </ByLine>
           </div>
         </div>
 
         {/* Visual Breakdown */}
         <div className="space-y-3 pt-4 border-t">
-          <div className="text-sm font-medium text-muted-foreground">
-            Estimated Breakdown
-          </div>
+          <Label className="text-sm font-medium m-0">Estimated Breakdown</Label>
           <div className="flex gap-2 h-8 rounded-md overflow-hidden">
             {updateRatio > 0 && (
               <div
-                className="bg-emerald-500 flex items-center justify-center text-white text-xs font-medium"
+                className="bg-success-500 flex items-center justify-center text-white text-xs font-medium"
                 style={{ width: `${updateRatio}%` }}
-                title={`Updated: ${estimatedUpdated.toLocaleString()} (${updateRatio.toFixed(
-                  1
-                )}%)`}
+                title={`Updated: ${estimatedUpdated.toLocaleString()} (${formatPercentage(
+                  updateRatio
+                )})`}
               >
-                {updateRatio > 5 && `${updateRatio.toFixed(0)}%`}
+                {updateRatio > 5 && formatPercentage(updateRatio)}
               </div>
             )}
             {newItemRatio > 0 && (
               <div
-                className="bg-blue-500 flex items-center justify-center text-white text-xs font-medium"
+                className="bg-info-500 flex items-center justify-center text-white text-xs font-medium"
                 style={{ width: `${newItemRatio}%` }}
-                title={`New: ${estimatedNew.toLocaleString()} (${newItemRatio.toFixed(
-                  1
-                )}%)`}
+                title={`New: ${estimatedNew.toLocaleString()} (${formatPercentage(
+                  newItemRatio
+                )})`}
               >
-                {newItemRatio > 5 && `${newItemRatio.toFixed(0)}%`}
+                {newItemRatio > 5 && formatPercentage(newItemRatio)}
               </div>
             )}
             {remaining > 0 && (
@@ -177,11 +159,11 @@ export default function DataVolumeCard({ data }: DataVolumeCardProps) {
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-emerald-500 rounded-sm" />
+              <div className="w-3 h-3 bg-success-500 rounded-sm" />
               <span>Updated</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-sm" />
+              <div className="w-3 h-3 bg-info-500 rounded-sm" />
               <span>New</span>
             </div>
             {remaining > 0 && (
@@ -195,30 +177,26 @@ export default function DataVolumeCard({ data }: DataVolumeCardProps) {
 
         {/* Summary Stats */}
         <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-          <div className="text-center">
-            <div className="text-2xl font-semibold text-emerald-600">
+          <div className="text-center space-y-1">
+            <H4 className="text-2xl font-semibold m-0 text-success-600">
               {estimatedUpdated.toLocaleString()}
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              Updated Items
-            </div>
+            </H4>
+            <Label className="text-xs m-0">Updated Items</Label>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-semibold text-blue-600">
+          <div className="text-center space-y-1">
+            <H4 className="text-2xl font-semibold m-0 text-info-600">
               {estimatedNew.toLocaleString()}
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">New Items</div>
+            </H4>
+            <Label className="text-xs m-0">New Items</Label>
           </div>
-          <div className="text-center">
-            <div className="text-2xl font-semibold">
+          <div className="text-center space-y-1">
+            <H4 className="text-2xl font-semibold m-0">
               {remaining.toLocaleString()}
-            </div>
-            <div className="text-xs text-muted-foreground mt-1">
-              Other Items
-            </div>
+            </H4>
+            <Label className="text-xs m-0">Other Items</Label>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </ElementContainer>
   );
 }

@@ -1,10 +1,12 @@
 "use client";
 
 import { AccountAnalytics } from "@/types/analytics";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
+import { LoadingState, EmptyState } from "@/components/ui-library";
 import { Badge } from "@/components/ui/badge";
-import { Clock, RefreshCw } from "lucide-react";
+import { Label, H4, SubsectionTitle } from "@/components/type/titles";
+import { Clock } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 
 /**
@@ -22,14 +24,11 @@ export default function SubscriptionStatusCard({
 }) {
   if (!analytics) {
     return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-48" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-32 w-full" />
-        </CardContent>
-      </Card>
+      <LoadingState variant="skeleton" message="Loading subscription status...">
+        <SectionContainer title="Season Pass Status" variant="compact">
+          <div className="h-32" />
+        </SectionContainer>
+      </LoadingState>
     );
   }
 
@@ -44,78 +43,66 @@ export default function SubscriptionStatusCard({
     : null;
 
   return (
-    <Card className="shadow-none bg-slate-50 border-b-4 border-b-slate-500 rounded-md">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <RefreshCw className="w-5 h-5 text-emerald-500" />
-            Season Pass Status
-          </CardTitle>
-          <Badge
-            variant={isActive ? "default" : "secondary"}
-            className={
-              isActive ? "bg-emerald-500 text-white" : "bg-slate-500 text-white"
-            }
-          >
-            {isActive ? "Active" : "Inactive"}
-          </Badge>
-        </div>
-      </CardHeader>
-
-      <CardContent>
-        {/* Current Season Pass Info */}
-        {currentSubscription ? (
-          <div className="p-4 bg-slate-100 rounded-lg border border-slate-300">
-            <div className="space-y-3">
-              {/* Title and Tier */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-foreground">
-                  Season Pass Details
-                </span>
-                <Badge variant="outline" className="text-xs">
-                  {currentSubscription.tier}
-                </Badge>
-              </div>
-
-              {/* Dates */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">
-                    Start Date
-                  </p>
-                  <p className="text-sm font-semibold">
-                    {formatDate(currentSubscription.startDate)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground mb-1">End Date</p>
-                  <p className="text-sm font-semibold">
-                    {formatDate(currentSubscription.endDate)}
-                  </p>
-                </div>
-              </div>
-
-              {/* Days Remaining */}
-              {daysUntilRenewal !== null && (
-                <div className="flex items-center gap-2 pt-2 border-t border-slate-300">
-                  <Clock className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-                  <span className="text-sm font-medium">
-                    {daysUntilRenewal > 0
-                      ? `${daysUntilRenewal} days remaining in season`
-                      : isActive
-                      ? "Season pass expired"
-                      : "Renewal overdue"}
-                  </span>
-                </div>
-              )}
+    <SectionContainer
+      title="Season Pass Status"
+      variant="compact"
+      action={
+        <Badge
+          className={`${
+            isActive ? "bg-success-500" : "bg-slate-500"
+          } text-white border-0 rounded-full`}
+        >
+          {isActive ? "Active" : "Inactive"}
+        </Badge>
+      }
+    >
+      {currentSubscription ? (
+        <ElementContainer variant="dark" border padding="md">
+          <div className="space-y-4">
+            {/* Title and Tier */}
+            <div className="flex items-center justify-between">
+              <SubsectionTitle className="m-0">
+                Season Pass Details
+              </SubsectionTitle>
+              <Badge variant="outline" className="text-xs rounded-full">
+                {currentSubscription.tier}
+              </Badge>
             </div>
+
+            {/* Dates */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label className="text-xs">Start Date</Label>
+                <H4 className="text-sm font-semibold m-0">
+                  {formatDate(currentSubscription.startDate)}
+                </H4>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">End Date</Label>
+                <H4 className="text-sm font-semibold m-0">
+                  {formatDate(currentSubscription.endDate)}
+                </H4>
+              </div>
+            </div>
+
+            {/* Days Remaining */}
+            {daysUntilRenewal !== null && (
+              <div className="flex items-center gap-2 pt-3 border-t border-slate-200">
+                <Clock className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+                <H4 className="text-sm font-medium m-0">
+                  {daysUntilRenewal > 0
+                    ? `${daysUntilRenewal} days remaining in season`
+                    : isActive
+                    ? "Season pass expired"
+                    : "Renewal overdue"}
+                </H4>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="text-center py-8 text-muted-foreground">
-            <p className="text-sm">No active season pass</p>
-          </div>
-        )}
-      </CardContent>
-    </Card>
+        </ElementContainer>
+      ) : (
+        <EmptyState title="No active season pass" variant="minimal" />
+      )}
+    </SectionContainer>
   );
 }

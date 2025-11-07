@@ -1,13 +1,8 @@
 "use client";
 
 import { AccountStatsResponse } from "@/types/dataCollection";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
+import { EmptyState } from "@/components/ui-library";
 import {
   ChartContainer,
   ChartTooltip,
@@ -16,6 +11,8 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Clock, MemoryStick } from "lucide-react";
 import { ChartConfig } from "@/components/ui/chart";
+import { Label, H4, SubsectionTitle, ByLine } from "@/components/type/titles";
+import { formatDuration, formatMemory } from "@/utils/chart-formatters";
 
 interface PerformanceOverTimeChartProps {
   data: AccountStatsResponse;
@@ -32,7 +29,12 @@ interface PerformanceOverTimeChartProps {
 export default function PerformanceOverTimeChart({
   data,
 }: PerformanceOverTimeChartProps) {
-  const performance = data.data.timeSeries.performanceOverTime || [];
+  const rawPerformance = data.data.timeSeries.performanceOverTime || [];
+
+  // Filter out entries where timeTaken < 1 minute (60000ms) - these indicate "ran but no data found"
+  const performance = rawPerformance.filter(
+    (point) => point.timeTaken >= 60000
+  );
 
   // Chart configuration
   const chartConfig = {
@@ -46,8 +48,8 @@ export default function PerformanceOverTimeChart({
     },
   } satisfies ChartConfig;
 
-  // Format date for display
-  const formatDate = (dateString: string): string => {
+  // Format date for chart display
+  const formatChartDate = (dateString: string): string => {
     try {
       const date = new Date(dateString);
       return date.toLocaleDateString("en-US", {
@@ -59,29 +61,7 @@ export default function PerformanceOverTimeChart({
     }
   };
 
-  // Format duration from milliseconds to readable format
-  const formatDuration = (ms: number): string => {
-    if (ms < 1000) return `${ms.toFixed(0)}ms`;
-    const seconds = ms / 1000;
-    if (seconds < 60) return `${seconds.toFixed(1)}s`;
-    const minutes = seconds / 60;
-    if (minutes < 60) return `${minutes.toFixed(1)}m`;
-    const hours = minutes / 60;
-    return `${hours.toFixed(1)}h`;
-  };
-
-  // Format memory from bytes to readable format
-  const formatMemory = (bytes: number): string => {
-    if (bytes < 1024) return `${bytes.toFixed(0)} B`;
-    const kb = bytes / 1024;
-    if (kb < 1024) return `${kb.toFixed(2)} KB`;
-    const mb = kb / 1024;
-    if (mb < 1024) return `${mb.toFixed(2)} MB`;
-    const gb = mb / 1024;
-    return `${gb.toFixed(2)} GB`;
-  };
-
-  // Calculate statistics for display
+  // Calculate statistics for display (using filtered data)
   const avgTimeTaken =
     performance.length > 0
       ? performance.reduce((sum, point) => sum + point.timeTaken, 0) /
@@ -103,75 +83,71 @@ export default function PerformanceOverTimeChart({
 
   if (performance.length === 0) {
     return (
-      <Card className="shadow-none bg-slate-50 border rounded-md">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <Clock className="w-5 h-5 text-purple-500" />
+      <ElementContainer variant="dark" border padding="md">
+        <div className="flex items-center gap-2 mb-2">
+          <Clock className="w-5 h-5 text-purple-500" />
+          <SubsectionTitle className="m-0">
             Performance Over Time
-          </CardTitle>
-          <CardDescription>Time taken and memory usage trends</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            No performance data available
-          </div>
-        </CardContent>
-      </Card>
+          </SubsectionTitle>
+        </div>
+        <ByLine className="mb-4">Time taken and memory usage trends</ByLine>
+        <EmptyState
+          title="No performance data available"
+          description="No performance data available for this time period."
+          variant="minimal"
+        />
+      </ElementContainer>
     );
   }
 
   return (
-    <Card className="shadow-none bg-slate-50 border rounded-md">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-purple-500" />
-          <CardTitle className="text-lg font-semibold">
-            Performance Over Time
-          </CardTitle>
-        </div>
-        <CardDescription>
-          Time taken and memory usage performance trends
-        </CardDescription>
-      </CardHeader>
+    <ElementContainer variant="dark" border padding="md">
+      <div className="flex items-center gap-2 mb-2">
+        <Clock className="w-5 h-5 text-purple-500" />
+        <SubsectionTitle className="m-0">Performance Over Time</SubsectionTitle>
+      </div>
+      <ByLine className="mb-4">
+        Time taken and memory usage performance trends
+      </ByLine>
 
-      <CardContent className="space-y-4">
+      <div className="space-y-4">
         {/* Summary Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-4 border-b">
           <div className="space-y-1">
-            <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <Label className="text-xs m-0 flex items-center gap-1">
               <Clock className="w-3 h-3" />
               Avg Time Taken
-            </div>
-            <div className="text-lg font-semibold text-purple-600">
-              {formatDuration(avgTimeTaken)}
-            </div>
+            </Label>
+            <H4 className="text-lg font-semibold m-0 text-purple-600">
+              {formatDuration(avgTimeTaken, "milliseconds")}
+            </H4>
           </div>
           <div className="space-y-1">
-            <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <Label className="text-xs m-0 flex items-center gap-1">
               <Clock className="w-3 h-3" />
               Max Time Taken
-            </div>
-            <div className="text-lg font-semibold text-red-600">
-              {formatDuration(maxTimeTaken)}
-            </div>
+            </Label>
+            <H4 className="text-lg font-semibold m-0 text-error-600">
+              {formatDuration(maxTimeTaken, "milliseconds")}
+            </H4>
           </div>
           <div className="space-y-1">
-            <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <Label className="text-xs m-0 flex items-center gap-1">
               <MemoryStick className="w-3 h-3" />
               Avg Memory Usage
-            </div>
-            <div className="text-lg font-semibold text-cyan-600">
-              {formatMemory(avgMemoryUsage)}
-            </div>
+            </Label>
+            <H4 className="text-lg font-semibold m-0 text-cyan-600">
+              {formatMemory(avgMemoryUsage, "bytes")}
+            </H4>
           </div>
           <div className="space-y-1">
-            <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <Label className="text-xs m-0 flex items-center gap-1">
               <MemoryStick className="w-3 h-3" />
               Max Memory Usage
-            </div>
-            <div className="text-lg font-semibold text-red-600">
-              {formatMemory(maxMemoryUsage)}
-            </div>
+            </Label>
+            <H4 className="text-lg font-semibold m-0 text-error-600">
+              {formatMemory(maxMemoryUsage, "bytes")}
+            </H4>
           </div>
         </div>
 
@@ -187,7 +163,7 @@ export default function PerformanceOverTimeChart({
               tickLine={false}
               tickMargin={10}
               axisLine={false}
-              tickFormatter={formatDate}
+              tickFormatter={formatChartDate}
               angle={-45}
               textAnchor="end"
               height={80}
@@ -222,14 +198,14 @@ export default function PerformanceOverTimeChart({
               content={<ChartTooltipContent />}
               formatter={(value: number, name: string) => {
                 if (name === "timeTaken") {
-                  return [formatDuration(value), "Time Taken"];
+                  return [formatDuration(value, "milliseconds"), "Time Taken"];
                 }
                 if (name === "memoryUsage") {
-                  return [formatMemory(value), "Memory Usage"];
+                  return [formatMemory(value, "bytes"), "Memory Usage"];
                 }
                 return [value.toString(), name];
               }}
-              labelFormatter={(label) => formatDate(label)}
+              labelFormatter={(label) => formatChartDate(label)}
             />
             <Line
               yAxisId="left"
@@ -264,7 +240,7 @@ export default function PerformanceOverTimeChart({
             <span>Memory Usage</span>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </ElementContainer>
   );
 }

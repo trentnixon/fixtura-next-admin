@@ -14,6 +14,9 @@ import DataTab from "../../../components/overview/tabs/Data";
 import { useParams } from "next/navigation";
 import AccountAnalyticsCards from "../../../components/overview/tabs/components/AccountAnalyticsCards";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
 
 // Loading component
 const LoadingState = () => <P>Loading account details...</P>;
@@ -90,35 +93,41 @@ export default function DisplayClub() {
   return (
     <>
       {accountData && <AccountTitle titleProps={accountData} />}
-      <div>
-        <div className="grid grid-cols-12 gap-4">
-          <div className="col-span-9">
-            <Tabs defaultValue="account" className="w-full">
-              <TabsList className="grid w-full grid-cols-7">
-                {TAB_LABELS.map((tab) => (
-                  <TabsTrigger key={tab.id} value={tab.id}>
-                    {tab.label}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
-              {TAB_LABELS.map((tab) => (
-                <TabsContent key={tab.id} value={tab.id}>
-                  {renderTabContent(
-                    tab.id,
-                    accountData as fixturaContentHubAccountDetails,
-                    accountID as string
-                  )}
-                </TabsContent>
-              ))}
-            </Tabs>
+      <PageContainer padding="xs" spacing="lg">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div className="lg:col-span-9">
+            <SectionContainer title="Account Details" variant="compact">
+              <ElementContainer padding="none" margin="none">
+                <Tabs defaultValue="data" className="w-full">
+                  <TabsList variant="primary" className="">
+                    {TAB_LABELS.map((tab) => (
+                      <TabsTrigger key={tab.id} value={tab.id}>
+                        {tab.label}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                  {TAB_LABELS.map((tab) => (
+                    <TabsContent key={tab.id} value={tab.id} className="mt-4">
+                      {renderTabContent(
+                        tab.id,
+                        accountData as fixturaContentHubAccountDetails,
+                        accountID as string
+                      )}
+                    </TabsContent>
+                  ))}
+                </Tabs>
+              </ElementContainer>
+            </SectionContainer>
           </div>
-          <div className="col-span-3 gap-4 space-y-4">
-            <AccountBasics
-              account={accountData as fixturaContentHubAccountDetails}
-            />
+          <div className="lg:col-span-3">
+            <ElementContainer padding="none" margin="none">
+              <AccountBasics
+                account={accountData as fixturaContentHubAccountDetails}
+              />
+            </ElementContainer>
           </div>
         </div>
-      </div>
+      </PageContainer>
     </>
   );
 }

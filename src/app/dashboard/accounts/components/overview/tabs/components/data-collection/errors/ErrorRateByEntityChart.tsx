@@ -1,13 +1,8 @@
 "use client";
 
 import { AccountStatsResponse } from "@/types/dataCollection";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
+import { EmptyState } from "@/components/ui-library";
 import {
   ChartContainer,
   ChartTooltip,
@@ -16,6 +11,8 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from "recharts";
 import { AlertTriangle } from "lucide-react";
 import { ChartConfig } from "@/components/ui/chart";
+import { Label, H4, SubsectionTitle, ByLine } from "@/components/type/titles";
+import { formatPercentage } from "@/utils/chart-formatters";
 
 interface ErrorRateByEntityChartProps {
   data: AccountStatsResponse;
@@ -40,17 +37,14 @@ export default function ErrorRateByEntityChart({
     {
       entity: "Competitions",
       errorRate: errorRates.competitions || 0,
-      formattedRate: ((errorRates.competitions || 0) * 100).toFixed(1),
     },
     {
       entity: "Teams",
       errorRate: errorRates.teams || 0,
-      formattedRate: ((errorRates.teams || 0) * 100).toFixed(1),
     },
     {
       entity: "Games",
       errorRate: errorRates.games || 0,
-      formattedRate: ((errorRates.games || 0) * 100).toFixed(1),
     },
   ];
 
@@ -62,12 +56,12 @@ export default function ErrorRateByEntityChart({
     },
   } satisfies ChartConfig;
 
-  // Get color based on error rate severity
+  // Get color based on error rate severity (using semantic colors)
   const getBarColor = (errorRate: number): string => {
-    if (errorRate >= 0.2) return "hsl(0, 84%, 60%)"; // red-500 - critical
-    if (errorRate >= 0.1) return "hsl(24, 95%, 53%)"; // orange-600 - high
-    if (errorRate >= 0.05) return "hsl(48, 96%, 53%)"; // yellow-500 - medium
-    return "hsl(142, 76%, 36%)"; // emerald-600 - low
+    if (errorRate >= 0.2) return "hsl(var(--error))"; // critical
+    if (errorRate >= 0.1) return "hsl(var(--error))"; // high
+    if (errorRate >= 0.05) return "hsl(var(--warning))"; // medium
+    return "hsl(var(--success))"; // low
   };
 
   // Get severity level
@@ -106,72 +100,64 @@ export default function ErrorRateByEntityChart({
     (errorRates.games || 0) === 0
   ) {
     return (
-      <Card className="shadow-none bg-slate-50 border rounded-md">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-red-500" />
+      <ElementContainer variant="dark" border padding="md">
+        <div className="flex items-center gap-2 mb-2">
+          <AlertTriangle className="w-5 h-5 text-error-500" />
+          <SubsectionTitle className="m-0">
             Error Rate by Entity Type
-          </CardTitle>
-          <CardDescription>
-            Error rate comparison across competitions, teams, and games
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            No error data available for entity types
-          </div>
-        </CardContent>
-      </Card>
+          </SubsectionTitle>
+        </div>
+        <ByLine className="mb-4">
+          Error rate comparison across competitions, teams, and games
+        </ByLine>
+        <EmptyState
+          title="No error data available for entity types"
+          description="No error data available for entity types in this time period."
+          variant="minimal"
+        />
+      </ElementContainer>
     );
   }
 
   return (
-    <Card className="shadow-none bg-slate-50 border rounded-md">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-red-500" />
-          <CardTitle className="text-lg font-semibold">
-            Error Rate by Entity Type
-          </CardTitle>
-        </div>
-        <CardDescription>
-          Comparison of error rates across competitions, teams, and games
-        </CardDescription>
-      </CardHeader>
+    <ElementContainer variant="dark" border padding="md">
+      <div className="flex items-center gap-2 mb-2">
+        <AlertTriangle className="w-5 h-5 text-error-500" />
+        <SubsectionTitle className="m-0">
+          Error Rate by Entity Type
+        </SubsectionTitle>
+      </div>
+      <ByLine className="mb-4">
+        Comparison of error rates across competitions, teams, and games
+      </ByLine>
 
-      <CardContent className="space-y-6">
+      <div className="space-y-6">
         {/* Summary Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pb-4 border-b">
           <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">Max Error Rate</div>
-            <div className="text-lg font-semibold text-red-600">
-              {(maxErrorRate * 100).toFixed(1)}%
-            </div>
-            <div className="text-xs text-muted-foreground">
-              {highestErrorEntity.entity}
-            </div>
+            <Label className="text-xs m-0">Max Error Rate</Label>
+            <H4 className="text-lg font-semibold m-0 text-error-600">
+              {formatPercentage(maxErrorRate * 100)}
+            </H4>
+            <ByLine className="text-xs m-0">{highestErrorEntity.entity}</ByLine>
           </div>
           <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">Min Error Rate</div>
-            <div className="text-lg font-semibold text-emerald-600">
-              {(minErrorRate * 100).toFixed(1)}%
-            </div>
+            <Label className="text-xs m-0">Min Error Rate</Label>
+            <H4 className="text-lg font-semibold m-0 text-success-600">
+              {formatPercentage(minErrorRate * 100)}
+            </H4>
           </div>
           <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">
-              Average Error Rate
-            </div>
-            <div className="text-lg font-semibold">
-              {(averageErrorRate * 100).toFixed(1)}%
-            </div>
+            <Label className="text-xs m-0">Average Error Rate</Label>
+            <H4 className="text-lg font-semibold m-0">
+              {formatPercentage(averageErrorRate * 100)}
+            </H4>
           </div>
           <div className="space-y-1">
-            <div className="text-xs text-muted-foreground">
-              Overall Error Rate
-            </div>
-            <div className="text-lg font-semibold">
-              {(errorAnalysis.overallErrorRate * 100).toFixed(1)}%
-            </div>
+            <Label className="text-xs m-0">Overall Error Rate</Label>
+            <H4 className="text-lg font-semibold m-0">
+              {formatPercentage(errorAnalysis.overallErrorRate * 100)}
+            </H4>
           </div>
         </div>
 
@@ -223,23 +209,23 @@ export default function ErrorRateByEntityChart({
 
         {/* Entity Breakdown */}
         <div className="space-y-3 pt-4 border-t">
-          <div className="text-sm font-medium text-muted-foreground">
+          <SubsectionTitle className="text-sm m-0">
             Error Rate Breakdown
-          </div>
+          </SubsectionTitle>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {chartData.map((item, index) => {
               const severity = getSeverityLevel(item.errorRate);
               const severityColors = {
-                Critical: "bg-red-50 border-red-200 text-red-700",
-                High: "bg-orange-50 border-orange-200 text-orange-700",
-                Medium: "bg-yellow-50 border-yellow-200 text-yellow-700",
-                Low: "bg-emerald-50 border-emerald-200 text-emerald-700",
+                Critical: "bg-error-50 border-error-200 text-error-700",
+                High: "bg-error-50 border-error-200 text-error-700",
+                Medium: "bg-warning-50 border-warning-200 text-warning-700",
+                Low: "bg-success-50 border-success-200 text-success-700",
               };
               const badgeColors = {
-                Critical: "bg-red-500",
-                High: "bg-orange-500",
-                Medium: "bg-yellow-500",
-                Low: "bg-emerald-500",
+                Critical: "bg-error-500",
+                High: "bg-error-500",
+                Medium: "bg-warning-500",
+                Low: "bg-success-500",
               };
 
               return (
@@ -250,7 +236,7 @@ export default function ErrorRateByEntityChart({
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">{item.entity}</span>
+                    <Label className="text-sm m-0">{item.entity}</Label>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full text-white ${
                         badgeColors[severity as keyof typeof badgeColors]
@@ -259,12 +245,10 @@ export default function ErrorRateByEntityChart({
                       {severity}
                     </span>
                   </div>
-                  <div className="text-2xl font-bold">
-                    {item.formattedRate}%
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Error rate
-                  </div>
+                  <H4 className="text-2xl font-bold m-0">
+                    {formatPercentage(item.errorRate * 100)}
+                  </H4>
+                  <ByLine className="text-xs m-0 mt-1">Error rate</ByLine>
                 </div>
               );
             })}
@@ -274,44 +258,44 @@ export default function ErrorRateByEntityChart({
         {/* Insights */}
         {maxErrorRate > 0 && (
           <div className="pt-4 border-t">
-            <div className="text-sm font-medium text-muted-foreground mb-2">
+            <SubsectionTitle className="text-sm m-0 mb-2">
               Insights
-            </div>
-            <div className="space-y-1 text-sm text-muted-foreground">
+            </SubsectionTitle>
+            <div className="space-y-1 text-sm">
               {maxErrorRate >= 0.2 && (
-                <div className="flex items-center gap-2 text-red-600">
+                <div className="flex items-center gap-2 text-error-600">
                   <AlertTriangle className="w-4 h-4" />
-                  <span>
+                  <ByLine className="m-0">
                     {highestErrorEntity.entity} has a critical error rate (
-                    {highestErrorEntity.formattedRate}%) requiring immediate
-                    attention.
-                  </span>
+                    {formatPercentage(highestErrorEntity.errorRate * 100)})
+                    requiring immediate attention.
+                  </ByLine>
                 </div>
               )}
               {maxErrorRate < 0.2 && maxErrorRate >= 0.1 && (
-                <div className="flex items-center gap-2 text-orange-600">
+                <div className="flex items-center gap-2 text-error-600">
                   <AlertTriangle className="w-4 h-4" />
-                  <span>
+                  <ByLine className="m-0">
                     {highestErrorEntity.entity} has the highest error rate (
-                    {highestErrorEntity.formattedRate}%) and should be
-                    monitored.
-                  </span>
+                    {formatPercentage(highestErrorEntity.errorRate * 100)}) and
+                    should be monitored.
+                  </ByLine>
                 </div>
               )}
               {maxErrorRate === minErrorRate && (
-                <div className="text-emerald-600">
+                <div className="text-success-600">
                   ✓ All entity types have consistent error rates.
                 </div>
               )}
               {maxErrorRate !== minErrorRate && maxErrorRate < 0.1 && (
-                <div className="text-muted-foreground">
+                <ByLine className="m-0">
                   Error rates vary across entity types, but all are below 10%.
-                </div>
+                </ByLine>
               )}
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </ElementContainer>
   );
 }

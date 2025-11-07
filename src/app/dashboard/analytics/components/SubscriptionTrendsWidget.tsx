@@ -1,14 +1,21 @@
 "use client";
 
 import { useSubscriptionTrends } from "@/hooks/analytics/useSubscriptionTrends";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import LoadingState from "@/components/ui-library/states/LoadingState";
+import ErrorState from "@/components/ui-library/states/ErrorState";
+import EmptyState from "@/components/ui-library/states/EmptyState";
+import { formatPercentage } from "@/utils/chart-formatters";
+import StatCard from "@/components/ui-library/metrics/StatCard";
+import {
+  TrendingUp,
+  CheckCircle,
+  TrendingDown,
+  Plus,
+  X,
+  ArrowUpRight,
+} from "lucide-react";
 
 /**
  * SubscriptionTrendsWidget Component
@@ -16,34 +23,47 @@ import { Skeleton } from "@/components/ui/skeleton";
  * Displays subscription lifecycle stages and renewal vs churn patterns.
  */
 export function SubscriptionTrendsWidget() {
-  const { data, isLoading, error } = useSubscriptionTrends();
+  const { data, isLoading, error, refetch } = useSubscriptionTrends();
 
   if (isLoading) {
     return (
-      <Card>
-        <CardHeader>
-          <Skeleton className="h-6 w-48" />
-        </CardHeader>
-        <CardContent>
-          <Skeleton className="h-48 w-full" />
-        </CardContent>
-      </Card>
+      <LoadingState variant="skeleton">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-20 w-full" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </LoadingState>
     );
   }
 
   if (error) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Error Loading Subscription Trends</CardTitle>
-          <CardDescription>{error.message}</CardDescription>
-        </CardHeader>
-      </Card>
+      <ErrorState
+        variant="card"
+        title="Error Loading Subscription Trends"
+        error={error}
+        onRetry={() => refetch()}
+      />
     );
   }
 
   if (!data) {
-    return null;
+    return (
+      <EmptyState
+        variant="card"
+        title="No Subscription Data"
+        description="Subscription trends data will appear here once available"
+        icon={<TrendingUp className="h-12 w-12 text-muted-foreground" />}
+      />
+    );
   }
 
   const analytics = data;
@@ -52,90 +72,60 @@ export function SubscriptionTrendsWidget() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">
-            Active Subscriptions
-          </CardTitle>
-          <CardDescription>Currently active</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{lifecycle?.active || 0}</div>
-          <p className="text-xs text-muted-foreground">
-            {renewalChurn?.totalSubscriptions || 0} total
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Active Subscriptions"
+        value={lifecycle?.active || 0}
+        icon={<CheckCircle className="h-5 w-5" />}
+        description={`${renewalChurn?.totalSubscriptions || 0} total`}
+        variant="primary"
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Renewal Rate</CardTitle>
-          <CardDescription>Successfully renewed</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {(renewalChurn?.renewalRate || 0).toFixed(1)}%
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {renewalChurn?.renewedSubscriptions || 0} renewed
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Renewal Rate"
+        value={formatPercentage(renewalChurn?.renewalRate || 0)}
+        icon={<TrendingUp className="h-5 w-5" />}
+        description={`${renewalChurn?.renewedSubscriptions || 0} renewed`}
+        trend={renewalChurn?.renewalRate}
+        variant="accent"
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Churn Rate</CardTitle>
-          <CardDescription>Cancellations</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {(renewalChurn?.churnRate || 0).toFixed(1)}%
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {renewalChurn?.churnedSubscriptions || 0} churned
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Churn Rate"
+        value={formatPercentage(renewalChurn?.churnRate || 0)}
+        icon={<TrendingDown className="h-5 w-5" />}
+        description={`${renewalChurn?.churnedSubscriptions || 0} churned`}
+        trend={renewalChurn?.churnRate ? -renewalChurn.churnRate : undefined}
+        variant="secondary"
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">
-            New Subscriptions
-          </CardTitle>
-          <CardDescription>Recently added</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{lifecycle?.new || 0}</div>
-          <p className="text-xs text-muted-foreground">This period</p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="New Subscriptions"
+        value={lifecycle?.new || 0}
+        icon={<Plus className="h-5 w-5" />}
+        description="This period"
+        variant="primary"
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Churned</CardTitle>
-          <CardDescription>Cancelled accounts</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{lifecycle?.churned || 0}</div>
-          <p className="text-xs text-muted-foreground">Total</p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Churned"
+        value={lifecycle?.churned || 0}
+        icon={<X className="h-5 w-5" />}
+        description="Total"
+        variant="secondary"
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-sm font-medium">Growth Rate</CardTitle>
-          <CardDescription>Net subscription growth</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {(analytics?.monthlySubscriptionTrends?.growthRate || 0).toFixed(1)}
-            %
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {analytics?.monthlySubscriptionTrends?.trend || "N/A"} trend
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Growth Rate"
+        value={formatPercentage(
+          analytics?.monthlySubscriptionTrends?.growthRate || 0
+        )}
+        icon={<ArrowUpRight className="h-5 w-5" />}
+        description={`${
+          analytics?.monthlySubscriptionTrends?.trend || "N/A"
+        } trend`}
+        trend={analytics?.monthlySubscriptionTrends?.growthRate}
+        variant="accent"
+      />
     </div>
   );
 }

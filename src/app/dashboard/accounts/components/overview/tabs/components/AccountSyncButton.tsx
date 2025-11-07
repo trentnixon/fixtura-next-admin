@@ -30,7 +30,9 @@ interface AccountSyncButtonProps {
     | "ghost"
     | "destructive"
     | "secondary"
-    | "link";
+    | "link"
+    | "primary"
+    | "accent";
 }
 
 /**
@@ -179,7 +181,8 @@ export default function AccountSyncButton({
           </div>
           <DialogFooter>
             <Button
-              variant="secondary"
+              variant="destructive"
+              className="rounded-full"
               onClick={() => {
                 setErrorState(null);
                 setIsDialogOpen(false);
@@ -189,7 +192,7 @@ export default function AccountSyncButton({
               Cancel
             </Button>
             <Button
-              variant="default"
+              variant={variant}
               onClick={handleSync}
               disabled={isPending}
               className={isPending ? "opacity-50 cursor-not-allowed" : ""}

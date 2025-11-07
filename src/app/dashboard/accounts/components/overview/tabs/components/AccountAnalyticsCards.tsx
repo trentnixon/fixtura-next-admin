@@ -1,13 +1,7 @@
 "use client";
 
 import { useAccountAnalytics } from "@/hooks/analytics/useAccountAnalytics";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-} from "@/components/ui/card";
+import { LoadingState, ErrorState, EmptyState } from "@/components/ui-library";
 import { Skeleton } from "@/components/ui/skeleton";
 import FinancialOverview from "./FinancialOverview";
 import SubscriptionStatusCard from "./SubscriptionStatusCard";
@@ -36,39 +30,30 @@ export default function AccountAnalyticsCards({
 
   if (isAnalyticsLoading) {
     return (
-      <div className="space-y-6">
+      <LoadingState variant="skeleton" message="Loading account analytics...">
         <Skeleton className="h-64 w-full" />
         <Skeleton className="h-64 w-full" />
-      </div>
+      </LoadingState>
     );
   }
 
   if (analyticsError) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Error Loading Analytics</CardTitle>
-          <CardDescription>{analyticsError.message}</CardDescription>
-        </CardHeader>
-      </Card>
+      <ErrorState
+        error={analyticsError}
+        title="Error Loading Analytics"
+        variant="card"
+      />
     );
   }
 
   if (!analyticsData) {
     return (
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold">
-            Account Analytics
-          </CardTitle>
-          <CardDescription>No analytics data available</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-center text-muted-foreground py-4">
-            Unable to load analytics for this account. Please try again later.
-          </p>
-        </CardContent>
-      </Card>
+      <EmptyState
+        title="Account Analytics"
+        description="No analytics data available. Unable to load analytics for this account. Please try again later."
+        variant="card"
+      />
     );
   }
 
@@ -81,22 +66,11 @@ export default function AccountAnalyticsCards({
       {hasRealData ? (
         <FinancialOverview analytics={analyticsData} />
       ) : (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg font-semibold">
-              Account Analytics
-            </CardTitle>
-            <CardDescription>
-              No account analytics data available yet
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-muted-foreground py-4">
-              This account has no orders or subscriptions yet. Check back once
-              the account has activity.
-            </p>
-          </CardContent>
-        </Card>
+        <EmptyState
+          title="Account Analytics"
+          description="No account analytics data available yet. This account has no orders or subscriptions yet. Check back once the account has activity."
+          variant="card"
+        />
       )}
 
       {/* Subscription Status Section */}

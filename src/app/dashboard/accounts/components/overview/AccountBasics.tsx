@@ -3,13 +3,8 @@
 import { useGlobalContext } from "@/components/providers/GlobalContext";
 import { H4, Label } from "@/components/type/titles";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
 import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccountDetails";
 import { Mail } from "lucide-react";
 import Link from "next/link";
@@ -22,55 +17,42 @@ export default function AccountBasics({
   const { strapiLocation } = useGlobalContext();
 
   return (
-    <Card className="w-full shadow-none bg-slate-50 border-b-4 border-b-slate-500">
-      <CardHeader>
-        <CardTitle>Account Information</CardTitle>
-        <CardDescription>Details about the account holder</CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-4">
-        <div className="flex items-center space-x-4">
-          <Mail className="h-5 w-5 text-gray-500" />
-          <div className="flex flex-col items-start justify-center">
-            <H4 className="leading-none">{account.DeliveryAddress}</H4>
-            <Label className=" font-normal my-0 text-gray-500 ">
-              Account Holder
-            </Label>
+    <SectionContainer
+      title="Account Information"
+      description="Details about the account holder"
+      variant="default"
+    >
+      <ElementContainer variant="light" padding="md">
+        <div className="grid gap-4">
+          <div className="flex items-center space-x-4">
+            <Mail className="h-5 w-5 text-muted-foreground" />
+            <div className="flex flex-col items-start justify-center space-y-1">
+              <H4 className="leading-none m-0">{account.DeliveryAddress}</H4>
+              <Label className="font-normal m-0 text-muted-foreground">
+                Account Holder
+              </Label>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center space-x-4">
-          <Mail className="h-5 w-5 text-gray-500" />
-          <div className="flex flex-col">
-            <H4 className="leading-none">{account.DeliveryAddress}</H4>
-            <Label className=" font-normal my-0 text-gray-500">
-              Delivery Address
-            </Label>
+          <div className="flex items-center space-x-4">
+            <Mail className="h-5 w-5 text-muted-foreground" />
+            <div className="flex flex-col space-y-1">
+              <H4 className="leading-none m-0">{account.DeliveryAddress}</H4>
+              <Label className="font-normal m-0 text-muted-foreground">
+                Delivery Address
+              </Label>
+            </div>
           </div>
-        </div>
 
-        <Button variant="outline">
-          <Link
-            target="_blank"
-            href={`${strapiLocation.account}${account?.id}`}>
-            Go To Account
-          </Link>
-        </Button>
-      </CardContent>
-    </Card>
+          <Button variant="primary" asChild>
+            <Link
+              target="_blank"
+              href={`${strapiLocation.account}${account?.id}`}
+            >
+              Go To Account
+            </Link>
+          </Button>
+        </div>
+      </ElementContainer>
+    </SectionContainer>
   );
-}
-
-{
-  /* <section>
-<P>
-  <Bold>Account Holder:</Bold> {account?.attributes.FirstName}
-</P>
-<P>
-  <Bold>Delivery Address:</Bold> {account?.attributes.DeliveryAddress}
-</P>
-<Button variant="outline">
-  <Link target="_blank" href={`${strapiLocation.account}${account?.id}`}>
-    View in Strapi
-  </Link>
-</Button>
-</section> */
 }

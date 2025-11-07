@@ -1,16 +1,10 @@
 "use client";
 
 import { AccountStatsResponse } from "@/types/dataCollection";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { H4 } from "@/components/type/titles";
-import { P } from "@/components/type/type";
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
+import { Label, H4, SubsectionTitle, ByLine } from "@/components/type/titles";
 import { Badge } from "@/components/ui/badge";
+import { formatDate, formatRelativeTime } from "@/utils/chart-formatters";
 import {
   Calendar,
   Clock,
@@ -39,76 +33,43 @@ export default function TemporalAnalysisCard({
 }: TemporalAnalysisCardProps) {
   const temporal = data.data.temporalAnalysis;
 
-  // Format date to readable string
-  const formatDate = (dateString: string): string => {
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-    } catch {
-      return dateString;
-    }
-  };
-
-  // Get relative time string (e.g., "2 days ago")
-  const getRelativeTime = (days: number): string => {
-    if (days === 0) return "Today";
-    if (days === 1) return "1 day ago";
-    if (days < 7) return `${days} days ago`;
-    if (days < 30) {
-      const weeks = Math.floor(days / 7);
-      return weeks === 1 ? "1 week ago" : `${weeks} weeks ago`;
-    }
-    if (days < 365) {
-      const months = Math.floor(days / 30);
-      return months === 1 ? "1 month ago" : `${months} months ago`;
-    }
-    const years = Math.floor(days / 365);
-    return years === 1 ? "1 year ago" : `${years} years ago`;
-  };
-
   // Get frequency status (good/fair/poor)
   const getFrequencyStatus = (
     frequency: number
   ): {
     label: string;
-    variant: "default" | "secondary" | "destructive" | "outline";
+    badgeColor: string;
     color: string;
     icon: React.ReactNode;
   } => {
     if (frequency >= 1) {
       return {
         label: "Excellent",
-        variant: "default",
-        color: "text-emerald-600",
+        badgeColor: "bg-success-500",
+        color: "text-success-600",
         icon: <TrendingUp className="w-4 h-4" />,
       };
     }
     if (frequency >= 0.5) {
       return {
         label: "Good",
-        variant: "default",
-        color: "text-blue-600",
+        badgeColor: "bg-info-500",
+        color: "text-info-600",
         icon: <Activity className="w-4 h-4" />,
       };
     }
     if (frequency >= 0.25) {
       return {
         label: "Fair",
-        variant: "secondary",
-        color: "text-yellow-600",
+        badgeColor: "bg-warning-500",
+        color: "text-warning-600",
         icon: <TrendingDown className="w-4 h-4" />,
       };
     }
     return {
       label: "Poor",
-      variant: "destructive",
-      color: "text-red-600",
+      badgeColor: "bg-error-500",
+      color: "text-error-600",
       icon: <AlertCircle className="w-4 h-4" />,
     };
   };
@@ -118,122 +79,124 @@ export default function TemporalAnalysisCard({
     days: number
   ): {
     label: string;
+    badgeColor: string;
     color: string;
     icon: React.ReactNode;
   } => {
     if (days <= 1) {
       return {
         label: "Recent",
-        color: "text-emerald-600",
+        badgeColor: "bg-success-500",
+        color: "text-success-600",
         icon: <TrendingUp className="w-4 h-4" />,
       };
     }
     if (days <= 7) {
       return {
         label: "Acceptable",
-        color: "text-blue-600",
+        badgeColor: "bg-info-500",
+        color: "text-info-600",
         icon: <Activity className="w-4 h-4" />,
       };
     }
     if (days <= 30) {
       return {
         label: "Stale",
-        color: "text-yellow-600",
+        badgeColor: "bg-warning-500",
+        color: "text-warning-600",
         icon: <TrendingDown className="w-4 h-4" />,
       };
     }
     return {
       label: "Very Stale",
-      color: "text-red-600",
+      badgeColor: "bg-error-500",
+      color: "text-error-600",
       icon: <AlertCircle className="w-4 h-4" />,
     };
   };
 
   const frequencyStatus = getFrequencyStatus(temporal.collectionFrequency);
   const daysStatus = getDaysStatus(temporal.daysSinceLastCollection);
-  const relativeTime = getRelativeTime(temporal.daysSinceLastCollection);
+  const relativeTime = formatRelativeTime(temporal.lastCollectionDate);
 
   return (
-    <Card className="shadow-none bg-slate-50 border rounded-md">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-indigo-500" />
-            <CardTitle className="text-lg font-semibold">
-              Collection Frequency Analysis
-            </CardTitle>
-          </div>
-          <Badge variant={frequencyStatus.variant} className="text-sm">
-            <div className="flex items-center gap-1">
-              {frequencyStatus.icon}
-              <span>{frequencyStatus.label} Frequency</span>
-            </div>
-          </Badge>
+    <ElementContainer variant="dark" border padding="md">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-indigo-500" />
+          <SubsectionTitle className="m-0">
+            Collection Frequency Analysis
+          </SubsectionTitle>
         </div>
-        <CardDescription>
-          Temporal patterns and collection frequency metrics
-        </CardDescription>
-      </CardHeader>
+        <Badge
+          className={`${frequencyStatus.badgeColor} text-white border-0 rounded-full text-sm`}
+        >
+          <div className="flex items-center gap-1">
+            {frequencyStatus.icon}
+            <span>{frequencyStatus.label} Frequency</span>
+          </div>
+        </Badge>
+      </div>
+      <ByLine className="mb-4">
+        Temporal patterns and collection frequency metrics
+      </ByLine>
 
-      <CardContent className="space-y-6">
+      <div className="space-y-6">
         {/* Total Collections - Large Metric */}
-        <div className="space-y-2">
+        <div className="space-y-1">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">
-              Total Collections
-            </span>
-            <span className="text-4xl font-bold text-indigo-600">
+            <Label className="text-sm font-medium m-0">Total Collections</Label>
+            <H4 className="text-4xl font-bold m-0 text-indigo-600">
               {temporal.totalCollections.toLocaleString()}
-            </span>
+            </H4>
           </div>
-          <div className="text-xs text-muted-foreground">
+          <ByLine className="text-xs m-0">
             Total data collection runs tracked
-          </div>
+          </ByLine>
         </div>
 
         {/* Last Collection Date */}
         <div className="pt-2 border-t space-y-3">
-          <H4 className="text-sm flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-indigo-500" />
-            Last Collection
-          </H4>
+            <SubsectionTitle className="text-sm m-0">
+              Last Collection
+            </SubsectionTitle>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2 p-4 rounded-lg bg-blue-50 border border-blue-200">
-              <div className="text-xs text-blue-900 font-medium">
+            <div className="space-y-1 p-4 rounded-lg bg-info-50 border border-info-200">
+              <Label className="text-xs m-0 text-info-900">
                 Last Collection Date
-              </div>
-              <div className="text-lg font-semibold text-blue-700">
+              </Label>
+              <H4 className="text-lg font-semibold m-0 text-info-700">
                 {formatDate(temporal.lastCollectionDate)}
-              </div>
-              <div className="flex items-center gap-2 text-xs text-blue-600">
-                <Clock className="w-3 h-3" />
-                <span>{relativeTime}</span>
+              </H4>
+              <div className="flex items-center gap-2">
+                <Clock className="w-3 h-3 text-info-600" />
+                <ByLine className="text-xs m-0 text-info-600">
+                  {relativeTime}
+                </ByLine>
               </div>
             </div>
 
-            <div className="space-y-2 p-4 rounded-lg bg-orange-50 border border-orange-200">
-              <div className="flex items-center gap-2 text-xs text-orange-900 font-medium">
+            <div className="space-y-1 p-4 rounded-lg bg-warning-50 border border-warning-200">
+              <div className="flex items-center gap-2">
                 {daysStatus.icon}
-                <span>Days Since Last Collection</span>
+                <Label className="text-xs m-0 text-warning-900">
+                  Days Since Last Collection
+                </Label>
               </div>
               <div className="flex items-baseline gap-2">
-                <span className={`text-2xl font-bold ${daysStatus.color}`}>
+                <H4 className={`text-2xl font-bold m-0 ${daysStatus.color}`}>
                   {temporal.daysSinceLastCollection}
-                </span>
-                <span className="text-xs text-orange-600">
+                </H4>
+                <ByLine className="text-xs m-0 text-warning-600">
                   {temporal.daysSinceLastCollection === 1 ? "day" : "days"}
-                </span>
+                </ByLine>
               </div>
               <div className="flex items-center gap-1">
                 <Badge
-                  variant={
-                    temporal.daysSinceLastCollection <= 7
-                      ? "default"
-                      : temporal.daysSinceLastCollection <= 30
-                      ? "secondary"
-                      : "destructive"
-                  }
-                  className="text-xs"
+                  className={`${daysStatus.badgeColor} text-white border-0 rounded-full text-xs`}
                 >
                   {daysStatus.label}
                 </Badge>
@@ -244,41 +207,43 @@ export default function TemporalAnalysisCard({
 
         {/* Collection Frequency */}
         <div className="pt-2 border-t space-y-3">
-          <H4 className="text-sm flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <Activity className="w-4 h-4 text-indigo-500" />
-            Collection Frequency
-          </H4>
+            <SubsectionTitle className="text-sm m-0">
+              Collection Frequency
+            </SubsectionTitle>
+          </div>
           <div className="space-y-4">
             {/* Frequency Metric */}
             <div className="p-4 rounded-lg bg-indigo-50 border border-indigo-200">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-indigo-900">
+                <Label className="text-sm font-medium m-0 text-indigo-900">
                   Collections Per Day
-                </span>
+                </Label>
                 <div className="flex items-center gap-2">
                   {frequencyStatus.icon}
-                  <span
-                    className={`text-2xl font-bold ${frequencyStatus.color}`}
+                  <H4
+                    className={`text-2xl font-bold m-0 ${frequencyStatus.color}`}
                   >
                     {temporal.collectionFrequency.toFixed(2)}
-                  </span>
+                  </H4>
                 </div>
               </div>
-              <div className="text-xs text-indigo-700">
+              <ByLine className="text-xs m-0 text-indigo-700">
                 Average number of collections per day based on total collections
                 and date range
-              </div>
+              </ByLine>
             </div>
 
             {/* Frequency Interpretation */}
             <div className="rounded-lg bg-slate-100 border border-slate-200 p-3">
               <div className="flex items-start gap-2">
                 <Activity className="w-4 h-4 text-slate-600 mt-0.5" />
-                <div className="flex-1">
-                  <P className="text-sm font-medium text-slate-900 mb-1">
+                <div className="flex-1 space-y-1">
+                  <Label className="text-sm font-medium m-0 text-slate-900">
                     Frequency Status
-                  </P>
-                  <P className="text-xs text-slate-700">
+                  </Label>
+                  <ByLine className="text-xs m-0 text-slate-700">
                     {temporal.collectionFrequency >= 1
                       ? "Excellent frequency - collections are happening daily or more frequently."
                       : temporal.collectionFrequency >= 0.5
@@ -286,7 +251,7 @@ export default function TemporalAnalysisCard({
                       : temporal.collectionFrequency >= 0.25
                       ? "Fair frequency - collections occur weekly. Consider increasing frequency for better data freshness."
                       : "Poor frequency - collections are infrequent. Data may be stale and require attention."}
-                  </P>
+                  </ByLine>
                 </div>
               </div>
             </div>
@@ -297,22 +262,18 @@ export default function TemporalAnalysisCard({
         <div className="pt-2 border-t">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <div className="text-xs text-muted-foreground">
-                Estimated Next Collection
-              </div>
-              <div className="text-sm font-semibold">
+              <Label className="text-xs m-0">Estimated Next Collection</Label>
+              <H4 className="text-sm font-semibold m-0">
                 {temporal.collectionFrequency > 0
                   ? `~${(1 / temporal.collectionFrequency).toFixed(1)} days`
                   : "Unknown"}
-              </div>
+              </H4>
             </div>
             <div className="space-y-1">
-              <div className="text-xs text-muted-foreground">
-                Collections Per Week
-              </div>
-              <div className="text-sm font-semibold">
+              <Label className="text-xs m-0">Collections Per Week</Label>
+              <H4 className="text-sm font-semibold m-0">
                 {(temporal.collectionFrequency * 7).toFixed(1)}
-              </div>
+              </H4>
             </div>
           </div>
         </div>
@@ -320,24 +281,24 @@ export default function TemporalAnalysisCard({
         {/* Alert Section (if stale) */}
         {temporal.daysSinceLastCollection > 7 && (
           <div className="pt-2 border-t">
-            <div className="rounded-lg bg-yellow-50 border border-yellow-200 p-3">
+            <div className="rounded-lg bg-warning-50 border border-warning-200 p-3">
               <div className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-yellow-600 mt-0.5" />
-                <div className="flex-1">
-                  <P className="text-sm font-medium text-yellow-900 mb-1">
+                <AlertCircle className="w-4 h-4 text-warning-600 mt-0.5" />
+                <div className="flex-1 space-y-1">
+                  <Label className="text-sm font-medium m-0 text-warning-900">
                     Collection Staleness Warning
-                  </P>
-                  <P className="text-xs text-yellow-700">
+                  </Label>
+                  <ByLine className="text-xs m-0 text-warning-700">
                     Last collection was {temporal.daysSinceLastCollection} days
                     ago. Consider triggering a manual collection to ensure data
                     freshness.
-                  </P>
+                  </ByLine>
                 </div>
               </div>
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </ElementContainer>
   );
 }

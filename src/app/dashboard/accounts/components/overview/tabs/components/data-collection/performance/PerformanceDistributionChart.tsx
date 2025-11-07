@@ -1,13 +1,8 @@
 "use client";
 
 import { AccountStatsResponse } from "@/types/dataCollection";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
+import { EmptyState } from "@/components/ui-library";
 import {
   ChartContainer,
   ChartTooltip,
@@ -16,6 +11,8 @@ import {
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
 import { Gauge } from "lucide-react";
 import { ChartConfig } from "@/components/ui/chart";
+import { Label, H4, SubsectionTitle, ByLine } from "@/components/type/titles";
+import { formatDuration, formatMemory } from "@/utils/chart-formatters";
 
 interface PerformanceDistributionChartProps {
   data: AccountStatsResponse;
@@ -32,24 +29,21 @@ interface PerformanceDistributionChartProps {
 export default function PerformanceDistributionChart({
   data,
 }: PerformanceDistributionChartProps) {
-  const performanceData = data.data.timeSeries.performanceOverTime || [];
-  const performanceMetrics = data.data.performanceMetrics;
+  const rawPerformanceData = data.data.timeSeries.performanceOverTime || [];
 
-  // Helper to format duration
-  const formatDuration = (ms: number): string => {
-    if (ms < 1000) return `${Math.round(ms)}ms`;
-    if (ms < 60000) return `${(ms / 1000).toFixed(1)}s`;
-    if (ms < 3600000) return `${(ms / 60000).toFixed(1)}m`;
-    return `${(ms / 3600000).toFixed(1)}h`;
+  // Filter out entries where timeTaken < 1 minute (60000ms) - these indicate "ran but no data found"
+  const performanceData = rawPerformanceData.filter(
+    (point) => point.timeTaken >= 60000
+  );
+
+  // Helper to format duration for histogram ranges (simplified format)
+  const formatDurationForRange = (ms: number): string => {
+    return formatDuration(ms, "milliseconds");
   };
 
-  // Helper to format memory
-  const formatMemory = (bytes: number): string => {
-    if (bytes < 1024) return `${Math.round(bytes)}B`;
-    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`;
-    if (bytes < 1024 * 1024 * 1024)
-      return `${(bytes / (1024 * 1024)).toFixed(1)}MB`;
-    return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)}GB`;
+  // Helper to format memory for histogram ranges (simplified format)
+  const formatMemoryForRange = (bytes: number): string => {
+    return formatMemory(bytes, "bytes");
   };
 
   // Create histogram bins for time taken
@@ -61,9 +55,9 @@ export default function PerformanceDistributionChart({
     const bins_data = Array(bins)
       .fill(0)
       .map((_, i) => ({
-        range: `${formatDuration(min + i * binWidth)} - ${formatDuration(
-          min + (i + 1) * binWidth
-        )}`,
+        range: `${formatDurationForRange(
+          min + i * binWidth
+        )} - ${formatDurationForRange(min + (i + 1) * binWidth)}`,
         min: min + i * binWidth,
         max: min + (i + 1) * binWidth,
         count: 0,
@@ -86,9 +80,9 @@ export default function PerformanceDistributionChart({
     const bins_data = Array(bins)
       .fill(0)
       .map((_, i) => ({
-        range: `${formatMemory(min + i * binWidth)} - ${formatMemory(
-          min + (i + 1) * binWidth
-        )}`,
+        range: `${formatMemoryForRange(
+          min + i * binWidth
+        )} - ${formatMemoryForRange(min + (i + 1) * binWidth)}`,
         min: min + i * binWidth,
         max: min + (i + 1) * binWidth,
         count: 0,
@@ -102,7 +96,7 @@ export default function PerformanceDistributionChart({
     return bins_data;
   };
 
-  // Extract values
+  // Extract values (already filtered for timeTaken >= 60000, but ensure positive values)
   const timeTakenValues = performanceData
     .map((p) => p.timeTaken)
     .filter((v) => v > 0);
@@ -131,65 +125,78 @@ export default function PerformanceDistributionChart({
 
   if (timeTakenValues.length === 0 && memoryUsageValues.length === 0) {
     return (
-      <Card className="shadow-none bg-slate-50 border rounded-md">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold flex items-center gap-2">
-            <Gauge className="w-5 h-5 text-indigo-500" />
+      <ElementContainer variant="dark" border padding="md">
+        <div className="flex items-center gap-2 mb-2">
+          <Gauge className="w-5 h-5 text-indigo-500" />
+          <SubsectionTitle className="m-0">
             Performance Distribution
-          </CardTitle>
-          <CardDescription>
-            Distribution of time taken and memory usage across collections
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-8 text-muted-foreground">
-            No performance distribution data available
-          </div>
-        </CardContent>
-      </Card>
+          </SubsectionTitle>
+        </div>
+        <ByLine className="mb-4">
+          Distribution of time taken and memory usage across collections
+        </ByLine>
+        <EmptyState
+          title="No performance distribution data available"
+          description="No performance distribution data available for this time period."
+          variant="minimal"
+        />
+      </ElementContainer>
     );
   }
 
-  // Calculate reference lines for time taken
-  const timeMetrics = performanceMetrics.timeTaken;
-  const timeAverage = timeMetrics.average || 0;
-  const timeMedian = timeMetrics.median || 0;
-  const timeMin = timeMetrics.min || 0;
-  const timeMax = timeMetrics.max || 0;
+  // Recalculate metrics from filtered data (instead of using API-provided metrics)
+  const calculateMetrics = (values: number[]) => {
+    if (values.length === 0) {
+      return { average: 0, median: 0, min: 0, max: 0 };
+    }
+    const sorted = [...values].sort((a, b) => a - b);
+    const sum = values.reduce((acc, val) => acc + val, 0);
+    const average = sum / values.length;
+    const median =
+      sorted.length % 2 === 0
+        ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+        : sorted[Math.floor(sorted.length / 2)];
+    const min = sorted[0];
+    const max = sorted[sorted.length - 1];
+    return { average, median, min, max };
+  };
 
-  // Calculate reference lines for memory usage
-  const memoryMetrics = performanceMetrics.memoryUsage;
-  const memoryAverage = memoryMetrics.average || 0;
-  const memoryMedian = memoryMetrics.median || 0;
-  const memoryMin = memoryMetrics.min || 0;
-  const memoryMax = memoryMetrics.max || 0;
+  // Calculate reference lines for time taken (from filtered data)
+  const timeMetrics = calculateMetrics(timeTakenValues);
+  const timeAverage = timeMetrics.average;
+  const timeMedian = timeMetrics.median;
+  const timeMin = timeMetrics.min;
+  const timeMax = timeMetrics.max;
+
+  // Calculate reference lines for memory usage (from filtered data)
+  const memoryMetrics = calculateMetrics(memoryUsageValues);
+  const memoryAverage = memoryMetrics.average;
+  const memoryMedian = memoryMetrics.median;
+  const memoryMin = memoryMetrics.min;
+  const memoryMax = memoryMetrics.max;
 
   return (
-    <Card className="shadow-none bg-slate-50 border rounded-md">
-      <CardHeader>
-        <div className="flex items-center gap-2">
-          <Gauge className="w-5 h-5 text-indigo-500" />
-          <CardTitle className="text-lg font-semibold">
-            Performance Distribution
-          </CardTitle>
-        </div>
-        <CardDescription>
-          Distribution histograms for time taken and memory usage with summary
-          statistics
-        </CardDescription>
-      </CardHeader>
+    <ElementContainer variant="dark" border padding="md">
+      <div className="flex items-center gap-2 mb-2">
+        <Gauge className="w-5 h-5 text-indigo-500" />
+        <SubsectionTitle className="m-0">
+          Performance Distribution
+        </SubsectionTitle>
+      </div>
+      <ByLine className="mb-4">
+        Distribution histograms for time taken and memory usage with summary
+        statistics
+      </ByLine>
 
-      <CardContent className="space-y-8">
+      <div className="space-y-8">
         {/* Time Taken Distribution */}
         {timeTakenValues.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-muted-foreground">
-                Time Taken Distribution
-              </div>
-              <div className="text-xs text-muted-foreground">
+              <Label className="text-sm m-0">Time Taken Distribution</Label>
+              <ByLine className="text-xs m-0">
                 {timeTakenValues.length} collections
-              </div>
+              </ByLine>
             </div>
 
             <ChartContainer
@@ -241,28 +248,28 @@ export default function PerformanceDistributionChart({
             {/* Summary Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 border-t">
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Min</div>
-                <div className="text-sm font-semibold">
-                  {formatDuration(timeMin)}
-                </div>
+                <Label className="text-xs m-0">Min</Label>
+                <H4 className="text-sm font-semibold m-0">
+                  {formatDuration(timeMin, "milliseconds")}
+                </H4>
               </div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Average</div>
-                <div className="text-sm font-semibold text-emerald-600">
-                  {formatDuration(timeAverage)}
-                </div>
+                <Label className="text-xs m-0">Average</Label>
+                <H4 className="text-sm font-semibold m-0 text-success-600">
+                  {formatDuration(timeAverage, "milliseconds")}
+                </H4>
               </div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Median</div>
-                <div className="text-sm font-semibold text-orange-600">
-                  {formatDuration(timeMedian)}
-                </div>
+                <Label className="text-xs m-0">Median</Label>
+                <H4 className="text-sm font-semibold m-0 text-warning-600">
+                  {formatDuration(timeMedian, "milliseconds")}
+                </H4>
               </div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Max</div>
-                <div className="text-sm font-semibold">
-                  {formatDuration(timeMax)}
-                </div>
+                <Label className="text-xs m-0">Max</Label>
+                <H4 className="text-sm font-semibold m-0">
+                  {formatDuration(timeMax, "milliseconds")}
+                </H4>
               </div>
             </div>
           </div>
@@ -272,12 +279,10 @@ export default function PerformanceDistributionChart({
         {memoryUsageValues.length > 0 && (
           <div className="space-y-4 pt-4 border-t">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-medium text-muted-foreground">
-                Memory Usage Distribution
-              </div>
-              <div className="text-xs text-muted-foreground">
+              <Label className="text-sm m-0">Memory Usage Distribution</Label>
+              <ByLine className="text-xs m-0">
                 {memoryUsageValues.length} collections
-              </div>
+              </ByLine>
             </div>
 
             <ChartContainer
@@ -329,33 +334,33 @@ export default function PerformanceDistributionChart({
             {/* Summary Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2 border-t">
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Min</div>
-                <div className="text-sm font-semibold">
-                  {formatMemory(memoryMin)}
-                </div>
+                <Label className="text-xs m-0">Min</Label>
+                <H4 className="text-sm font-semibold m-0">
+                  {formatMemory(memoryMin, "bytes")}
+                </H4>
               </div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Average</div>
-                <div className="text-sm font-semibold text-emerald-600">
-                  {formatMemory(memoryAverage)}
-                </div>
+                <Label className="text-xs m-0">Average</Label>
+                <H4 className="text-sm font-semibold m-0 text-success-600">
+                  {formatMemory(memoryAverage, "bytes")}
+                </H4>
               </div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Median</div>
-                <div className="text-sm font-semibold text-orange-600">
-                  {formatMemory(memoryMedian)}
-                </div>
+                <Label className="text-xs m-0">Median</Label>
+                <H4 className="text-sm font-semibold m-0 text-warning-600">
+                  {formatMemory(memoryMedian, "bytes")}
+                </H4>
               </div>
               <div className="space-y-1">
-                <div className="text-xs text-muted-foreground">Max</div>
-                <div className="text-sm font-semibold">
-                  {formatMemory(memoryMax)}
-                </div>
+                <Label className="text-xs m-0">Max</Label>
+                <H4 className="text-sm font-semibold m-0">
+                  {formatMemory(memoryMax, "bytes")}
+                </H4>
               </div>
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </ElementContainer>
   );
 }

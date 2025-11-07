@@ -37,7 +37,7 @@ export default function Button_SyncAccount({
   return (
     <>
       {/* Button to open the confirmation modal */}
-      <Button variant="outline" onClick={() => setIsDialogOpen(true)}>
+      <Button variant="primary" onClick={() => setIsDialogOpen(true)}>
         <P>Sync Account {syncCompetitionsID}</P>
       </Button>
 
@@ -56,9 +56,10 @@ export default function Button_SyncAccount({
               Cancel
             </Button>
             <Button
-              variant="destructive"
+              variant="accent"
               onClick={handleConfirm}
-              disabled={isLoading}>
+              disabled={isLoading}
+            >
               {isLoading ? "Syncing..." : "Confirm Sync"}
             </Button>
           </DialogFooter>
