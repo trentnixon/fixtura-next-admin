@@ -1,13 +1,16 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ChartCard from "@/components/modules/charts/ChartCard";
+import MetricGrid from "@/components/ui-library/metrics/MetricGrid";
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { ByIDResponse } from "@/types/fetch-test";
-import { SectionTitle } from "@/components/type/titles";
 import {
   LineChart,
   Line,
@@ -17,6 +20,18 @@ import {
   BarChart,
   Bar,
 } from "recharts";
+import {
+  MemoryStick,
+  Activity,
+  Server,
+  Settings,
+  Box,
+  Code,
+  Monitor,
+  MousePointerClick,
+} from "lucide-react";
+import type { ChartConfig } from "@/components/ui/chart";
+import { formatMemory, formatDuration } from "@/utils/chart-formatters";
 
 interface PerformanceChartsProps {
   data: ByIDResponse;
@@ -27,9 +42,9 @@ export function PerformanceCharts({ data }: PerformanceChartsProps) {
   const memoryData = data.performanceMetrics.systemMetrics.memorySnapshots.map(
     (snapshot, index) => ({
       index: index + 1,
-      heapUsed: (snapshot.heapUsed / 1024 / 1024).toFixed(2),
-      heapTotal: (snapshot.heapTotal / 1024 / 1024).toFixed(2),
-      rss: (snapshot.rss / 1024 / 1024).toFixed(2),
+      heapUsed: Number((snapshot.heapUsed / 1024 / 1024).toFixed(2)),
+      heapTotal: Number((snapshot.heapTotal / 1024 / 1024).toFixed(2)),
+      rss: Number((snapshot.rss / 1024 / 1024).toFixed(2)),
     })
   );
 
@@ -37,9 +52,9 @@ export function PerformanceCharts({ data }: PerformanceChartsProps) {
   const gameMetricsData = data.performanceMetrics.perGameMetrics.map(
     (metric) => ({
       gameId: metric.gameId.substring(0, 8) + "...",
-      executionTime: (metric.executionTime / 1000).toFixed(2),
-      memoryRSS: (metric.memoryUsage.rss * 1024).toFixed(2),
-      memoryHeap: metric.memoryUsage.heapUsed.toFixed(2),
+      executionTime: Number((metric.executionTime / 1000).toFixed(2)),
+      memoryRSS: Number((metric.memoryUsage.rss * 1024).toFixed(2)),
+      memoryHeap: metric.memoryUsage.heapUsed,
     })
   );
 
@@ -56,206 +71,254 @@ export function PerformanceCharts({ data }: PerformanceChartsProps) {
       label: "RSS",
       color: "hsl(var(--chart-3))",
     },
-  };
+  } satisfies ChartConfig;
 
   const gameMetricsConfig = {
     executionTime: {
-      label: "Execution Time (s)",
+      label: "Execution Time",
       color: "hsl(var(--chart-4))",
     },
-    memoryRSS: {
-      label: "Memory RSS (MB)",
-      color: "hsl(var(--chart-5))",
-    },
-  };
+  } satisfies ChartConfig;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+    <MetricGrid columns={2} gap="lg">
       {/* Memory Usage Over Time */}
-      <Card className="bg-slate-50 border-b-4 border-b-blue-500">
-        <CardHeader className="p-4">
-          <CardTitle className="flex items-center justify-between w-full">
-            <SectionTitle>Memory Usage Over Time</SectionTitle>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
-          <ChartContainer
-            config={memoryConfig}
-            className="w-full"
-            style={{ height: "200px" }}
-          >
-            <LineChart data={memoryData}>
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="index"
-                tickLine={false}
-                tickMargin={10}
-                axisLine={false}
-                tickFormatter={(value) => `Snapshot ${value}`}
-              />
-              <YAxis tickLine={false} axisLine={false} />
-              <ChartTooltip
-                content={<ChartTooltipContent />}
-                formatter={(value: number, name: string) => [
-                  `${value} MB`,
-                  name === "heapUsed"
-                    ? "Heap Used"
-                    : name === "heapTotal"
-                    ? "Heap Total"
-                    : "RSS",
-                ]}
-              />
-              <Line
-                type="monotone"
-                dataKey="heapUsed"
-                stroke="var(--color-heapUsed)"
-                strokeWidth={2}
-                dot={{ fill: "var(--color-heapUsed)", strokeWidth: 2, r: 4 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="heapTotal"
-                stroke="var(--color-heapTotal)"
-                strokeWidth={2}
-                dot={{ fill: "var(--color-heapTotal)", strokeWidth: 2, r: 4 }}
-              />
-              <Line
-                type="monotone"
-                dataKey="rss"
-                stroke="var(--color-rss)"
-                strokeWidth={2}
-                dot={{ fill: "var(--color-rss)", strokeWidth: 2, r: 4 }}
-              />
-            </LineChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
+      <ChartCard
+        title="Memory Usage Over Time"
+        description="System memory metrics during test execution"
+        icon={MemoryStick}
+        chartConfig={memoryConfig}
+        chartClassName="h-[200px]"
+      >
+        <LineChart data={memoryData}>
+          <CartesianGrid vertical={false} />
+          <XAxis
+            dataKey="index"
+            tickLine={false}
+            tickMargin={10}
+            axisLine={false}
+            tickFormatter={(value) => `Snapshot ${value}`}
+          />
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(value) => formatMemory(value, "mb")}
+          />
+          <ChartTooltip
+            content={<ChartTooltipContent />}
+            formatter={(value: number, name: string) => [
+              formatMemory(value, "mb"),
+              name === "heapUsed"
+                ? "Heap Used"
+                : name === "heapTotal"
+                ? "Heap Total"
+                : "RSS",
+            ]}
+          />
+          <Line
+            type="monotone"
+            dataKey="heapUsed"
+            stroke="var(--color-heapUsed)"
+            strokeWidth={2}
+            dot={{ fill: "var(--color-heapUsed)", strokeWidth: 2, r: 4 }}
+          />
+          <Line
+            type="monotone"
+            dataKey="heapTotal"
+            stroke="var(--color-heapTotal)"
+            strokeWidth={2}
+            dot={{ fill: "var(--color-heapTotal)", strokeWidth: 2, r: 4 }}
+          />
+          <Line
+            type="monotone"
+            dataKey="rss"
+            stroke="var(--color-rss)"
+            strokeWidth={2}
+            dot={{ fill: "var(--color-rss)", strokeWidth: 2, r: 4 }}
+          />
+        </LineChart>
+      </ChartCard>
 
       {/* Per-Game Performance */}
-      <Card className="bg-slate-50 border-b-4 border-b-green-500">
-        <CardHeader className="p-4">
-          <CardTitle className="flex items-center justify-between w-full">
-            <SectionTitle>Per-Game Performance</SectionTitle>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
-          <ChartContainer
-            config={gameMetricsConfig}
-            className="w-full"
-            style={{ height: "200px" }}
-          >
-            <BarChart data={gameMetricsData}>
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="gameId"
-                tickLine={false}
-                tickMargin={10}
-                axisLine={false}
-              />
-              <YAxis tickLine={false} axisLine={false} />
-              <ChartTooltip
-                content={<ChartTooltipContent />}
-                formatter={(value: number, name: string) => [
-                  `${value}${name === "executionTime" ? "s" : " MB"}`,
-                  name === "executionTime" ? "Execution Time" : "Memory RSS",
-                ]}
-              />
-              <Bar
-                dataKey="executionTime"
-                fill="var(--color-executionTime)"
-                radius={4}
-              />
-            </BarChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
+      <ChartCard
+        title="Per-Game Performance"
+        description="Execution time per game"
+        icon={Activity}
+        chartConfig={gameMetricsConfig}
+        chartClassName="h-[200px]"
+      >
+        <BarChart data={gameMetricsData}>
+          <CartesianGrid vertical={false} />
+          <XAxis
+            dataKey="gameId"
+            tickLine={false}
+            tickMargin={10}
+            axisLine={false}
+          />
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(value) => formatDuration(value, "seconds")}
+          />
+          <ChartTooltip
+            content={<ChartTooltipContent />}
+            formatter={(value: number) => [
+              formatDuration(value, "seconds"),
+              "Execution Time",
+            ]}
+          />
+          <Bar
+            dataKey="executionTime"
+            fill="var(--color-executionTime)"
+            radius={[4, 4, 0, 0]}
+          />
+        </BarChart>
+      </ChartCard>
 
       {/* System Information */}
-      <Card className="bg-slate-50 border-b-4 border-b-purple-500">
-        <CardHeader className="p-4">
-          <CardTitle className="flex items-center justify-between w-full">
-            <SectionTitle>System Information</SectionTitle>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
-          <div className="space-y-3">
-            <div className="flex justify-between items-center p-2 bg-white rounded">
-              <span className="text-sm font-medium">Node Version</span>
-              <span className="text-sm text-muted-foreground font-mono">
-                {data.systemInfo.nodeVersion}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-2 bg-white rounded">
-              <span className="text-sm font-medium">Platform</span>
-              <span className="text-sm text-muted-foreground">
-                {data.systemInfo.platform}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-2 bg-white rounded">
-              <span className="text-sm font-medium">Architecture</span>
-              <span className="text-sm text-muted-foreground">
-                {data.systemInfo.architecture}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-2 bg-white rounded">
-              <span className="text-sm font-medium">Puppeteer Version</span>
-              <span className="text-sm text-muted-foreground">
-                {data.systemInfo.puppeteerVersion}
-              </span>
-            </div>
+      <Card className="shadow-none bg-slate-50 border rounded-md">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Server className="w-5 h-5 text-muted-foreground" />
+            <CardTitle className="text-lg font-semibold">
+              System Information
+            </CardTitle>
           </div>
+          <CardDescription>System environment details</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <dl className="space-y-4">
+            <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <dt className="font-semibold text-sm w-32 flex-shrink-0 flex items-center gap-2">
+                <Code className="h-4 w-4 text-muted-foreground" />
+                Node Version:
+              </dt>
+              <dd className="flex-1 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground font-mono">
+                  {data.systemInfo.nodeVersion}
+                </span>
+              </dd>
+            </div>
+            <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <dt className="font-semibold text-sm w-32 flex-shrink-0 flex items-center gap-2">
+                <Monitor className="h-4 w-4 text-muted-foreground" />
+                Platform:
+              </dt>
+              <dd className="flex-1 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {data.systemInfo.platform}
+                </span>
+              </dd>
+            </div>
+            <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <dt className="font-semibold text-sm w-32 flex-shrink-0 flex items-center gap-2">
+                <Server className="h-4 w-4 text-muted-foreground" />
+                Architecture:
+              </dt>
+              <dd className="flex-1 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {data.systemInfo.architecture}
+                </span>
+              </dd>
+            </div>
+            <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <dt className="font-semibold text-sm w-32 flex-shrink-0 flex items-center gap-2">
+                <MousePointerClick className="h-4 w-4 text-muted-foreground" />
+                Puppeteer Version:
+              </dt>
+              <dd className="flex-1 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {data.systemInfo.puppeteerVersion}
+                </span>
+              </dd>
+            </div>
+          </dl>
         </CardContent>
       </Card>
 
       {/* Test Configuration */}
-      <Card className="bg-slate-50 border-b-4 border-b-orange-500">
-        <CardHeader className="p-4">
-          <CardTitle className="flex items-center justify-between w-full">
-            <SectionTitle>Test Configuration</SectionTitle>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
-          <div className="space-y-3">
-            <div className="flex justify-between items-center p-2 bg-white rounded">
-              <span className="text-sm font-medium">Test Type</span>
-              <span className="text-sm text-muted-foreground">
-                {data.testConfiguration.testType}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-2 bg-white rounded">
-              <span className="text-sm font-medium">Test Version</span>
-              <span className="text-sm text-muted-foreground font-mono">
-                {data.testConfiguration.testVersion}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-2 bg-white rounded">
-              <span className="text-sm font-medium">Fixtures Count</span>
-              <span className="text-sm text-muted-foreground">
-                {data.testConfiguration.fixturesCount}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-2 bg-white rounded">
-              <span className="text-sm font-medium">XPath Version</span>
-              <span className="text-sm text-muted-foreground">
-                {data.testConfiguration.xpathVersion}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-2 bg-white rounded">
-              <span className="text-sm font-medium">Headless Mode</span>
-              <span className="text-sm text-muted-foreground">
-                {data.testConfiguration.browserConfig.headless ? "Yes" : "No"}
-              </span>
-            </div>
-            <div className="flex justify-between items-center p-2 bg-white rounded">
-              <span className="text-sm font-medium">Viewport</span>
-              <span className="text-sm text-muted-foreground">
-                {data.testConfiguration.browserConfig.viewport.width}x
-                {data.testConfiguration.browserConfig.viewport.height}
-              </span>
-            </div>
+      <Card className="shadow-none bg-slate-50 border rounded-md">
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Settings className="w-5 h-5 text-muted-foreground" />
+            <CardTitle className="text-lg font-semibold">
+              Test Configuration
+            </CardTitle>
           </div>
+          <CardDescription>Test run configuration details</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <dl className="space-y-4">
+            <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <dt className="font-semibold text-sm w-32 flex-shrink-0 flex items-center gap-2">
+                <Box className="h-4 w-4 text-muted-foreground" />
+                Test Type:
+              </dt>
+              <dd className="flex-1 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {data.testConfiguration.testType}
+                </span>
+              </dd>
+            </div>
+            <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <dt className="font-semibold text-sm w-32 flex-shrink-0 flex items-center gap-2">
+                <Code className="h-4 w-4 text-muted-foreground" />
+                Test Version:
+              </dt>
+              <dd className="flex-1 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground font-mono">
+                  {data.testConfiguration.testVersion}
+                </span>
+              </dd>
+            </div>
+            <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <dt className="font-semibold text-sm w-32 flex-shrink-0 flex items-center gap-2">
+                <Box className="h-4 w-4 text-muted-foreground" />
+                Fixtures Count:
+              </dt>
+              <dd className="flex-1 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {data.testConfiguration.fixturesCount}
+                </span>
+              </dd>
+            </div>
+            <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <dt className="font-semibold text-sm w-32 flex-shrink-0 flex items-center gap-2">
+                <Code className="h-4 w-4 text-muted-foreground" />
+                XPath Version:
+              </dt>
+              <dd className="flex-1 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {data.testConfiguration.xpathVersion}
+                </span>
+              </dd>
+            </div>
+            <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <dt className="font-semibold text-sm w-32 flex-shrink-0 flex items-center gap-2">
+                <Monitor className="h-4 w-4 text-muted-foreground" />
+                Headless Mode:
+              </dt>
+              <dd className="flex-1 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {data.testConfiguration.browserConfig.headless ? "Yes" : "No"}
+                </span>
+              </dd>
+            </div>
+            <div className="flex items-start gap-4 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <dt className="font-semibold text-sm w-32 flex-shrink-0 flex items-center gap-2">
+                <Monitor className="h-4 w-4 text-muted-foreground" />
+                Viewport:
+              </dt>
+              <dd className="flex-1 flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {data.testConfiguration.browserConfig.viewport.width}x
+                  {data.testConfiguration.browserConfig.viewport.height}
+                </span>
+              </dd>
+            </div>
+          </dl>
         </CardContent>
       </Card>
-    </div>
+    </MetricGrid>
   );
 }

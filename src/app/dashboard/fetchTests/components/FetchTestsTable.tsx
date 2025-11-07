@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { SectionTitle } from "@/components/type/titles";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { EmptyState } from "@/components/ui-library";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -11,8 +12,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { TestRun } from "@/types/fetch-test";
-import { CheckIcon, XIcon } from "lucide-react";
+import { CheckCircle, XCircle, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 
@@ -60,86 +62,90 @@ export function FetchTestsTable({
   };
 
   return (
-    <div className="mb-6">
-      <div className="bg-slate-200 rounded-lg px-4 py-2">
-        <div className="flex justify-between items-center py-2">
-          <SectionTitle className="py-2 px-1">{title}</SectionTitle>
-          {/* Input filter */}
-          <div className="flex items-center w-1/2">
-            <Input
-              type="text"
-              placeholder="Search by ID, Date, Duration, or Test Results..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="bg-white w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
-            />
-            <Button
-              variant="ghost"
-              onClick={() => setSearch("")}
-              className="ml-2 px-4 py-2 rounded-md focus:outline-none"
-            >
-              <XIcon className="h-5 w-5" />
+    <SectionContainer
+      title={title}
+      variant="compact"
+      action={
+        <div className="flex items-center gap-2 w-full max-w-md">
+          <Input
+            type="text"
+            placeholder="Search by ID, Date, Duration, or Test Results..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full"
+          />
+          {search && (
+            <Button variant="ghost" size="sm" onClick={() => setSearch("")}>
+              <X className="h-4 w-4" />
             </Button>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg p-4">
-          {/* Table */}
-          {filteredTestRuns.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-left">ID</TableHead>
-                  <TableHead className="text-center">Date</TableHead>
-                  <TableHead className="text-center">Duration</TableHead>
-                  <TableHead className="text-center">Passed Tests</TableHead>
-                  <TableHead className="text-center">Failed Tests</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTestRuns.map((testRun) => (
-                  <TableRow key={testRun.id}>
-                    <TableCell className="text-left font-mono">
-                      {testRun.id}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {formatDate(testRun.timestamp)}
-                    </TableCell>
-                    <TableCell className="text-center font-mono">
-                      {formatDuration(testRun.testDuration)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {testRun.passedTests}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {testRun.failedTests}
-                    </TableCell>
-                    <TableCell className="text-center flex justify-center items-center">
-                      {testRun.failedTests === 0 ? (
-                        <CheckIcon className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <XIcon className="w-4 h-4 text-red-500" />
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="outline"
-                        onClick={() => handleViewTest(testRun.id)}
-                      >
-                        View Test
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <p className="text-gray-500">{emptyMessage}</p>
           )}
         </div>
-      </div>
-    </div>
+      }
+    >
+      {testRuns.length === 0 ? (
+        <EmptyState title={emptyMessage} variant="minimal" />
+      ) : filteredTestRuns.length === 0 ? (
+        <EmptyState
+          title="No results found"
+          description="Try adjusting your search terms"
+          variant="minimal"
+        />
+      ) : (
+        <ScrollArea className="h-[600px] w-full">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-left">ID</TableHead>
+                <TableHead className="text-center">Date</TableHead>
+                <TableHead className="text-center">Duration</TableHead>
+                <TableHead className="text-center">Passed Tests</TableHead>
+                <TableHead className="text-center">Failed Tests</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredTestRuns.map((testRun) => (
+                <TableRow key={testRun.id}>
+                  <TableCell className="text-left font-mono font-semibold">
+                    {testRun.id}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {formatDate(testRun.timestamp)}
+                  </TableCell>
+                  <TableCell className="text-center font-mono text-sm">
+                    {formatDuration(testRun.testDuration)}
+                  </TableCell>
+                  <TableCell className="text-center font-semibold">
+                    {testRun.passedTests}
+                  </TableCell>
+                  <TableCell className="text-center font-semibold">
+                    {testRun.failedTests}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex justify-center">
+                      {testRun.failedTests === 0 ? (
+                        <CheckCircle className="w-5 h-5 text-success-500" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-error-500" />
+                      )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => handleViewTest(testRun.id)}
+                    >
+                      View Test
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollArea>
+      )}
+    </SectionContainer>
   );
 }

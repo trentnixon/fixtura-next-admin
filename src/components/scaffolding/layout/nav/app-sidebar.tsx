@@ -2,15 +2,20 @@
 
 import * as React from "react";
 import {
-  SquareTerminal,
-  CircleUser,
-  ShieldHalf,
-  Component,
-  ChartCandlestick,
-  CalendarSync,
-  Pickaxe,
+  LayoutDashboard,
+  Users,
+  Building2,
+  Network,
+  CalendarClock,
+  FileCode,
+  UsersRound,
+  Trophy,
+  GraduationCap,
+  BarChart3,
   TestTube,
-  TrendingUp,
+  FlaskConical,
+  DollarSign,
+  Mail,
 } from "lucide-react";
 import { NavMain } from "@/components/scaffolding/layout/nav/nav-main";
 /* import { NavProjects } from "@/components/nav-projects"; */
@@ -30,29 +35,31 @@ import { SignedIn } from "@clerk/nextjs";
 import { S } from "@/components/type/type";
 
 const data = {
-  navMain: [
+  mainNav: [
     {
       title: "Dashboard",
       url: "/dashboard",
-      icon: SquareTerminal,
+      icon: LayoutDashboard,
       isActive: true,
     },
+  ],
+  accountsNav: [
     {
       title: "Accounts",
       url: "/dashboard/accounts",
-      icon: CircleUser,
+      icon: Users,
       isActive: false,
     },
     {
       title: "Clubs",
       url: "/dashboard/accounts/club",
-      icon: CircleUser,
+      icon: Building2,
       isActive: false,
     },
     {
       title: "Associations",
       url: "/dashboard/accounts/association",
-      icon: CircleUser,
+      icon: Network,
       isActive: false,
     },
   ],
@@ -60,41 +67,60 @@ const data = {
     {
       title: "Schedulers",
       url: "/dashboard/schedulers",
-      icon: CalendarSync,
+      icon: CalendarClock,
       isActive: true,
     },
     {
       title: "Renders",
       url: "/dashboard/renders",
-      icon: Pickaxe,
+      icon: FileCode,
       isActive: true,
     },
   ],
-  dataNav: [
-    {
-      title: "Analytics",
-      url: "/dashboard/analytics",
-      icon: TrendingUp,
-      isActive: true,
-    },
+  sportsDataNav: [
     {
       title: "Teams",
       url: "/dashboard/teams",
-      icon: ShieldHalf,
+      icon: UsersRound,
       isActive: true,
     },
     {
       title: "Competitions",
       url: "/dashboard/competitions",
-      icon: Component,
+      icon: Trophy,
       isActive: true,
     },
     {
       title: "Grades",
       url: "/dashboard/grades",
-      icon: ChartCandlestick,
+      icon: GraduationCap,
       isActive: true,
     },
+  ],
+  financialNav: [
+    {
+      title: "Analytics",
+      url: "/dashboard/analytics",
+      icon: BarChart3,
+      isActive: true,
+    },
+    {
+      title: "Budget & Costings",
+      url: "/dashboard/budget",
+      icon: DollarSign,
+      isActive: true,
+    },
+  ],
+
+  communicationNav: [
+    {
+      title: "Contact Forms",
+      url: "/dashboard/contact",
+      icon: Mail,
+      isActive: true,
+    },
+  ],
+  testingNav: [
     {
       title: "Account Scraper Tests",
       url: "/dashboard/fetchAccountTests",
@@ -104,7 +130,7 @@ const data = {
     {
       title: "Result Scraper Tests",
       url: "/dashboard/fetchTests",
-      icon: TestTube,
+      icon: FlaskConical,
       isActive: true,
     },
   ],
@@ -130,10 +156,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={data.navMain} title="Platform" />
+      <SidebarContent className="gap-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+        <NavMain items={data.mainNav} title="Main" />
+        <NavMain items={data.accountsNav} title="Accounts" />
         <NavMain items={data.renderNav} title="Renders" />
-        <NavMain items={data.dataNav} title="Data" />
+        <NavMain items={data.sportsDataNav} title="Sports Data" />
+        <NavMain items={data.financialNav} title="Financial" />
+        <NavMain items={data.communicationNav} title="Communication" />
+        <NavMain items={data.testingNav} title="Testing" />
       </SidebarContent>
       <SidebarFooter>
         <S className="text-center">Fixtura</S>

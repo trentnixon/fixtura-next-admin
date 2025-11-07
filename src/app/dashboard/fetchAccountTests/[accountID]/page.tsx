@@ -1,8 +1,9 @@
 "use client";
 
 import { use } from "react";
-import CreatePage from "@/components/scaffolding/containers/createPage";
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
+import { LoadingState, ErrorState, EmptyState } from "@/components/ui-library";
 import { useFetchAccountTestByIdQuery } from "@/hooks/fetch-account-scrape-test/useFetchAccountTestByIdQuery";
 import { AccountTestStatsCards } from "./components/AccountTestStatsCards";
 import { AccountTestDiscrepanciesTable } from "./components/AccountTestDiscrepanciesTable";
@@ -20,84 +21,72 @@ export default function FetchAccountTestPage({
   const { accountID } = use(params);
   const { data, isLoading, error } = useFetchAccountTestByIdQuery(accountID);
 
-  if (isLoading) {
-    return (
-      <CreatePage>
-        <CreatePageTitle
-          title="Account Scraper Test Details"
-          byLine="Loading account test details..."
-        />
-        <div className="mt-6">
-          <p>Loading account test details...</p>
-        </div>
-      </CreatePage>
-    );
-  }
-
-  if (error) {
-    return (
-      <CreatePage>
-        <CreatePageTitle
-          title="Account Scraper Test Details"
-          byLine="Error loading account test"
-        />
-        <div className="mt-6">
-          <p className="text-red-500">Error: {error.message}</p>
-        </div>
-      </CreatePage>
-    );
-  }
-
   // Check if API returned success: false
-  if (data && !data.success) {
-    return (
-      <CreatePage>
-        <CreatePageTitle
-          title="Account Scraper Test Details"
-          byLine="API Error"
-        />
-        <div className="mt-6">
-          <p className="text-red-500">
-            API Error: {data.message || "Unknown error"}
-          </p>
-        </div>
-      </CreatePage>
-    );
-  }
-
-  if (!data || !data.data) {
-    return (
-      <CreatePage>
-        <CreatePageTitle
-          title="Account Scraper Test Details"
-          byLine="Account test not found"
-        />
-        <div className="mt-6">
-          <p>Account test not found</p>
-        </div>
-      </CreatePage>
-    );
-  }
-
-  const testRun = data.data;
+  const apiError =
+    data && !data.success ? data.message || "Unknown error" : null;
+  const testRun = data?.success ? data.data : null;
 
   return (
-    <CreatePage>
+    <>
       <CreatePageTitle
-        title={`Account Scraper Test #${testRun.id || "Unknown"}`}
-        byLine={`Test executed on ${new Date(
-          testRun.timestamp || Date.now()
-        ).toLocaleDateString()}`}
+        title={
+          testRun
+            ? `Account Scraper Test #${testRun.id || "Unknown"}`
+            : "Account Scraper Test Details"
+        }
+        byLine={
+          testRun
+            ? `Test executed on ${new Date(
+                testRun.timestamp || Date.now()
+              ).toLocaleDateString()}`
+            : isLoading
+            ? "Loading account test details..."
+            : error || apiError
+            ? "Error loading account test"
+            : "Account test not found"
+        }
       />
+      <PageContainer padding="xs" spacing="lg">
+        {isLoading && (
+          <LoadingState
+            variant="skeleton"
+            message="Loading account test details..."
+          />
+        )}
 
-      {/* Statistics Cards */}
-      <AccountTestStatsCards data={testRun} />
+        {error && (
+          <ErrorState
+            variant="card"
+            error={error}
+            title="Error Loading Account Test"
+          />
+        )}
 
-      {/* Discrepancies Table */}
-      <AccountTestDiscrepanciesTable data={testRun} />
+        {!isLoading && !error && apiError && (
+          <ErrorState
+            variant="card"
+            error={new Error(apiError)}
+            title="API Error"
+          />
+        )}
 
-      {/* Performance Charts */}
-      <AccountTestPerformanceCharts data={testRun} />
-    </CreatePage>
+        {!isLoading && !error && !apiError && !testRun && (
+          <EmptyState variant="card" title="Account test not found" />
+        )}
+
+        {!isLoading && !error && !apiError && testRun && (
+          <>
+            {/* Statistics Cards */}
+            <AccountTestStatsCards data={testRun} />
+
+            {/* Discrepancies Table */}
+            <AccountTestDiscrepanciesTable data={testRun} />
+
+            {/* Performance Charts */}
+            <AccountTestPerformanceCharts data={testRun} />
+          </>
+        )}
+      </PageContainer>
+    </>
   );
 }

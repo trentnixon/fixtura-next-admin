@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import StatCard from "@/components/ui-library/metrics/StatCard";
+import MetricGrid from "@/components/ui-library/metrics/MetricGrid";
 import { ByIDResponse } from "@/types/fetch-test";
 import {
   CheckCircle,
@@ -11,169 +12,119 @@ import {
   Database,
   Cpu,
   MemoryStick,
+  Server,
 } from "lucide-react";
+import { formatDuration, formatMemory } from "@/utils/chart-formatters";
 
 interface TestStatsCardsProps {
   data: ByIDResponse;
 }
 
 export function TestStatsCards({ data }: TestStatsCardsProps) {
-  const formatDuration = (duration: number) => {
-    return `${(duration / 1000).toFixed(2)}s`;
-  };
-
-  const formatMemory = (bytes: number) => {
-    return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
-  };
-
   const successRate =
     data.totalTests > 0
       ? ((data.passedTests / data.totalTests) * 100).toFixed(1)
       : "0";
 
   const memoryPeak = data.performanceMetrics.systemMetrics.memoryPeak;
+  const totalDiscrepancies = data.detailedResults.reduce(
+    (acc, result) => acc + result.discrepancies.length,
+    0
+  );
+
+  const cpuTimeSeconds =
+    (data.performanceMetrics.systemMetrics.cpuUsage.user +
+      data.performanceMetrics.systemMetrics.cpuUsage.system) /
+    1000000;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <MetricGrid columns={4} gap="lg">
       {/* Test Results */}
-      <Card className="bg-slate-50 border-b-4 border-b-blue-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Test Results</CardTitle>
-          <Activity className="h-4 w-4 text-blue-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{data.totalTests}</div>
-          <p className="text-xs text-muted-foreground">
-            {data.passedTests} passed, {data.failedTests} failed
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Test Results"
+        value={data.totalTests}
+        icon={<Activity className="h-5 w-5" />}
+        description={`${data.passedTests} passed, ${data.failedTests} failed`}
+        variant="primary"
+      />
 
       {/* Success Rate */}
-      <Card
-        className={`bg-slate-50 border-b-4 ${
-          data.failedTests === 0 ? "border-b-green-500" : "border-b-red-500"
-        }`}
-      >
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Success Rate</CardTitle>
-          {data.failedTests === 0 ? (
-            <CheckCircle className="h-4 w-4 text-green-500" />
+      <StatCard
+        title="Success Rate"
+        value={`${successRate}%`}
+        icon={
+          data.failedTests === 0 ? (
+            <CheckCircle className="h-5 w-5" />
           ) : (
-            <XCircle className="h-4 w-4 text-red-500" />
-          )}
-        </CardHeader>
-        <CardContent>
-          <div
-            className={`text-2xl font-bold ${
-              data.failedTests === 0 ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {successRate}%
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {data.failedTests === 0
-              ? "All tests passed"
-              : `${data.failedTests} test(s) failed`}
-          </p>
-        </CardContent>
-      </Card>
+            <XCircle className="h-5 w-5" />
+          )
+        }
+        description={
+          data.failedTests === 0
+            ? "All tests passed"
+            : `${data.failedTests} test(s) failed`
+        }
+        variant={data.failedTests === 0 ? "secondary" : "light"}
+        className={data.failedTests === 0 ? "" : "border-error-200"}
+      />
 
       {/* Duration */}
-      <Card className="bg-slate-50 border-b-4 border-b-orange-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Duration</CardTitle>
-          <Clock className="h-4 w-4 text-orange-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-orange-600">
-            {formatDuration(data.testDuration)}
-          </div>
-          <p className="text-xs text-muted-foreground">Total execution time</p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Duration"
+        value={formatDuration(data.testDuration, "milliseconds")}
+        icon={<Clock className="h-5 w-5" />}
+        description="Total execution time"
+        variant="accent"
+      />
 
-      {/* Memory Usage */}
-      <Card className="bg-slate-50 border-b-4 border-b-purple-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Memory Peak</CardTitle>
-          <MemoryStick className="h-4 w-4 text-purple-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-purple-600">
-            {formatMemory(memoryPeak * 1024 * 1024)}
-          </div>
-          <p className="text-xs text-muted-foreground">Peak memory usage</p>
-        </CardContent>
-      </Card>
+      {/* Memory Peak */}
+      <StatCard
+        title="Memory Peak"
+        value={formatMemory(memoryPeak, "mb")}
+        icon={<MemoryStick className="h-5 w-5" />}
+        description="Peak memory usage"
+        variant="light"
+      />
 
       {/* CPU Usage */}
-      <Card className="bg-slate-50 border-b-4 border-b-cyan-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">CPU Usage</CardTitle>
-          <Cpu className="h-4 w-4 text-cyan-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-cyan-600">
-            {(
-              (data.performanceMetrics.systemMetrics.cpuUsage.user +
-                data.performanceMetrics.systemMetrics.cpuUsage.system) /
-              1000000
-            ).toFixed(2)}
-            s
-          </div>
-          <p className="text-xs text-muted-foreground">User + System time</p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="CPU Usage"
+        value={`${cpuTimeSeconds.toFixed(2)}s`}
+        icon={<Cpu className="h-5 w-5" />}
+        description="User + System time"
+        variant="light"
+      />
 
       {/* Discrepancies */}
-      <Card className="bg-slate-50 border-b-4 border-b-yellow-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Discrepancies</CardTitle>
-          <AlertTriangle className="h-4 w-4 text-yellow-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-yellow-600">
-            {data.detailedResults.reduce(
-              (acc, result) => acc + result.discrepancies.length,
-              0
-            )}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Total discrepancies found
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Discrepancies"
+        value={totalDiscrepancies}
+        icon={<AlertTriangle className="h-5 w-5" />}
+        description="Total discrepancies found"
+        variant="light"
+      />
 
-      {/* Data Quality */}
-      <Card className="bg-slate-50 border-b-4 border-b-indigo-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Extraction Rate</CardTitle>
-          <Database className="h-4 w-4 text-indigo-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-indigo-600">
-            {(data.dataQualityMetrics.extractionSuccessRate * 100).toFixed(1)}%
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Data extraction success
-          </p>
-        </CardContent>
-      </Card>
+      {/* Extraction Rate */}
+      <StatCard
+        title="Extraction Rate"
+        value={`${(data.dataQualityMetrics.extractionSuccessRate * 100).toFixed(
+          1
+        )}%`}
+        icon={<Database className="h-5 w-5" />}
+        description="Data extraction success"
+        variant="light"
+      />
 
       {/* Environment */}
-      <Card className="bg-slate-50 border-b-4 border-b-gray-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Environment</CardTitle>
-          <Database className="h-4 w-4 text-gray-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-gray-600 capitalize">
-            {data.environment}
-          </div>
-          <p className="text-xs text-muted-foreground">{data.testInitiator}</p>
-        </CardContent>
-      </Card>
-    </div>
+      <StatCard
+        title="Environment"
+        value={
+          data.environment.charAt(0).toUpperCase() + data.environment.slice(1)
+        }
+        icon={<Server className="h-5 w-5" />}
+        description={data.testInitiator}
+        variant="light"
+      />
+    </MetricGrid>
   );
 }

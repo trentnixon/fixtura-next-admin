@@ -92,13 +92,15 @@ export default function DisplayClub() {
 
   return (
     <>
-      {accountData && <AccountTitle titleProps={accountData} />}
+      {accountData?.accountOrganisationDetails && (
+        <AccountTitle titleProps={accountData} />
+      )}
       <PageContainer padding="xs" spacing="lg">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <div className="lg:col-span-9">
             <SectionContainer title="Account Details" variant="compact">
               <ElementContainer padding="none" margin="none">
-                <Tabs defaultValue="data" className="w-full">
+                <Tabs defaultValue="account" className="w-full">
                   <TabsList variant="primary" className="">
                     {TAB_LABELS.map((tab) => (
                       <TabsTrigger key={tab.id} value={tab.id}>

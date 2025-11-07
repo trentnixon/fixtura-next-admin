@@ -1,6 +1,7 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import StatCard from "@/components/ui-library/metrics/StatCard";
+import MetricGrid from "@/components/ui-library/metrics/MetricGrid";
 import { TestRun } from "@/types/fetch-account-scrape-test";
 import {
   CheckCircle,
@@ -32,132 +33,87 @@ export function AccountTestStatsCards({ data }: AccountTestStatsCardsProps) {
       : "0";
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <MetricGrid columns={4} gap="lg">
       {/* Test Status */}
-      <Card
-        className={`${
-          data.testPassed
-            ? "bg-green-50 border-green-200"
-            : "bg-red-50 border-red-200"
-        }`}
-      >
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Test Status</CardTitle>
-          {data.testPassed ? (
-            <CheckCircle className="h-4 w-4 text-green-500" />
+      <StatCard
+        title="Test Status"
+        value={data.testPassed ? "Passed" : "Failed"}
+        icon={
+          data.testPassed ? (
+            <CheckCircle className="h-5 w-5" />
           ) : (
-            <XCircle className="h-4 w-4 text-red-500" />
-          )}
-        </CardHeader>
-        <CardContent>
-          <div
-            className={`text-2xl font-bold ${
-              data.testPassed ? "text-green-600" : "text-red-600"
-            }`}
-          >
-            {data.testPassed ? "Passed" : "Failed"}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {data.regressionDetected ? "Regression detected" : "No regression"}
-          </p>
-        </CardContent>
-      </Card>
+            <XCircle className="h-5 w-5" />
+          )
+        }
+        description={
+          data.regressionDetected ? "Regression detected" : "No regression"
+        }
+        variant={data.testPassed ? "secondary" : "light"}
+        className={data.testPassed ? "" : "border-error-200"}
+      />
 
       {/* Test Duration */}
-      <Card className="bg-slate-50 border-b-4 border-b-blue-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Duration</CardTitle>
-          <Clock className="h-4 w-4 text-blue-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">
-            {formatDuration(data.testDuration)}
-          </div>
-          <p className="text-xs text-muted-foreground">Test execution time</p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Duration"
+        value={formatDuration(data.testDuration)}
+        icon={<Clock className="h-5 w-5" />}
+        description="Test execution time"
+        variant="primary"
+      />
 
       {/* Validations */}
-      <Card className="bg-slate-50 border-b-4 border-b-purple-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Validations</CardTitle>
-          <Target className="h-4 w-4 text-purple-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{validationSuccessRate}%</div>
-          <p className="text-xs text-muted-foreground">
-            {data.validation.passedValidations} /{" "}
-            {data.validation.totalValidations} passed
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Validations"
+        value={`${validationSuccessRate}%`}
+        icon={<Target className="h-5 w-5" />}
+        description={`${data.validation.passedValidations} / ${data.validation.totalValidations} passed`}
+        variant="accent"
+      />
 
       {/* Items Scraped */}
-      <Card className="bg-slate-50 border-b-4 border-b-cyan-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Items Scraped</CardTitle>
-          <Database className="h-4 w-4 text-cyan-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold">{scrapedItemSuccessRate}%</div>
-          <p className="text-xs text-muted-foreground">
-            {data.dataComparison.scrapedItemCount} /{" "}
-            {data.dataComparison.expectedItemCount} expected
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Items Scraped"
+        value={`${scrapedItemSuccessRate}%`}
+        icon={<Database className="h-5 w-5" />}
+        description={`${data.dataComparison.scrapedItemCount} / ${data.dataComparison.expectedItemCount} expected`}
+        variant="light"
+      />
 
       {/* Test Entity */}
-      <Card className="bg-slate-50 border-b-4 border-b-orange-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Test Entity</CardTitle>
-          <Activity className="h-4 w-4 text-orange-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-lg font-bold">{data.testEntity}</div>
-          <p className="text-xs text-muted-foreground">
-            ID: {data.testEntityId}
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Test Entity"
+        value={data.testEntity}
+        icon={<Activity className="h-5 w-5" />}
+        description={`ID: ${data.testEntityId}`}
+        variant="light"
+      />
 
       {/* Scraper Type */}
-      <Card className="bg-slate-50 border-b-4 border-b-indigo-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Scraper Type</CardTitle>
-          <Database className="h-4 w-4 text-indigo-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-lg font-bold">{data.scraperType}</div>
-          <p className="text-xs text-muted-foreground">
-            {data.environment} environment
-          </p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Scraper Type"
+        value={data.scraperType}
+        icon={<Database className="h-5 w-5" />}
+        description={`${data.environment} environment`}
+        variant="light"
+      />
 
       {/* Environment */}
-      <Card className="bg-slate-50 border-b-4 border-b-green-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Environment</CardTitle>
-          <Activity className="h-4 w-4 text-green-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-lg font-bold">{data.environment}</div>
-          <p className="text-xs text-muted-foreground">Test environment</p>
-        </CardContent>
-      </Card>
+      <StatCard
+        title="Environment"
+        value={data.environment}
+        icon={<Activity className="h-5 w-5" />}
+        description="Test environment"
+        variant="light"
+      />
 
       {/* Test Initiator */}
-      <Card className="bg-slate-50 border-b-4 border-b-pink-500">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">Initiator</CardTitle>
-          <Activity className="h-4 w-4 text-pink-500" />
-        </CardHeader>
-        <CardContent>
-          <div className="text-lg font-bold">{data.testInitiator}</div>
-          <p className="text-xs text-muted-foreground">Test trigger source</p>
-        </CardContent>
-      </Card>
-    </div>
+      <StatCard
+        title="Initiator"
+        value={data.testInitiator}
+        icon={<Activity className="h-5 w-5" />}
+        description="Test trigger source"
+        variant="light"
+      />
+    </MetricGrid>
   );
 }

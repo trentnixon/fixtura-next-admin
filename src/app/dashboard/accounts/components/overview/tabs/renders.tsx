@@ -15,21 +15,26 @@ export default function RendersTab({
   accountId: number;
 }) {
   const renders = (accountData?.renders as Render[]) || [];
+  const schedulerId = accountData?.scheduler?.id;
 
   return (
     <div className="col-span-12 gap-4 space-y-4">
-      <SchedulerDetailsGrid
-        schedulerId={accountData?.scheduler.id as number}
-        accountData={accountData as fixturaContentHubAccountDetails}
-      />
+      {schedulerId && (
+        <SchedulerDetailsGrid
+          schedulerId={schedulerId}
+          accountData={accountData as fixturaContentHubAccountDetails}
+        />
+      )}
       <MetricsTable accountData={accountData} />
-      <ListRendersInTable
-        schedulerId={accountData?.scheduler.id as number}
-        accountId={accountId}
-        sport={accountData?.Sport || ""}
-        accountType={accountData?.account_type === 1 ? "club" : "association"}
-        renders={renders}
-      />
+      {schedulerId && (
+        <ListRendersInTable
+          schedulerId={schedulerId}
+          accountId={accountId}
+          sport={accountData?.Sport || ""}
+          accountType={accountData?.account_type === 1 ? "club" : "association"}
+          renders={renders}
+        />
+      )}
       {renders.length > 0 && <RenderCharts renders={renders} />}
     </div>
   );

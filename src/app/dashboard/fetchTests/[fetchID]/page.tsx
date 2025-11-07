@@ -1,8 +1,11 @@
 "use client";
 
 import { use } from "react";
-import CreatePage from "@/components/scaffolding/containers/createPage";
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
+import { LoadingState, ErrorState, EmptyState } from "@/components/ui-library";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
 import { useFetchTestByIdQuery } from "@/hooks/fetch-tests/useFetchTestByIdQuery";
 import { TestStatsCards } from "./components/TestStatsCards";
 import { DiscrepanciesTable } from "./components/DiscrepanciesTable";
@@ -18,77 +21,86 @@ export default function FetchTestPage({ params }: FetchTestPageProps) {
   const { fetchID } = use(params);
   const { data, isLoading, error } = useFetchTestByIdQuery(fetchID);
 
-  if (isLoading) {
-    return (
-      <CreatePage>
-        <CreatePageTitle
-          title="Result Scraper Test Details"
-          byLine="Loading test details..."
-        />
-        <div className="mt-6">
-          <p>Loading test details...</p>
-        </div>
-      </CreatePage>
-    );
-  }
-
-  if (error) {
-    return (
-      <CreatePage>
-        <CreatePageTitle
-          title="Result Scraper Test Details"
-          byLine="Error loading test"
-        />
-        <div className="mt-6">
-          <p className="text-red-500">Error: {error.message}</p>
-        </div>
-      </CreatePage>
-    );
-  }
-
-  if (!data) {
-    return (
-      <CreatePage>
-        <CreatePageTitle
-          title="Result Scraper Test Details"
-          byLine="Test not found"
-        />
-        <div className="mt-6">
-          <p>Test not found</p>
-        </div>
-      </CreatePage>
-    );
-  }
-
   return (
-    <CreatePage>
+    <>
       <CreatePageTitle
-        title={`Result Scraper Test #${data.id}`}
-        byLine={`Test executed on ${new Date(
-          data.timestamp
-        ).toLocaleDateString()}`}
+        title={
+          data
+            ? `Result Scraper Test #${data.id}`
+            : "Result Scraper Test Details"
+        }
+        byLine={
+          data
+            ? `Test executed on ${new Date(
+                data.timestamp
+              ).toLocaleDateString()}`
+            : isLoading
+            ? "Loading test details..."
+            : error
+            ? "Error loading test"
+            : "Test not found"
+        }
       />
+      <PageContainer padding="xs" spacing="lg">
+        {isLoading && (
+          <LoadingState variant="skeleton" message="Loading test details..." />
+        )}
 
-      {/* Statistics Cards */}
-      <TestStatsCards data={data} />
+        {error && (
+          <ErrorState
+            variant="card"
+            error={error}
+            title="Error Loading Result Scraper Test"
+          />
+        )}
 
-      {/* Discrepancies Table */}
-      <DiscrepanciesTable data={data} />
+        {!isLoading && !error && !data && (
+          <EmptyState variant="card" title="Test not found" />
+        )}
 
-      {/* Performance Charts */}
-      <PerformanceCharts data={data} />
+        {!isLoading && !error && data && (
+          <>
+            {/* Statistics Cards */}
+            <SectionContainer
+              title="Statistics"
+              description="Key metrics and statistics for the test"
+            >
+              <TestStatsCards data={data} />
+            </SectionContainer>
 
-      {/* Error Logs */}
-      {data.errorLogs && (
-        <div className="mb-6">
-          <div className="bg-white rounded-lg p-6 shadow">
-            <h3 className="font-semibold mb-2">Error Logs</h3>
-            <pre className="bg-red-50 p-4 rounded text-sm overflow-auto">
-              {data.errorLogs}
-            </pre>
-          </div>
-        </div>
-      )}
-    </CreatePage>
+            {/* Discrepancies Table */}
+            <SectionContainer
+              title="Discrepancies"
+              description="Discrepancies between the expected and actual results"
+            >
+              <DiscrepanciesTable data={data} />
+            </SectionContainer>
+
+            {/* Performance Charts */}
+            <SectionContainer
+              title="Performance Charts"
+              description="Performance charts for the test"
+            >
+              <PerformanceCharts data={data} />
+            </SectionContainer>
+
+            {/* Error Logs */}
+            {data.errorLogs && (
+              <SectionContainer
+                title="Error Logs"
+                description="Error logs from the test execution"
+                variant="compact"
+              >
+                <ElementContainer variant="dark" border padding="md">
+                  <pre className="bg-error-50 text-error-900 p-4 rounded text-sm overflow-auto font-mono whitespace-pre-wrap break-words">
+                    {data.errorLogs}
+                  </pre>
+                </ElementContainer>
+              </SectionContainer>
+            )}
+          </>
+        )}
+      </PageContainer>
+    </>
   );
 }

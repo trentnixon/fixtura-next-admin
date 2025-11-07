@@ -10,14 +10,21 @@ type AccountTitleProps = {
 };
 
 export default function AccountTitle({ titleProps }: AccountTitleProps) {
+  // Guard against null/undefined accountOrganisationDetails
+  if (!titleProps?.accountOrganisationDetails) {
+    return null;
+  }
+
+  const { Name, Sport, ParentLogo } = titleProps.accountOrganisationDetails;
+
   return (
     <>
       <CreatePageTitle
-        title={titleProps.accountOrganisationDetails.Name}
-        byLine={`${titleProps.accountOrganisationDetails.Sport} - ${
+        title={Name || "Account"}
+        byLine={`${Sport || "Unknown"} - ${
           titleProps.account_type === 1 ? "Club" : "Association"
         }`}
-        image={titleProps.accountOrganisationDetails.ParentLogo}
+        image={ParentLogo}
       />
       <SyncCTABar titleProps={titleProps} />
       <CheckBooleanStatus titleProps={titleProps} />

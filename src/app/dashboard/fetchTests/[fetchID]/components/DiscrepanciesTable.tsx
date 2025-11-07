@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { EmptyState } from "@/components/ui-library";
 import {
   Table,
   TableBody,
@@ -10,12 +11,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { ByIDResponse } from "@/types/fetch-test";
-import { SectionTitle } from "@/components/type/titles";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { XIcon, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { X, CheckCircle, XCircle } from "lucide-react";
 
 interface DiscrepanciesTableProps {
   data: ByIDResponse;
@@ -48,148 +49,132 @@ export function DiscrepanciesTable({ data }: DiscrepanciesTableProps) {
     );
   });
 
-  const getSeverityColor = (severity: string | undefined) => {
+  const getSeverityBadgeColor = (severity: string | undefined) => {
     if (!severity) {
-      return "bg-gray-100 text-gray-800 border-gray-200";
+      return "bg-slate-500 text-white";
     }
 
     switch (severity.toLowerCase()) {
       case "error":
-        return "bg-red-100 text-red-800 border-red-200";
+        return "bg-error-500 text-white";
       case "warning":
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+        return "bg-warning-500 text-white";
       case "info":
-        return "bg-blue-100 text-blue-800 border-blue-200";
+        return "bg-info-500 text-white";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
+        return "bg-slate-500 text-white";
     }
   };
 
-  if (allDiscrepancies.length === 0) {
-    return (
-      <Card className="bg-slate-50 border-b-4 border-b-green-500 mb-6">
-        <CardHeader className="p-4">
-          <CardTitle className="flex items-center justify-between w-full">
-            <SectionTitle>Discrepancies</SectionTitle>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
-          <div className="text-center py-8">
-            <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-4" />
-            <p className="text-lg font-medium text-green-600">
-              No Discrepancies Found
-            </p>
-            <p className="text-sm text-muted-foreground">
-              All tests passed successfully
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card className="bg-slate-50 border-b-4 border-b-red-500 mb-6">
-      <CardHeader className="p-4">
-        <div className="flex justify-between items-center">
-          <CardTitle className="flex items-center justify-between w-full">
-            <SectionTitle>
-              Discrepancies ({allDiscrepancies.length})
-            </SectionTitle>
-          </CardTitle>
-          <div className="flex items-center w-1/2">
+    <SectionContainer
+      title={`Discrepancies${
+        allDiscrepancies.length > 0 ? ` (${allDiscrepancies.length})` : ""
+      }`}
+      description="Detailed discrepancies found in test results"
+      variant="compact"
+      action={
+        allDiscrepancies.length > 0 ? (
+          <div className="flex items-center gap-2 w-full max-w-md">
             <Input
               type="text"
               placeholder="Search discrepancies..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-white w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
+              className="w-full"
             />
-            <Button
-              variant="ghost"
-              onClick={() => setSearch("")}
-              className="ml-2 px-4 py-2 rounded-md focus:outline-none"
-            >
-              <XIcon className="h-5 w-5" />
-            </Button>
+            {search && (
+              <Button variant="ghost" size="sm" onClick={() => setSearch("")}>
+                <X className="h-4 w-4" />
+              </Button>
+            )}
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="p-4">
-        <div className="bg-white rounded-lg">
-          {filteredDiscrepancies.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-left">Game ID</TableHead>
-                  <TableHead className="text-left">Field Path</TableHead>
-                  <TableHead className="text-center">Severity</TableHead>
-                  <TableHead className="text-center">Expected</TableHead>
-                  <TableHead className="text-center">Actual</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredDiscrepancies.map((discrepancy, index) => (
-                  <TableRow key={`${discrepancy.gameId}-${index}`}>
-                    <TableCell className="text-left font-mono text-sm">
-                      {discrepancy.gameId}
-                    </TableCell>
-                    <TableCell className="text-left">
-                      <div>
-                        <div className="font-medium">
-                          {discrepancy.fieldPath}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {discrepancy.fieldType}
-                        </div>
+        ) : undefined
+      }
+    >
+      {allDiscrepancies.length === 0 ? (
+        <EmptyState
+          title="No Discrepancies Found"
+          description="All tests passed successfully"
+          variant="minimal"
+        />
+      ) : filteredDiscrepancies.length === 0 ? (
+        <EmptyState
+          title="No discrepancies match your search"
+          description="Try adjusting your search terms"
+          variant="minimal"
+        />
+      ) : (
+        <ScrollArea className="h-[600px] w-full">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-left">Game ID</TableHead>
+                <TableHead className="text-left">Field Path</TableHead>
+                <TableHead className="text-center">Severity</TableHead>
+                <TableHead className="text-center">Expected</TableHead>
+                <TableHead className="text-center">Actual</TableHead>
+                <TableHead className="text-center">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredDiscrepancies.map((discrepancy, index) => (
+                <TableRow key={`${discrepancy.gameId}-${index}`}>
+                  <TableCell className="text-left font-mono text-sm font-semibold">
+                    {discrepancy.gameId}
+                  </TableCell>
+                  <TableCell className="text-left">
+                    <div>
+                      <div className="font-medium text-sm">
+                        {discrepancy.fieldPath}
                       </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Badge className={getSeverityColor(discrepancy.severity)}>
+                      <div className="text-xs text-muted-foreground">
+                        {discrepancy.fieldType}
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex justify-center">
+                      <Badge
+                        className={`rounded-full ${getSeverityBadgeColor(
+                          discrepancy.severity
+                        )}`}
+                      >
                         {discrepancy.severity || "unknown"}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="text-center max-w-xs">
-                      <div
-                        className="truncate"
-                        title={discrepancy.expected || "null"}
-                      >
-                        {discrepancy.expected || "null"}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center max-w-xs">
-                      <div
-                        className="truncate"
-                        title={discrepancy.actual?.toString() || "null"}
-                      >
-                        {discrepancy.actual?.toString() || "null"}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center flex justify-center items-center">
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center max-w-xs">
+                    <div
+                      className="truncate text-sm"
+                      title={discrepancy.expected || "null"}
+                    >
+                      {discrepancy.expected || "null"}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center max-w-xs">
+                    <div
+                      className="truncate text-sm"
+                      title={discrepancy.actual?.toString() || "null"}
+                    >
+                      {discrepancy.actual?.toString() || "null"}
+                    </div>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <div className="flex justify-center">
                       {discrepancy.passed ? (
-                        <CheckCircle className="w-4 h-4 text-green-500" />
+                        <CheckCircle className="w-5 h-5 text-success-500" />
                       ) : (
-                        <XCircle className="w-4 h-4 text-red-500" />
+                        <XCircle className="w-5 h-5 text-error-500" />
                       )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="text-center py-8">
-              <AlertTriangle className="h-12 w-12 text-yellow-500 mx-auto mb-4" />
-              <p className="text-lg font-medium">
-                No discrepancies match your search
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Try adjusting your search terms
-              </p>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollArea>
+      )}
+    </SectionContainer>
   );
 }

@@ -1,6 +1,9 @@
 "use client";
-import CreatePage from "@/components/scaffolding/containers/createPage";
+
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
+import { LoadingState, ErrorState, EmptyState } from "@/components/ui-library";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { useFetchTestsQuery } from "@/hooks/fetch-tests/useFetchTestsQuery";
 import { FetchTestsTable } from "./components/FetchTestsTable";
 import { FetchTestsSummary } from "./components/FetchTestsSummary";
@@ -9,67 +12,60 @@ import { FetchTestsCharts } from "./components/FetchTestsCharts";
 export default function FetchTestsPage() {
   const { data, isLoading, error } = useFetchTestsQuery();
 
-  if (isLoading) {
-    return (
-      <CreatePage>
-        <CreatePageTitle
-          title="Result Scraper Tests"
-          byLine="Result Scraper Tests"
-        />
-        <div className="mt-6">
-          <p>Loading fetch tests...</p>
-        </div>
-      </CreatePage>
-    );
-  }
-
-  if (error) {
-    return (
-      <CreatePage>
-        <CreatePageTitle
-          title="Result Scraper Tests"
-          byLine="Result Scraper Tests"
-        />
-        <div className="mt-6">
-          <p className="text-red-500">Error: {error.message}</p>
-        </div>
-      </CreatePage>
-    );
-  }
-
-  if (!data) {
-    return (
-      <CreatePage>
-        <CreatePageTitle
-          title="Result Scraper Tests"
-          byLine="Result Scraper Tests"
-        />
-        <div className="mt-6">
-          <p>No data available</p>
-        </div>
-      </CreatePage>
-    );
-  }
-
   return (
-    <CreatePage>
+    <>
       <CreatePageTitle
         title="Result Scraper Tests"
-        byLine="Result Scraper Tests"
+        byLine="Overview of all result scraper tests"
+        byLineBottom="View test results, statistics, and charts"
       />
+      <PageContainer padding="xs" spacing="lg">
+        {isLoading && (
+          <LoadingState
+            variant="skeleton"
+            message="Loading result scraper tests..."
+          />
+        )}
 
-      {/* Test Runs Table */}
-      <FetchTestsTable
-        title="Recent Test Runs (Top 10)"
-        testRuns={data.list.sort((a, b) => b.id - a.id).slice(0, 10)}
-        emptyMessage="No test runs available."
-      />
+        {error && (
+          <ErrorState
+            variant="card"
+            error={error}
+            title="Error Loading Result Scraper Tests"
+          />
+        )}
 
-      {/* Summary Statistics */}
-      <FetchTestsSummary summary={data.summary} />
+        {!isLoading && !error && !data && (
+          <EmptyState variant="card" title="No data available" />
+        )}
 
-      {/* Charts */}
-      <FetchTestsCharts charts={data.charts} />
-    </CreatePage>
+        {!isLoading && !error && data && (
+          <>
+            {/* Test Runs Table */}
+            <FetchTestsTable
+              title="Recent Test Runs (Top 10)"
+              testRuns={data.list.sort((a, b) => b.id - a.id).slice(0, 10)}
+              emptyMessage="No test runs available."
+            />
+
+            {/* Summary Statistics */}
+            <SectionContainer
+              title="Summary Statistics"
+              description="Key metrics and statistics for all result scraper tests"
+            >
+              <FetchTestsSummary summary={data.summary} />
+            </SectionContainer>
+
+            {/* Charts */}
+            <SectionContainer
+              title="Analytics Charts"
+              description="Visual representation of test data and trends"
+            >
+              <FetchTestsCharts charts={data.charts} />
+            </SectionContainer>
+          </>
+        )}
+      </PageContainer>
+    </>
   );
 }

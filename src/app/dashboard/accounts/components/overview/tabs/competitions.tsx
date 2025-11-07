@@ -38,8 +38,8 @@ export default function CompetitionsTab() {
   } = useAccountQuery(accountID as string);
 
   // Extract account organization ID and account type
-  const organizationId = accountData?.data.accountOrganisationDetails.id;
-  const account_type = accountData?.data.account_type;
+  const organizationId = accountData?.data?.accountOrganisationDetails?.id;
+  const account_type = accountData?.data?.account_type;
 
   // Fetch competitions for the organization
   const {
@@ -47,7 +47,7 @@ export default function CompetitionsTab() {
     isLoading: isCompetitionsLoading,
     isError: isCompetitionsError,
     error: competitionsError,
-  } = useCompetitionsQuery(organizationId as number, account_type as number);
+  } = useCompetitionsQuery(organizationId, account_type);
 
   if (isAccountLoading || isCompetitionsLoading) {
     return <LoadingState variant="skeleton" />;
@@ -60,6 +60,18 @@ export default function CompetitionsTab() {
         error={accountError}
         title="Error fetching account details"
       />
+    );
+  }
+
+  // Show message if organization details are missing
+  if (!organizationId || account_type === undefined) {
+    return (
+      <SectionContainer title="Competitions" variant="compact">
+        <EmptyState
+          variant="minimal"
+          description="Account organization details are missing. Cannot load competitions."
+        />
+      </SectionContainer>
     );
   }
 
