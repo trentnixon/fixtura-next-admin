@@ -4,6 +4,7 @@ import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import { useContactFormSubmissionsData } from "@/hooks/contact-form/useContactFormSubmissions";
 import ContactFormTable from "./components/ContactFormTable";
+import ContactFormStats from "./components/ContactFormStats";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
@@ -61,9 +62,21 @@ export default function ContactPage() {
           )}
 
           {!isLoading && !isError && data.length > 0 && (
-            <ContactFormTable submissions={data} />
+            <>
+              <ContactFormTable submissions={data} />
+            </>
           )}
         </SectionContainer>
+
+        {/* Stats and Charts Section */}
+        {!isLoading && !isError && data.length > 0 && (
+          <SectionContainer
+            title="Statistics & Insights"
+            description="Overview metrics and visualizations for contact form submissions"
+          >
+            <ContactFormStats submissions={data} />
+          </SectionContainer>
+        )}
       </PageContainer>
     </>
   );
