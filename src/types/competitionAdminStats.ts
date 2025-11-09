@@ -25,10 +25,12 @@ export type CompetitionAdminStatsAvailableCompetition = {
   name: string;
   season: string | null;
   associationName: string | null;
+  sport: string | null;
   gradeCount: number;
   sizeCategory: "none" | "small" | "medium" | "large";
   weight: number;
   durationDays: number | null;
+  startDate?: string | null;
 };
 
 export type CompetitionAdminStatsTables = {
