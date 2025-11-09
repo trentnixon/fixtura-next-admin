@@ -8,7 +8,6 @@ import {
   Network,
   CalendarClock,
   FileCode,
-  UsersRound,
   Trophy,
   GraduationCap,
   BarChart3,
@@ -16,6 +15,7 @@ import {
   FlaskConical,
   DollarSign,
   Mail,
+  CalendarDays,
 } from "lucide-react";
 import { NavMain } from "@/components/scaffolding/layout/nav/nav-main";
 /* import { NavProjects } from "@/components/nav-projects"; */
@@ -85,12 +85,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       },
     ],
     sportsDataNav: [
-      {
+      /*  {
         title: "Teams",
         url: "/dashboard/teams",
         icon: UsersRound,
         isActive: true,
-      },
+      }, */
       {
         title: "Competitions",
         url: "/dashboard/competitions",
@@ -101,6 +101,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Grades",
         url: "/dashboard/grades",
         icon: GraduationCap,
+        isActive: true,
+      },
+      {
+        title: "Fixtures",
+        url: "/dashboard/fixtures",
+        icon: CalendarDays,
         isActive: true,
       },
     ],

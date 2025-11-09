@@ -7,29 +7,33 @@ This folder contains club-specific account management pages and components for t
 - `page.tsx`: Main clubs listing page with table display and navigation
 - `[accountID]/page.tsx`: Individual club account detail page
 - `[accountID]/components/DisplayClub.tsx`: Component for displaying club account details
+- `[accountID]/components/overview/tabs/competitions.tsx`: Shared competitions tab that now supports club drilldowns
 - `components/ClubsTable.tsx`: Table component for listing and managing club accounts
 
 ## Relations
 
 - Parent folder: [../readMe.md](../readMe.md)
 - Consumed by: Dashboard navigation and account management workflows
-- Key dependencies: `../../components/` for UI components, `../../../../hooks/` for data fetching
+- Key dependencies: `../../components/` for UI components, `../../../../hooks/` for data fetching, `../../../../lib/services/` for CMS integrations
 
 ## Dependencies
 
 - Internal:
   - `../../components/`: UI components and scaffolding
-  - `../../../../hooks/`: Custom React hooks for data fetching
-  - `../../../../types/`: TypeScript interfaces and type definitions
+  - `../../../../hooks/accounts/useAccountQuery.ts`: Fetches base account data
+  - `../../../../hooks/competitions/useCompetitionClubDrilldown.ts`: Loads club competition drilldown data
+  - `../../../../hooks/competitions/useCompetitionAssociationDrilldown.ts`: Shared hook leveraged when rendering association accounts via the same tab
+  - `../../../../lib/services/competitions/fetchCompetitionClubDrilldown.ts`: Service wrapper for the CMS club drilldown endpoint
+  - `../../../../types/competitionClubDrilldown.ts`: Shared contract for the club drilldown payload
 - External:
   - `next/link`: Next.js navigation
-  - `@clerk/nextjs/server`: Server-side authentication
+  - `@tanstack/react-query`: Data fetching and caching
 
 ## Patterns
 
 - **Page Structure**: Consistent page structure using CreatePage and CreatePageTitle components
 - **Dynamic Routing**: Uses Next.js dynamic routing with [accountID] parameter
-- **Component Organization**: Domain-specific components for club management
-- **Data Integration**: Integration with custom hooks for account data fetching
+- **Component Organization**: Domain-specific components for club management and competition drilldowns
+- **Data Integration**: Integration with account hooks plus CMS drilldown hooks for competition visibility
 - **Navigation**: Seamless navigation between club accounts and related data
 - **Type Safety**: Strong TypeScript integration with proper prop interfaces

@@ -7,29 +7,32 @@ This folder contains association-specific account management pages and component
 - `page.tsx`: Main associations listing page with table display and navigation
 - `[accountID]/page.tsx`: Individual association account detail page
 - `[accountID]/components/DisplayAssociation.tsx`: Component for displaying association account details
+- `[accountID]/components/overview/tabs/competitions.tsx`: Association competitions tab powered by the CMS drilldown endpoint
 - `components/AssociationsTable.tsx`: Table component for listing and managing association accounts
 
 ## Relations
 
 - Parent folder: [../readMe.md](../readMe.md)
 - Consumed by: Dashboard navigation and account management workflows
-- Key dependencies: `../../components/` for UI components, `../../../../hooks/` for data fetching
+- Key dependencies: `../../components/` for UI components, `../../../../hooks/` for data fetching, `../../../../lib/services/` for CMS integrations
 
 ## Dependencies
 
 - Internal:
   - `../../components/`: UI components and scaffolding
-  - `../../../../hooks/`: Custom React hooks for data fetching
-  - `../../../../types/`: TypeScript interfaces and type definitions
+  - `../../../../hooks/accounts/useAccountQuery.ts`: Fetches base account data
+  - `../../../../hooks/competitions/useCompetitionAssociationDrilldown.ts`: Loads per-association competition data
+  - `../../../../lib/services/competitions/fetchCompetitionAssociationDrilldown.ts`: Service wrapper for the CMS association drilldown endpoint
+  - `../../../../types/competitionAssociationDrilldown.ts`: Shared contract for the association drilldown payload
 - External:
   - `next/link`: Next.js navigation
-  - `@clerk/nextjs/server`: Server-side authentication
+  - `@tanstack/react-query`: Data fetching and caching
 
 ## Patterns
 
 - **Page Structure**: Consistent page structure using CreatePage and CreatePageTitle components
 - **Dynamic Routing**: Uses Next.js dynamic routing with [accountID] parameter
-- **Component Organization**: Domain-specific components for association management
-- **Data Integration**: Integration with custom hooks for account data fetching
+- **Component Organization**: Domain-specific components for association management and competition drilldowns
+- **Data Integration**: Integration with account hooks plus CMS drilldown hooks for competition visibility
 - **Navigation**: Seamless navigation between association accounts and related data
 - **Type Safety**: Strong TypeScript integration with proper prop interfaces
