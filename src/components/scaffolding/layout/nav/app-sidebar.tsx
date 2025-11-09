@@ -85,12 +85,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       },
     ],
     sportsDataNav: [
-      /*  {
-        title: "Teams",
-        url: "/dashboard/teams",
-        icon: UsersRound,
+      {
+        title: "Associations",
+        url: "/dashboard/association",
+        icon: Network,
         isActive: true,
-      }, */
+      },
+      {
+        title: "Clubs",
+        url: "/dashboard/club",
+        icon: Building2,
+        isActive: true,
+      },
       {
         title: "Competitions",
         url: "/dashboard/competitions",
@@ -121,6 +127,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Budget & Costings",
         url: "/dashboard/budget",
         icon: DollarSign,
+        isActive: true,
+      },
+      {
+        title: "Orders",
+        url: "/dashboard/orders",
+        icon: FileCode,
         isActive: true,
       },
     ],
