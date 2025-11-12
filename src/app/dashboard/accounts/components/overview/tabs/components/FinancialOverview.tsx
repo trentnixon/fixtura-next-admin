@@ -8,8 +8,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { SectionTitle, Label, H4 } from "@/components/type/titles";
 import { TrendingUp, DollarSign, Calendar, CreditCard } from "lucide-react";
 
-import { formatDate } from "@/lib/utils";
-
 /**
  * FinancialOverview Component
  *
@@ -99,7 +97,14 @@ export default function FinancialOverview({
           title="Last Season Pass"
           value={
             paymentStatus?.lastPaymentDate
-              ? formatDate(paymentStatus.lastPaymentDate)
+              ? new Date(paymentStatus.lastPaymentDate).toLocaleDateString(
+                  "en-US",
+                  {
+                    month: "short",
+                    day: "numeric",
+                    year: "2-digit",
+                  }
+                )
               : "Never"
           }
           icon={<CreditCard className="h-5 w-5" />}
