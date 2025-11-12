@@ -1,15 +1,27 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import axiosInstance from "@/lib/axios";
 import { AxiosError } from "axios";
-import { AccountAnalytics } from "@/types/analytics";
-
-// Raw API response type
-interface RawAccountAnalyticsResponse {
-  json?: any;
-  [key: string]: any;
-}
+import {
+  AccountAnalytics,
+  RawAccountAnalyticsResponse,
+  RawOrderHistoryItem,
+  RawSubscriptionTimelineEvent,
+  RawRiskIndicatorItem,
+} from "@/types/analytics";
+import {
+  calculateTotalSpent,
+  countPaidOrders,
+  determineTrialConversion,
+  filterTrialOrders,
+  getPaymentMethod,
+} from "./utils/accountAnalyticsHelpers";
+import {
+  logApiResponse,
+  logAxiosError,
+  logFetchStart,
+  logUnexpectedError,
+} from "./utils/accountAnalyticsLogger";
 
 /**
  * Fetches account-specific analytics from the Order Analytics API
@@ -23,27 +35,19 @@ interface RawAccountAnalyticsResponse {
 export async function fetchAccountAnalytics(
   accountId: string
 ): Promise<AccountAnalytics> {
-  console.log("[fetchAccountAnalytics] Input accountId:", accountId);
+  logFetchStart(accountId);
 
   if (!accountId) {
     throw new Error("accountId is required.");
   }
 
   try {
-    console.log(
-      "[fetchAccountAnalytics] Full URL:",
-      `/orders/analytics/account/${accountId}`
-    );
-
     const response = await axiosInstance.get<RawAccountAnalyticsResponse>(
       `/orders/analytics/account/${accountId}`
     );
 
     // Log the full response for debugging
-    console.log(
-      "[fetchAccountAnalytics] Full response:",
-      JSON.stringify(response.data, null, 2)
-    );
+    logApiResponse(response.data);
 
     // Check if response has expected structure (API returns data directly)
     if (!response.data) {
@@ -54,43 +58,20 @@ export async function fetchAccountAnalytics(
     const rawData = response.data.json || response.data;
 
     // Transform orderHistory from array to object with stats
-    const orders = rawData.orderHistory || [];
+    const orders: RawOrderHistoryItem[] = rawData.orderHistory || [];
     const totalOrders = orders.length;
-    const paidOrders = orders.filter(
-      (order: { status?: boolean }) => order.status === true
-    ).length;
-    const totalSpent = orders.reduce(
-      (sum: number, order: { total?: string }) =>
-        sum + (parseFloat(order.total || "0") || 0),
-      0
-    );
+    // Count paid orders based on paymentStatus (new field) or legacy status field
+    const paidOrders = countPaidOrders(orders);
+    // Calculate total spent - total is defined as number in RawOrderHistoryItem
+    const totalSpent = calculateTotalSpent(orders);
     const averageOrderValue = totalOrders > 0 ? totalSpent / totalOrders : 0;
 
     // Extract trial history from orders
-    const trialOrders = orders.filter(
-      (order: { subscriptionTier?: string }) =>
-        order.subscriptionTier?.toLowerCase().includes("trial") ||
-        order.subscriptionTier?.toLowerCase().includes("free")
-    );
-
-    // Determine if trial was converted by checking if there's a paid Season Pass after the trial
-    const determineTrialConversion = (trialOrder: any) => {
-      const trialDate = new Date(trialOrder.createdAt);
-      // Check if there's any paid Season Pass order after the trial
-      const hasPaidSubscription = orders.some((order: any) => {
-        const orderDate = new Date(order.createdAt);
-        return (
-          order.status === true && // Paid order
-          order.subscriptionTier?.toLowerCase().includes("season") &&
-          orderDate > trialDate
-        );
-      });
-      return hasPaidSubscription;
-    };
+    const trialOrders = filterTrialOrders(orders);
 
     // Transform the data to match our AccountAnalytics type
     const transformedData: AccountAnalytics = {
-      accountId: parseInt(rawData.accountId || accountId),
+      accountId: parseInt(String(rawData.accountId || accountId)),
       accountType: rawData.accountInfo?.accountType || "",
       sport: rawData.accountInfo?.sport || "",
       createdAt: rawData.accountInfo?.createdAt || "",
@@ -99,31 +80,64 @@ export async function fetchAccountAnalytics(
         paidOrders,
         totalSpent,
         averageOrderValue,
-        orders: orders.map((order: any) => ({
-          id: order.id,
-          date: order.createdAt,
-          amount: parseFloat(order.total) || 0,
-          status: order.checkout_status,
-          subscriptionTier: order.subscriptionTier,
-          paymentMethod: "Stripe", // Default or extract from order if available
-        })),
+        orders: orders.map((order: RawOrderHistoryItem) => {
+          // Handle amount - total is defined as number in RawOrderHistoryItem
+          const amount = Number(order.total) || 0;
+
+          // Determine payment method from paymentChannel
+          const paymentMethod = getPaymentMethod(order.paymentChannel);
+
+          return {
+            id: order.id,
+            date: order.createdAt || order.date || "",
+            amount: amount,
+            // Use status field from new response, fallback to checkoutStatus for backward compatibility
+            status:
+              order.status ||
+              order.checkoutStatus ||
+              order.checkout_status ||
+              "",
+            subscriptionTier: order.subscriptionTier || "",
+            paymentMethod: paymentMethod,
+            invoiceId: order.invoiceId || order.invoice_id || null,
+          };
+        }),
       },
       subscriptionTimeline: {
-        currentSubscription: rawData.currentSubscription
-          ? {
-              tier: rawData.currentSubscription.tier,
-              startDate: rawData.currentSubscription.startDate,
-              endDate: rawData.currentSubscription.endDate,
-              isActive: rawData.currentSubscription.status === "Active",
-              autoRenew: !rawData.currentSubscription.cancelAtPeriodEnd,
-            }
-          : null,
+        currentSubscription:
+          rawData.currentSubscription &&
+          rawData.currentSubscription.tier &&
+          rawData.currentSubscription.startDate &&
+          rawData.currentSubscription.endDate
+            ? {
+                tier: rawData.currentSubscription.tier,
+                startDate: rawData.currentSubscription.startDate,
+                endDate: rawData.currentSubscription.endDate,
+                isActive: rawData.currentSubscription.status === "Active",
+                autoRenew: !rawData.currentSubscription.cancelAtPeriodEnd,
+              }
+            : null,
         subscriptionHistory: (rawData.subscriptionTimeline || []).map(
-          (timeline: any) => ({
-            date: timeline.date,
-            event: timeline.event,
-            tier: timeline.subscriptionTier,
-            status: timeline.status,
+          (timeline: RawSubscriptionTimelineEvent) => ({
+            date: timeline.date || "",
+            action: (timeline.event === "started"
+              ? "started"
+              : timeline.event === "renewed"
+              ? "renewed"
+              : timeline.event === "cancelled"
+              ? "cancelled"
+              : timeline.event === "upgraded"
+              ? "upgraded"
+              : timeline.event === "downgraded"
+              ? "downgraded"
+              : "started") as
+              | "started"
+              | "renewed"
+              | "cancelled"
+              | "upgraded"
+              | "downgraded",
+            tier: timeline.subscriptionTier || "",
+            amount: 0,
           })
         ),
         totalSubscriptions: rawData.renewalPatterns?.totalSubscriptions || 0,
@@ -132,20 +146,24 @@ export async function fetchAccountAnalytics(
       },
       trialUsage: {
         hasActiveTrial: rawData.trialUsage?.trialStatus === "Active",
-        trialInstance: rawData.trialUsage?.hasTrial
-          ? {
-              startDate: rawData.trialUsage.trialStartDate,
-              endDate: rawData.trialUsage.trialEndDate,
-              isActive: rawData.trialUsage?.trialStatus === "Active",
-              subscriptionTier: rawData.trialUsage.trialTier,
-              daysRemaining: 0,
-            }
-          : null,
-        trialHistory: trialOrders.map((order: any) => ({
+        trialInstance:
+          rawData.trialUsage?.hasTrial &&
+          rawData.trialUsage.trialStartDate &&
+          rawData.trialUsage.trialEndDate &&
+          rawData.trialUsage.trialTier
+            ? {
+                startDate: rawData.trialUsage.trialStartDate,
+                endDate: rawData.trialUsage.trialEndDate,
+                isActive: rawData.trialUsage?.trialStatus === "Active",
+                subscriptionTier: rawData.trialUsage.trialTier,
+                daysRemaining: 0,
+              }
+            : null,
+        trialHistory: trialOrders.map((order: RawOrderHistoryItem) => ({
           startDate: order.createdAt,
           endDate: order.createdAt, // API doesn't provide end date, using start date
           subscriptionTier: order.subscriptionTier || "Unknown",
-          converted: determineTrialConversion(order), // Trial converted if there's a paid Season Pass after it
+          converted: determineTrialConversion(order, orders), // Trial converted if there's a paid Season Pass after it
         })),
         totalTrials: trialOrders.length,
         trialConversionRate: rawData.trialUsage?.trialConversion ? 100 : 0,
@@ -191,16 +209,21 @@ export async function fetchAccountAnalytics(
             ? "poor"
             : "critical",
       },
-      currentSubscription: rawData.currentSubscription
-        ? {
-            tier: rawData.currentSubscription.tier,
-            status: rawData.currentSubscription.status,
-            startDate: rawData.currentSubscription.startDate,
-            endDate: rawData.currentSubscription.endDate,
-            isActive: rawData.currentSubscription.status === "Active",
-            autoRenew: !rawData.currentSubscription.cancelAtPeriodEnd,
-          }
-        : null,
+      currentSubscription:
+        rawData.currentSubscription &&
+        rawData.currentSubscription.tier &&
+        rawData.currentSubscription.status &&
+        rawData.currentSubscription.startDate &&
+        rawData.currentSubscription.endDate
+          ? {
+              tier: rawData.currentSubscription.tier,
+              status: rawData.currentSubscription.status,
+              startDate: rawData.currentSubscription.startDate,
+              endDate: rawData.currentSubscription.endDate,
+              isActive: rawData.currentSubscription.status === "Active",
+              autoRenew: !rawData.currentSubscription.cancelAtPeriodEnd,
+            }
+          : null,
       financialSummary: {
         totalLifetimeValue: rawData.financialSummary?.lifetimeValue || 0,
         monthlyRecurringRevenue: rawData.currentSubscription?.price || 0,
@@ -210,9 +233,9 @@ export async function fetchAccountAnalytics(
       },
       usagePatterns: {
         orderFrequency:
-          rawData.usagePatterns?.averageOrdersPerMonth >= 4
+          (rawData.usagePatterns?.averageOrdersPerMonth ?? 0) >= 4
             ? "high"
-            : rawData.usagePatterns?.averageOrdersPerMonth >= 2
+            : (rawData.usagePatterns?.averageOrdersPerMonth ?? 0) >= 2
             ? "medium"
             : "low",
         seasonalPatterns: [],
@@ -228,13 +251,15 @@ export async function fetchAccountAnalytics(
         longInactivityPeriods: 0,
         downgradeHistory: 0,
         riskLevel:
-          rawData.riskIndicators?.totalRisks === 0
+          (rawData.riskIndicators?.totalRisks ?? 0) === 0
             ? "low"
-            : rawData.riskIndicators?.highSeverityRisks > 0
+            : (rawData.riskIndicators?.highSeverityRisks ?? 0) > 0
             ? "high"
             : "medium",
         riskFactors:
-          rawData.riskIndicators?.risks?.map((r: any) => r.description) || [],
+          rawData.riskIndicators?.risks?.map(
+            (r: RawRiskIndicatorItem) => r.description || ""
+          ) || [],
       },
       generatedAt: rawData.generatedAt || new Date().toISOString(),
       lastUpdated: new Date().toISOString(),
@@ -244,15 +269,7 @@ export async function fetchAccountAnalytics(
   } catch (error) {
     if (error instanceof AxiosError) {
       // Axios-specific error handling
-      console.error("[Axios Error] Failed to fetch account analytics:", {
-        message: error.message,
-        url: error.config?.url,
-        method: error.config?.method,
-        status: error.response?.status,
-        data: error.response?.data,
-        headers: error.response?.headers,
-        accountId,
-      });
+      logAxiosError(error, accountId);
 
       // Throw a standardized error
       throw new Error(
@@ -263,10 +280,7 @@ export async function fetchAccountAnalytics(
       );
     } else {
       // Handle non-Axios errors
-      console.error(
-        "[Unexpected Error] Failed to fetch account analytics:",
-        error
-      );
+      logUnexpectedError(error);
       throw new Error(
         `An unexpected error occurred while fetching analytics for account ${accountId}. Please try again.`
       );

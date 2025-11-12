@@ -50,7 +50,20 @@ export default function OrderPaymentCard({ payment }: OrderPaymentCardProps) {
         </div>
         <div className="space-y-2">
           <p className="text-muted-foreground">Invoice</p>
-          <p className="font-medium">{payment.invoice?.number ?? "—"}</p>
+          <div className="space-y-1">
+            {payment.invoice?.id && (
+              <div>
+                <p className="text-xs text-muted-foreground">Invoice ID</p>
+                <p className="font-medium font-mono text-sm">
+                  {payment.invoice.id}
+                </p>
+              </div>
+            )}
+            <div>
+              <p className="text-xs text-muted-foreground">Invoice Number</p>
+              <p className="font-medium">{payment.invoice?.number ?? "—"}</p>
+            </div>
+          </div>
           <div className="flex flex-wrap gap-2">
             {payment.hostedInvoiceUrl && (
               <Button variant="outline" size="sm" asChild>

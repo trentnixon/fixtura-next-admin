@@ -6,6 +6,8 @@ import { OrderUpdatePayload } from "@/lib/services/orders/updateAdminOrder";
 import { CheckoutStatus } from "@/types/orderOverview";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { useAccountQuery } from "@/hooks/accounts/useAccountQuery";
 import {
@@ -44,6 +46,7 @@ export default function OrderEditForm({
   const [formData, setFormData] = useState({
     name: order.name ?? "",
     currency: order.currency ?? "",
+    invoice_id: order.payment.invoice.id ?? "",
     payment: {
       channel: order.payment.channel ?? "none",
       orderPaid: order.payment.orderPaid ?? false,
@@ -98,6 +101,13 @@ export default function OrderEditForm({
       updates.payment_status = formData.payment.status.trim();
     } else {
       updates.payment_status = null;
+    }
+
+    // Invoice ID
+    if (formData.invoice_id && formData.invoice_id.trim() !== "") {
+      updates.invoice_id = formData.invoice_id.trim();
+    } else {
+      updates.invoice_id = null;
     }
 
     // Status fields
@@ -186,6 +196,22 @@ export default function OrderEditForm({
               }
               includeNone={true}
               required={false}
+            />
+          </div>
+
+          <Separator />
+
+          {/* Invoice ID */}
+          <div className="space-y-2">
+            <Label htmlFor="invoice-id">Invoice ID</Label>
+            <Input
+              id="invoice-id"
+              type="text"
+              value={formData.invoice_id}
+              onChange={(e) =>
+                setFormData({ ...formData, invoice_id: e.target.value })
+              }
+              placeholder="Enter invoice ID (optional)"
             />
           </div>
 

@@ -138,6 +138,9 @@ export async function createAdminInvoice(
       checkoutStatus: payload.checkoutStatus, // Checkout status string
       payment_status: payload.payment_status, // Payment status string
 
+      // Optional fields
+      invoice_id: payload.invoice_id?.trim() || null, // Invoice ID
+
       // Boolean fields - send as camelCase (backend will map to Strapi schema names)
       Status: payload.Status ?? false,
       isActive: payload.isActive ?? false,

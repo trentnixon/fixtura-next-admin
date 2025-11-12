@@ -57,6 +57,7 @@ import {
   getStatusBadgeClassName,
   getActiveBadgeClassName,
   getEndingSoonBadgeClassName,
+  getPaymentChannelBadgeClassName,
 } from "../utils/badgeHelpers";
 import {
   calculateOrderLengthDays,
@@ -377,6 +378,7 @@ export function OrdersOverviewTable({
                 </Button>
               </TableHead>
               <TableHead className="text-center">Payment Status</TableHead>
+              <TableHead className="text-center">Payment Channel</TableHead>
               <TableHead className="text-center">Active</TableHead>
               <TableHead className="text-center">Ending Soon</TableHead>
               <TableHead className="text-right">
@@ -441,7 +443,7 @@ export function OrdersOverviewTable({
             {paginatedOrders.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={10}
+                  colSpan={11}
                   className="py-8 text-center text-sm text-muted-foreground"
                 >
                   No orders match your criteria. Try adjusting filters or
@@ -459,6 +461,20 @@ export function OrdersOverviewTable({
                         className={getStatusBadgeClassName(order.paymentStatus)}
                       >
                         {toTitleCase(order.paymentStatus)}
+                      </Badge>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {order.paymentChannel ? (
+                      <Badge
+                        variant="outline"
+                        className={getPaymentChannelBadgeClassName(
+                          order.paymentChannel
+                        )}
+                      >
+                        {toTitleCase(order.paymentChannel)}
                       </Badge>
                     ) : (
                       <span className="text-muted-foreground">—</span>

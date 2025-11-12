@@ -10,6 +10,8 @@ import { useSubscriptionTiers } from "@/hooks/subscription-tiers/useSubscription
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
@@ -162,6 +164,9 @@ export default function CreateInvoiceForm({
       checkoutStatus: formData.checkoutStatus, // Checkout status
       payment_status: formData.payment_status, // Payment status
 
+      // Optional fields
+      invoice_id: formData.invoice_id.trim() || null, // Invoice ID
+
       // Boolean fields
       Status: formData.Status,
       isActive: formData.isActive,
@@ -270,6 +275,26 @@ export default function CreateInvoiceForm({
               required
               error={errors.currency}
             />
+          </div>
+
+          <Separator />
+
+          {/* Invoice ID */}
+          <div className="space-y-2">
+            <Label htmlFor="invoice-id">Invoice ID</Label>
+            <Input
+              id="invoice-id"
+              type="text"
+              value={formData.invoice_id}
+              onChange={(e) =>
+                setFormData({ ...formData, invoice_id: e.target.value })
+              }
+              placeholder="Enter invoice ID (optional)"
+              className={errors.invoice_id ? "border-destructive" : ""}
+            />
+            {errors.invoice_id && (
+              <p className="text-sm text-destructive">{errors.invoice_id}</p>
+            )}
           </div>
 
           <Separator />

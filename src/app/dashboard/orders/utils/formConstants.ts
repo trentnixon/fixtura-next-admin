@@ -39,6 +39,7 @@ export interface InvoiceFormState {
   endDate: string;
   checkoutStatus: string;
   payment_status: string;
+  invoice_id: string;
   Status: boolean;
   isActive: boolean;
   OrderPaid: boolean;
@@ -67,6 +68,7 @@ export function createDefaultFormState(defaultDates: {
     endDate: defaultDates.endDate,
     checkoutStatus: DEFAULT_CHECKOUT_STATUS,
     payment_status: DEFAULT_PAYMENT_STATUS,
+    invoice_id: "",
     Status: false,
     isActive: false,
     OrderPaid: false,

@@ -116,6 +116,193 @@ export type GlobalAnalyticsResponse = AnalyticsResponse<GlobalAnalytics>;
 // ============================================================================
 
 /**
+ * Raw API response type for order history items from the account analytics endpoint
+ */
+export interface RawOrderHistoryItem {
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+  subscriptionTier: string;
+  price: number;
+  currency: string;
+  isActive: boolean;
+  isPaused: boolean;
+  cancelAtPeriodEnd: boolean;
+  hasOrderExpired: boolean;
+  startOrderAt: string | null;
+  endOrderAt: string | null;
+  stripeStatus: string | null;
+  checkoutStatus: string | null;
+  paymentStatus: string | null;
+  paymentChannel: "stripe" | "invoice" | null;
+  invoiceId: string | null;
+  total: number;
+  status: string;
+  // Legacy fields for backward compatibility
+  date?: string;
+  amount?: number;
+  checkout_status?: string;
+  invoice_id?: string;
+}
+
+/**
+ * Raw subscription data from API
+ */
+export interface RawCurrentSubscription {
+  tier?: string;
+  startDate?: string;
+  endDate?: string;
+  status?: string;
+  cancelAtPeriodEnd?: boolean;
+  price?: number;
+}
+
+/**
+ * Raw subscription timeline event from API
+ */
+export interface RawSubscriptionTimelineEvent {
+  date?: string;
+  event?: string;
+  subscriptionTier?: string;
+  status?: string;
+}
+
+/**
+ * Raw renewal patterns data from API
+ */
+export interface RawRenewalPatterns {
+  totalSubscriptions?: number;
+  averageSubscriptionDuration?: number;
+  renewalRate?: number;
+  lastRenewalDate?: string | null;
+  cancelledSubscriptions?: number;
+}
+
+/**
+ * Raw trial usage data from API
+ */
+export interface RawTrialUsage {
+  trialStatus?: string;
+  hasTrial?: boolean;
+  trialStartDate?: string;
+  trialEndDate?: string;
+  trialTier?: string;
+  trialConversion?: boolean;
+}
+
+/**
+ * Raw payment status data from API
+ */
+export interface RawPaymentStatus {
+  paymentSuccessRate?: number;
+  totalOrders?: number;
+  paidOrders?: number;
+  failedOrders?: number;
+  lastPaymentDate?: string | null;
+}
+
+/**
+ * Raw account health score breakdown from API
+ */
+export interface RawAccountHealthScoreBreakdown {
+  accountSetup?: number;
+  accountActivity?: number;
+  paymentSuccess?: number;
+  subscriptionContinuity?: number;
+  trialConversion?: number;
+}
+
+/**
+ * Raw account health score data from API
+ */
+export interface RawAccountHealthScore {
+  score?: number;
+  breakdown?: RawAccountHealthScoreBreakdown;
+  percentage?: number;
+}
+
+/**
+ * Raw financial summary data from API
+ */
+export interface RawFinancialSummary {
+  lifetimeValue?: number;
+  averageOrderValue?: number;
+}
+
+/**
+ * Raw usage patterns data from API
+ */
+export interface RawUsagePatterns {
+  averageOrdersPerMonth?: number;
+  monthlyOrderFrequency?: Record<string, number>;
+}
+
+/**
+ * Raw risk indicator item from API
+ */
+export interface RawRiskIndicatorItem {
+  description?: string;
+}
+
+/**
+ * Raw risk indicators data from API
+ */
+export interface RawRiskIndicators {
+  totalRisks?: number;
+  highSeverityRisks?: number;
+  risks?: RawRiskIndicatorItem[];
+}
+
+/**
+ * Raw account analytics data structure (used in json field)
+ */
+export interface RawAccountAnalyticsData {
+  orderHistory?: RawOrderHistoryItem[];
+  accountId?: number | string;
+  accountInfo?: {
+    accountType?: string;
+    sport?: string;
+    createdAt?: string;
+  };
+  currentSubscription?: RawCurrentSubscription;
+  subscriptionTimeline?: RawSubscriptionTimelineEvent[];
+  renewalPatterns?: RawRenewalPatterns;
+  trialUsage?: RawTrialUsage;
+  paymentStatus?: RawPaymentStatus;
+  accountHealthScore?: RawAccountHealthScore;
+  financialSummary?: RawFinancialSummary;
+  usagePatterns?: RawUsagePatterns;
+  riskIndicators?: RawRiskIndicators;
+  generatedAt?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Raw API response type for account analytics endpoint
+ */
+export interface RawAccountAnalyticsResponse {
+  json?: RawAccountAnalyticsData;
+  orderHistory?: RawOrderHistoryItem[];
+  accountId?: number | string;
+  accountInfo?: {
+    accountType?: string;
+    sport?: string;
+    createdAt?: string;
+  };
+  currentSubscription?: RawCurrentSubscription;
+  subscriptionTimeline?: RawSubscriptionTimelineEvent[];
+  renewalPatterns?: RawRenewalPatterns;
+  trialUsage?: RawTrialUsage;
+  paymentStatus?: RawPaymentStatus;
+  accountHealthScore?: RawAccountHealthScore;
+  financialSummary?: RawFinancialSummary;
+  usagePatterns?: RawUsagePatterns;
+  riskIndicators?: RawRiskIndicators;
+  generatedAt?: string;
+  [key: string]: unknown;
+}
+
+/**
  * Order summary for account analytics
  */
 export interface OrderSummary {
@@ -125,6 +312,7 @@ export interface OrderSummary {
   status: string;
   subscriptionTier: string;
   paymentMethod: string;
+  invoiceId: string | null;
 }
 
 /**

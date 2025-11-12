@@ -93,6 +93,8 @@ export interface RelatedOrderSummary {
   status: string;
   checkoutStatus: CheckoutStatus | null;
   paymentStatus: string | null;
+  paymentChannel: "stripe" | "invoice" | null;
+  invoiceId: string | null;
   isActive: boolean;
   createdAt: string;
   startDate: string | null;
@@ -117,6 +119,9 @@ export interface AdminCreateInvoicePayload {
   checkoutStatus: string; // Checkout status (e.g., "incomplete", "complete", "active", etc.)
   payment_status: string; // Payment status (e.g., "open", "paid", "unpaid", etc.)
 
+  // Optional fields
+  invoice_id?: string | null; // Invoice ID (optional)
+
   // Optional boolean fields
   Status?: boolean; // Order status
   isActive?: boolean; // Whether the order is active
@@ -130,7 +135,7 @@ export interface AdminCreateInvoicePayload {
 
   // Note: The following fields are set automatically by the backend:
   // - payment_channel (always "invoice")
-  // - invoice_id, invoice_number, invoice_created (generated automatically)
+  // - invoice_number, invoice_created (generated automatically)
   // - Name (generated automatically)
 }
 

@@ -25,6 +25,7 @@ export interface OrderOverviewRow {
   account: OrderOverviewAccount;
   totals: OrderOverviewTotals;
   paymentStatus: string | null;
+  paymentChannel: "stripe" | "invoice" | null;
   status: string;
   isActive: boolean;
   isExpiringSoon: boolean;

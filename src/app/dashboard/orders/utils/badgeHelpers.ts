@@ -157,3 +157,28 @@ export function getEndingSoonBadgeClassName(isExpiringSoon: boolean): string {
     : "rounded-full bg-emerald-500 text-white border-0";
 }
 
+/**
+ * Gets the CSS class name for payment channel badges with color styling
+ * @param paymentChannel - Payment channel string ("stripe" | "invoice" | null)
+ * @returns CSS class string
+ */
+export function getPaymentChannelBadgeClassName(
+  paymentChannel: "stripe" | "invoice" | null
+): string {
+  if (!paymentChannel) {
+    return "rounded-full bg-slate-500 text-white border-0";
+  }
+
+  const normalized = paymentChannel.toLowerCase();
+
+  if (normalized === "stripe") {
+    return "rounded-full bg-purple-500 text-white border-0";
+  }
+
+  if (normalized === "invoice") {
+    return "rounded-full bg-blue-500 text-white border-0";
+  }
+
+  return "rounded-full bg-slate-500 text-white border-0";
+}
+
