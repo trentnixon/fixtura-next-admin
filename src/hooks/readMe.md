@@ -21,6 +21,17 @@ This folder contains custom React hooks that provide data fetching, state manage
 
 - `useDownloadsQuery.ts`: Manages download data fetching and caching
 
+### orders/
+
+- `useAdminOrderOverview.ts`: Fetches admin orders overview data (table rows, stats, timeline) with filter parameters
+- `useAdminOrderDetail.ts`: Fetches single order detail payload and related orders for drill-down views
+- `useAdminCreateInvoice.ts`: Mutation hook for creating manual invoice orders via POST /api/orders/admin/create-invoice
+- `useAdminOrderUpdate.ts`: Mutation hook for updating existing orders via POST /api/orders/admin/:id
+
+### subscription-tiers/
+
+- `useSubscriptionTiers.ts`: Fetches all subscription tiers from the Strapi API endpoint GET /api/subscription-tiers
+
 ### fetch-tests/
 
 - `useFetchTestsQuery.ts`: Fetches all fetch test data including test runs, summary, and charts

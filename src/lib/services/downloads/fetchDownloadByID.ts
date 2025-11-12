@@ -14,7 +14,7 @@ export async function fetchDownloadByID(downloadId: string): Promise<Download> {
     // Build query parameters using qs
     const query = qs.stringify(
       {
-        populate: ["asset_category", "asset"],
+        populate: ["asset_category", "asset", "render"],
       },
       { encodeValuesOnly: true } // Serialize parameters for Strapi
     );

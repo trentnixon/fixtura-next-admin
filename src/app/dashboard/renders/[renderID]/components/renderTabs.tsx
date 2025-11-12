@@ -8,7 +8,7 @@ import TableGrades from "./TableGradesInRender";
 export function RenderTabs() {
   return (
     <Tabs defaultValue="downloads" className="w-full">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList variant="secondary" className="">
         <TabsTrigger value="downloads">Downloads</TabsTrigger>
         <TabsTrigger value="gameResults">Game Results</TabsTrigger>
         <TabsTrigger value="upcomingGames">Upcoming Games</TabsTrigger>

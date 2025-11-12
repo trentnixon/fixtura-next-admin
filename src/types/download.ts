@@ -24,6 +24,11 @@ export interface DownloadAttributes {
       };
     };
   };
+  render?: {
+    data: {
+      id: number;
+    } | null;
+  };
 }
 
 export interface DownloadResponse {

@@ -1,63 +1,53 @@
-// create a render header component that displays the render details
 "use client";
-import { DatabaseIcon } from "lucide-react";
-import { Label } from "@/components/type/titles";
-import { ByLine } from "@/components/type/titles";
-import { Title } from "@/components/type/titles";
+
+import { DatabaseIcon, ExternalLinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ExternalLinkIcon } from "lucide-react";
 import StatusFlags from "./StatusFlags";
 import { useGlobalContext } from "@/components/providers/GlobalContext";
 import { useParams } from "next/navigation";
-
 import Link from "next/link";
-import { useRendersQuery } from "@/hooks/renders/useRendersQuery";
 import DeleteRenderButton from "../../../accounts/components/actions/button_delete_Render";
 import { useGetAccountDetailsFromRenderId } from "@/hooks/renders/useGetAccountDetailsFromRenderId";
 
-export default function RenderHeader() {
+interface RenderHeaderProps {
+  render?: {
+    Processing?: boolean;
+    Complete?: boolean;
+    forceRerender?: boolean;
+    EmailSent?: boolean;
+  } | null;
+}
+
+export default function RenderHeader({ render }: RenderHeaderProps) {
   const { Domain, strapiLocation } = useGlobalContext();
   const { contentHub } = Domain;
   const { renderID } = useParams();
 
-  // Fetch data
-  const { data: render } = useRendersQuery(renderID as string);
-
+  // Fetch account details for links
   const { data: accountDetails } = useGetAccountDetailsFromRenderId(
     renderID as string
   );
 
+  // Determine account route based on account_type
+  // account_type === 1 = Club, account_type === 2 = Association
+  const accountId = accountDetails?.account?.id;
+  // Check if account_type exists (may not be in type definition but could be in API response)
+  const accountType =
+    accountDetails?.account && "account_type" in accountDetails.account
+      ? (accountDetails.account as { account_type?: number }).account_type
+      : undefined;
+  const backToAccountUrl =
+    accountId && accountType === 1
+      ? `/dashboard/accounts/club/${accountId}`
+      : accountId && accountType === 2
+      ? `/dashboard/accounts/association/${accountId}`
+      : accountId
+      ? `/dashboard/accounts/club/${accountId}` // Default to club if type unknown
+      : "/dashboard/accounts";
+
   return (
-    <>
-      <Title>Render Details</Title>
-      <ByLine>
-        {render?.Name} - {renderID}
-      </ByLine>
-
-      {/* Links */}
-      <div className="flex justify-end gap-2 items-center">
-        <Label>Actions</Label>
-
-        <Link
-          href={`${contentHub}/${
-            accountDetails?.account?.id
-          }/${accountDetails?.account?.Sport.toLowerCase()}/${renderID}`}
-          target="_blank"
-          rel="noopener noreferrer">
-          <Button variant="outline">
-            <ExternalLinkIcon size="16" />
-          </Button>
-        </Link>
-        <Link
-          href={`${strapiLocation.render}${renderID}`}
-          target="_blank"
-          rel="noopener noreferrer">
-          <Button variant="outline">
-            <DatabaseIcon size="16" />
-          </Button>
-        </Link>
-        <DeleteRenderButton />
-      </div>
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* Status Flags */}
       <StatusFlags
         flags={{
           Processing: render?.Processing || false,
@@ -66,6 +56,36 @@ export default function RenderHeader() {
           EmailSent: render?.EmailSent || false,
         }}
       />
-    </>
+
+      {/* Action Buttons */}
+      <div className="flex gap-2 items-center">
+        {accountId && (
+          <Button variant="primary" asChild>
+            <Link href={backToAccountUrl}>Back to Account</Link>
+          </Button>
+        )}
+        <Link
+          href={`${contentHub}/${
+            accountDetails?.account?.id
+          }/${accountDetails?.account?.Sport?.toLowerCase()}/${renderID}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Button variant="primary">
+            <ExternalLinkIcon size="16" />
+          </Button>
+        </Link>
+        <Link
+          href={`${strapiLocation.render}${renderID}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <Button variant="primary">
+            <DatabaseIcon size="16" />
+          </Button>
+        </Link>
+        <DeleteRenderButton />
+      </div>
+    </div>
   );
 }

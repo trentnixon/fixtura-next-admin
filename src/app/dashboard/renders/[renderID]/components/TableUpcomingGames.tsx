@@ -11,26 +11,52 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import LoadingState from "@/components/ui-library/states/LoadingState";
+import ErrorState from "@/components/ui-library/states/ErrorState";
+import EmptyState from "@/components/ui-library/states/EmptyState";
 
 export default function TableUpcomingGames() {
   const { renderID } = useParams();
 
   // Fetch data
-  const { upcomingGames, isLoading, isError, error } = useRendersQuery(
-    renderID as string
-  );
+  const {
+    upcomingGames,
+    isLoading,
+    isError,
+    error,
+    refetch: refetchRender,
+  } = useRendersQuery(renderID as string);
 
-  // Handle loading and error states
-  if (isLoading) return <p>Loading game results...</p>;
-  if (isError) return <p>Error loading game results: {error?.message}</p>;
+  // UI: Loading State
+  if (isLoading) {
+    return <LoadingState message="Loading upcoming games…" />;
+  }
 
+  // UI: Error State
+  if (isError) {
+    return (
+      <ErrorState
+        variant="card"
+        title="Unable to load upcoming games"
+        error={error}
+        onRetry={() => refetchRender()}
+      />
+    );
+  }
+
+  // UI: Empty State - No upcoming games
   if (!upcomingGames || upcomingGames.length === 0) {
-    return <p>No upcoming games available.</p>;
+    return (
+      <EmptyState
+        variant="card"
+        title="No upcoming games available"
+        description="No upcoming games found for this render."
+      />
+    );
   }
 
   return (
-    <div className="p-6">
-      <h4 className="mb-4 text-lg font-semibold">Upcoming Games</h4>
+    <div className="space-y-4">
       <Table>
         <TableHeader>
           <TableRow>

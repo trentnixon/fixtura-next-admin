@@ -13,6 +13,9 @@ import { useFetchGamesCricket } from "@/hooks/games/useFetchGamesCricket";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { EyeIcon } from "lucide-react";
+import LoadingState from "@/components/ui-library/states/LoadingState";
+import ErrorState from "@/components/ui-library/states/ErrorState";
+import EmptyState from "@/components/ui-library/states/EmptyState";
 
 export default function TableGamesResults() {
   const { renderID } = useParams();
@@ -23,39 +26,39 @@ export default function TableGamesResults() {
     isLoading: isGameLoading,
     isError: isGameError,
     error: gameError,
+    refetch: refetchGames,
   } = useFetchGamesCricket(renderID as string);
 
-  // Handle loading and error states for games
-  if (isGameLoading) return <p>Loading games...</p>;
-  if (isGameError)
-    return <p>Error loading games: {(gameError as Error)?.message}</p>;
+  // UI: Loading State
+  if (isGameLoading) {
+    return <LoadingState message="Loading games…" />;
+  }
 
-  // Debug game data
-  console.log("[gameData]", gameData);
-  console.log("[gameData length]", gameData?.length);
-  console.log("[gameData type]", typeof gameData);
-  console.log("[gameData isArray]", Array.isArray(gameData));
+  // UI: Error State
+  if (isGameError) {
+    return (
+      <ErrorState
+        variant="card"
+        title="Unable to load games"
+        error={gameError as Error}
+        onRetry={() => refetchGames()}
+      />
+    );
+  }
 
-  // Check for game data
+  // UI: Empty State - No game data
   if (!gameData || !Array.isArray(gameData) || gameData.length === 0) {
     return (
-      <div className="p-6">
-        <h4 className="mb-4 text-lg font-semibold">Games</h4>
-        <p>No games available.</p>
-        <div className="mt-4 text-sm text-gray-500">
-          <p>Debug info:</p>
-          <p>renderID: {renderID}</p>
-          <p>gameData: {JSON.stringify(gameData)}</p>
-          <p>isGameLoading: {isGameLoading.toString()}</p>
-          <p>isGameError: {isGameError.toString()}</p>
-        </div>
-      </div>
+      <EmptyState
+        variant="card"
+        title="No games available"
+        description="No game results found for this render."
+      />
     );
   }
 
   return (
-    <div className="p-6">
-      <h4 className="mb-4 text-lg font-semibold">Games</h4>
+    <div className="space-y-4">
       <Table>
         <TableHeader>
           <TableRow>

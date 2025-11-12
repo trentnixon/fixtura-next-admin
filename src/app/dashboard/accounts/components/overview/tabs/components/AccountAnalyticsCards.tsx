@@ -3,6 +3,8 @@
 import { useAccountAnalytics } from "@/hooks/analytics/useAccountAnalytics";
 import { LoadingState, ErrorState, EmptyState } from "@/components/ui-library";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 import FinancialOverview from "./FinancialOverview";
 import SubscriptionStatusCard from "./SubscriptionStatusCard";
 import OrderHistoryTable from "./OrderHistoryTable";
@@ -60,8 +62,23 @@ export default function AccountAnalyticsCards({
   // Check if we have any real data
   const hasRealData = analyticsData?.orderHistory?.totalOrders > 0;
 
+  // Check if account has an active order/subscription
+  // Show "Create Invoice" button only if there's no active subscription
+  const hasActiveOrder = analyticsData?.currentSubscription?.isActive || false;
+
   return (
     <div className="space-y-6">
+      {/* Create Invoice Button - Only show if account has no active order */}
+      {!hasActiveOrder && (
+        <div className="flex justify-end">
+          <Button variant="primary" asChild>
+            <Link href={`/dashboard/orders/create/${accountId}`}>
+              Create Invoice
+            </Link>
+          </Button>
+        </div>
+      )}
+
       {/* Financial Overview Section */}
       {hasRealData ? (
         <FinancialOverview analytics={analyticsData} />

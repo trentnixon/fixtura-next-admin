@@ -1,30 +1,48 @@
 "use client";
 
+import { useState } from "react";
+
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { OrdersOverviewDashboard } from "./components/OrdersOverviewDashboard";
+import { OrdersOverviewFilters } from "./components/OrdersOverviewFilters";
+import { FetchOrderOverviewParams } from "@/types/orderOverview";
+
+const INITIAL_FILTERS: FetchOrderOverviewParams = {};
 
 export default function Orders() {
+  const [filters, setFilters] =
+    useState<FetchOrderOverviewParams>(INITIAL_FILTERS);
+
+  const handleResetFilters = () => {
+    setFilters(INITIAL_FILTERS);
+  };
+
   return (
     <>
       <CreatePageTitle
         title="Orders"
         byLine="Financial orders and billing activity"
-        byLineBottom="Orders workspace under construction"
+        byLineBottom="Track order performance, payments, and revenue trends"
       />
       <PageContainer padding="md" spacing="lg">
+        <div className="flex justify-end">
+          <div className="w-full max-w-xl">
+            <OrdersOverviewFilters
+              value={filters}
+              onChange={setFilters}
+              onReset={handleResetFilters}
+            />
+          </div>
+        </div>
         <SectionContainer
-          title="Coming Soon"
-          description="The orders dashboard will land here."
+          title="Admin orders overview"
+          description="Filter by date or status to monitor order activity, payment states, and revenue."
         >
-          <p className="text-sm text-muted-foreground">
-            We’re preparing tooling to review, search, and reconcile Fixtura
-            orders. This placeholder will be replaced with the full experience
-            shortly.
-          </p>
+          <OrdersOverviewDashboard filters={filters} />
         </SectionContainer>
       </PageContainer>
     </>
   );
 }
-

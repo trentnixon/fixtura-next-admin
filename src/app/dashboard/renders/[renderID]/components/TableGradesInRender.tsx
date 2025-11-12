@@ -14,6 +14,9 @@ import { useRendersQuery } from "@/hooks/renders/useRendersQuery";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { EyeIcon } from "lucide-react";
+import LoadingState from "@/components/ui-library/states/LoadingState";
+import ErrorState from "@/components/ui-library/states/ErrorState";
+import EmptyState from "@/components/ui-library/states/EmptyState";
 
 export default function TableGrades() {
   const { renderID } = useParams();
@@ -24,6 +27,7 @@ export default function TableGrades() {
     isLoading: isRenderLoading,
     isError: isRenderError,
     error: renderError,
+    refetch: refetchRender,
   } = useRendersQuery(renderID as string);
 
   // Use the grade IDs to fetch detailed grade data
@@ -32,25 +36,56 @@ export default function TableGrades() {
     isLoading: isGradeLoading,
     isError: isGradeError,
     error: gradeError,
+    refetch: refetchGrades,
   } = useGradeInRender(gradeIDs);
 
-  // Handle loading and error states for render
-  if (isRenderLoading) return <p>Loading render details...</p>;
-  if (isRenderError) return <p>Error loading render: {renderError?.message}</p>;
+  // UI: Loading State - Render query loading
+  if (isRenderLoading) {
+    return <LoadingState message="Loading render details…" />;
+  }
 
-  // Handle loading and error states for grades
-  if (isGradeLoading) return <p>Loading grades...</p>;
-  if (isGradeError)
-    return <p>Error loading grades: {(gradeError as Error)?.message}</p>;
+  // UI: Error State - Render query error
+  if (isRenderError) {
+    return (
+      <ErrorState
+        variant="card"
+        title="Unable to load render details"
+        error={renderError}
+        onRetry={() => refetchRender()}
+      />
+    );
+  }
 
-  // Check for grade data
+  // UI: Loading State - Grades query loading
+  if (isGradeLoading) {
+    return <LoadingState message="Loading grades…" />;
+  }
+
+  // UI: Error State - Grades query error
+  if (isGradeError) {
+    return (
+      <ErrorState
+        variant="card"
+        title="Unable to load grades"
+        error={gradeError as Error}
+        onRetry={() => refetchGrades()}
+      />
+    );
+  }
+
+  // UI: Empty State - No grade data
   if (!gradeData || gradeData.length === 0) {
-    return <p>No grades available.</p>;
+    return (
+      <EmptyState
+        variant="card"
+        title="No grades available"
+        description="No grades found for this render."
+      />
+    );
   }
 
   return (
-    <div className="p-6">
-      <h4 className="mb-4 text-lg font-semibold">Grades</h4>
+    <div className="space-y-4">
       <Table>
         <TableHeader>
           <TableRow>

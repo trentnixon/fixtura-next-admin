@@ -25,6 +25,17 @@ This folder contains API service functions that handle all external data fetchin
 - `fetchDownloadByID.ts`: Gets download details by ID
 - `fetchDownloadByRenderID.ts`: Retrieves downloads associated with specific render
 
+### orders/
+
+- `fetchAdminOrderOverview.ts`: Fetches admin orders overview data including table rows, summary statistics, and timeline series
+- `fetchAdminOrderDetail.ts`: Fetches a single admin order detail payload with related orders for drill-down views
+- `createAdminInvoice.ts`: Creates a new manual invoice order via POST /api/orders/admin/create-invoice
+- `updateAdminOrder.ts`: Updates an existing order via POST /api/orders/admin/:id
+
+### subscription-tiers/
+
+- `fetchSubscriptionTiers.ts`: Fetches all subscription tiers from the Strapi API endpoint GET /api/subscription-tiers
+
 ### games/
 
 - `fetchGamesCricket.ts`: Fetches cricket game metadata using ID filters

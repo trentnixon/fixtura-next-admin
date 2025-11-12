@@ -38,7 +38,7 @@ export default function DeleteRenderButton() {
         // Optionally redirect or refresh the page
         router.push(`${basePath}/${accountID}`); // Replace with the desired path
       },
-      onError: error => {
+      onError: (error) => {
         console.error("Failed to delete render:", error);
       },
     });
@@ -50,7 +50,7 @@ export default function DeleteRenderButton() {
     <>
       <Button
         onClick={() => setIsDialogOpen(true)}
-        variant="outline"
+        variant="accent"
         disabled={isPending} // Disable button while deleting
       >
         {isPending ? "Deleting..." : "Delete Render"}
@@ -73,7 +73,8 @@ export default function DeleteRenderButton() {
             <Button
               variant="destructive"
               onClick={handleDeleteRender}
-              disabled={isPending}>
+              disabled={isPending}
+            >
               {isPending ? "Deleting..." : "Confirm Delete"}
             </Button>
           </DialogFooter>

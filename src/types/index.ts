@@ -29,4 +29,6 @@ export * from "./competitionAdminStats";
 export * from "./competitionAdminDetail";
 export * from "./competitionAssociationDrilldown";
 export * from "./competitionClubDrilldown";
+export * from "./orderOverview";
+export * from "./orderDetail";
 // Add other type files as needed
