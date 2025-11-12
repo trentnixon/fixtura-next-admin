@@ -16,6 +16,7 @@ export * from "./competition";
 export * from "./customer";
 export * from "./dataCollection";
 export * from "./download";
+export * from "./downloadAsset";
 export * from "./gameDataAFL";
 export * from "./gameDataNetball";
 export * from "./gameMetaData";

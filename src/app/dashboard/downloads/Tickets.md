@@ -425,4 +425,291 @@ Build a complete downloads listing page with:
 
 ---
 
+### TKT-2025-007
+
+---
+
+ID: TKT-2025-007
+Status: Draft
+Priority: Medium
+Owner: Development Team
+Created: 2025-01-27
+Updated: 2025-01-27
+Related: TKT-2025-004, TKT-2025-005, Roadmap Downloads
+
+---
+
+## Overview
+
+Create a structured view for displaying asset details from download raw data. All asset objects share a common structure (asset, render, account, timings, frames, videoMeta) but have asset-specific data in the `OBJ.data` array. This ticket will implement a common component for shared data and asset-type-specific components for the variable data.
+
+## What We Need to Do
+
+Replace the current raw JSON display with structured, user-friendly components that show:
+
+1. **Common Asset Details**: Display shared metadata (asset info, render info, account info, timings, frames, videoMeta, processing status)
+2. **Asset-Specific Data**: Display asset-type-specific data from `OBJ.data` array (starting with CricketResults/weekend results)
+
+## Phases & Tasks
+
+### Phase 1: Data Structure Analysis & Type Definitions
+
+#### Tasks
+
+- [x] Analyze common data structure from download JSON
+  - [x] Map `asset` object structure
+  - [x] Map `render` object structure
+  - [x] Map `account` object structure
+  - [x] Map `timings` object structure (FPS_MAIN, FPS_INTRO, FPS_OUTRO, FPS_LADDER, FPS_SCORECARD)
+  - [x] Map `frames` array structure
+  - [x] Map `videoMeta` object structure (club, video, appearance, templateVariation)
+  - [x] Map `errors` array structure
+  - [x] Map processing status fields (hasBeenProcessed, forceRerender, errorHandler)
+- [x] Analyze asset-specific data structure for CricketResults
+  - [x] Map `OBJ.data` array structure
+  - [x] Map game object structure (gameID, status, homeTeam, awayTeam, date, type, ground, round, etc.)
+  - [x] Map team structure (name, logo, score, overs, battingPerformances, bowlingPerformances)
+  - [x] Map performance structures (batting, bowling)
+  - [x] Map prompt structure (matchContext, team data, accountBias)
+- [x] Create TypeScript interfaces for common data
+  - [x] `CommonAssetDetails` interface
+  - [x] `AssetMetadata` interface
+  - [x] `RenderMetadata` interface
+  - [x] `AccountMetadata` interface
+  - [x] `TimingsMetadata` interface
+  - [x] `VideoMetaMetadata` interface
+  - [x] `DownloadOBJ` interface (contains common metadata and data array)
+- [x] Create TypeScript interfaces for CricketResults data
+  - [x] `CricketResultsData` interface
+  - [x] `CricketGame` interface
+  - [x] `CricketTeam` interface
+  - [x] `BattingPerformance` interface
+  - [x] `BowlingPerformance` interface
+  - [x] `MatchContext` interface
+  - [x] `ParsedPromptData` interface
+  - [x] `AccountBias` interface
+- [x] Update `DownloadAttributes` interface to include `OBJ` field
+  - [x] Add `OBJ?: DownloadOBJ` to support asset-specific data
+  - [x] Add proper typing for common metadata fields
+  - [x] Update asset, asset_category, and render types with additional fields
+- [x] Create utility functions for asset type detection
+  - [x] `detectAssetType` function
+  - [x] `isCricketResults` type guard
+  - [x] `isCricketResultsData` type guard
+  - [x] `parsePromptData` function
+  - [x] `getCommonAssetDetails` function
+  - [x] `getAssetSpecificData` function
+  - [x] `getCricketResultsData` function
+
+### Phase 2: Common Asset Details Component
+
+#### Tasks
+
+- [x] Create `AssetDetailsCommon` component
+  - [x] Accept `commonDetails` prop with typed common data
+  - [x] Display asset information section
+    - [x] Asset ID, Asset Type ID, Asset Category ID, Assets Link ID
+    - [x] Asset metadata in card format
+  - [x] Display render information section
+    - [x] Render ID, scheduler ID
+    - [x] Render metadata in card format
+  - [x] Display account information section
+    - [x] Account ID
+    - [x] Account metadata in card format
+  - [x] Display timings section
+    - [x] FPS_MAIN, FPS_INTRO, FPS_OUTRO, FPS_LADDER, FPS_SCORECARD
+    - [x] Format as readable values (e.g., "585 fps", "90 fps")
+  - [x] Display frames section
+    - [x] Show frames array as badges
+    - [x] Display frame count
+  - [x] Display videoMeta section
+    - [x] Club information (name, logo, sport, IsAccountClub)
+    - [x] Video metadata (fixtureCategory, groupingCategory, metadata)
+    - [x] Appearance settings (theme colors with visual indicators)
+    - [x] Template variation settings (useBackground, mode, category, audio bundle)
+  - [x] Display errors section (if errors exist)
+    - [x] Show error list with styling
+    - [x] Display error count
+- [x] Use UI library components
+  - [x] Use `Card` components for each section
+  - [x] Use `Badge` components for status indicators
+  - [x] Use `Text` and `Label` components for typography
+  - [x] Use `SectionContainer` for organization
+  - [x] Use icons from lucide-react for visual indicators
+- [x] Add collapsible sections for detailed data
+  - [x] Make videoMeta section collapsible (large object)
+  - [x] Make templateVariation section collapsible (nested object)
+  - [x] Use `Collapsible` component from UI library
+- [x] Integrate component into DisplayDownload
+  - [x] Import `AssetDetailsCommon` and `getCommonAssetDetails`
+  - [x] Conditionally render component if OBJ data exists
+  - [x] Wrap in SectionContainer with appropriate title and description
+  - [x] Place after cards grid and before Download Links section
+
+### Phase 3: CricketResults Asset-Specific Component
+
+#### Tasks
+
+- [x] Create `AssetDetailsCricketResults` component
+  - [x] Accept `games` array prop (from `OBJ.data`)
+  - [x] Display games list
+    - [x] Show game count in section description
+    - [x] Display each game in a card
+  - [x] Display game information
+    - [x] Game ID, status, date, type, ground, round
+    - [x] Grade name, gender, ageGroup
+    - [x] Result statement
+  - [x] Display team information for each game
+    - [x] Home team card
+      - [x] Team name, logo, isClubTeam badge
+      - [x] Score and overs
+      - [x] Batting performances (top 3, expandable)
+      - [x] Bowling performances (top 3, expandable)
+    - [x] Away team card
+      - [x] Team name, logo, isClubTeam badge
+      - [x] Score and overs
+      - [x] Batting performances (top 3, expandable)
+      - [x] Bowling performances (top 3, expandable)
+  - [x] Display match context (if available from prompt)
+    - [x] Competition, grade, round, ground
+    - [x] Match type, toss winner, toss result
+    - [x] Result statement
+    - [x] Day one and final days play
+  - [x] Display account bias information (if available from prompt)
+    - [x] Is bias indicator
+    - [x] Club teams list
+    - [x] Focused teams list
+- [x] Create sub-components for reusability
+  - [x] `CricketGameCard` component
+  - [x] `CricketTeamCard` component
+  - [x] `BattingPerformanceList` component
+  - [x] `BowlingPerformanceList` component
+  - [x] `MatchContextCard` component
+  - [x] `AccountBiasCard` component
+- [x] Use UI library components
+  - [x] Use `Card` components for games and teams
+  - [x] Use `Badge` components for status, isClubTeam, etc.
+  - [x] Use `Table` component for performances
+  - [x] Use `Image` component for team logos
+  - [x] Use `Text` and `Label` components for typography
+  - [x] Use `SectionContainer` for organization
+- [x] Add expandable sections
+  - [x] Make performances expandable (show top 3 by default, expand to show all)
+  - [x] Make match context expandable (collapsible)
+  - [x] Make account bias expandable (collapsible)
+  - [x] Use `Collapsible` component from UI library for match context and account bias
+- [x] Integrate component into DisplayDownload
+  - [x] Import `AssetDetailsCricketResults` and `getCricketResultsData`
+  - [x] Conditionally render component if CricketResults data exists
+  - [x] Place after Asset Details Common section
+
+### Phase 4: Component Integration & Asset Type Detection
+
+#### Tasks
+
+- [x] Create asset type detection utility
+  - [x] Function to determine asset type from `CompositionID` or `asset.attributes.CompositionID`
+  - [x] Support for "CricketResults" type
+  - [x] Extensible for future asset types (AssetType union type supports string)
+- [x] Create `AssetDetailsViewer` component
+  - [x] Accept `download` prop
+  - [x] Detect asset type using `detectAssetType` utility
+  - [x] Render `AssetDetailsCommon` component (always if OBJ exists)
+  - [x] Conditionally render asset-specific component based on type
+  - [x] Handle unknown asset types (show informative message with raw JSON fallback)
+  - [x] Handle missing asset type (show informative message with raw JSON fallback)
+- [x] Update `DisplayDownload` component
+  - [x] Replace separate Asset Details Common and Asset-Specific Data sections with `AssetDetailsViewer`
+  - [x] Keep raw JSON as collapsible fallback option (always available)
+  - [x] Structured view shown when available, raw JSON always accessible as fallback
+- [x] Add loading and error states
+  - [x] Handle missing `OBJ` data gracefully (show EmptyState)
+  - [x] Show empty state if `OBJ.data` is empty (show EmptyState with common details if available)
+  - [x] Show error state if data structure is invalid (show informative message with colored card)
+  - [x] Show informative messages for unknown asset types (blue card)
+  - [x] Show informative messages for invalid CricketResults data (yellow card)
+
+### Phase 5: Styling & UX Improvements
+
+#### Tasks
+
+- [x] Apply consistent styling
+  - [x] Use consistent spacing and padding
+  - [x] Apply consistent card styling
+  - [x] Use consistent badge colors and variants
+  - [x] Apply consistent typography
+- [x] Add responsive design
+  - [x] Ensure components work on mobile devices
+  - [x] Use responsive grid layouts
+  - [x] Stack cards vertically on small screens
+- [x] Add interactive features
+  - [x] Add hover effects on cards
+  - [x] Add click to expand/collapse functionality
+  - [x] Add copy to clipboard for game IDs, etc.
+  - [x] Add tooltips for abbreviations (FPS, etc.)
+- [x] Add visual indicators
+  - [x] Show club team indicator (badge or icon)
+  - [x] Show game status with color coding
+  - [x] Show score comparison (winner highlight)
+  - [x] Show performance highlights (centuries, 5-wicket hauls, etc.)
+
+### Phase 6: Testing & Documentation
+
+#### Tasks
+
+- [ ] Test with various download data
+  - [ ] Test with CricketResults data (multiple games)
+  - [ ] Test with single game data
+  - [ ] Test with missing optional fields
+  - [ ] Test with error states
+- [ ] Test edge cases
+  - [ ] Test with empty `OBJ.data` array
+  - [ ] Test with malformed data
+  - [ ] Test with missing common metadata
+  - [ ] Test with very large datasets
+- [ ] Update documentation
+  - [ ] Update `readMe.md` with new components
+  - [ ] Update `DevelopmentRoadMap.md` with completed work
+  - [ ] Add JSDoc comments to components
+  - [ ] Document component props and usage
+- [ ] Update types documentation
+  - [ ] Document new TypeScript interfaces
+  - [ ] Document asset type detection logic
+  - [ ] Document data structure requirements
+
+## Constraints, Risks, Assumptions
+
+### Constraints
+
+- Asset data structure may vary between asset types
+- Some fields may be optional or null
+- Large datasets may impact performance
+- Asset-specific components need to be extensible for future asset types
+
+### Risks
+
+- Complex nested data structures may be difficult to display clearly
+- Performance issues with large `OBJ.data` arrays
+- Type safety challenges with dynamic asset data
+- User experience may suffer if too much information is displayed at once
+
+### Assumptions
+
+- All downloads have the common metadata structure
+- `OBJ.data` structure is consistent within asset types
+- Asset type can be determined from `CompositionID`
+- Future asset types can follow the same pattern (common + specific components)
+
+## Notes
+
+- This is the first asset type implementation (CricketResults)
+- Future asset types (CricketUpcoming, CricketLadder, etc.) can follow the same pattern
+- Consider creating a shared component library for common patterns (team cards, performance lists, etc.)
+- Consider adding export functionality for game data (CSV, JSON)
+- Consider adding filtering and sorting for games list
+- Consider adding search functionality for games
+- Consider adding pagination for large games lists
+
+---
+
 ## Summaries of Completed Tickets

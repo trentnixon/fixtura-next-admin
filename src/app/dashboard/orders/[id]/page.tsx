@@ -14,6 +14,7 @@ import EmptyState from "@/components/ui-library/states/EmptyState";
 import { useAdminOrderDetail } from "@/hooks/orders/useAdminOrderDetail";
 import { useAdminOrderUpdate } from "@/hooks/orders/useAdminOrderUpdate";
 import { OrderUpdatePayload } from "@/lib/services/orders/updateAdminOrder";
+import { useAccountQuery } from "@/hooks/accounts/useAccountQuery";
 import OrderEditForm from "./components/OrderEditForm";
 import OrderSummaryCard from "./components/OrderSummaryCard";
 import OrderScheduleCard from "./components/OrderScheduleCard";
@@ -30,6 +31,25 @@ export default function OrderDetailPage() {
   const { data, isLoading, error, refetch, isFetching } =
     useAdminOrderDetail(orderId);
   const { mutate: updateOrder, isPending: isSaving } = useAdminOrderUpdate();
+
+  // Fetch account details for navigation
+  const accountId = data?.order?.account?.id;
+  const {
+    data: accountData,
+  } = useAccountQuery(accountId?.toString() || "");
+
+  const account = accountData?.data;
+  const accountType = account?.account_type;
+
+  // Determine account route based on account_type
+  // account_type === 1 = Club, account_type === 2 = Association
+  const accountRoute = useMemo(() => {
+    if (!accountId) return "/dashboard/accounts";
+    if (accountType === 1) return `/dashboard/accounts/club/${accountId}`;
+    if (accountType === 2) return `/dashboard/accounts/association/${accountId}`;
+    // Default to club if type unknown or not loaded yet
+    return `/dashboard/accounts/club/${accountId}`;
+  }, [accountId, accountType]);
 
   const pageTitle = orderId ? `Order #${orderId}` : "Order detail";
 
@@ -90,6 +110,11 @@ export default function OrderDetailPage() {
             </Button>
           ) : (
             <>
+              {accountId && (
+                <Button variant="secondary" asChild>
+                  <Link href={accountRoute}>View Account</Link>
+                </Button>
+              )}
               <Button variant="accent" asChild>
                 <Link href="/dashboard/orders">Back to Invoices</Link>
               </Button>

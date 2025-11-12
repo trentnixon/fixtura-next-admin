@@ -6,6 +6,7 @@ import { useGlobalContext } from "@/components/providers/GlobalContext";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Download } from "@/types/download";
+import CMSNavigationButtons from "./CMSNavigationButtons";
 
 interface DownloadHeaderProps {
   download: Download;
@@ -27,7 +28,10 @@ export default function DownloadHeader({ download }: DownloadHeaderProps) {
       : null;
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-2">
+    <div className="flex flex-wrap items-center justify-between gap-4">
+      {/* CMS Navigation Buttons */}
+      <CMSNavigationButtons download={download} />
+
       {/* Action Buttons */}
       <div className="flex gap-2 items-center">
         {/* Back to Render Button - Only show if render ID is available */}

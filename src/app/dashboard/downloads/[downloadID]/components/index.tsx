@@ -37,7 +37,10 @@ import {
 } from "lucide-react";
 import Text from "@/components/ui-library/foundation/Text";
 import StyledLink from "@/components/ui-library/foundation/Link";
-import { Label } from "@/components/type/titles";
+import AssetDetailsViewer from "./AssetDetailsViewer";
+import MetadataTable from "./MetadataTable";
+import Settings from "./Settings";
+import { getCommonAssetDetails } from "@/utils/downloadAsset";
 
 interface DisplayDownloadProps {
   download: Download;
@@ -102,10 +105,7 @@ export default function DisplayDownload({ download }: DisplayDownloadProps) {
     hasError,
     isAccurate,
     forceRerender,
-    UserErrorMessage,
     numDownloads,
-    assetLinkID,
-    gameID,
     errorEmailSentToAdmin,
   } = download.attributes;
 
@@ -457,50 +457,24 @@ export default function DisplayDownload({ download }: DisplayDownloadProps) {
         </div>
       </SectionContainer>
 
-      {/* Error Message & Related IDs Section */}
-      {(hasError && UserErrorMessage) || assetLinkID || gameID ? (
-        <SectionContainer
-          title="Additional Information"
-          description="Error messages and related IDs"
-        >
-          <div className="space-y-4">
-            {/* Error Message */}
-            {hasError && UserErrorMessage && (
-              <div>
-                <Label className="mb-2">Error Message:</Label>
-                <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-md">
-                  <Text className="text-red-700">{UserErrorMessage}</Text>
-                </div>
-              </div>
-            )}
+      {/* Cricket Results (Asset-Specific Data) */}
+      <AssetDetailsViewer download={download} />
 
-            {/* Related IDs */}
-            {(assetLinkID || gameID) && (
-              <div>
-                <Label className="mb-2">Related IDs:</Label>
-                <div className="space-y-1">
-                  {assetLinkID && (
-                    <Text>
-                      <Text as="span" weight="semibold">
-                        Asset Link ID:
-                      </Text>{" "}
-                      {assetLinkID}
-                    </Text>
-                  )}
-                  {gameID && (
-                    <Text>
-                      <Text as="span" weight="semibold">
-                        Game ID:
-                      </Text>{" "}
-                      {gameID}
-                    </Text>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        </SectionContainer>
-      ) : null}
+      {/* Settings Section */}
+      {(() => {
+        const commonDetails = getCommonAssetDetails(download);
+        return commonDetails ? (
+          <Settings commonDetails={commonDetails} />
+        ) : null;
+      })()}
+
+      {/* Metadata Table */}
+      {(() => {
+        const commonDetails = getCommonAssetDetails(download);
+        return commonDetails ? (
+          <MetadataTable commonDetails={commonDetails} />
+        ) : null;
+      })()}
 
       {/* Raw Data Section - Collapsible */}
       <SectionContainer

@@ -137,10 +137,12 @@ export default function OrderSummaryCard({ order }: OrderSummaryCardProps) {
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <h2 className="text-2xl font-bold text-slate-900 mb-2 truncate">
-              {order.name ?? `Order #${order.id}`}
+              {order.account.name ?? "Unknown Account"}
             </h2>
             <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
-              <span className="font-medium">ID: {order.id}</span>
+              <span className="font-medium">
+                {order.subscriptionTier.name ?? "No Subscription Tier"}
+              </span>
               {order.currency && (
                 <>
                   <span className="text-slate-400">·</span>
@@ -149,6 +151,8 @@ export default function OrderSummaryCard({ order }: OrderSummaryCardProps) {
                   </span>
                 </>
               )}
+              <span className="text-slate-400">·</span>
+              <span className="font-medium">Order #{order.id}</span>
             </div>
           </div>
           {/* Status Badges - Prominent Display */}

@@ -14,7 +14,7 @@ import ElementContainer from "@/components/scaffolding/containers/ElementContain
 import { LoadingState, EmptyState } from "@/components/ui-library";
 import { Badge } from "@/components/ui/badge";
 import { Label, H4 } from "@/components/type/titles";
-import { ExternalLink, Edit } from "lucide-react";
+import { Edit } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -35,13 +35,6 @@ export default function OrderHistoryTable({
   const [sortField, setSortField] = useState<keyof OrderSummary | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-
-  // Get CMS base URL from environment
-  const cmsBaseUrl =
-    typeof process !== "undefined" &&
-    process.env?.NEXT_APP_API_BASE_URL?.replace("/api", "")
-      ? process.env.NEXT_APP_API_BASE_URL.replace("/api", "")
-      : "http://localhost:1337";
 
   if (!analytics?.orderHistory) {
     return (
@@ -175,7 +168,6 @@ export default function OrderHistoryTable({
               <TableHead className="text-center">Tier</TableHead>
               <TableHead className="text-center">Payment Method</TableHead>
               <TableHead className="text-center">Edit</TableHead>
-              <TableHead className="text-center">View in Strapi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -222,21 +214,6 @@ export default function OrderHistoryTable({
                     <Link href={`/dashboard/orders/${order.id}`}>
                       <Edit className="w-4 h-4" />
                     </Link>
-                  </Button>
-                </TableCell>
-                <TableCell className="text-center">
-                  <Button
-                    variant="accent"
-                    className="text-xs h-auto p-1"
-                    onClick={() =>
-                      window.open(
-                        `${cmsBaseUrl}/admin/content-manager/collection-types/api::order.order/${order.id}`,
-                        "_blank",
-                        "noopener,noreferrer"
-                      )
-                    }
-                  >
-                    <ExternalLink className="w-4 h-4" />
                   </Button>
                 </TableCell>
               </TableRow>
