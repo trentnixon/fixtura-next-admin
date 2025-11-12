@@ -10,7 +10,7 @@ import {
   getStatusBadgeClassName,
   getCheckoutBadgeClassName,
   getActiveBadgeClassName,
-} from "../../utils/badgeHelpers";
+} from "../components/utils/badgeHelpers";
 import { formatMoney } from "../../utils/currencyHelpers";
 import { calculateDaysBetween } from "../../utils/dateHelpers";
 import { toTitleCase } from "../../utils/textHelpers";
@@ -109,8 +109,7 @@ export default function OrderSummaryCard({ order }: OrderSummaryCardProps) {
 
   // Determine if order is paid
   const isPaid =
-    order.payment.orderPaid ||
-    order.payment.status?.toLowerCase() === "paid";
+    order.payment.orderPaid || order.payment.status?.toLowerCase() === "paid";
 
   // Set background and text colors based on payment status
   const paidStyles = {
@@ -166,7 +165,9 @@ export default function OrderSummaryCard({ order }: OrderSummaryCardProps) {
             {order.status.checkoutStatus && (
               <Badge
                 variant="outline"
-                className={getCheckoutBadgeClassName(order.status.checkoutStatus)}
+                className={getCheckoutBadgeClassName(
+                  order.status.checkoutStatus
+                )}
               >
                 Checkout Status: {toTitleCase(order.status.checkoutStatus)}
               </Badge>
@@ -201,7 +202,9 @@ export default function OrderSummaryCard({ order }: OrderSummaryCardProps) {
             >
               <div className="flex items-baseline justify-between gap-4">
                 <div className="flex-1">
-                  <p className={`text-sm font-medium ${styles.textPrimary} mb-1`}>
+                  <p
+                    className={`text-sm font-medium ${styles.textPrimary} mb-1`}
+                  >
                     Total Amount
                   </p>
                   <p className={`text-3xl font-bold ${styles.textPrimary}`}>
@@ -213,18 +216,26 @@ export default function OrderSummaryCard({ order }: OrderSummaryCardProps) {
                     className={`mt-4 space-y-2 pt-4 border-t ${styles.borderDivider}`}
                   >
                     <div>
-                      <p className={`text-xs font-medium ${styles.textSecondary} mb-0.5`}>
+                      <p
+                        className={`text-xs font-medium ${styles.textSecondary} mb-0.5`}
+                      >
                         Payment status
                       </p>
-                      <p className={`text-sm font-semibold ${styles.textPrimary}`}>
+                      <p
+                        className={`text-sm font-semibold ${styles.textPrimary}`}
+                      >
                         {order.payment.status ?? "—"}
                       </p>
                     </div>
                     <div>
-                      <p className={`text-xs font-medium ${styles.textSecondary} mb-0.5`}>
+                      <p
+                        className={`text-xs font-medium ${styles.textSecondary} mb-0.5`}
+                      >
                         Payment channel
                       </p>
-                      <p className={`text-sm font-semibold ${styles.textPrimary}`}>
+                      <p
+                        className={`text-sm font-semibold ${styles.textPrimary}`}
+                      >
                         {order.payment.channel
                           ? order.payment.channel.charAt(0).toUpperCase() +
                             order.payment.channel.slice(1)

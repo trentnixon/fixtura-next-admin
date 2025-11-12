@@ -4,5 +4,4 @@ export {
   getStatusBadgeClassName,
   getCheckoutBadgeClassName,
   getActiveBadgeClassName,
-} from "../../utils/badgeHelpers";
-
+} from "../../../utils/badgeHelpers";
