@@ -5,7 +5,7 @@
  */
 
 import { CheckoutStatus } from "@/types/orderOverview";
-import { TransformedSubscriptionTier } from "../../../utils/subscriptionTierHelpers";
+import { TransformedSubscriptionTier } from "../../utils/subscriptionTierHelpers";
 import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccountDetails";
 
 /**
