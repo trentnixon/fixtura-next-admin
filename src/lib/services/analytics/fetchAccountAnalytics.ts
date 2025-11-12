@@ -103,12 +103,7 @@ export async function fetchAccountAnalytics(
           id: order.id,
           date: order.createdAt,
           amount: parseFloat(order.total) || 0,
-          status:
-            order.status === true
-              ? "Paid"
-              : order.status === false
-              ? "Unpaid"
-              : "Unknown",
+          status: order.checkout_status,
           subscriptionTier: order.subscriptionTier,
           paymentMethod: "Stripe", // Default or extract from order if available
         })),

@@ -14,10 +14,11 @@ import ElementContainer from "@/components/scaffolding/containers/ElementContain
 import { LoadingState, EmptyState } from "@/components/ui-library";
 import { Badge } from "@/components/ui/badge";
 import { Label, H4 } from "@/components/type/titles";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Edit } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 /**
  * OrderHistoryTable Component
@@ -63,7 +64,9 @@ export default function OrderHistoryTable({
     statusFilter === "all"
       ? safeOrders
       : safeOrders.filter(
-          (order) => order.status.toLowerCase() === statusFilter.toLowerCase()
+          (order) =>
+            order.status &&
+            order.status.toLowerCase() === statusFilter.toLowerCase()
         );
 
   // Sort orders
@@ -91,7 +94,13 @@ export default function OrderHistoryTable({
   // Get unique statuses for filter
   const uniqueStatuses =
     Array.isArray(safeOrders) && safeOrders.length > 0
-      ? Array.from(new Set(safeOrders.map((order) => order.status)))
+      ? Array.from(
+          new Set(
+            safeOrders
+              .map((order) => order.status)
+              .filter((status): status is string => Boolean(status))
+          )
+        )
       : [];
 
   return (
@@ -114,8 +123,8 @@ export default function OrderHistoryTable({
               className="border border-slate-300 rounded-md px-3 py-1 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-ring"
             >
               <option value="all">All Orders</option>
-              {uniqueStatuses.map((status) => (
-                <option key={status} value={status}>
+              {uniqueStatuses.map((status, index) => (
+                <option key={status || `status-${index}`} value={status}>
                   {status}
                 </option>
               ))}
@@ -165,12 +174,13 @@ export default function OrderHistoryTable({
               </TableHead>
               <TableHead className="text-center">Tier</TableHead>
               <TableHead className="text-center">Payment Method</TableHead>
+              <TableHead className="text-center">Edit</TableHead>
               <TableHead className="text-center">View in Strapi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedOrders.map((order) => (
-              <TableRow key={order.id}>
+            {sortedOrders.map((order, index) => (
+              <TableRow key={order.id || `order-${index}`}>
                 <TableCell className="font-medium">
                   {formatDate(order.date)}
                 </TableCell>
@@ -184,16 +194,23 @@ export default function OrderHistoryTable({
                 <TableCell className="text-center">
                   <Badge
                     className={`${
-                      order.status.toLowerCase() === "paid"
+                      !order.status
+                        ? "bg-slate-500"
+                        : order.status.toLowerCase() === "active" ||
+                          order.status.toLowerCase() === "complete"
                         ? "bg-success-500"
-                        : order.status.toLowerCase() === "pending"
+                        : order.status.toLowerCase() === "incomplete" ||
+                          order.status.toLowerCase() === "trialing"
                         ? "bg-warning-500"
-                        : order.status.toLowerCase() === "failed"
+                        : order.status.toLowerCase() === "canceled" ||
+                          order.status.toLowerCase() === "past_due" ||
+                          order.status.toLowerCase() === "incomplete_expired" ||
+                          order.status.toLowerCase() === "unpaid"
                         ? "bg-error-500"
                         : "bg-slate-500"
                     } text-white border-0 rounded-full text-xs`}
                   >
-                    {order.status}
+                    {order.status || "Unknown"}
                   </Badge>
                 </TableCell>
                 <TableCell>{order.subscriptionTier}</TableCell>
@@ -201,9 +218,16 @@ export default function OrderHistoryTable({
                   {order.paymentMethod}
                 </TableCell>
                 <TableCell className="text-center">
+                  <Button variant="accent" className="h-auto p-1" asChild>
+                    <Link href={`/dashboard/orders/${order.id}`}>
+                      <Edit className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                </TableCell>
+                <TableCell className="text-center">
                   <Button
-                    variant="ghost"
-                    className="font-mono text-xs h-auto p-1"
+                    variant="accent"
+                    className="text-xs h-auto p-1"
                     onClick={() =>
                       window.open(
                         `${cmsBaseUrl}/admin/content-manager/collection-types/api::order.order/${order.id}`,
@@ -212,7 +236,7 @@ export default function OrderHistoryTable({
                       )
                     }
                   >
-                    <ExternalLink className="w-3 h-3 ml-1" />
+                    <ExternalLink className="w-4 h-4" />
                   </Button>
                 </TableCell>
               </TableRow>
