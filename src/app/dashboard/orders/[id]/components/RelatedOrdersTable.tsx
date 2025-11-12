@@ -19,7 +19,7 @@ import {
   getStatusBadgeClassName,
   getCheckoutBadgeClassName,
   getActiveBadgeClassName,
-} from "../components/utils/badgeHelpers";
+} from "./utils/badgeHelpers";
 import { formatMoney } from "../../utils/currencyHelpers";
 import { toTitleCase } from "../../utils/textHelpers";
 

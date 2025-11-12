@@ -7,9 +7,10 @@ import type { PaymentStatus, PaymentChannel, OrderStatusFlagConfig } from "./typ
 
 /**
  * Available checkout status options for dropdowns
+ * Excludes null since SelectItem value must be a string
  */
 export const CHECKOUT_STATUS_OPTIONS: Array<{
-  value: CheckoutStatus;
+  value: Exclude<CheckoutStatus, null>;
   label: string;
 }> = [
   { value: "active", label: "Active" },

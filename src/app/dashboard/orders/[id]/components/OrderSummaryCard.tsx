@@ -10,7 +10,7 @@ import {
   getStatusBadgeClassName,
   getCheckoutBadgeClassName,
   getActiveBadgeClassName,
-} from "../components/utils/badgeHelpers";
+} from "./utils/badgeHelpers";
 import { formatMoney } from "../../utils/currencyHelpers";
 import { calculateDaysBetween } from "../../utils/dateHelpers";
 import { toTitleCase } from "../../utils/textHelpers";
