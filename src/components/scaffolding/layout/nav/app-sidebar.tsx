@@ -16,6 +16,7 @@ import {
   DollarSign,
   Mail,
   CalendarDays,
+  RefreshCw,
 } from "lucide-react";
 import { NavMain } from "@/components/scaffolding/layout/nav/nav-main";
 /* import { NavProjects } from "@/components/nav-projects"; */
@@ -34,12 +35,20 @@ import { UserButton } from "@clerk/nextjs";
 import { SignedIn } from "@clerk/nextjs";
 import { S } from "@/components/type/type";
 import { useContactFormSubmissionsData } from "@/hooks/contact-form/useContactFormSubmissions";
+import { useRerenderRequestsData } from "@/hooks/rerender-request/useRerenderRequests";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Get unseen contact form submissions count
   const { data: contactFormData } = useContactFormSubmissionsData();
   const unseenCount =
     contactFormData?.filter((submission) => !submission.hasSeen).length ?? 0;
+
+  // Get unhandled rerender requests count
+  // Count requests where hasBeenHandled is false
+  const { data: rerenderRequestsData } = useRerenderRequestsData();
+  const unhandledCount =
+    rerenderRequestsData?.filter((request) => !request.hasBeenHandled).length ??
+    0;
 
   const data = {
     mainNav: [
@@ -144,6 +153,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: Mail,
         isActive: true,
         badge: unseenCount,
+      },
+      {
+        title: "ReRender Requests",
+        url: "/dashboard/rerender-requests",
+        icon: RefreshCw,
+        isActive: true,
+        badge: unhandledCount,
       },
     ],
     testingNav: [
