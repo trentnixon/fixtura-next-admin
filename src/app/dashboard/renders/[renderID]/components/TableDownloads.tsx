@@ -288,7 +288,7 @@ export default function TableDownloads() {
                                       target="_blank"
                                       rel="noopener noreferrer"
                                     >
-                                      <Button variant="outline" size="sm">
+                                      <Button variant="primary" size="sm">
                                         <DatabaseIcon size="14" />
                                       </Button>
                                     </Link>
@@ -303,7 +303,7 @@ export default function TableDownloads() {
                                       key={download.id}
                                       href={`/dashboard/downloads/${download.id}`}
                                     >
-                                      <Button variant="outline" size="sm">
+                                      <Button variant="accent" size="sm">
                                         View
                                       </Button>
                                     </Link>

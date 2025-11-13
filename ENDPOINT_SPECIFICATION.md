@@ -51,6 +51,7 @@ GET /render/adminGetUpcomingFixturesFromRender/8564
           "tossWinner": null,
           "tossResult": null,
           "urlToScoreCard": "/scorecard/123",
+          "gradeName": "Under 16 Boys",
           "createdAt": "2025-11-13T00:00:00.000Z",
           "updatedAt": "2025-11-13T00:00:00.000Z"
         }
@@ -89,6 +90,7 @@ interface Fixture {
   tossWinner: string | null;
   tossResult: string | null;
   urlToScoreCard: string;
+  gradeName: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -139,6 +141,7 @@ GameMetaData -> Fixture:
 - tossWinner: gameMetaData.attributes.tossWinner || null
 - tossResult: gameMetaData.attributes.tossResult || null
 - urlToScoreCard: gameMetaData.attributes.urlToScoreCard
+- gradeName: gameMetaData.attributes.grade?.data?.attributes?.gradeName || ""
 - createdAt: gameMetaData.attributes.createdAt
 - updatedAt: gameMetaData.attributes.updatedAt
 ```

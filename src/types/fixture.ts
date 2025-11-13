@@ -17,6 +17,7 @@ export interface Fixture {
   tossWinner: string | null;
   tossResult: string | null;
   urlToScoreCard: string;
+  gradeName: string;
   createdAt: string;
   updatedAt: string;
 }
