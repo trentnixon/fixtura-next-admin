@@ -56,6 +56,7 @@ export interface OrderOverviewStats {
   byStatus: Record<string, number>;
   byTier: Record<string, number>;
   byAccountType: Record<string, number>;
+  byPaymentChannel: Record<string, number>;
   paidVsUnpaid: OrderOverviewPaidVsUnpaid;
   lastUpdated: string;
 }

@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { OrdersOverviewMetrics } from "./OrdersOverviewMetrics";
 import { OrdersOverviewTimeline } from "./OrdersOverviewTimeline";
 import { OrdersOverviewTable } from "./OrdersOverviewTable";
+import { OrdersOverviewPaymentChannelChart } from "./OrdersOverviewPaymentChannelChart";
 import { findCurrencyFromOrders } from "../utils/orderHelpers";
 
 interface OrdersOverviewDashboardProps {
@@ -66,7 +67,15 @@ export function OrdersOverviewDashboard({
       )}
       <OrdersOverviewTable orders={data.orders} currency={currency} />
       <OrdersOverviewMetrics stats={data.stats} currency={currency} />
-      <OrdersOverviewTimeline timeline={data.timeline} currency={currency} />
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="md:col-span-2">
+          <OrdersOverviewTimeline
+            timeline={data.timeline}
+            currency={currency}
+          />
+        </div>
+        <OrdersOverviewPaymentChannelChart stats={data.stats} />
+      </div>
     </div>
   );
 }
