@@ -97,10 +97,11 @@ export default function TableGrades() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {gradeData.map(grade => {
+          {gradeData.map((grade) => {
             const { id, attributes } = grade;
             const { gradeName, daysPlayed, gender, ageGroup } =
               attributes.grade.data.attributes || {};
+            const gradeId = attributes.grade.data.id;
 
             return (
               <TableRow key={id}>
@@ -109,9 +110,9 @@ export default function TableGrades() {
                 <TableCell>{gender || "N/A"}</TableCell>
                 <TableCell>{ageGroup || "N/A"}</TableCell>
                 <TableCell>
-                  <Link href={`/dashboard/accounts/grade/${grade.id}`}>
-                    <Button variant="outline">
-                      <EyeIcon size="16" />
+                  <Link href={`/dashboard/grades/${gradeId}`}>
+                    <Button variant="accent">
+                      <EyeIcon className="h-4 w-4" />
                     </Button>
                   </Link>
                 </TableCell>

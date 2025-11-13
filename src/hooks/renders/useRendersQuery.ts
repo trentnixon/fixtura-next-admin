@@ -2,11 +2,13 @@ import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { fetchRenderById } from "@/lib/services/renders/fetchRenderByID";
 import { RenderAttributes } from "@/types/render";
 import { Download } from "@/types/download";
+import { GameMetaData } from "@/types/gameMetaData";
 
 interface EnhancedRender extends Omit<RenderAttributes, "downloads"> {
   downloads: Download[];
   gameResults: Array<string>;
   upcomingGames: Array<string>;
+  upcomingGamesData: GameMetaData[];
   grades: Array<string>;
 }
 
@@ -14,6 +16,7 @@ type UseRendersQueryResult = UseQueryResult<EnhancedRender, Error> & {
   downloads: Download[];
   gameResults: Array<string>;
   upcomingGames: Array<string>;
+  upcomingGamesData: GameMetaData[];
   grades: Array<string>;
 };
 
@@ -36,6 +39,8 @@ export function useRendersQuery(renderId: string): UseRendersQueryResult {
         response?.attributes.upcoming_games_in_renders?.data?.map((game) =>
           game.id.toString()
         ) || [];
+      const upcomingGamesData =
+        response?.attributes.upcoming_games_in_renders?.data || [];
       // Extract and format nested data
       const downloads =
         response?.attributes.downloads?.data?.map((download) => ({
@@ -48,6 +53,7 @@ export function useRendersQuery(renderId: string): UseRendersQueryResult {
         downloads,
         gameResults,
         upcomingGames,
+        upcomingGamesData,
         grades,
       };
     },
@@ -63,6 +69,7 @@ export function useRendersQuery(renderId: string): UseRendersQueryResult {
     downloads: data?.downloads || [],
     gameResults: data?.gameResults || [],
     upcomingGames: data?.upcomingGames || [],
+    upcomingGamesData: data?.upcomingGamesData || [],
     grades: data?.grades || [],
   };
 }

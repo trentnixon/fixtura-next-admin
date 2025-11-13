@@ -5,10 +5,12 @@ This guide explains how to add support for new asset types in the download detai
 ## Current Status
 
 - ✅ **CricketResults** - Fully implemented with structured views
-- ❌ **CricketUpcoming** - Not yet implemented
-- ❌ **CricketLadder** - Not yet implemented
+- ✅ **CricketLadder** - Fully implemented with league tables
+- ✅ **CricketTop5Bowling** - Fully implemented with table view
+- ✅ **CricketTop5Batting** - Fully implemented with table view
+- ✅ **CricketUpcoming** - Fully implemented with table view
+- ✅ **CricketResultSingle** - Fully implemented with game card view
 - ❌ **CricketRoster** - Not yet implemented
-- ❌ **CricketResultSingle** - Not yet implemented
 
 ## Architecture Overview
 

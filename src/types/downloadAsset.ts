@@ -529,11 +529,277 @@ export interface CricketResultsData {
   data: CricketGame[];
 }
 
+// ============================================================================
+// CricketLadder Asset-Specific Types
+// ============================================================================
+
+/**
+ * Team statistics in ladder
+ */
+export interface LadderTeamStats {
+  wins: string;
+  losses: string;
+  points: string;
+  pointsPlayed: string;
+  ties: string;
+  noResult: string;
+}
+
+/**
+ * Team prompt data in ladder
+ */
+export interface LadderTeamPrompt {
+  teamName: string;
+  position: string;
+  gradeName: string;
+  stats: LadderTeamStats;
+}
+
+/**
+ * Team in ladder league table
+ */
+export interface LadderTeam {
+  position: string;
+  teamName: string;
+  teamHref: string;
+  P: string; // Points played
+  PTS: string; // Points
+  BP?: string; // Bonus points
+  Q?: string; // Quotient
+  W: string; // Wins
+  L: string; // Losses
+  TIE: string; // Ties
+  "N/R": string; // No result
+  BYE: string; // Bye
+  clubId: number | null;
+  clubLogo: string | null;
+  playHQLogo: string | null;
+  clubName: string | null;
+  teamLogo: string | null;
+  prompt: LadderTeamPrompt;
+}
+
+/**
+ * Grade prompt data in ladder
+ */
+export interface LadderGradePrompt {
+  gradeName: string;
+  teams: Array<{
+    teamName: string;
+    position: string;
+    stats: LadderTeamStats;
+  }>;
+}
+
+/**
+ * Assign sponsors for ladder grade
+ */
+export interface LadderAssignSponsors {
+  competition: unknown[];
+  grade: unknown[];
+  team: unknown[];
+}
+
+/**
+ * Ladder grade data structure
+ */
+export interface LadderGrade {
+  ID: number;
+  gradeName: string;
+  League: LadderTeam[];
+  bias: unknown | null;
+  prompt: LadderGradePrompt;
+  assignSponsors: LadderAssignSponsors;
+}
+
+/**
+ * CricketLadder asset data structure
+ * Contains the OBJ.data array for CricketLadder assets
+ */
+export interface CricketLadderData {
+  data: LadderGrade[];
+}
+
+// ============================================================================
+// Top5Bowling Asset-Specific Types
+// ============================================================================
+
+/**
+ * Team logo information for top 5 bowling
+ */
+export interface Top5BowlingTeamLogo {
+  url: string;
+  width: number;
+  height: number;
+}
+
+/**
+ * Assign sponsors for top 5 bowling
+ */
+export interface Top5BowlingAssignSponsors {
+  Team: {
+    name: string;
+  };
+  grade: {
+    id: number;
+    name: string;
+  };
+  competition: {
+    id: number;
+    name: string;
+  };
+}
+
+/**
+ * Top 5 bowling performance
+ */
+export interface Top5BowlingPerformance {
+  name: string;
+  runs: number | string;
+  overs: string;
+  prompt: string;
+  wickets: number | string;
+  teamLogo: Top5BowlingTeamLogo;
+  playedFor: string;
+  assignSponsors: Top5BowlingAssignSponsors;
+}
+
+/**
+ * Top5Bowling asset data structure
+ * Contains the OBJ.data array for Top5Bowling assets
+ */
+export interface Top5BowlingData {
+  data: Top5BowlingPerformance[];
+}
+
+// ============================================================================
+// Top5Batting Asset-Specific Types
+// ============================================================================
+
+/**
+ * Team logo information for top 5 batting
+ */
+export interface Top5BattingTeamLogo {
+  url: string;
+  width: number;
+  height: number;
+}
+
+/**
+ * Assign sponsors for top 5 batting
+ */
+export interface Top5BattingAssignSponsors {
+  Team: {
+    name: string;
+  };
+  grade: {
+    id: number;
+    name: string;
+  };
+  competition: {
+    id: number;
+    name: string;
+  };
+}
+
+/**
+ * Top 5 batting performance
+ */
+export interface Top5BattingPerformance {
+  SR: number | string; // Strike Rate
+  name: string;
+  runs: number | string;
+  balls: number | string;
+  notOut: boolean;
+  prompt: string;
+  teamLogo: Top5BattingTeamLogo;
+  playedFor: string;
+  assignSponsors: Top5BattingAssignSponsors;
+}
+
+/**
+ * Top5Batting asset data structure
+ * Contains the OBJ.data array for Top5Batting assets
+ */
+export interface Top5BattingData {
+  data: Top5BattingPerformance[];
+}
+
+// ============================================================================
+// CricketUpcoming Asset-Specific Types
+// ============================================================================
+
+/**
+ * Team logo information for upcoming fixtures
+ */
+export interface UpcomingFixtureTeamLogo {
+  url: string;
+  width: number;
+  height: number;
+}
+
+/**
+ * Assign sponsors for upcoming fixtures
+ */
+export interface UpcomingFixtureAssignSponsors {
+  competition: unknown[];
+  grade: unknown[];
+  team: unknown[];
+}
+
+/**
+ * Upcoming cricket fixture
+ */
+export interface UpcomingFixture {
+  date: string;
+  time: string;
+  type: string;
+  round: string;
+  gameID: string;
+  gender: string;
+  ground: string;
+  prompt: string;
+  ageGroup: string;
+  teamAway: string;
+  teamHome: string;
+  gradeName: string;
+  teamAwayLogo: UpcomingFixtureTeamLogo;
+  teamHomeLogo: UpcomingFixtureTeamLogo;
+  assignSponsors: UpcomingFixtureAssignSponsors;
+}
+
+/**
+ * CricketUpcoming asset data structure
+ * Contains the OBJ.data array for CricketUpcoming assets
+ */
+export interface CricketUpcomingData {
+  data: UpcomingFixture[];
+}
+
+// ============================================================================
+// CricketResultSingle Asset-Specific Types
+// ============================================================================
+
+/**
+ * CricketResultSingle asset data structure
+ * Contains the OBJ.data array for CricketResultSingle assets
+ * Note: The data array contains a single CricketGame, similar to CricketResults
+ */
+export interface CricketResultSingleData {
+  data: CricketGame[]; // Array with single game, reusing CricketGame type
+}
+
 /**
  * Union type for all asset-specific data types
  * Extend this as new asset types are added
  */
-export type AssetSpecificData = CricketResultsData;
+export type AssetSpecificData =
+  | CricketResultsData
+  | CricketLadderData
+  | Top5BowlingData
+  | Top5BattingData
+  | CricketUpcomingData
+  | CricketResultSingleData;
 
 /**
  * Asset type identifier

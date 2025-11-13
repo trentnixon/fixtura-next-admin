@@ -82,9 +82,9 @@ export default function TableGamesResults() {
                 </TableCell>
                 <TableCell>{status || "N/A"}</TableCell>
                 <TableCell>
-                  <Link href={`/dashboard/accounts/game/${id}`}>
-                    <Button variant="outline">
-                      <EyeIcon size="16" />
+                  <Link href={`/dashboard/fixtures/${id}`}>
+                    <Button variant="accent">
+                      <EyeIcon className="h-4 w-4" />
                     </Button>
                   </Link>
                 </TableCell>

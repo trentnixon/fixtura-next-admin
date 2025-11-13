@@ -6,10 +6,25 @@ import Text from "@/components/ui-library/foundation/Text";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import EmptyState from "@/components/ui-library/states/EmptyState";
 import AssetDetailsCricketResults from "./AssetDetailsCricketResults";
+import AssetDetailsLadder from "./AssetDetailsLadder";
+import AssetDetailsTop5Bowling from "./AssetDetailsTop5Bowling";
+import AssetDetailsTop5Batting from "./AssetDetailsTop5Batting";
+import AssetDetailsUpcoming from "./AssetDetailsUpcoming";
+import AssetDetailsResultSingle from "./AssetDetailsResultSingle";
 import {
   detectAssetType,
   getCricketResultsData,
+  getCricketLadderData,
+  getTop5BowlingData,
+  getTop5BattingData,
+  getCricketUpcomingData,
+  getCricketResultSingleData,
   isCricketResults,
+  isCricketLadder,
+  isTop5Bowling,
+  isTop5Batting,
+  isCricketUpcoming,
+  isCricketResultSingle,
 } from "@/utils/downloadAsset";
 import { AlertCircle } from "lucide-react";
 
@@ -96,6 +111,169 @@ export default function AssetDetailsViewer({
                   <AlertCircle className="h-4 w-4 text-yellow-700" />
                   <Text className="text-yellow-700">
                     Asset type is CricketResults but the data structure is invalid or empty.
+                  </Text>
+                </div>
+              </CardContent>
+            </Card>
+          </SectionContainer>
+        );
+      }
+    }
+
+    if (assetType && isCricketLadder(assetType)) {
+      // CricketLadder asset type
+      const cricketLadderData = getCricketLadderData(download);
+      if (
+        cricketLadderData &&
+        cricketLadderData.data &&
+        cricketLadderData.data.length > 0
+      ) {
+        return <AssetDetailsLadder grades={cricketLadderData.data} />;
+      } else {
+        // Asset type is CricketLadder but data structure is invalid
+        return (
+          <SectionContainer
+            title="Ladder"
+            description="League tables and standings"
+          >
+            <Card className="shadow-none border border-yellow-200 bg-yellow-50">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-yellow-700" />
+                  <Text className="text-yellow-700">
+                    Asset type is CricketLadder but the data structure is invalid or empty.
+                  </Text>
+                </div>
+              </CardContent>
+            </Card>
+          </SectionContainer>
+        );
+      }
+    }
+
+    if (assetType && isTop5Bowling(assetType)) {
+      // CricketTop5Bowling asset type
+      const top5BowlingData = getTop5BowlingData(download);
+      if (
+        top5BowlingData &&
+        top5BowlingData.data &&
+        top5BowlingData.data.length > 0
+      ) {
+        return (
+          <AssetDetailsTop5Bowling performances={top5BowlingData.data} />
+        );
+      } else {
+        // Asset type is CricketTop5Bowling but data structure is invalid
+        return (
+          <SectionContainer
+            title="Top 5 Bowling"
+            description="Top bowling performances"
+          >
+            <Card className="shadow-none border border-yellow-200 bg-yellow-50">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-yellow-700" />
+                  <Text className="text-yellow-700">
+                    Asset type is CricketTop5Bowling but the data structure is invalid or empty.
+                  </Text>
+                </div>
+              </CardContent>
+            </Card>
+          </SectionContainer>
+        );
+      }
+    }
+
+    if (assetType && isTop5Batting(assetType)) {
+      // CricketTop5Batting asset type
+      const top5BattingData = getTop5BattingData(download);
+      if (
+        top5BattingData &&
+        top5BattingData.data &&
+        top5BattingData.data.length > 0
+      ) {
+        return (
+          <AssetDetailsTop5Batting performances={top5BattingData.data} />
+        );
+      } else {
+        // Asset type is CricketTop5Batting but data structure is invalid
+        return (
+          <SectionContainer
+            title="Top 5 Batting"
+            description="Top batting performances"
+          >
+            <Card className="shadow-none border border-yellow-200 bg-yellow-50">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-yellow-700" />
+                  <Text className="text-yellow-700">
+                    Asset type is CricketTop5Batting but the data structure is invalid or empty.
+                  </Text>
+                </div>
+              </CardContent>
+            </Card>
+          </SectionContainer>
+        );
+      }
+    }
+
+    if (assetType && isCricketUpcoming(assetType)) {
+      // CricketUpcoming asset type
+      const cricketUpcomingData = getCricketUpcomingData(download);
+      if (
+        cricketUpcomingData &&
+        cricketUpcomingData.data &&
+        cricketUpcomingData.data.length > 0
+      ) {
+        return (
+          <AssetDetailsUpcoming fixtures={cricketUpcomingData.data} />
+        );
+      } else {
+        // Asset type is CricketUpcoming but data structure is invalid
+        return (
+          <SectionContainer
+            title="Upcoming Fixtures"
+            description="Upcoming cricket fixtures"
+          >
+            <Card className="shadow-none border border-yellow-200 bg-yellow-50">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-yellow-700" />
+                  <Text className="text-yellow-700">
+                    Asset type is CricketUpcoming but the data structure is invalid or empty.
+                  </Text>
+                </div>
+              </CardContent>
+            </Card>
+          </SectionContainer>
+        );
+      }
+    }
+
+    if (assetType && isCricketResultSingle(assetType)) {
+      // CricketResultSingle asset type
+      const cricketResultSingleData = getCricketResultSingleData(download);
+      if (
+        cricketResultSingleData &&
+        cricketResultSingleData.data &&
+        cricketResultSingleData.data.length > 0
+      ) {
+        // Get the first (and only) game from the array
+        const game = cricketResultSingleData.data[0];
+        return <AssetDetailsResultSingle game={game} />;
+      } else {
+        // Asset type is CricketResultSingle but data structure is invalid
+        return (
+          <SectionContainer
+            title="Game Result"
+            description="Single cricket game result"
+          >
+            <Card className="shadow-none border border-yellow-200 bg-yellow-50">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-yellow-700" />
+                  <Text className="text-yellow-700">
+                    Asset type is CricketResultSingle but the data structure is invalid or empty.
                   </Text>
                 </div>
               </CardContent>
