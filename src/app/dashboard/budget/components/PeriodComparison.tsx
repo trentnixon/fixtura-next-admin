@@ -58,7 +58,14 @@ export default function PeriodComparison({
     return null;
   }
 
-  const calculateChange = (current: number, previous: number) => {
+  const calculateChange = (
+    current: number,
+    previous: number
+  ): {
+    value: number;
+    percentage: number;
+    direction: "stable" | "up" | "down";
+  } => {
     if (previous === 0) return { value: 0, percentage: 0, direction: "stable" };
     const change = current - previous;
     const percentage = (change / previous) * 100;
