@@ -2,7 +2,9 @@
 
 import { useMemo } from "react";
 import { useTopAccountsByCost } from "@/hooks/rollups/useTopAccountsByCost";
-import ChartCard, { ChartSummaryStat } from "@/components/modules/charts/ChartCard";
+import ChartCard, {
+  ChartSummaryStat,
+} from "@/components/modules/charts/ChartCard";
 import {
   ChartTooltip,
   ChartTooltipContent,
@@ -12,11 +14,7 @@ import { SummaryPeriod } from "./PeriodControls";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import { formatCurrency, formatPercentage } from "@/utils/chart-formatters";
-import {
-  PieChart,
-  Pie,
-  Cell,
-} from "recharts";
+import { PieChart, Pie, Cell } from "recharts";
 import { PieChart as PieChartIcon, DollarSign, Users } from "lucide-react";
 
 const COLORS = [
@@ -41,7 +39,8 @@ export default function AccountShareChart({
   period = "current-month",
   limit = 10,
 }: AccountShareChartProps) {
-  const { data, isLoading, isError, error } = useTopAccountsByCost(period, {
+  const { data, isLoading, isError, error } = useTopAccountsByCost({
+    period,
     limit,
     sortBy: "totalCost",
     sortOrder: "desc",
@@ -102,9 +101,7 @@ export default function AccountShareChart({
       {
         icon: PieChartIcon,
         label: "Top Account Share",
-        value: topAccount
-          ? formatPercentage(topAccount.percentage)
-          : "N/A",
+        value: topAccount ? formatPercentage(topAccount.percentage) : "N/A",
       },
     ];
   }, [chartData, totalCost, topAccount, limit]);
@@ -137,9 +134,7 @@ export default function AccountShareChart({
             cy="50%"
             labelLine={false}
             label={({ name, percentage }) =>
-              percentage > 5
-                ? `${name}: ${formatPercentage(percentage)}`
-                : ""
+              percentage > 5 ? `${name}: ${formatPercentage(percentage)}` : ""
             }
             outerRadius={100}
             fill="#8884d8"
@@ -163,7 +158,9 @@ export default function AccountShareChart({
                   <ChartTooltipContent
                     active={active}
                     payload={payload}
-                    label={`${data.name} • ${formatPercentage(data.percentage)}`}
+                    label={`${data.name} • ${formatPercentage(
+                      data.percentage
+                    )}`}
                     formatter={(value) => [
                       formatCurrency(value as number),
                       "Cost",
@@ -183,4 +180,3 @@ export default function AccountShareChart({
     </ChartCard>
   );
 }
-
