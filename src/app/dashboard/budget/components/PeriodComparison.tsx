@@ -24,10 +24,18 @@ export default function PeriodComparison({
   currentPeriod = "current-month",
   comparePeriod = "last-month",
 }: PeriodComparisonProps) {
-  const { data: currentData, isLoading: currentLoading, isError: currentError } =
-    useGlobalCostSummary(currentPeriod);
-  const { data: compareData, isLoading: compareLoading, isError: compareError } =
-    useGlobalCostSummary(comparePeriod);
+  const {
+    data: currentData,
+    isLoading: currentLoading,
+    isError: currentError,
+    error: currentErr,
+  } = useGlobalCostSummary(currentPeriod);
+  const {
+    data: compareData,
+    isLoading: compareLoading,
+    isError: compareError,
+    error: compareErr,
+  } = useGlobalCostSummary(comparePeriod);
 
   const isLoading = currentLoading || compareLoading;
   const isError = currentError || compareError;
@@ -41,7 +49,7 @@ export default function PeriodComparison({
       <ErrorState
         variant="card"
         title="Unable to load period comparison"
-        error={(currentError || compareError) as Error}
+        error={(currentErr || compareErr) as Error}
       />
     );
   }
@@ -180,15 +188,15 @@ function ComparisonRow({
     change.direction === "up"
       ? ArrowUp
       : change.direction === "down"
-        ? ArrowDown
-        : Minus;
+      ? ArrowDown
+      : Minus;
 
   const colorClass =
     change.direction === "up"
       ? "text-red-600"
       : change.direction === "down"
-        ? "text-green-600"
-        : "text-muted-foreground";
+      ? "text-green-600"
+      : "text-muted-foreground";
 
   if (compact) {
     return (
@@ -246,4 +254,3 @@ function ComparisonRow({
     </div>
   );
 }
-
