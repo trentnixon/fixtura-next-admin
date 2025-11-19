@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import CreateInvoiceForm from "./components/CreateInvoiceForm";
 
 /**
@@ -50,7 +51,12 @@ export default function CreateInvoicePage() {
       />
 
       <PageContainer padding="md" spacing="lg">
-        <CreateInvoiceForm accountId={accountId} />
+        <SectionContainer
+          title="Create Invoice"
+          description={`Create a new invoice order for account #${accountId}`}
+        >
+          <CreateInvoiceForm accountId={accountId} />
+        </SectionContainer>
       </PageContainer>
     </>
   );

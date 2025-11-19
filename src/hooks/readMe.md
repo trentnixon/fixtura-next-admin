@@ -12,6 +12,11 @@ This folder contains custom React hooks that provide data fetching, state manage
 - `useUpdateAccountOnly.ts`: Mutation hook for triggering lightweight account metadata updates
 - `useAccountDataCollectionQuery.ts`: Fetches comprehensive account-specific data collection statistics including entity statistics, performance metrics, error analysis, temporal patterns, and time series data
 
+### association/
+
+- `useAssociationInsights.ts`: Fetches comprehensive association admin insights including overview statistics, grade/club distributions, competition insights, and detailed per-association metrics with optional sport filtering
+- `useAssociationDetail.ts`: Fetches detailed association information by ID including core association data, relational data (competitions, clubs, grades, accounts), detailed statistics, and formatted responses for all related entities
+
 ### competitions/
 
 - `useCompetitionsQuery.ts`: Fetches competitions for specific organization with account type filtering

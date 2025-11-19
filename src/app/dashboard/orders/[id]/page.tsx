@@ -171,18 +171,28 @@ export default function OrderDetailPage() {
               <LoadingState variant="minimal" message="Refreshing data…" />
             )}
 
-            <div className="grid gap-6">
-              <OrderSummaryCard order={data.order} />
-            </div>
+            <SectionContainer
+              title="Order Overview"
+              description="Core order metadata, payment status, and scheduling details"
+            >
+              <div className="grid gap-6">
+                <OrderSummaryCard order={data.order} />
+              </div>
+            </SectionContainer>
 
-            <div className="grid gap-6 lg:grid-cols-3">
-              <OrderScheduleCard
-                schedule={data.order.schedule}
-                subscriptionTier={data.order.subscriptionTier}
-              />
-              <OrderPaymentCard payment={data.order.payment} />
-              <OrderCustomerCard customer={data.order.customer} />
-            </div>
+            <SectionContainer
+              title="Order Details"
+              description="Schedule, payment, and customer information"
+            >
+              <div className="grid gap-6 lg:grid-cols-3">
+                <OrderScheduleCard
+                  schedule={data.order.schedule}
+                  subscriptionTier={data.order.subscriptionTier}
+                />
+                <OrderPaymentCard payment={data.order.payment} />
+                <OrderCustomerCard customer={data.order.customer} />
+              </div>
+            </SectionContainer>
           </>
         )}
 

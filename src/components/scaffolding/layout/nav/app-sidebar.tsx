@@ -31,11 +31,19 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { UserButton } from "@clerk/nextjs";
+import dynamic from "next/dynamic";
 import { SignedIn } from "@clerk/nextjs";
 import { S } from "@/components/type/type";
 import { useContactFormSubmissionsData } from "@/hooks/contact-form/useContactFormSubmissions";
 import { useRerenderRequestsData } from "@/hooks/rerender-request/useRerenderRequests";
+
+// Dynamically import UserButton to prevent hydration mismatch
+const UserButton = dynamic(
+  () => import("@clerk/nextjs").then((mod) => mod.UserButton),
+  {
+    ssr: false,
+  }
+);
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Get unseen contact form submissions count

@@ -10,6 +10,11 @@ This folder contains API service functions that handle all external data fetchin
 - `fetchAccounts.ts`: Retrieves paginated list of accounts with filtering capabilities
 - `fetchAccountsSummary.ts`: Gets aggregated account statistics and analytics data
 
+### association/
+
+- `fetchAssociationInsights.ts`: Fetches comprehensive association admin insights including overview statistics, grade/club distributions, competition insights, and detailed per-association metrics with optional sport filtering
+- `fetchAssociationDetail.ts`: Fetches detailed association information by ID including core association data, relational data (competitions, clubs, grades, accounts), detailed statistics, and formatted responses for all related entities
+
 ### competitions/
 
 - `fetchCompetitionByID.ts`: Retrieves single competition details with populated relations

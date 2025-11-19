@@ -33,6 +33,11 @@ const robotoCondensed = Roboto_Condensed({
 export const metadata: Metadata = {
   title: "Fixtura Admin",
   description: "Fixtura Admin",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default async function RootLayout({

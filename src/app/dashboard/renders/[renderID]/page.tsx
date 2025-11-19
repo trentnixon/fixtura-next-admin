@@ -1,6 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import { useMemo } from "react";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
@@ -10,6 +11,7 @@ import { RenderTabs } from "./components/renderTabs";
 import { useRendersQuery } from "@/hooks/renders/useRendersQuery";
 import { useGetAccountDetailsFromRenderId } from "@/hooks/renders/useGetAccountDetailsFromRenderId";
 import { formatDate } from "@/lib/utils";
+import RenderCostBreakdown from "@/app/dashboard/budget/components/RenderCostBreakdown";
 
 export default function RenderID() {
   const { renderID } = useParams();
@@ -17,6 +19,13 @@ export default function RenderID() {
   const { data: accountDetails } = useGetAccountDetailsFromRenderId(
     renderID as string
   );
+
+  // Convert renderID string to number for rollup hook
+  const renderIdNumber = useMemo(() => {
+    if (!renderID) return null;
+    const id = parseInt(renderID as string, 10);
+    return isNaN(id) ? null : id;
+  }, [renderID]);
 
   // Build account name from FirstName and LastName
   const accountName =
@@ -62,6 +71,17 @@ export default function RenderID() {
       <PageContainer padding="md" spacing="lg">
         <RenderHeader render={render} />
         <RenderOverview />
+
+        {/* Cost Analytics Section */}
+        {renderIdNumber && (
+          <SectionContainer
+            title="Cost Analytics"
+            description="Cost breakdown and performance metrics for this render"
+          >
+            <RenderCostBreakdown renderId={renderIdNumber} />
+          </SectionContainer>
+        )}
+
         <SectionContainer
           title="Render Data"
           description="Downloads, game results, upcoming games, and grades associated with this render."

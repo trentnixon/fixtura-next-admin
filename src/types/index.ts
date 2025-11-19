@@ -32,4 +32,5 @@ export * from "./competitionAssociationDrilldown";
 export * from "./competitionClubDrilldown";
 export * from "./orderOverview";
 export * from "./orderDetail";
+export * from "./associationInsights";
 // Add other type files as needed

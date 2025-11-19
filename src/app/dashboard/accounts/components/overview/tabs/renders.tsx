@@ -6,6 +6,8 @@ import SchedulerDetailsGrid from "../components/SchedulerDetails";
 import ListRendersInTable from "../components/ListRendersInTable";
 import MetricsTable from "./components/MetricsTable";
 import RenderCharts from "./components/RenderCharts";
+import SchedulerCostTable from "@/app/dashboard/budget/components/SchedulerCostTable";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 // TODO: Add Overview Tab
 export default function RendersTab({
   accountData,
@@ -25,7 +27,6 @@ export default function RendersTab({
           accountData={accountData as fixturaContentHubAccountDetails}
         />
       )}
-      <MetricsTable accountData={accountData} />
       {schedulerId && (
         <ListRendersInTable
           schedulerId={schedulerId}
@@ -35,6 +36,16 @@ export default function RendersTab({
           renders={renders}
         />
       )}
+      {schedulerId && (
+        <SectionContainer
+          title="Scheduler Cost Analysis"
+          description="Cost breakdown and analysis for renders in this scheduler"
+        >
+          <SchedulerCostTable schedulerId={schedulerId} />
+        </SectionContainer>
+      )}
+      <MetricsTable accountData={accountData} />
+
       {renders.length > 0 && <RenderCharts renders={renders} />}
     </div>
   );
