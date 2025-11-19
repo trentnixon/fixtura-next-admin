@@ -161,25 +161,30 @@ export default function FileSizeDurationAnalysis() {
                       />
                       <Tooltip
                         cursor={{ strokeDasharray: "3 3" }}
-                        formatter={(value: number, name: string, props: { payload: { assets: number; duration: string; renderId: number } }) => {
-                          if (name === "cost") {
-                            return [
-                              <div key="tooltip">
-                                <div>Cost: {formatCurrency(value)}</div>
-                                <div className="text-xs">
-                                  Assets: {props.payload.assets}
-                                </div>
-                                <div className="text-xs">
-                                  Duration: {props.payload.duration}s
-                                </div>
-                                <div className="text-xs">
-                                  Render: {props.payload.renderId}
-                                </div>
-                              </div>,
-                              "Cost",
-                            ];
+                        content={({ active, payload }) => {
+                          if (active && payload && payload[0]) {
+                            const data = payload[0].payload as {
+                              assets: number;
+                              duration: string;
+                              renderId: number;
+                              cost: number;
+                            };
+                            return (
+                              <div className="bg-background border rounded-lg p-3 shadow-lg">
+                                <p className="font-medium">Render #{data.renderId}</p>
+                                <p className="text-sm">
+                                  Cost: {formatCurrency(data.cost)}
+                                </p>
+                                <p className="text-sm">
+                                  Assets: {data.assets}
+                                </p>
+                                <p className="text-sm">
+                                  Duration: {data.duration}s
+                                </p>
+                              </div>
+                            );
                           }
-                          return [value, name];
+                          return null;
                         }}
                       />
                       <Scatter name="Renders" dataKey="cost" fill="#3b82f6">
@@ -226,25 +231,30 @@ export default function FileSizeDurationAnalysis() {
                       />
                       <Tooltip
                         cursor={{ strokeDasharray: "3 3" }}
-                        formatter={(value: number, name: string, props: { payload: { assets: number; duration: string; renderId: number } }) => {
-                          if (name === "cost") {
-                            return [
-                              <div key="tooltip">
-                                <div>Cost: {formatCurrency(value)}</div>
-                                <div className="text-xs">
-                                  Duration: {props.payload.duration}s
-                                </div>
-                                <div className="text-xs">
-                                  Assets: {props.payload.assets}
-                                </div>
-                                <div className="text-xs">
-                                  Render: {props.payload.renderId}
-                                </div>
-                              </div>,
-                              "Cost",
-                            ];
+                        content={({ active, payload }) => {
+                          if (active && payload && payload[0]) {
+                            const data = payload[0].payload as {
+                              assets: number;
+                              duration: string;
+                              renderId: number;
+                              cost: number;
+                            };
+                            return (
+                              <div className="bg-background border rounded-lg p-3 shadow-lg">
+                                <p className="font-medium">Render #{data.renderId}</p>
+                                <p className="text-sm">
+                                  Cost: {formatCurrency(data.cost)}
+                                </p>
+                                <p className="text-sm">
+                                  Duration: {data.duration}s
+                                </p>
+                                <p className="text-sm">
+                                  Assets: {data.assets}
+                                </p>
+                              </div>
+                            );
                           }
-                          return [value, name];
+                          return null;
                         }}
                       />
                       <Scatter name="Renders" dataKey="cost" fill="#3b82f6" />
