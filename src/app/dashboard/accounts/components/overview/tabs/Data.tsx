@@ -14,6 +14,7 @@ import EntitiesTab from "./components/data-collection/tabs/EntitiesTab";
 import StagesTab from "./components/data-collection/tabs/StagesTab";
 import TemporalTab from "./components/data-collection/tabs/TemporalTab";
 import CollectionsTable from "./components/data-collection/collections/CollectionsTable";
+import SyncResultsButton from "./components/SyncResultsButton";
 
 interface DataTabProps {
   accountData: fixturaContentHubAccountDetails;
@@ -54,6 +55,9 @@ export default function DataTab({ accountData, accountId }: DataTabProps) {
         title="Data Collection Statistics"
         description="Comprehensive account-specific data collection insights and statistics"
         variant="compact"
+        action={
+          <SyncResultsButton accountId={accountIdNumber} variant="primary" />
+        }
       >
         {isDataCollectionLoading && (
           <LoadingState

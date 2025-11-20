@@ -27,7 +27,7 @@ export default function SchedulerCostTable({
   const { data, isLoading, isError, error } = useRenderRollupsByScheduler(
     schedulerId,
     {
-      limit: 50,
+      limit: 10000, // Fetch all renders (no practical limit)
       offset: 0,
       sortBy: "completedAt",
       sortOrder: "desc",
@@ -102,56 +102,58 @@ export default function SchedulerCostTable({
           )}
 
           <div className="border rounded-lg overflow-hidden shadow-none w-full">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Render ID</TableHead>
-                  <TableHead>Render Name</TableHead>
-                  <TableHead>Completed</TableHead>
-                  <TableHead className="text-right">Total Cost</TableHead>
-                  <TableHead className="text-right">Lambda</TableHead>
-                  <TableHead className="text-right">AI</TableHead>
-                  <TableHead className="text-right">Assets</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.data.map((render) => (
-                  <TableRow
-                    key={render.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => {
-                      if (render.renderId) {
-                        router.push(getRenderDetailUrl(render.renderId));
-                      }
-                    }}
-                  >
-                    <TableCell className="font-mono text-sm">
-                      {render.renderId}
-                    </TableCell>
-                    <TableCell>
-                      {render.renderName || (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {new Date(render.completedAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatCurrency(render.totalCost)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm">
-                      {formatCurrency(render.totalLambdaCost)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm">
-                      {formatCurrency(render.totalAiCost)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm">
-                      {formatNumber(render.totalDigitalAssets)}
-                    </TableCell>
+            <div className="max-h-[400px] overflow-y-auto">
+              <Table>
+                <TableHeader className="sticky top-0 bg-background z-10">
+                  <TableRow>
+                    <TableHead>Render ID</TableHead>
+                    <TableHead>Render Name</TableHead>
+                    <TableHead>Completed</TableHead>
+                    <TableHead className="text-right">Total Cost</TableHead>
+                    <TableHead className="text-right">Lambda</TableHead>
+                    <TableHead className="text-right">AI</TableHead>
+                    <TableHead className="text-right">Assets</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {data.data.map((render) => (
+                    <TableRow
+                      key={render.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => {
+                        if (render.renderId) {
+                          router.push(getRenderDetailUrl(render.renderId));
+                        }
+                      }}
+                    >
+                      <TableCell className="font-mono text-sm">
+                        {render.renderId}
+                      </TableCell>
+                      <TableCell>
+                        {render.renderName || (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {new Date(render.completedAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatCurrency(render.totalCost)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm">
+                        {formatCurrency(render.totalLambdaCost)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm">
+                        {formatCurrency(render.totalAiCost)}
+                      </TableCell>
+                      <TableCell className="text-right text-sm">
+                        {formatNumber(render.totalDigitalAssets)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
 
           {data.meta && (
