@@ -37,6 +37,12 @@ This folder contains custom React hooks that provide data fetching, state manage
 
 - `useSubscriptionTiers.ts`: Fetches all subscription tiers from the Strapi API endpoint GET /api/subscription-tiers
 
+### fixtures/
+
+- `useFixtureInsights.ts`: Fetches comprehensive fixture insights including overview statistics, categorized summaries (by association, competition, grade), charts, and distributions with 5-minute cache
+- `useFixtureDetails.ts`: Fetches filtered fixture details based on optional filters (association, grade, competition) with 2-minute cache
+- `useSingleFixtureDetail.ts`: Fetches comprehensive detailed information about a single fixture by ID including core fixture data, related entities, validation scoring, and administrative metadata with 2-minute cache
+
 ### fetch-tests/
 
 - `useFetchTestsQuery.ts`: Fetches all fetch test data including test runs, summary, and charts

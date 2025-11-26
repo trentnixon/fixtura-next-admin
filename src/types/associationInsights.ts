@@ -3,7 +3,14 @@
  *
  * This file contains comprehensive TypeScript type definitions for the Association Admin Insights API endpoint.
  * Based on the documentation in src/app/dashboard/association/CMS_Handover.md
+ * Updated with competition date range support for Gantt chart visualization
  */
+
+// ============================================================================
+// COMPETITION DATE RANGE TYPES
+// ============================================================================
+
+import type { CompetitionDateRange } from "./shared";
 
 // ============================================================================
 // MAIN RESPONSE TYPE
@@ -14,11 +21,11 @@
  */
 export interface AssociationInsightsResponse {
   data: {
-    overview: OverviewAnalytics;
-    gradesAndClubs: GradesAndClubsAnalytics;
-    competitions: AssociationCompetitionAnalytics;
+    overview: AssociationInsightsOverview;
+    gradesAndClubs: AssociationInsightsGradesAndClubs;
+    competitions: AssociationInsightsCompetitions;
     associations: AssociationDetail[];
-    meta: Metadata;
+    meta: AssociationInsightsMeta;
   };
 }
 
@@ -29,38 +36,25 @@ export interface AssociationInsightsResponse {
 /**
  * Overview analytics containing high-level association statistics
  */
-export interface OverviewAnalytics {
+export interface AssociationInsightsOverview {
   totalAssociations: number;
   activeAssociations: number;
   inactiveAssociations: number;
   associationsWithAccounts: number;
   associationsWithoutAccounts: number;
-  /**
-   * Sport distribution by type. Null when filtering by a specific sport.
-   */
-  sportDistribution: SportDistribution | null;
-  associationsByAccountCount: AccountCountDistribution;
-}
-
-/**
- * Distribution of associations across different sports
- */
-export interface SportDistribution {
-  Cricket: number;
-  AFL: number;
-  Hockey: number;
-  Netball: number;
-  Basketball: number;
-}
-
-/**
- * Distribution of associations by number of associated accounts
- */
-export interface AccountCountDistribution {
-  zero: number;
-  one: number;
-  twoToFive: number;
-  sixPlus: number;
+  sportDistribution: {
+    Cricket: number;
+    AFL: number;
+    Hockey: number;
+    Netball: number;
+    Basketball: number;
+  } | null;
+  associationsByAccountCount: {
+    zero: number;
+    one: number;
+    twoToFive: number;
+    sixPlus: number;
+  };
 }
 
 // ============================================================================
@@ -70,34 +64,24 @@ export interface AccountCountDistribution {
 /**
  * Analytics for grades and clubs across all associations
  */
-export interface GradesAndClubsAnalytics {
+export interface AssociationInsightsGradesAndClubs {
   totalGrades: number;
   totalClubs: number;
   averageGradesPerAssociation: number;
   averageClubsPerAssociation: number;
-  gradeDistribution: GradeDistribution;
-  clubDistribution: ClubDistribution;
-}
-
-/**
- * Distribution of associations by number of grades
- */
-export interface GradeDistribution {
-  zero: number;
-  oneToFive: number;
-  sixToTen: number;
-  elevenPlus: number;
-}
-
-/**
- * Distribution of associations by number of clubs
- */
-export interface ClubDistribution {
-  zero: number;
-  oneToFive: number;
-  sixToTen: number;
-  elevenToTwenty: number;
-  twentyOnePlus: number;
+  gradeDistribution: {
+    zero: number;
+    oneToFive: number;
+    sixToTen: number;
+    elevenPlus: number;
+  };
+  clubDistribution: {
+    zero: number;
+    oneToFive: number;
+    sixToTen: number;
+    elevenToTwenty: number;
+    twentyOnePlus: number;
+  };
 }
 
 // ============================================================================
@@ -107,61 +91,32 @@ export interface ClubDistribution {
 /**
  * Analytics for competitions across all associations
  */
-export interface AssociationCompetitionAnalytics {
+export interface AssociationInsightsCompetitions {
   totalCompetitions: number;
   activeCompetitions: number;
   inactiveCompetitions: number;
-  /**
-   * Dynamic status keys with competition counts
-   */
   competitionsByStatus: Record<string, number>;
-  competitionSizeDistribution: CompetitionSizeDistribution;
-  competitionGradeDistribution: CompetitionGradeDistribution;
-  datePatterns: DatePatterns;
-}
-
-/**
- * Distribution of competitions by team size
- */
-export interface CompetitionSizeDistribution {
-  /** 1-5 teams */
-  small: number;
-  /** 6-20 teams */
-  medium: number;
-  /** 21-50 teams */
-  large: number;
-  /** 51+ teams */
-  xlarge: number;
-}
-
-/**
- * Distribution of competitions by number of grades
- */
-export interface CompetitionGradeDistribution {
-  /** 1 grade */
-  single: number;
-  /** 2-5 grades */
-  few: number;
-  /** 6-10 grades */
-  many: number;
-  /** 11+ grades */
-  extensive: number;
-}
-
-/**
- * Date patterns and temporal analytics for competitions
- */
-export interface DatePatterns {
-  competitionsStartingThisMonth: number;
-  competitionsEndingThisMonth: number;
-  competitionsStartingNextMonth: number;
-  competitionsEndingNextMonth: number;
-  /** Average duration in days */
-  averageCompetitionDurationDays: number;
-  /** ISO timestamp or null if no valid dates exist */
-  earliestStartDate: string | null;
-  /** ISO timestamp or null if no valid dates exist */
-  latestEndDate: string | null;
+  competitionSizeDistribution: {
+    small: number;      // 1-5 teams
+    medium: number;     // 6-20 teams
+    large: number;      // 21-50 teams
+    xlarge: number;     // 51+ teams
+  };
+  competitionGradeDistribution: {
+    single: number;    // 1 grade
+    few: number;       // 2-5 grades
+    many: number;      // 6-10 grades
+    extensive: number; // 11+ grades
+  };
+  datePatterns: {
+    competitionsStartingThisMonth: number;
+    competitionsEndingThisMonth: number;
+    competitionsStartingNextMonth: number;
+    competitionsEndingNextMonth: number;
+    averageCompetitionDurationDays: number;
+    earliestStartDate: string | null;
+    latestEndDate: string | null;
+  };
 }
 
 // ============================================================================
@@ -171,13 +126,12 @@ export interface DatePatterns {
 /**
  * Consolidated per-association metrics
  * Contains aggregated data from grades, clubs, and competitions
+ * Includes competition date range information for Gantt chart visualization
  */
 export interface AssociationDetail {
   id: number;
   name: string;
-  /** External link to association (e.g., website) */
   href: string | null;
-  /** Logo URL (Logo.url || PlayHQLogo.url || default logo) */
   logoUrl: string;
   gradeCount: number;
   clubCount: number;
@@ -191,6 +145,8 @@ export interface AssociationDetail {
    * Sport type. Only present when NOT filtering by sport.
    */
   sport?: string;
+  /** Competition date range information for Gantt chart visualization */
+  competitionDateRange: CompetitionDateRange | null;
 }
 
 // ============================================================================
@@ -200,7 +156,7 @@ export interface AssociationDetail {
 /**
  * Response metadata including filters, data points, and performance metrics
  */
-export interface Metadata {
+export interface AssociationInsightsMeta {
   /** ISO timestamp of when the data was generated */
   generatedAt: string;
   filters: {
@@ -242,3 +198,113 @@ export type SportFilter =
   | "Hockey"
   | "Netball"
   | "Basketball";
+
+// ============================================================================
+// LEGACY TYPE ALIASES (for backward compatibility)
+// ============================================================================
+
+/**
+ * @deprecated Use AssociationInsightsOverview instead
+ */
+export type OverviewAnalytics = AssociationInsightsOverview;
+
+/**
+ * @deprecated Use AssociationInsightsGradesAndClubs instead
+ */
+export type GradesAndClubsAnalytics = AssociationInsightsGradesAndClubs;
+
+/**
+ * @deprecated Use AssociationInsightsCompetitions instead
+ */
+export type AssociationCompetitionAnalytics = AssociationInsightsCompetitions;
+
+/**
+ * @deprecated Use AssociationInsightsMeta instead
+ */
+export type Metadata = AssociationInsightsMeta;
+
+/**
+ * @deprecated Use SportDistribution from AssociationInsightsOverview instead
+ */
+export interface SportDistribution {
+  Cricket: number;
+  AFL: number;
+  Hockey: number;
+  Netball: number;
+  Basketball: number;
+}
+
+/**
+ * @deprecated Use associationsByAccountCount from AssociationInsightsOverview instead
+ */
+export interface AccountCountDistribution {
+  zero: number;
+  one: number;
+  twoToFive: number;
+  sixPlus: number;
+}
+
+/**
+ * @deprecated Use gradeDistribution from AssociationInsightsGradesAndClubs instead
+ */
+export interface GradeDistribution {
+  zero: number;
+  oneToFive: number;
+  sixToTen: number;
+  elevenPlus: number;
+}
+
+/**
+ * @deprecated Use clubDistribution from AssociationInsightsGradesAndClubs instead
+ */
+export interface ClubDistribution {
+  zero: number;
+  oneToFive: number;
+  sixToTen: number;
+  elevenToTwenty: number;
+  twentyOnePlus: number;
+}
+
+/**
+ * @deprecated Use competitionSizeDistribution from AssociationInsightsCompetitions instead
+ */
+export interface CompetitionSizeDistribution {
+  /** 1-5 teams */
+  small: number;
+  /** 6-20 teams */
+  medium: number;
+  /** 21-50 teams */
+  large: number;
+  /** 51+ teams */
+  xlarge: number;
+}
+
+/**
+ * @deprecated Use competitionGradeDistribution from AssociationInsightsCompetitions instead
+ */
+export interface CompetitionGradeDistribution {
+  /** 1 grade */
+  single: number;
+  /** 2-5 grades */
+  few: number;
+  /** 6-10 grades */
+  many: number;
+  /** 11+ grades */
+  extensive: number;
+}
+
+/**
+ * @deprecated Use datePatterns from AssociationInsightsCompetitions instead
+ */
+export interface DatePatterns {
+  competitionsStartingThisMonth: number;
+  competitionsEndingThisMonth: number;
+  competitionsStartingNextMonth: number;
+  competitionsEndingNextMonth: number;
+  /** Average duration in days */
+  averageCompetitionDurationDays: number;
+  /** ISO timestamp or null if no valid dates exist */
+  earliestStartDate: string | null;
+  /** ISO timestamp or null if no valid dates exist */
+  latestEndDate: string | null;
+}

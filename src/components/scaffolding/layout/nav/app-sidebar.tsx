@@ -9,7 +9,6 @@ import {
   CalendarClock,
   FileCode,
   Trophy,
-  GraduationCap,
   BarChart3,
   TestTube,
   FlaskConical,
@@ -118,12 +117,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Competitions",
         url: "/dashboard/competitions",
         icon: Trophy,
-        isActive: true,
-      },
-      {
-        title: "Grades",
-        url: "/dashboard/grades",
-        icon: GraduationCap,
         isActive: true,
       },
       {

@@ -2,15 +2,31 @@
 
 import { useMemo } from "react";
 import { AccountDetail } from "@/types/associationDetail";
-import AccountCard from "./AccountCard";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import StatusBadge from "@/components/ui-library/badges/StatusBadge";
+import {
+  Mail,
+  User,
+  CreditCard,
+  CheckCircle2,
+  XCircle,
+  ShoppingCart,
+} from "lucide-react";
 
 /**
  * AccountsList Component
  *
  * Main accounts list component displaying:
  * - Accounts sorted by lastName, firstName, then creation date
- * - Account cards with account details
+ * - Table format for better density
  * - Empty state handling
  */
 interface AccountsListProps {
@@ -40,20 +56,110 @@ export default function AccountsList({ accounts }: AccountsListProps) {
 
   if (sortedAccounts.length === 0) {
     return (
-      <Card>
-        <CardContent className="p-8 text-center">
-          <p className="text-muted-foreground">No accounts found for this association.</p>
-        </CardContent>
-      </Card>
+      <div className="p-8 text-center border rounded-md bg-slate-50">
+        <p className="text-muted-foreground">
+          No accounts found for this association.
+        </p>
+      </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {sortedAccounts.map((account) => (
-        <AccountCard key={account.id} account={account} />
-      ))}
-    </div>
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Account</TableHead>
+          <TableHead>Type</TableHead>
+          <TableHead>Tier</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead>Setup</TableHead>
+          <TableHead className="text-right">Order</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {sortedAccounts.map((account) => (
+          <TableRow key={account.id}>
+            <TableCell>
+              <div className="flex flex-col">
+                <span className="font-medium">
+                  {[account.firstName, account.lastName]
+                    .filter(Boolean)
+                    .join(" ") || "Unnamed Account"}
+                </span>
+                {account.email && (
+                  <a
+                    href={`mailto:${account.email}`}
+                    className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mt-0.5"
+                  >
+                    <Mail className="h-3 w-3" />
+                    {account.email}
+                  </a>
+                )}
+              </div>
+            </TableCell>
+            <TableCell>
+              {account.accountType && (
+                <Badge
+                  variant="outline"
+                  className="flex w-fit items-center gap-1 font-normal"
+                >
+                  <User className="h-3 w-3" />
+                  {account.accountType.name}
+                </Badge>
+              )}
+            </TableCell>
+            <TableCell>
+              {account.subscriptionTier && (
+                <Badge
+                  variant="outline"
+                  className="flex w-fit items-center gap-1 font-normal"
+                >
+                  <CreditCard className="h-3 w-3" />
+                  {account.subscriptionTier.name}
+                </Badge>
+              )}
+            </TableCell>
+            <TableCell>
+              <StatusBadge
+                status={account.isActive}
+                trueLabel="Active"
+                falseLabel="Inactive"
+                variant={account.isActive ? "default" : "neutral"}
+              />
+            </TableCell>
+            <TableCell>
+              <div className="flex items-center gap-1.5">
+                {account.isSetup ? (
+                  <>
+                    <CheckCircle2 className="h-4 w-4 text-green-600" />
+                    <span className="text-sm text-muted-foreground">
+                      Complete
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="h-4 w-4 text-yellow-600" />
+                    <span className="text-sm text-muted-foreground">
+                      Pending
+                    </span>
+                  </>
+                )}
+              </div>
+            </TableCell>
+            <TableCell className="text-right">
+              {account.hasActiveOrder && (
+                <Badge
+                  variant="outline"
+                  className="inline-flex items-center gap-1 bg-green-50 border-green-500 text-green-700"
+                >
+                  <ShoppingCart className="h-3 w-3" />
+                  <span className="text-xs">Active</span>
+                </Badge>
+              )}
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }
-

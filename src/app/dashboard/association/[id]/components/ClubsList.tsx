@@ -161,7 +161,7 @@ function ClubTableRow({ club }: { club: ClubDetail }) {
             </Button>
           )}
           <Button variant="accent" size="sm" asChild>
-            <Link href={`/dashboard/accounts/club/${id}`}>
+            <Link href={`/dashboard/club/${id}`}>
               <Eye className="h-3.5 w-3.5" />
               <span className="hidden sm:inline ml-1">View</span>
             </Link>

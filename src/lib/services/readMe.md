@@ -15,6 +15,10 @@ This folder contains API service functions that handle all external data fetchin
 - `fetchAssociationInsights.ts`: Fetches comprehensive association admin insights including overview statistics, grade/club distributions, competition insights, and detailed per-association metrics with optional sport filtering
 - `fetchAssociationDetail.ts`: Fetches detailed association information by ID including core association data, relational data (competitions, clubs, grades, accounts), detailed statistics, and formatted responses for all related entities
 
+### club/
+
+- `fetchClubAdminDetail.ts`: Fetches bundled admin detail for a single club by ID including core club data, statistics, associations, teams, competitions, accounts, and insights from the Club Admin Detail endpoint.
+
 ### competitions/
 
 - `fetchCompetitionByID.ts`: Retrieves single competition details with populated relations
@@ -40,6 +44,11 @@ This folder contains API service functions that handle all external data fetchin
 ### subscription-tiers/
 
 - `fetchSubscriptionTiers.ts`: Fetches all subscription tiers from the Strapi API endpoint GET /api/subscription-tiers
+
+### fixtures/
+
+- `fetchFixtureInsights.ts`: Fetches comprehensive fixture insights including overview statistics, categorized summaries (by association, competition, grade), charts, and distributions
+- `fetchFixtureDetails.ts`: Fetches filtered fixture details based on optional filters (association, grade, competition)
 
 ### games/
 

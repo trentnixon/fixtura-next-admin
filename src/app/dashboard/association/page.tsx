@@ -13,8 +13,9 @@ import SportFilterComponent from "./components/SportFilter";
 import OverviewStatsCard from "./components/OverviewStatsCard";
 import GradesAndClubsStatsCard from "./components/GradesAndClubsStatsCard";
 import CompetitionStatsCard from "./components/CompetitionStatsCard";
-import CompetitionDatePatternsCard from "./components/CompetitionDatePatternsCard";
 import AssociationsTable from "./components/AssociationsTable";
+import { AssociationGanttSection } from "./components/AssociationGanttSection";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function AssociationData() {
   const [selectedSport, setSelectedSport] = useState<SportFilter | undefined>(
@@ -43,17 +44,33 @@ export default function AssociationData() {
             onSportChange={setSelectedSport}
           />
 
-          {/* 5. Associations Table Section */}
-          {data?.data?.associations && (
-            <SectionContainer
-              title="Associations"
-              description="Detailed per-association metrics and data"
-            >
-              <AssociationsTable associations={data.data.associations} />
-            </SectionContainer>
-          )}
+          <Tabs defaultValue="table">
+            <TabsList variant="secondary">
+              <TabsTrigger value="table">Table</TabsTrigger>
+              <TabsTrigger value="gantt">Gantt Chart</TabsTrigger>
+            </TabsList>
+            <TabsContent value="gantt">
+              {/* 2. Association Gantt Chart Section */}
+              {data?.data?.associations && (
+                <AssociationGanttSection
+                  associations={data.data.associations}
+                />
+              )}
+            </TabsContent>
+            <TabsContent value="table">
+              {/* 3. Associations Table Section */}
+              {data?.data?.associations && (
+                <SectionContainer
+                  title="Associations"
+                  description="Detailed per-association metrics and data"
+                >
+                  <AssociationsTable associations={data.data.associations} />
+                </SectionContainer>
+              )}
+            </TabsContent>
+          </Tabs>
 
-          {/* 2. Overview Section */}
+          {/* 4. Overview Section */}
           {data?.data?.overview && (
             <SectionContainer
               title="Overview"
@@ -63,7 +80,7 @@ export default function AssociationData() {
             </SectionContainer>
           )}
 
-          {/* 3. Grades & Clubs Section */}
+          {/* 5. Grades & Clubs Section */}
           {data?.data?.gradesAndClubs && (
             <SectionContainer
               title="Grades & Clubs"
@@ -73,7 +90,7 @@ export default function AssociationData() {
             </SectionContainer>
           )}
 
-          {/* 4. Competitions Section */}
+          {/* 6. Competitions Section */}
           {data?.data?.competitions && (
             <SectionContainer
               title="Competitions"
@@ -81,9 +98,6 @@ export default function AssociationData() {
             >
               <div className="space-y-4">
                 <CompetitionStatsCard data={data.data.competitions} />
-                <CompetitionDatePatternsCard
-                  data={data.data.competitions.datePatterns}
-                />
               </div>
             </SectionContainer>
           )}

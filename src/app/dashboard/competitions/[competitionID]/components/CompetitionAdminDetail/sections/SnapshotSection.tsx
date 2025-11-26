@@ -62,7 +62,7 @@ export function SnapshotSection({
         <div className="flex items-center gap-2">
           {associationId !== undefined && associationId !== null && (
             <Button asChild variant="accent" size="sm">
-              <Link href={`/dashboard/associations/${associationId}`}>
+              <Link href={`/dashboard/association/${associationId}`}>
                 <Building className="mr-1 h-4 w-4" />
                 View Association
               </Link>

@@ -3,6 +3,7 @@ export * from "./adminAccountLookup";
 export * from "./analytics";
 export * from "./association";
 export * from "./club";
+export * from "./clubInsights";
 export * from "./order";
 export * from "./accountMediaLibrary";
 export * from "./renderToken";
@@ -33,4 +34,8 @@ export * from "./competitionClubDrilldown";
 export * from "./orderOverview";
 export * from "./orderDetail";
 export * from "./associationInsights";
+export * from "./fixtureInsights";
+export * from "./fixtureDetail";
+export * from "./shared";
+
 // Add other type files as needed

@@ -221,6 +221,7 @@ export function AvailableCompetitionsSection({
       title="Available Competitions"
       description="Search, filter, and sort competitions returned by the admin stats endpoint."
     >
+
       <div className="space-y-4">
         <div className="flex flex-wrap gap-4 items-end">
           <div className="flex flex-col gap-2">

@@ -7,14 +7,16 @@ import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import { FiltersSection } from "./CompetitionAdminStats/sections/FiltersSection";
 import { OverviewSection } from "./CompetitionAdminStats/sections/OverviewSection";
-import { HighlightsSection } from "./CompetitionAdminStats/sections/HighlightsSection";
 import { DistributionsSection } from "./CompetitionAdminStats/sections/DistributionsSection";
 import { AvailableCompetitionsSection } from "./CompetitionAdminStats/sections/AvailableCompetitionsSection";
+import { GanttSection } from "./CompetitionAdminStats/sections/GanttSection";
 import {
   buildSeasonChartData,
   getSeasonsFromSummary,
 } from "./CompetitionAdminStats/helpers";
 import { ChartConfig } from "@/components/ui/chart";
+
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function CompetitionAdminStats() {
   const [associationInput, setAssociationInput] = useState<string>("");
@@ -132,13 +134,30 @@ export default function CompetitionAdminStats() {
 
   return (
     <div className="space-y-6">
-      <AvailableCompetitionsSection competitions={data.tables.available} />
-      <OverviewSection
-        summary={data.summary}
-        filters={filters}
-        competitions={data.tables.available}
-      />
-      <HighlightsSection highlights={data.facts.highlights} />
+
+      <Tabs defaultValue="available">
+        <TabsList>
+          <TabsTrigger value="available">Available Competitions</TabsTrigger>
+          <TabsTrigger value="gantt">Gantt Chart</TabsTrigger>
+          <TabsTrigger value="upcoming">Upcoming Competitions</TabsTrigger>
+        </TabsList>
+        <TabsContent value="available">
+          <AvailableCompetitionsSection competitions={data.tables.available} />
+        </TabsContent>
+        <TabsContent value="gantt">
+          <GanttSection competitions={data.tables.available} />
+        </TabsContent>
+        <TabsContent value="upcoming">
+          <OverviewSection
+            summary={data.summary}
+            filters={filters}
+            competitions={data.tables.available}
+          />
+        </TabsContent>
+      </Tabs>
+
+
+
       <DistributionsSection
         statusChartData={statusChartData}
         timingChartData={timingChartData}

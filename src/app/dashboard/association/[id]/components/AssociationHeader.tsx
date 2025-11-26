@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import {
   Mail,
@@ -7,23 +8,31 @@ import {
   MapPin,
   ExternalLink,
   Globe,
-  Building2,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { AssociationDetail } from "@/types/associationDetail";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/ui-library/badges/StatusBadge";
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
+import { useProcessAssociationDirect } from "@/hooks/association/useProcessAssociationDirect";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 /**
  * AssociationHeader Component
  *
  * Main association header component displaying:
  * - Association name, sport, logo
- * - Contact details (phone, email, address) - handle null
- * - Location information (address, city, state, country, coordinates) - handle null
- * - Website link - handle null
- * - Active status badge
- * - PlayHQ link (if available)
+ * - Contact details (phone, email, address)
+ * - Location information
+ * - Website and PlayHQ links
  */
 interface AssociationHeaderProps {
   association: AssociationDetail;
@@ -62,162 +71,308 @@ export default function AssociationHeader({
       )}`
     : null;
 
+  const hasContactDetails =
+    contactDetails?.phone || contactDetails?.email || contactDetails?.address;
+  const hasLocation = location && (locationString || location.coordinates);
+  const hasLinks = website?.website || href || playHqId;
+
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="space-y-6">
-          {/* Header Section: Logo, Name, Sport, Status */}
-          <div className="flex items-start gap-4">
-            {/* Logo */}
-            <div className="flex-shrink-0">
-              <div className="relative w-20 h-20 rounded-lg border-2 bg-white p-2 shadow-sm">
-                <Image
-                  src={logoUrl}
-                  alt={`${name} logo`}
-                  width={64}
-                  height={64}
-                  className="w-full h-full object-contain"
-                  unoptimized
-                />
-              </div>
-            </div>
+    <div className="space-y-8">
+      {/* Identity Section */}
+      <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+        {/* Logo */}
+        <div className="relative w-32 h-32 rounded-xl border bg-white p-4 shadow-sm flex-shrink-0 overflow-hidden">
+          <Image
+            src={logoUrl}
+            alt={`${name} logo`}
+            fill
+            className="object-contain p-2"
+            unoptimized
+          />
+        </div>
 
-            {/* Name, Sport, Status */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">
-                    {name}
-                  </h2>
-                  <p className="text-lg text-gray-600 dark:text-gray-400 mb-3">
-                    {sport}
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <StatusBadge
-                      status={isActive}
-                      trueLabel="Active"
-                      falseLabel="Inactive"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* Info */}
+        <div className="flex-1 space-y-3 text-center md:text-left pt-2">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
+              {name}
+            </h2>
+            <p className="text-xl text-gray-500 dark:text-gray-400 font-medium">
+              {sport}
+            </p>
           </div>
+          <div className="flex items-center justify-center md:justify-start gap-3 flex-wrap">
+            <StatusBadge
+              status={isActive}
+              trueLabel="Active Association"
+              falseLabel="Inactive Association"
+              variant={isActive ? "default" : "neutral"}
+            />
+            <ProcessDirectButton associationId={association.id} />
+          </div>
+        </div>
+      </div>
 
-          {/* Contact Details Section */}
-          {contactDetails && (
-            <div className="border-t pt-4">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                Contact Details
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      {/* Details Grid */}
+      {(hasContactDetails || hasLocation || hasLinks) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Contact Details */}
+          {hasContactDetails && (
+            <ElementContainer
+              title="Contact Details"
+              border
+              padding="md"
+              className="h-full"
+            >
+              <div className="space-y-4">
                 {contactDetails.phone && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Phone className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                    <a
-                      href={`tel:${contactDetails.phone}`}
-                      className="text-gray-700 dark:text-gray-300 hover:text-primary hover:underline"
-                    >
-                      {contactDetails.phone}
-                    </a>
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg shrink-0">
+                      <Phone className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="space-y-1 overflow-hidden">
+                      <p className="text-xs font-medium text-gray-500 uppercase">
+                        Phone
+                      </p>
+                      <a
+                        href={`tel:${contactDetails.phone}`}
+                        className="block text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 hover:underline truncate"
+                      >
+                        {contactDetails.phone}
+                      </a>
+                    </div>
                   </div>
                 )}
+
                 {contactDetails.email && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Mail className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                    <a
-                      href={`mailto:${contactDetails.email}`}
-                      className="text-gray-700 dark:text-gray-300 hover:text-primary hover:underline"
-                    >
-                      {contactDetails.email}
-                    </a>
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg shrink-0">
+                      <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="space-y-1 overflow-hidden w-full">
+                      <p className="text-xs font-medium text-gray-500 uppercase">
+                        Email
+                      </p>
+                      <a
+                        href={`mailto:${contactDetails.email}`}
+                        className="block text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 hover:underline truncate"
+                        title={contactDetails.email}
+                      >
+                        {contactDetails.email}
+                      </a>
+                    </div>
                   </div>
                 )}
+
                 {contactDetails.address && (
-                  <div className="flex items-center gap-2 text-sm md:col-span-2">
-                    <MapPin className="h-4 w-4 text-gray-500 dark:text-gray-400 flex-shrink-0" />
-                    <span className="text-gray-700 dark:text-gray-300">
-                      {contactDetails.address}
-                    </span>
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg shrink-0">
+                      <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-xs font-medium text-gray-500 uppercase">
+                        Address
+                      </p>
+                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {contactDetails.address}
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
-            </div>
+            </ElementContainer>
           )}
 
-          {/* Location Section */}
-          {location && (locationString || location.coordinates) && (
-            <div className="border-t pt-4">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                Location
-              </h3>
-              <div className="space-y-2">
-                {locationString && (
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    {locationString}
-                  </p>
-                )}
+          {/* Location */}
+          {hasLocation && (
+            <ElementContainer
+              title="Location"
+              border
+              padding="md"
+              className="h-full"
+            >
+              <div className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg shrink-0">
+                    <MapPin className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-medium text-gray-500 uppercase">
+                      Address
+                    </p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                      {locationString}
+                    </p>
+                  </div>
+                </div>
+
                 {googleMapsUrl && (
-                  <Button variant="outline" size="sm" asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start"
+                    asChild
+                  >
                     <a
                       href={googleMapsUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2"
                     >
-                      <MapPin className="h-4 w-4" />
+                      <ExternalLink className="h-4 w-4 mr-2" />
                       View on Google Maps
-                      <ExternalLink className="h-3 w-3" />
                     </a>
                   </Button>
                 )}
               </div>
-            </div>
+            </ElementContainer>
           )}
 
-          {/* Links Section: Website and PlayHQ */}
-          {(website?.website || href || playHqId) && (
-            <div className="border-t pt-4">
-              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3 flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                Links
-              </h3>
-              <div className="flex flex-wrap gap-2">
+          {/* Links */}
+          {hasLinks && (
+            <ElementContainer
+              title="Quick Links"
+              border
+              padding="md"
+              className="h-full"
+            >
+              <div className="space-y-3">
                 {website?.website && (
-                  <Button variant="outline" size="sm" asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start h-auto py-3"
+                    asChild
+                  >
                     <a
                       href={website.website}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center gap-2"
                     >
-                      <Globe className="h-4 w-4" />
-                      Website
-                      <ExternalLink className="h-3 w-3" />
+                      <div className="p-1 bg-purple-50 dark:bg-purple-900/20 rounded mr-3">
+                        <Globe className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                      </div>
+                      <div className="flex flex-col items-start overflow-hidden">
+                        <span className="text-sm font-medium">Website</span>
+                        <span className="text-xs text-muted-foreground font-normal truncate max-w-[180px]">
+                          {website.website}
+                        </span>
+                      </div>
+                      <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground shrink-0" />
                     </a>
                   </Button>
                 )}
+
                 {href && (
-                  <Button variant="outline" size="sm" asChild>
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center gap-2"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      PlayHQ
-                      <ExternalLink className="h-3 w-3" />
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start h-auto py-3"
+                    asChild
+                  >
+                    <a href={href} target="_blank" rel="noopener noreferrer">
+                      <div className="p-1 bg-orange-50 dark:bg-orange-900/20 rounded mr-3">
+                        <ExternalLink className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                      </div>
+                      <div className="flex flex-col items-start">
+                        <span className="text-sm font-medium">PlayHQ</span>
+                        <span className="text-xs text-muted-foreground font-normal">
+                          View on PlayHQ
+                        </span>
+                      </div>
+                      <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground shrink-0" />
                     </a>
                   </Button>
                 )}
               </div>
-            </div>
+            </ElementContainer>
           )}
         </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
+  );
+}
+
+/**
+ * ProcessDirectButton Component
+ *
+ * Button to trigger direct association processing via the API with confirmation dialog
+ */
+function ProcessDirectButton({ associationId }: { associationId: number }) {
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const processAssociationDirect = useProcessAssociationDirect();
+
+  const handleProcessDirect = async () => {
+    try {
+      await processAssociationDirect.mutateAsync({ associationId });
+      setIsDialogOpen(false); // Close dialog on success
+    } catch (error) {
+      // Error handling is done in the hook
+      console.error("Error processing association:", error);
+      // Keep dialog open on error so user can retry or cancel
+    }
+  };
+
+  return (
+    <>
+      <Button
+        onClick={() => setIsDialogOpen(true)}
+        disabled={processAssociationDirect.isPending}
+        variant="accent"
+        size="sm"
+      >
+        <RefreshCw className="h-4 w-4 mr-2" />
+        Process Direct
+      </Button>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RefreshCw className="h-5 w-5 text-brandAccent-600" />
+              Confirm Association Processing
+            </DialogTitle>
+            <DialogDescription>
+              Are you sure you want to trigger direct processing for this
+              association? This will queue a background job to process
+              association data, including competitions, clubs, and games. The
+              job will be processed asynchronously.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="text-sm space-y-1">
+              <p>
+                <span className="font-medium">Association ID:</span>{" "}
+                {associationId}
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => setIsDialogOpen(false)}
+              disabled={processAssociationDirect.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="accent"
+              onClick={handleProcessDirect}
+              disabled={processAssociationDirect.isPending}
+            >
+              {processAssociationDirect.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Confirm Process
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

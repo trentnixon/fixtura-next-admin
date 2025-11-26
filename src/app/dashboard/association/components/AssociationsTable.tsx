@@ -47,7 +47,7 @@ type SortField =
 
 type SortDirection = "asc" | "desc" | null;
 
-const ITEMS_PER_PAGE = 25;
+const ITEMS_PER_PAGE = 15;
 
 export default function AssociationsTable({
   associations,

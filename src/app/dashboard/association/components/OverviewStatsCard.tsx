@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -67,115 +66,110 @@ export default function OverviewStatsCard({ data }: OverviewStatsCardProps) {
   }, [accountCountChartData]);
 
   return (
-    <Card className="bg-white border shadow-none">
-      <CardHeader className="p-4">
-        <CardTitle>Overview Statistics</CardTitle>
-      </CardHeader>
-      <CardContent className="p-4 space-y-6">
-        {/* Summary Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Stat
-            label="Total Associations"
-            value={data.totalAssociations.toLocaleString()}
-          />
-          <Stat
-            label="Active Associations"
-            value={data.activeAssociations.toLocaleString()}
-          />
-          <Stat
-            label="With Accounts"
-            value={data.associationsWithAccounts.toLocaleString()}
-          />
-          <Stat
-            label="Without Accounts"
-            value={data.associationsWithoutAccounts.toLocaleString()}
-          />
+    <div className="p-4 space-y-6">
+      {/* Summary Stats Grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Stat
+          label="Total Associations"
+          value={data.totalAssociations.toLocaleString()}
+        />
+        <Stat
+          label="Active Associations"
+          value={data.activeAssociations.toLocaleString()}
+        />
+        <Stat
+          label="With Accounts"
+          value={data.associationsWithAccounts.toLocaleString()}
+        />
+        <Stat
+          label="Without Accounts"
+          value={data.associationsWithoutAccounts.toLocaleString()}
+        />
+      </div>
+
+      {/* Active/Inactive Breakdown */}
+      {data.inactiveAssociations > 0 && (
+        <div className="flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Status Breakdown:</span>
+          <Badge variant="default">{data.activeAssociations} Active</Badge>
+          <Badge variant="secondary">
+            {data.inactiveAssociations} Inactive
+          </Badge>
         </div>
+      )}
 
-        {/* Active/Inactive Breakdown */}
-        {data.inactiveAssociations > 0 && (
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-muted-foreground">Status Breakdown:</span>
-            <Badge variant="default">{data.activeAssociations} Active</Badge>
-            <Badge variant="secondary">
-              {data.inactiveAssociations} Inactive
-            </Badge>
-          </div>
-        )}
-
-        {/* Sport Distribution - Only show if not filtered (not null) */}
-        {data.sportDistribution && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-semibold">Sport Distribution</h4>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Sport</TableHead>
-                  <TableHead className="text-right">Count</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {Object.entries(data.sportDistribution)
-                  .sort(([, a], [, b]) => b - a)
-                  .map(([sport, count]) => (
-                    <TableRow key={sport}>
-                      <TableCell className="font-medium">{sport}</TableCell>
-                      <TableCell className="text-right">
-                        {count.toLocaleString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-
-        {/* Account Count Distribution - Pie Chart */}
-        {accountCountChartData.length > 0 ? (
-          <ChartCard
-            title="Associations by Account Count"
-            description="Distribution of associations by number of accounts"
-            chartConfig={accountCountChartConfig}
-            chartClassName="h-[300px]"
-            emptyStateMessage="No account count data available"
-          >
-            <PieChart>
-              <Pie
-                data={accountCountChartData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) =>
-                  `${name}: ${formatPercentage(percent * 100)}`
-                }
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {accountCountChartData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={
-                      accountCountChartConfig[entry.name]?.color ||
-                      `hsl(var(--chart-${(index % 5) + 1}))`
-                    }
-                  />
+      {/* Sport Distribution - Only show if not filtered (not null) */}
+      {data.sportDistribution && (
+        <div className="space-y-2">
+          <h4 className="text-sm font-semibold">Sport Distribution</h4>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Sport</TableHead>
+                <TableHead className="text-right">Count</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Object.entries(data.sportDistribution)
+                .sort(([, a], [, b]) => b - a)
+                .map(([sport, count]) => (
+                  <TableRow key={sport}>
+                    <TableCell className="font-medium">{sport}</TableCell>
+                    <TableCell className="text-right">
+                      {count.toLocaleString()}
+                    </TableCell>
+                  </TableRow>
                 ))}
-              </Pie>
-              <ChartTooltip
-                content={<ChartTooltipContent />}
-                formatter={(value: number, name: string) => [
-                  formatNumber(value),
-                  accountCountChartConfig[
-                    name as keyof typeof accountCountChartConfig
-                  ]?.label || name,
-                ]}
-              />
-            </PieChart>
-          </ChartCard>
-        ) : null}
-      </CardContent>
-    </Card>
+            </TableBody>
+          </Table>
+        </div>
+      )}
+
+      {/* Account Count Distribution - Pie Chart */}
+      {accountCountChartData.length > 0 ? (
+        <ChartCard
+          title="Associations by Account Count"
+          description="Distribution of associations by number of accounts"
+          chartConfig={accountCountChartConfig}
+          chartClassName="h-[300px]"
+          emptyStateMessage="No account count data available"
+        >
+          <PieChart>
+            <Pie
+              data={accountCountChartData}
+              cx="50%"
+              cy="50%"
+              labelLine={false}
+              label={({ name, percent }) =>
+                `${name}: ${formatPercentage(percent * 100)}`
+              }
+              outerRadius={100}
+              fill="#8884d8"
+              dataKey="value"
+            >
+              {accountCountChartData.map((entry, index) => (
+                <Cell
+                  key={`cell-${index}`}
+                  fill={
+                    accountCountChartConfig[entry.name]?.color ||
+                    `hsl(var(--chart-${(index % 5) + 1}))`
+                  }
+                />
+              ))}
+            </Pie>
+            <ChartTooltip
+              content={<ChartTooltipContent />}
+              formatter={(value: number, name: string) => [
+                formatNumber(value),
+                accountCountChartConfig[
+                  name as keyof typeof accountCountChartConfig
+                ]?.label || name,
+              ]}
+            />
+          </PieChart>
+        </ChartCard>
+      ) : null}
+    </div>
   );
 }
 

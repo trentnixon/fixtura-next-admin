@@ -157,6 +157,12 @@ export default function CompetitionsList({
   );
 }
 
+import { calculateCompetitionTimeline } from "@/lib/utils";
+
+// ... existing imports
+
+// ... existing code
+
 // Individual competition table row component
 function CompetitionTableRow({
   competition,
@@ -173,11 +179,38 @@ function CompetitionTableRow({
     gradeCount,
     teamCount,
     clubCount,
-    timeline,
+    timeline: apiTimeline,
   } = competition;
 
   const formattedStartDate = formatDate(startDate);
   const formattedEndDate = formatDate(endDate);
+
+  // Calculate timeline on client side as fallback/correction
+  const calculatedTimeline = calculateCompetitionTimeline(startDate, endDate);
+
+  // Merge API timeline with calculated timeline, preferring calculated if API is missing/invalid
+  const timeline = {
+    status:
+      apiTimeline.status === "unknown" && calculatedTimeline.status !== "unknown"
+        ? calculatedTimeline.status
+        : apiTimeline.status,
+    daysElapsed:
+      apiTimeline.daysElapsed == null || Number.isNaN(apiTimeline.daysElapsed)
+        ? calculatedTimeline.daysElapsed
+        : apiTimeline.daysElapsed,
+    daysTotal:
+      apiTimeline.daysTotal == null || Number.isNaN(apiTimeline.daysTotal)
+        ? calculatedTimeline.daysTotal
+        : apiTimeline.daysTotal,
+    daysRemaining:
+      apiTimeline.daysRemaining == null || Number.isNaN(apiTimeline.daysRemaining)
+        ? calculatedTimeline.daysRemaining
+        : apiTimeline.daysRemaining,
+    progressPercent:
+      apiTimeline.progressPercent == null || Number.isNaN(apiTimeline.progressPercent)
+        ? calculatedTimeline.progressPercent
+        : apiTimeline.progressPercent,
+  };
 
   return (
     <TableRow className="hover:bg-muted/50">
@@ -227,12 +260,12 @@ function CompetitionTableRow({
       {/* Timeline Info */}
       <TableCell>
         <div className="space-y-1">
-          {timeline.daysElapsed !== null && (
+          {timeline.daysElapsed != null && !Number.isNaN(timeline.daysElapsed) && (
             <div className="text-xs text-muted-foreground">
               {timeline.daysElapsed} elapsed
             </div>
           )}
-          {timeline.daysTotal !== null && (
+          {timeline.daysTotal != null && !Number.isNaN(timeline.daysTotal) && (
             <div className="text-xs text-muted-foreground">
               Total: {timeline.daysTotal} days
             </div>
@@ -242,7 +275,7 @@ function CompetitionTableRow({
 
       {/* Days Remaining */}
       <TableCell>
-        {timeline.daysRemaining !== null ? (
+        {timeline.daysRemaining != null && !Number.isNaN(timeline.daysRemaining) ? (
           <div className="text-sm font-medium">
             {timeline.daysRemaining} remaining
           </div>
@@ -253,7 +286,7 @@ function CompetitionTableRow({
 
       {/* Progress Bar */}
       <TableCell>
-        {timeline.progressPercent !== null ? (
+        {timeline.progressPercent != null && !Number.isNaN(timeline.progressPercent) ? (
           <div className="space-y-1">
             <Progress value={timeline.progressPercent} className="h-2" />
             <p className="text-xs text-muted-foreground text-center">

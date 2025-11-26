@@ -14,7 +14,6 @@ import CompetitionsList from "./components/CompetitionsList";
 import ClubsList from "./components/ClubsList";
 import AccountsList from "./components/AccountsList";
 import InsightsSection from "./components/InsightsSection";
-import MetadataCard from "./components/MetadataCard";
 
 export default function AssociationDetailPage() {
   const params = useParams<{ id: string }>();
@@ -101,7 +100,6 @@ export default function AssociationDetailPage() {
     clubs,
     accounts,
     insights,
-    meta,
   } = data.data;
 
   return (
@@ -113,20 +111,9 @@ export default function AssociationDetailPage() {
       />
       <PageContainer padding="md" spacing="lg">
         {/* 1. Association Header */}
-        <SectionContainer
-          title="Association Information"
-          description="Core association details and contact information"
-        >
-          <AssociationHeader association={association} />
-        </SectionContainer>
-
+        <AssociationHeader association={association} />
         {/* 2. Statistics Overview */}
-        <SectionContainer
-          title="Statistics Overview"
-          description="Comprehensive statistics for competitions, grades, clubs, teams, and accounts"
-        >
-          <StatisticsOverview statistics={statistics} />
-        </SectionContainer>
+        <StatisticsOverview statistics={statistics} />
 
         {/* 3. Competitions Section */}
         {competitions.length > 0 && (
@@ -166,13 +153,6 @@ export default function AssociationDetailPage() {
           <InsightsSection insights={insights} />
         </SectionContainer>
 
-        {/* 7. Metadata Section */}
-        <SectionContainer
-          title="Metadata"
-          description="Performance metrics and data summary"
-        >
-          <MetadataCard metadata={meta} />
-        </SectionContainer>
       </PageContainer>
     </>
   );
