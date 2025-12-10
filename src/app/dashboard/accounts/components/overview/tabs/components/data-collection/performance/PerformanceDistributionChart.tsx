@@ -51,7 +51,9 @@ export default function PerformanceDistributionChart({
     if (values.length === 0) return [];
     const min = Math.min(...values);
     const max = Math.max(...values);
-    const binWidth = (max - min) / bins;
+    let binWidth = (max - min) / bins;
+    if (binWidth === 0) binWidth = 1;
+
     const bins_data = Array(bins)
       .fill(0)
       .map((_, i) => ({
@@ -76,7 +78,9 @@ export default function PerformanceDistributionChart({
     if (values.length === 0) return [];
     const min = Math.min(...values);
     const max = Math.max(...values);
-    const binWidth = (max - min) / bins;
+    let binWidth = (max - min) / bins;
+    if (binWidth === 0) binWidth = 1;
+
     const bins_data = Array(bins)
       .fill(0)
       .map((_, i) => ({
