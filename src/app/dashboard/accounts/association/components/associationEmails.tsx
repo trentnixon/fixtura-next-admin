@@ -9,21 +9,47 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Check, X, MapPin, Download } from "lucide-react";
+import {
+  ExternalLink,
+  Check,
+  X,
+  MapPin,
+  Download,
+  Users,
+  CreditCard,
+  AlertCircle,
+  Search,
+} from "lucide-react";
 import {
   getUnsubscribedEmails,
   isEmailUnsubscribed,
 } from "@/lib/utils/unsubscribedEmails";
-import { useEffect, useState } from "react";
-import { SectionTitle } from "@/components/type/titles";
+import { useEffect, useState, useMemo } from "react";
+import { useAccountsQuery } from "@/hooks/accounts/useAccountsQuery";
+import MetricGrid from "@/components/ui-library/metrics/MetricGrid";
+import StatCard from "@/components/ui-library/metrics/StatCard";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { Input } from "@/components/ui/input";
+import {
+  Pagination,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationPages,
+  PaginationInfo,
+} from "@/components/ui/pagination";
+import LoadingState from "@/components/ui-library/states/LoadingState";
+import ErrorState from "@/components/ui-library/states/ErrorState";
+import EmptyState from "@/components/ui-library/states/EmptyState";
 
 export default function AssociationEmails() {
-  const { data, isLoading, error } = useGetAssociationEmails();
+  const { data, isLoading, error, refetch } = useGetAssociationEmails();
+  const { data: accountsData, isLoading: accountsLoading } = useAccountsQuery();
   const [unsubscribedEmails, setUnsubscribedEmails] = useState<string[]>([]);
   const [unsubscribedLoading, setUnsubscribedLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "approved" | "unsubscribed">(
-    "all"
-  );
+  const [filter, setFilter] = useState<"all" | "active" | "inactive">("active");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Fetch unsubscribed emails on component mount
   useEffect(() => {
@@ -41,116 +67,125 @@ export default function AssociationEmails() {
     fetchUnsubscribedEmails();
   }, []);
 
-  if (isLoading || unsubscribedLoading) {
+  // Create sets of association IDs for efficient lookup
+  const activeAssociationIds = useMemo(() => {
+    return new Set(
+      accountsData?.associations.active.flatMap((acc) =>
+        acc.associations.map((a) => a.id)
+      ) || []
+    );
+  }, [accountsData]);
+
+  const inactiveAssociationIds = useMemo(() => {
+    return new Set(
+      accountsData?.associations.inactive.flatMap((acc) =>
+        acc.associations.map((a) => a.id)
+      ) || []
+    );
+  }, [accountsData]);
+
+  // Combined filtering logic
+  const filteredAssociations = useMemo(() => {
+    if (!data?.data) return [];
+
+    return data.data.filter((association) => {
+      // 1. Filter by subscription status
+      const matchesSubscription =
+        filter === "all" ||
+        (filter === "active" && activeAssociationIds.has(association.id)) ||
+        (filter === "inactive" && inactiveAssociationIds.has(association.id));
+
+      if (!matchesSubscription) return false;
+
+      // 2. Filter by search query
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch =
+        searchQuery === "" ||
+        association.name.toLowerCase().includes(searchLower) ||
+        association.email.toLowerCase().includes(searchLower) ||
+        association.id.toString().includes(searchLower) ||
+        (association.address &&
+          association.address.toLowerCase().includes(searchLower));
+
+      return matchesSearch;
+    });
+  }, [data, filter, searchQuery, activeAssociationIds, inactiveAssociationIds]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredAssociations.length / itemsPerPage);
+  const paginatedAssociations = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredAssociations.slice(start, start + itemsPerPage);
+  }, [filteredAssociations, currentPage]);
+
+  // Reset to page 1 when filter or search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchQuery]);
+
+  if (isLoading || unsubscribedLoading || accountsLoading) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">
-            Loading association contact information...
-          </p>
-        </div>
-      </div>
+      <LoadingState variant="default" message="Loading association contacts..." />
     );
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Error Loading Data
-          </h3>
-          <p className="text-gray-600 mb-4">
-            {error instanceof Error
-              ? error.message
-              : "An unexpected error occurred"}
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
+      <ErrorState
+        error={error instanceof Error ? error : new Error("Failed to load data")}
+        onRetry={refetch}
+      />
     );
   }
 
   if (!data?.data || data.data.length === 0) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="text-gray-400 text-6xl mb-4">📧</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            No Association Contacts Found
-          </h3>
-          <p className="text-gray-600">
-            There are no association contact details available at this time.
-          </p>
-        </div>
-      </div>
+      <EmptyState
+        title="No Association Contacts Found"
+        description="There are no association contact details available at this time."
+        variant="card"
+      />
     );
   }
 
-  // Filter associations based on selected filter
-  const filteredAssociations = data.data.filter((association) => {
-    switch (filter) {
-      case "approved":
-        return !isEmailUnsubscribed(association.email, unsubscribedEmails);
-      case "unsubscribed":
-        return isEmailUnsubscribed(association.email, unsubscribedEmails);
-      default:
-        return true; // 'all'
-    }
-  });
-
   // Calculate statistics
   const totalAssociations = data.data.length;
-  const associationsWithEmail = data.data.filter(
-    (association) => association.email && association.email.trim() !== ""
+  const activeSubscribedAssociations = data.data.filter((association) =>
+    activeAssociationIds.has(association.id)
   ).length;
-  const associationsUnsubscribed = data.data.filter((association) =>
-    isEmailUnsubscribed(association.email, unsubscribedEmails)
+  const inactiveSubscribedAssociations = data.data.filter((association) =>
+    inactiveAssociationIds.has(association.id)
   ).length;
 
   // Function to download CSV for SendGrid
   const downloadCSV = () => {
-    // Helper function to validate email format
     const isValidEmail = (email: string) => {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       return emailRegex.test(email);
     };
 
-    // Filter associations that have valid email addresses and are not unsubscribed
     const validAssociations = filteredAssociations.filter(
       (association) =>
         association.email &&
         association.email.trim() !== "" &&
-        association.email !== "No email" &&
-        association.email !== "No address" &&
         isValidEmail(association.email.trim()) &&
         !isEmailUnsubscribed(association.email, unsubscribedEmails)
     );
 
-    // Create CSV content
     const csvContent = [
-      "name,email", // Header row
+      "name,email",
       ...validAssociations.map(
         (association) => `"${association.name}","${association.email}"`
       ),
     ].join("\n");
 
-    // Create and download file
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `association-contacts-${filter}-${
-        new Date().toISOString().split("T")[0]
+      `association-contacts-${filter}-${new Date().toISOString().split("T")[0]
       }.csv`
     );
     link.style.visibility = "hidden";
@@ -160,218 +195,227 @@ export default function AssociationEmails() {
   };
 
   return (
-    <>
-      <div className="mt-8">
-        <div className="bg-slate-200 rounded-lg px-4 py-2">
-          <div className="flex justify-between items-center  py-2">
-            {/* Input filter */}
-            <div className="flex items-center w-1/2">
-              <SectionTitle className="py-2 px-1">
-                Association Contact Information
-              </SectionTitle>
-            </div>
-          </div>
+    <div className="space-y-6 mt-4">
+      {/* Statistics Cards */}
+      <MetricGrid columns={3} gap="md">
+        <StatCard
+          title="Total Associations"
+          value={totalAssociations}
+          icon={<Users className="h-5 w-5" />}
+          variant="light"
+          description="Total associations in the system"
+        />
+        <StatCard
+          title="Active Subscriptions"
+          value={activeSubscribedAssociations}
+          icon={<CreditCard className="h-5 w-5" />}
+          variant="primary"
+          description="Associations with active orders"
+        />
+        <StatCard
+          title="Inactive Subscriptions"
+          value={inactiveSubscribedAssociations}
+          icon={<AlertCircle className="h-5 w-5" />}
+          variant="accent"
+          description="Associations with no active orders"
+        />
+      </MetricGrid>
 
-          <div className="bg-white rounded-lg p-4">
-            <div className="space-y-4">
-              {/* Statistics Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold text-sm">
-                          T
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-500">
-                        Total Associations
-                      </p>
-                      <p className="text-2xl font-semibold text-gray-900">
-                        {totalAssociations}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <span className="text-green-600 font-semibold text-sm">
-                          E
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-500">
-                        With Email Address
-                      </p>
-                      <p className="text-2xl font-semibold text-gray-900">
-                        {associationsWithEmail}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                        <span className="text-red-600 font-semibold text-sm">
-                          U
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-500">
-                        Unsubscribed
-                      </p>
-                      <p className="text-2xl font-semibold text-gray-900">
-                        {associationsUnsubscribed}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+      {/* Main Table Section */}
+      <SectionContainer
+        title="Association Contact Information"
+        description="Manage and export contact details for association accounts"
+        variant="default"
+      >
+        <div className="space-y-4">
+          {/* Controls: Search, Filters, Download */}
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-muted/30 p-4 rounded-lg">
+            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto flex-1">
+              <div className="relative w-full sm:w-80">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search associations, emails, IDs..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-
-              {/* Filter Buttons and Download */}
-              <div className="flex gap-2 items-center justify-between">
-                <div className="flex gap-2">
-                  <Button
-                    variant={filter === "all" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFilter("all")}
-                  >
-                    All ({totalAssociations})
-                  </Button>
-                  <Button
-                    variant={filter === "approved" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFilter("approved")}
-                  >
-                    Approved ({totalAssociations - associationsUnsubscribed})
-                  </Button>
-                  <Button
-                    variant={filter === "unsubscribed" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFilter("unsubscribed")}
-                  >
-                    Unsubscribed ({associationsUnsubscribed})
-                  </Button>
-                </div>
-
+              <div className="flex gap-2">
                 <Button
-                  variant="secondary"
+                  variant={filter === "all" ? "secondary" : "primary"}
                   size="sm"
-                  onClick={downloadCSV}
-                  className="flex items-center gap-2"
+                  onClick={() => setFilter("all")}
                 >
-                  <Download className="h-4 w-4" />
-                  Download CSV for SendGrid
+                  All
+                </Button>
+                <Button
+                  variant={filter === "active" ? "secondary" : "primary"}
+                  size="sm"
+                  onClick={() => setFilter("active")}
+                >
+                  Active
+                </Button>
+                <Button
+                  variant={filter === "inactive" ? "secondary" : "primary"}
+                  size="sm"
+                  onClick={() => setFilter("inactive")}
+                >
+                  Inactive
                 </Button>
               </div>
+            </div>
 
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[50px]">Status</TableHead>
-                      <TableHead className="w-[200px]">
-                        Association Name
-                      </TableHead>
-                      <TableHead className="w-[250px]">Email</TableHead>
-                      <TableHead className="w-[150px]">Phone</TableHead>
-                      <TableHead className="w-[300px]">Address</TableHead>
-                      <TableHead className="w-[200px]">Website</TableHead>
-                      <TableHead className="w-[100px]">ID</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredAssociations.map((association) => (
-                      <TableRow key={association.id}>
-                        <TableCell className="text-center">
-                          {isEmailUnsubscribed(
-                            association.email,
-                            unsubscribedEmails
-                          ) ? (
-                            <X className="h-5 w-5 text-red-600" />
-                          ) : (
-                            <Check className="h-5 w-5 text-green-600" />
-                          )}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {association.name}
-                        </TableCell>
-                        <TableCell>
-                          <a
-                            href={`mailto:${association.email}`}
-                            className="text-blue-600 hover:text-blue-800 hover:underline"
-                          >
-                            {association.email}
-                          </a>
-                        </TableCell>
-                        <TableCell>{association.phone}</TableCell>
-                        <TableCell>
-                          {association.address &&
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={downloadCSV}
+              className="w-full md:w-auto flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Download CSV
+            </Button>
+          </div>
+
+          {/* Results Summary */}
+          <div className="text-sm text-muted-foreground px-2">
+            Showing {paginatedAssociations.length} of {filteredAssociations.length} contacts
+            {filteredAssociations.length !== totalAssociations &&
+              ` (filtered from ${totalAssociations})`}
+          </div>
+
+          {/* Table */}
+          <div className="rounded-md border bg-card overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead>Association Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead className="hidden lg:table-cell">Phone</TableHead>
+                  <TableHead>Address</TableHead>
+                  <TableHead className="w-[100px] text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedAssociations.length > 0 ? (
+                  paginatedAssociations.map((association) => (
+                    <TableRow key={association.id} className="hover:bg-muted/30">
+                      <TableCell className="font-semibold">
+                        {association.name}
+                        <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                          ID: {association.id}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <a
+                          href={`mailto:${association.email}`}
+                          className="text-primary hover:underline flex items-center gap-1 group"
+                        >
+                          {association.email}
+                        </a>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell text-muted-foreground">
+                        {association.phone || "-"}
+                      </TableCell>
+                      <TableCell>
+                        {association.address &&
                           association.address !== "No address" ? (
-                            <Button variant="outline" size="sm" asChild>
-                              <a
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                                  association.address
-                                )}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2"
-                              >
-                                <MapPin className="h-4 w-4" />
-                                View
-                              </a>
-                            </Button>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {association.website !== "No website" ? (
-                            <Button variant="outline" size="sm" asChild>
-                              <a
-                                href={association.website}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2"
-                              >
-                                <ExternalLink className="h-4 w-4" />
-                                View
-                              </a>
-                            </Button>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Button variant="outline" size="sm" asChild>
+                          <div className="flex items-center gap-2 max-w-[200px] truncate">
+                            <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
+                            <span className="text-sm truncate">
+                              {association.address}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">
+                            -
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          {association.address &&
+                            association.address !== "No address" && (
+                              <Button variant="secondary" size="sm" asChild>
+                                <a
+                                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                    association.address
+                                  )}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1"
+                                >
+                                  <MapPin className="h-3.5 w-3.5" />
+                                  <span>Map</span>
+                                </a>
+                              </Button>
+                            )}
+                          {association.website &&
+                            association.website !== "No website" && (
+                              <Button variant="accent" size="sm" asChild>
+                                <a
+                                  href={association.website}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1"
+                                >
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                  <span>Web</span>
+                                </a>
+                              </Button>
+                            )}
+                          <Button variant="primary" size="sm" asChild>
                             <a
                               href={`http://localhost:1337/admin/content-manager/collection-types/api::association.association/${association.id}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-1 font-mono text-xs"
                             >
-                              View on Strapi
+                              Manage
                             </a>
                           </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-32 text-center">
+                      <div className="flex flex-col items-center justify-center text-muted-foreground">
+                        <Search className="h-8 w-8 mb-2 opacity-20" />
+                        <p>No associations found matching your search</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t pt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                variant="primary"
+                className="w-full"
+              >
+                <PaginationInfo
+                  format="long"
+                  totalItems={filteredAssociations.length}
+                  itemsPerPage={itemsPerPage}
+                  className="mr-auto"
+                />
+                <div className="flex items-center gap-1 ml-auto">
+                  <PaginationPrevious />
+                  <PaginationPages />
+                  <PaginationNext />
+                </div>
+              </Pagination>
+            </div>
+          )}
         </div>
-      </div>
-    </>
+      </SectionContainer>
+    </div>
   );
 }

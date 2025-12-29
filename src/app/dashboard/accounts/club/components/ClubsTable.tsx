@@ -42,7 +42,7 @@ export default function DisplayClubsTable() {
           <TabsTrigger value="inactive">
             Inactive Subscriptions ({inactiveClubs.length})
           </TabsTrigger>
-          {/* <TabsTrigger value="all">Clubs Contact Information</TabsTrigger> */}
+          <TabsTrigger value="emails">Contacts</TabsTrigger>
         </TabsList>
 
         <SectionContainer
@@ -61,7 +61,7 @@ export default function DisplayClubsTable() {
               emptyMessage="No clubs with inactive subscriptions available."
             />
           </TabsContent>
-          <TabsContent value="all">
+          <TabsContent value="emails">
             <ClubEmails />
           </TabsContent>
         </SectionContainer>

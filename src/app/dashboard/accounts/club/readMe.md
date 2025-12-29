@@ -9,6 +9,7 @@ This folder contains club-specific account management pages and components for t
 - `[accountID]/components/DisplayClub.tsx`: Component for displaying club account details
 - `[accountID]/components/overview/tabs/competitions.tsx`: Shared competitions tab that now supports club drilldowns
 - `components/ClubsTable.tsx`: Table component for listing and managing club accounts
+- `components/clubEmails.tsx`: Premium contacts management interface with subscription filtering and CSV export
 
 ## Relations
 
@@ -37,3 +38,11 @@ This folder contains club-specific account management pages and components for t
 - **Data Integration**: Integration with account hooks plus CMS drilldown hooks for competition visibility
 - **Navigation**: Seamless navigation between club accounts and related data
 - **Type Safety**: Strong TypeScript integration with proper prop interfaces
+
+## Contacts Management
+
+The Contacts tab (via `clubEmails.tsx`) provides a premium administrative interface for:
+- **Subscription Awareness**: Automatically filters clubs based on their active/inactive order status via `useAccountsQuery`.
+- **Global Search**: Real-time filtering across names, emails, IDs, and physical addresses.
+- **Data Portability**: Purpose-built CSV export function for SendGrid, which respects blacklisted/unsubscribed status regardless of subscription filters.
+- **Interactive Actions**: Integrated shortcuts for Google Maps, club websites, and direct Strapi CMS management.

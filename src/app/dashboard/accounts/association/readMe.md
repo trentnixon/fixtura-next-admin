@@ -9,6 +9,7 @@ This folder contains association-specific account management pages and component
 - `[accountID]/components/DisplayAssociation.tsx`: Component for displaying association account details
 - `[accountID]/components/overview/tabs/competitions.tsx`: Association competitions tab powered by the CMS drilldown endpoint
 - `components/AssociationsTable.tsx`: Table component for listing and managing association accounts
+- `components/associationEmails.tsx`: Premium contacts management interface with subscription filtering and CSV export
 
 ## Relations
 
@@ -36,3 +37,11 @@ This folder contains association-specific account management pages and component
 - **Data Integration**: Integration with account hooks plus CMS drilldown hooks for competition visibility
 - **Navigation**: Seamless navigation between association accounts and related data
 - **Type Safety**: Strong TypeScript integration with proper prop interfaces
+
+## Contacts Management
+
+The Contacts tab (via `associationEmails.tsx`) provides a premium administrative interface for:
+- **Subscription Awareness**: Automatically filters associations based on their active/inactive order status via `useAccountsQuery`.
+- **Global Search**: Real-time filtering across names, emails, IDs, and physical addresses.
+- **Data Portability**: Purpose-built CSV export function for SendGrid, which respects blacklisted/unsubscribed status regardless of subscription filters.
+- **Interactive Actions**: Integrated shortcuts for Google Maps, association websites, and direct Strapi CMS management.

@@ -9,21 +9,47 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Check, X, MapPin, Download } from "lucide-react";
+import {
+  ExternalLink,
+  Check,
+  X,
+  MapPin,
+  Download,
+  Users,
+  CreditCard,
+  AlertCircle,
+  Search,
+} from "lucide-react";
 import {
   getUnsubscribedEmails,
   isEmailUnsubscribed,
 } from "@/lib/utils/unsubscribedEmails";
-import { useEffect, useState } from "react";
-import { SectionTitle } from "@/components/type/titles";
+import { useEffect, useState, useMemo } from "react";
+import { useAccountsQuery } from "@/hooks/accounts/useAccountsQuery";
+import MetricGrid from "@/components/ui-library/metrics/MetricGrid";
+import StatCard from "@/components/ui-library/metrics/StatCard";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { Input } from "@/components/ui/input";
+import {
+  Pagination,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationPages,
+  PaginationInfo,
+} from "@/components/ui/pagination";
+import LoadingState from "@/components/ui-library/states/LoadingState";
+import ErrorState from "@/components/ui-library/states/ErrorState";
+import EmptyState from "@/components/ui-library/states/EmptyState";
 
 export default function ClubEmails() {
-  const { data, isLoading, error } = useGetClubEmails();
+  const { data, isLoading, error, refetch } = useGetClubEmails();
+  const { data: accountsData, isLoading: accountsLoading } = useAccountsQuery();
   const [unsubscribedEmails, setUnsubscribedEmails] = useState<string[]>([]);
   const [unsubscribedLoading, setUnsubscribedLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "approved" | "unsubscribed">(
-    "all"
-  );
+  const [filter, setFilter] = useState<"all" | "active" | "inactive">("active");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   // Fetch unsubscribed emails on component mount
   useEffect(() => {
@@ -41,104 +67,112 @@ export default function ClubEmails() {
     fetchUnsubscribedEmails();
   }, []);
 
-  if (isLoading || unsubscribedLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading club contact information...</p>
-        </div>
-      </div>
+  // Create sets of club IDs for efficient lookup
+  const activeClubIds = useMemo(() => {
+    return new Set(
+      accountsData?.clubs.active.flatMap((acc) => acc.clubs.map((c) => c.id)) ||
+      []
     );
+  }, [accountsData]);
+
+  const inactiveClubIds = useMemo(() => {
+    return new Set(
+      accountsData?.clubs.inactive.flatMap((acc) =>
+        acc.clubs.map((c) => c.id)
+      ) || []
+    );
+  }, [accountsData]);
+
+  // Combined filtering logic
+  const filteredClubs = useMemo(() => {
+    if (!data?.data) return [];
+
+    return data.data.filter((club) => {
+      // 1. Filter by subscription status
+      const matchesSubscription =
+        filter === "all" ||
+        (filter === "active" && activeClubIds.has(club.id)) ||
+        (filter === "inactive" && inactiveClubIds.has(club.id));
+
+      if (!matchesSubscription) return false;
+
+      // 2. Filter by search query
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch =
+        searchQuery === "" ||
+        club.name.toLowerCase().includes(searchLower) ||
+        club.email.toLowerCase().includes(searchLower) ||
+        club.id.toString().includes(searchLower) ||
+        (club.address && club.address.toLowerCase().includes(searchLower));
+
+      return matchesSearch;
+    });
+  }, [data, filter, searchQuery, activeClubIds, inactiveClubIds]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredClubs.length / itemsPerPage);
+  const paginatedClubs = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredClubs.slice(start, start + itemsPerPage);
+  }, [filteredClubs, currentPage]);
+
+  // Reset to page 1 when filter or search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchQuery]);
+
+  if (isLoading || unsubscribedLoading || accountsLoading) {
+    return <LoadingState variant="default" message="Loading club contacts..." />;
   }
 
   if (error) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Error Loading Data
-          </h3>
-          <p className="text-gray-600 mb-4">
-            {error instanceof Error
-              ? error.message
-              : "An unexpected error occurred"}
-          </p>
-          <button
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-          >
-            Try Again
-          </button>
-        </div>
-      </div>
+      <ErrorState
+        error={error instanceof Error ? error : new Error("Failed to load data")}
+        onRetry={refetch}
+      />
     );
   }
 
   if (!data?.data || data.data.length === 0) {
     return (
-      <div className="flex items-center justify-center p-8">
-        <div className="text-center">
-          <div className="text-gray-400 text-6xl mb-4">📧</div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            No Club Contacts Found
-          </h3>
-          <p className="text-gray-600">
-            There are no club contact details available at this time.
-          </p>
-        </div>
-      </div>
+      <EmptyState
+        title="No Club Contacts Found"
+        description="There are no club contact details available at this time."
+        variant="card"
+      />
     );
   }
 
-  // Filter clubs based on selected filter
-  const filteredClubs = data.data.filter((club) => {
-    switch (filter) {
-      case "approved":
-        return !isEmailUnsubscribed(club.email, unsubscribedEmails);
-      case "unsubscribed":
-        return isEmailUnsubscribed(club.email, unsubscribedEmails);
-      default:
-        return true; // 'all'
-    }
-  });
-
   // Calculate statistics
   const totalClubs = data.data.length;
-  const clubsWithEmail = data.data.filter(
-    (club) => club.email && club.email.trim() !== ""
+  const activeSubscribedClubs = data.data.filter((club) =>
+    activeClubIds.has(club.id)
   ).length;
-  const clubsUnsubscribed = data.data.filter((club) =>
-    isEmailUnsubscribed(club.email, unsubscribedEmails)
+  const inactiveSubscribedClubs = data.data.filter((club) =>
+    inactiveClubIds.has(club.id)
   ).length;
 
   // Function to download CSV for SendGrid
   const downloadCSV = () => {
-    // Helper function to validate email format
     const isValidEmail = (email: string) => {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       return emailRegex.test(email);
     };
 
-    // Filter clubs that have valid email addresses and are not unsubscribed
     const validClubs = filteredClubs.filter(
       (club) =>
         club.email &&
         club.email.trim() !== "" &&
-        club.email !== "No email" &&
-        club.email !== "No address" &&
         isValidEmail(club.email.trim()) &&
         !isEmailUnsubscribed(club.email, unsubscribedEmails)
     );
 
-    // Create CSV content
     const csvContent = [
-      "name,email", // Header row
+      "name,email",
       ...validClubs.map((club) => `"${club.name}","${club.email}"`),
     ].join("\n");
 
-    // Create and download file
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -154,214 +188,236 @@ export default function ClubEmails() {
   };
 
   return (
-    <>
-      <div className="mt-8">
-        <div className="bg-slate-200 rounded-lg px-4 py-2">
-          <div className="flex justify-between items-center  py-2">
-            {/* Input filter */}
-            <div className="flex items-center w-1/2">
-              <SectionTitle className="py-2 px-1">
-                Club Contact Information
-              </SectionTitle>
-            </div>
-          </div>
+    <div className="space-y-6 mt-4">
+      {/* Statistics Cards */}
+      <MetricGrid columns={3} gap="md">
+        <StatCard
+          title="Total Clubs"
+          value={totalClubs}
+          icon={<Users className="h-5 w-5" />}
+          variant="light"
+          description="Total clubs in the system"
+        />
+        <StatCard
+          title="Active Subscriptions"
+          value={activeSubscribedClubs}
+          icon={<CreditCard className="h-5 w-5" />}
+          variant="primary"
+          description="Clubs with active orders"
+        />
+        <StatCard
+          title="Inactive Subscriptions"
+          value={inactiveSubscribedClubs}
+          icon={<AlertCircle className="h-5 w-5" />}
+          variant="accent"
+          description="Clubs with no active orders"
+        />
+      </MetricGrid>
 
-          <div className="bg-white rounded-lg p-4">
-            <div className="space-y-4">
-              {" "}
-              {/* Statistics Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <span className="text-blue-600 font-semibold text-sm">
-                          T
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-500">
-                        Total Clubs
-                      </p>
-                      <p className="text-2xl font-semibold text-gray-900">
-                        {totalClubs}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <span className="text-green-600 font-semibold text-sm">
-                          E
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-500">
-                        With Email Address
-                      </p>
-                      <p className="text-2xl font-semibold text-gray-900">
-                        {clubsWithEmail}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                      <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                        <span className="text-red-600 font-semibold text-sm">
-                          U
-                        </span>
-                      </div>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-500">
-                        Unsubscribed
-                      </p>
-                      <p className="text-2xl font-semibold text-gray-900">
-                        {clubsUnsubscribed}
-                      </p>
-                    </div>
-                  </div>
-                </div>
+      {/* Main Table Section */}
+      <SectionContainer
+        title="Club Contact Information"
+        description="Manage and export contact details for club accounts"
+        variant="default"
+      >
+        <div className="space-y-4">
+          {/* Controls: Search, Filters, Download */}
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-muted/30 p-4 rounded-lg">
+            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto flex-1">
+              <div className="relative w-full sm:w-80">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search clubs, emails, IDs..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-              {/* Filter Buttons and Download */}
-              <div className="flex gap-2 items-center justify-between">
-                <div className="flex gap-2">
-                  <Button
-                    variant={filter === "all" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFilter("all")}
-                  >
-                    All ({totalClubs})
-                  </Button>
-                  <Button
-                    variant={filter === "approved" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFilter("approved")}
-                  >
-                    Approved ({totalClubs - clubsUnsubscribed})
-                  </Button>
-                  <Button
-                    variant={filter === "unsubscribed" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFilter("unsubscribed")}
-                  >
-                    Unsubscribed ({clubsUnsubscribed})
-                  </Button>
-                </div>
-
+              <div className="flex gap-2">
                 <Button
-                  variant="secondary"
+                  variant={filter === "all" ? "secondary" : "primary"}
                   size="sm"
-                  onClick={downloadCSV}
-                  className="flex items-center gap-2"
+                  onClick={() => setFilter("all")}
                 >
-                  <Download className="h-4 w-4" />
-                  Download CSV for SendGrid
+                  All
+                </Button>
+                <Button
+                  variant={filter === "active" ? "secondary" : "primary"}
+                  size="sm"
+                  onClick={() => setFilter("active")}
+                >
+                  Active
+                </Button>
+                <Button
+                  variant={filter === "inactive" ? "secondary" : "primary"}
+                  size="sm"
+                  onClick={() => setFilter("inactive")}
+                >
+                  Inactive
                 </Button>
               </div>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="w-[50px]">Status</TableHead>
-                      <TableHead className="w-[200px]">Club Name</TableHead>
-                      <TableHead className="w-[250px]">Email</TableHead>
-                      <TableHead className="w-[150px]">Phone</TableHead>
-                      <TableHead className="w-[300px]">Address</TableHead>
-                      <TableHead className="w-[200px]">Website</TableHead>
-                      <TableHead className="w-[100px]">ID</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredClubs.map((club) => (
-                      <TableRow key={club.id}>
-                        <TableCell className="text-center">
-                          {isEmailUnsubscribed(
-                            club.email,
-                            unsubscribedEmails
-                          ) ? (
-                            <X className="h-5 w-5 text-red-600" />
-                          ) : (
-                            <Check className="h-5 w-5 text-green-600" />
-                          )}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          {club.name}
-                        </TableCell>
-                        <TableCell>
-                          <a
-                            href={`mailto:${club.email}`}
-                            className="text-blue-600 hover:text-blue-800 hover:underline"
-                          >
-                            {club.email}
-                          </a>
-                        </TableCell>
-                        <TableCell>{club.phone}</TableCell>
-                        <TableCell>
-                          {club.address && club.address !== "No address" ? (
-                            <Button variant="outline" size="sm" asChild>
+            </div>
+
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={downloadCSV}
+              className="w-full md:w-auto flex items-center gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Download CSV
+            </Button>
+          </div>
+
+          {/* Results Summary */}
+          <div className="text-sm text-muted-foreground px-2">
+            Showing {paginatedClubs.length} of {filteredClubs.length} contacts
+            {filteredClubs.length !== totalClubs &&
+              ` (filtered from ${totalClubs})`}
+          </div>
+
+          {/* Table */}
+          <div className="rounded-md border bg-card overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50">
+                  <TableHead>Club Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead className="hidden lg:table-cell">Phone</TableHead>
+                  <TableHead>Address</TableHead>
+                  <TableHead className="w-[100px] text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedClubs.length > 0 ? (
+                  paginatedClubs.map((club) => (
+                    <TableRow key={club.id} className="hover:bg-muted/30">
+                      <TableCell className="font-semibold">
+                        {club.name}
+                        <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                          ID: {club.id}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <a
+                          href={`mailto:${club.email}`}
+                          className="text-primary hover:underline flex items-center gap-1 group"
+                        >
+                          {club.email}
+                        </a>
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell text-muted-foreground">
+                        {club.phone || "-"}
+                      </TableCell>
+                      <TableCell>
+                        {club.address && club.address !== "No address" ? (
+                          <div className="flex items-center gap-2 max-w-[200px] truncate">
+                            <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
+                            <span className="text-sm truncate">
+                              {club.address}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">
+                            -
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          {club.address && club.address !== "No address" && (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              asChild
+                            >
                               <a
                                 href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                                   club.address
                                 )}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-2"
+                                className="flex items-center gap-1"
                               >
-                                <MapPin className="h-4 w-4" />
-                                View
+                                <MapPin className="h-3.5 w-3.5" />
+                                <span>Map</span>
                               </a>
                             </Button>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
                           )}
-                        </TableCell>
-                        <TableCell>
-                          {club.website !== "No website" ? (
-                            <Button variant="outline" size="sm" asChild>
+                          {club.website && club.website !== "No website" && (
+                            <Button
+                              variant="accent"
+                              size="sm"
+                              asChild
+                            >
                               <a
                                 href={club.website}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-2"
+                                className="flex items-center gap-1"
                               >
-                                <ExternalLink className="h-4 w-4" />
-                                View
+                                <ExternalLink className="h-3.5 w-3.5" />
+                                <span>Web</span>
                               </a>
                             </Button>
-                          ) : (
-                            <span className="text-muted-foreground">-</span>
                           )}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Button variant="outline" size="sm" asChild>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            asChild
+                          >
                             <a
                               href={`http://localhost:1337/admin/content-manager/collection-types/api::club.club/${club.id}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="flex items-center gap-1 font-mono text-xs"
                             >
-                              View on Strapi
+                              Manage
                             </a>
                           </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="h-32 text-center">
+                      <div className="flex flex-col items-center justify-center text-muted-foreground">
+                        <Search className="h-8 w-8 mb-2 opacity-20" />
+                        <p>No clubs found matching your search</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t pt-4">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                variant="primary"
+                className="w-full"
+              >
+                <PaginationInfo
+                  format="long"
+                  totalItems={filteredClubs.length}
+                  itemsPerPage={itemsPerPage}
+                  className="mr-auto"
+                />
+                <div className="flex items-center gap-1 ml-auto">
+                  <PaginationPrevious />
+                  <PaginationPages />
+                  <PaginationNext />
+                </div>
+              </Pagination>
+            </div>
+          )}
         </div>
-      </div>
-    </>
+      </SectionContainer>
+    </div>
   );
 }

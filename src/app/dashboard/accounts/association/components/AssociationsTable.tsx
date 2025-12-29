@@ -45,9 +45,7 @@ export default function DisplayAssociationsTable() {
           <TabsTrigger value="inactive">
             Inactive Subscriptions ({inactiveAssociations.length})
           </TabsTrigger>
-          <TabsTrigger value="all">
-            Associations Contact Information
-          </TabsTrigger>
+          <TabsTrigger value="emails">Contacts</TabsTrigger>
         </TabsList>
 
         <SectionContainer
@@ -66,7 +64,7 @@ export default function DisplayAssociationsTable() {
               emptyMessage="No associations with inactive subscriptions available."
             />
           </TabsContent>
-          <TabsContent value="all">
+          <TabsContent value="emails">
             <AssociationEmails />
           </TabsContent>
         </SectionContainer>
