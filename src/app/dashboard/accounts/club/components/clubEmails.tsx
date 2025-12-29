@@ -11,8 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import {
   ExternalLink,
-  Check,
-  X,
   MapPin,
   Download,
   Users,
