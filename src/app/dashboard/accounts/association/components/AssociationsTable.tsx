@@ -65,7 +65,7 @@ export default function DisplayAssociationsTable() {
             />
           </TabsContent>
           <TabsContent value="emails">
-            <AssociationEmails />
+            <AssociationEmails initialFilter="active" hideAllFilter />
           </TabsContent>
         </SectionContainer>
       </Tabs>

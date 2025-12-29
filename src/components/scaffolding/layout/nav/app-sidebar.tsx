@@ -149,6 +149,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
     communicationNav: [
       {
+        title: "Email Listings",
+        url: "/dashboard/communications/email-listings",
+        icon: Mail,
+        isActive: true,
+      },
+      {
         title: "Contact Forms",
         url: "/dashboard/contact",
         icon: Mail,

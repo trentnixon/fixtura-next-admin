@@ -17,7 +17,9 @@ import {
   CreditCard,
   AlertCircle,
   Search,
+  ImageIcon,
 } from "lucide-react";
+import Image from "next/image";
 import {
   getUnsubscribedEmails,
   isEmailUnsubscribed,
@@ -39,12 +41,22 @@ import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import EmptyState from "@/components/ui-library/states/EmptyState";
 
-export default function AssociationEmails() {
+interface AssociationEmailsProps {
+  initialFilter?: "all" | "active" | "inactive";
+  hideAllFilter?: boolean;
+}
+
+export default function AssociationEmails({
+  initialFilter = "active",
+  hideAllFilter = false,
+}: AssociationEmailsProps) {
   const { data, isLoading, error, refetch } = useGetAssociationEmails();
   const { data: accountsData, isLoading: accountsLoading } = useAccountsQuery();
   const [unsubscribedEmails, setUnsubscribedEmails] = useState<string[]>([]);
   const [unsubscribedLoading, setUnsubscribedLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "active" | "inactive">("active");
+  const [filter, setFilter] = useState<"all" | "active" | "inactive">(
+    initialFilter
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -80,6 +92,34 @@ export default function AssociationEmails() {
         acc.associations.map((a) => a.id)
       ) || []
     );
+  }, [accountsData]);
+
+  // Create a map of association ID to account info for email lookups
+  interface MappedAccountInfo {
+    userEmail: string | null;
+    deliveryEmail: string | null;
+    id: number;
+    logo?: string | null;
+  }
+
+  const associationIdToAccountMap = useMemo(() => {
+    const map = new Map<number, MappedAccountInfo>();
+    if (!accountsData) return map;
+
+    [
+      ...accountsData.associations.active,
+      ...accountsData.associations.inactive,
+    ].forEach((account) => {
+      account.associations.forEach((assoc) => {
+        map.set(assoc.id, {
+          userEmail: account.email,
+          deliveryEmail: account.DeliveryAddress,
+          id: account.id,
+          logo: account.logo?.url,
+        });
+      });
+    });
+    return map;
   }, [accountsData]);
 
   // Combined filtering logic
@@ -170,12 +210,22 @@ export default function AssociationEmails() {
         !isEmailUnsubscribed(association.email, unsubscribedEmails)
     );
 
-    const csvContent = [
-      "name,email",
-      ...validAssociations.map(
-        (association) => `"${association.name}","${association.email}"`
-      ),
-    ].join("\n");
+    const isAccountView = filter !== "all";
+
+    const csvHeader = isAccountView
+      ? "Association Name,Association ID,User Email,Delivery Email"
+      : "Association Name,Association ID,Contact Email";
+
+    const csvRows = validAssociations.map((association) => {
+      if (isAccountView) {
+        const accountInfo = associationIdToAccountMap.get(association.id);
+        return `"${association.name}","${association.id}","${accountInfo?.userEmail || ""
+          }","${accountInfo?.deliveryEmail || ""}"`;
+      }
+      return `"${association.name}","${association.id}","${association.email}"`;
+    });
+
+    const csvContent = [csvHeader, ...csvRows].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
@@ -239,13 +289,15 @@ export default function AssociationEmails() {
                 />
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant={filter === "all" ? "secondary" : "primary"}
-                  size="sm"
-                  onClick={() => setFilter("all")}
-                >
-                  All
-                </Button>
+                {!hideAllFilter && (
+                  <Button
+                    variant={filter === "all" ? "secondary" : "primary"}
+                    size="sm"
+                    onClick={() => setFilter("all")}
+                  >
+                    All
+                  </Button>
+                )}
                 <Button
                   variant={filter === "active" ? "secondary" : "primary"}
                   size="sm"
@@ -286,94 +338,173 @@ export default function AssociationEmails() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
+                  <TableHead className="w-[60px]">Logo</TableHead>
                   <TableHead>Association Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead className="hidden lg:table-cell">Phone</TableHead>
-                  <TableHead>Address</TableHead>
+                  {filter === "all" ? (
+                    <>
+                      <TableHead>Contact Email</TableHead>
+                      <TableHead className="hidden lg:table-cell">
+                        Phone
+                      </TableHead>
+                      <TableHead>Address</TableHead>
+                    </>
+                  ) : (
+                    <>
+                      <TableHead>User Email</TableHead>
+                      <TableHead>Delivery Email</TableHead>
+                    </>
+                  )}
                   <TableHead className="w-[100px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedAssociations.length > 0 ? (
-                  paginatedAssociations.map((association) => (
-                    <TableRow key={association.id} className="hover:bg-muted/30">
-                      <TableCell className="font-semibold">
-                        {association.name}
-                        <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
-                          ID: {association.id}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <a
-                          href={`mailto:${association.email}`}
-                          className="text-primary hover:underline flex items-center gap-1 group"
-                        >
-                          {association.email}
-                        </a>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-muted-foreground">
-                        {association.phone || "-"}
-                      </TableCell>
-                      <TableCell>
-                        {association.address &&
-                          association.address !== "No address" ? (
-                          <div className="flex items-center gap-2 max-w-[200px] truncate">
-                            <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
-                            <span className="text-sm truncate">
-                              {association.address}
-                            </span>
+                  paginatedAssociations.map((association) => {
+                    const accountInfo = associationIdToAccountMap.get(
+                      association.id
+                    );
+                    return (
+                      <TableRow
+                        key={association.id}
+                        className="hover:bg-muted/30"
+                      >
+                        <TableCell>
+                          {accountInfo?.logo ? (
+                            <div className="flex items-center justify-center">
+                              <Image
+                                src={accountInfo.logo}
+                                alt={`${association.name} logo`}
+                                width={40}
+                                height={40}
+                                className="rounded object-contain"
+                                style={{
+                                  maxWidth: "40px",
+                                  maxHeight: "40px",
+                                }}
+                                unoptimized
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center">
+                              <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          {association.name}
+                          <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                            ID: {association.id}
                           </div>
+                        </TableCell>
+
+                        {filter === "all" ? (
+                          <>
+                            <TableCell>
+                              <a
+                                href={`mailto:${association.email}`}
+                                className="text-primary hover:underline flex items-center gap-1 group"
+                              >
+                                {association.email}
+                              </a>
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell text-muted-foreground">
+                              {association.phone || "-"}
+                            </TableCell>
+                            <TableCell>
+                              {association.address &&
+                                association.address !== "No address" ? (
+                                <div className="flex items-center gap-2 max-w-[200px] truncate">
+                                  <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
+                                  <span className="text-sm truncate">
+                                    {association.address}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">
+                                  -
+                                </span>
+                              )}
+                            </TableCell>
+                          </>
                         ) : (
-                          <span className="text-muted-foreground text-sm">
-                            -
-                          </span>
+                          <>
+                            <TableCell>
+                              {accountInfo?.userEmail ? (
+                                <a
+                                  href={`mailto:${accountInfo.userEmail}`}
+                                  className="text-primary hover:underline"
+                                >
+                                  {accountInfo.userEmail}
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {accountInfo?.deliveryEmail ? (
+                                <a
+                                  href={`mailto:${accountInfo.deliveryEmail}`}
+                                  className="text-primary hover:underline"
+                                >
+                                  {accountInfo.deliveryEmail}
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </TableCell>
+                          </>
                         )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          {association.address &&
-                            association.address !== "No address" && (
-                              <Button variant="secondary" size="sm" asChild>
-                                <a
-                                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                                    association.address
-                                  )}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-1"
-                                >
-                                  <MapPin className="h-3.5 w-3.5" />
-                                  <span>Map</span>
-                                </a>
-                              </Button>
+
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            {filter === "all" && (
+                              <>
+                                {association.address &&
+                                  association.address !== "No address" && (
+                                    <Button variant="secondary" size="sm" asChild>
+                                      <a
+                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                          association.address
+                                        )}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1"
+                                      >
+                                        <MapPin className="h-3.5 w-3.5" />
+                                        <span>Map</span>
+                                      </a>
+                                    </Button>
+                                  )}
+                                {association.website &&
+                                  association.website !== "No website" && (
+                                    <Button variant="accent" size="sm" asChild>
+                                      <a
+                                        href={association.website}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1"
+                                      >
+                                        <ExternalLink className="h-3.5 w-3.5" />
+                                        <span>Web</span>
+                                      </a>
+                                    </Button>
+                                  )}
+                              </>
                             )}
-                          {association.website &&
-                            association.website !== "No website" && (
-                              <Button variant="accent" size="sm" asChild>
-                                <a
-                                  href={association.website}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex items-center gap-1"
-                                >
-                                  <ExternalLink className="h-3.5 w-3.5" />
-                                  <span>Web</span>
-                                </a>
-                              </Button>
-                            )}
-                          <Button variant="primary" size="sm" asChild>
-                            <a
-                              href={`http://localhost:1337/admin/content-manager/collection-types/api::association.association/${association.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              Manage
-                            </a>
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                            <Button variant="primary" size="sm" asChild>
+                              <a
+                                href={`http://localhost:1337/admin/content-manager/collection-types/api::association.association/${association.id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                Manage
+                              </a>
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} className="h-32 text-center">

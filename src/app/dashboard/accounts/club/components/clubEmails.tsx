@@ -17,7 +17,9 @@ import {
   CreditCard,
   AlertCircle,
   Search,
+  ImageIcon,
 } from "lucide-react";
+import Image from "next/image";
 import {
   getUnsubscribedEmails,
   isEmailUnsubscribed,
@@ -39,12 +41,22 @@ import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import EmptyState from "@/components/ui-library/states/EmptyState";
 
-export default function ClubEmails() {
+interface ClubEmailsProps {
+  initialFilter?: "all" | "active" | "inactive";
+  hideAllFilter?: boolean;
+}
+
+export default function ClubEmails({
+  initialFilter = "active",
+  hideAllFilter = false,
+}: ClubEmailsProps) {
   const { data, isLoading, error, refetch } = useGetClubEmails();
   const { data: accountsData, isLoading: accountsLoading } = useAccountsQuery();
   const [unsubscribedEmails, setUnsubscribedEmails] = useState<string[]>([]);
   const [unsubscribedLoading, setUnsubscribedLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "active" | "inactive">("active");
+  const [filter, setFilter] = useState<"all" | "active" | "inactive">(
+    initialFilter
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -79,6 +91,33 @@ export default function ClubEmails() {
         acc.clubs.map((c) => c.id)
       ) || []
     );
+  }, [accountsData]);
+
+  // Create a map of club ID to account info for email lookups
+  interface MappedAccountInfo {
+    userEmail: string | null;
+    deliveryEmail: string | null;
+    id: number;
+    logo?: string | null;
+  }
+
+  const clubIdToAccountMap = useMemo(() => {
+    const map = new Map<number, MappedAccountInfo>();
+    if (!accountsData) return map;
+
+    [...accountsData.clubs.active, ...accountsData.clubs.inactive].forEach(
+      (account) => {
+        account.clubs.forEach((club) => {
+          map.set(club.id, {
+            userEmail: account.email,
+            deliveryEmail: account.DeliveryAddress,
+            id: account.id,
+            logo: account.logo?.url,
+          });
+        });
+      }
+    );
+    return map;
   }, [accountsData]);
 
   // Combined filtering logic
@@ -166,10 +205,22 @@ export default function ClubEmails() {
         !isEmailUnsubscribed(club.email, unsubscribedEmails)
     );
 
-    const csvContent = [
-      "name,email",
-      ...validClubs.map((club) => `"${club.name}","${club.email}"`),
-    ].join("\n");
+    const isAccountView = filter !== "all";
+
+    const csvHeader = isAccountView
+      ? "Club Name,Club ID,User Email,Delivery Email"
+      : "Club Name,Club ID,Contact Email";
+
+    const csvRows = validClubs.map((club) => {
+      if (isAccountView) {
+        const accountInfo = clubIdToAccountMap.get(club.id);
+        return `"${club.name}","${club.id}","${accountInfo?.userEmail || ""}","${accountInfo?.deliveryEmail || ""
+          }"`;
+      }
+      return `"${club.name}","${club.id}","${club.email}"`;
+    });
+
+    const csvContent = [csvHeader, ...csvRows].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
@@ -232,13 +283,15 @@ export default function ClubEmails() {
                 />
               </div>
               <div className="flex gap-2">
-                <Button
-                  variant={filter === "all" ? "secondary" : "primary"}
-                  size="sm"
-                  onClick={() => setFilter("all")}
-                >
-                  All
-                </Button>
+                {!hideAllFilter && (
+                  <Button
+                    variant={filter === "all" ? "secondary" : "primary"}
+                    size="sm"
+                    onClick={() => setFilter("all")}
+                  >
+                    All
+                  </Button>
+                )}
                 <Button
                   variant={filter === "active" ? "secondary" : "primary"}
                   size="sm"
@@ -279,103 +332,167 @@ export default function ClubEmails() {
             <Table>
               <TableHeader>
                 <TableRow className="bg-muted/50">
+                  <TableHead className="w-[60px]">Logo</TableHead>
                   <TableHead>Club Name</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead className="hidden lg:table-cell">Phone</TableHead>
-                  <TableHead>Address</TableHead>
+                  {filter === "all" ? (
+                    <>
+                      <TableHead>Contact Email</TableHead>
+                      <TableHead className="hidden lg:table-cell">
+                        Phone
+                      </TableHead>
+                      <TableHead>Address</TableHead>
+                    </>
+                  ) : (
+                    <>
+                      <TableHead>User Email</TableHead>
+                      <TableHead>Delivery Email</TableHead>
+                    </>
+                  )}
                   <TableHead className="w-[100px] text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedClubs.length > 0 ? (
-                  paginatedClubs.map((club) => (
-                    <TableRow key={club.id} className="hover:bg-muted/30">
-                      <TableCell className="font-semibold">
-                        {club.name}
-                        <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
-                          ID: {club.id}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <a
-                          href={`mailto:${club.email}`}
-                          className="text-primary hover:underline flex items-center gap-1 group"
-                        >
-                          {club.email}
-                        </a>
-                      </TableCell>
-                      <TableCell className="hidden lg:table-cell text-muted-foreground">
-                        {club.phone || "-"}
-                      </TableCell>
-                      <TableCell>
-                        {club.address && club.address !== "No address" ? (
-                          <div className="flex items-center gap-2 max-w-[200px] truncate">
-                            <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
-                            <span className="text-sm truncate">
-                              {club.address}
-                            </span>
+                  paginatedClubs.map((club) => {
+                    const accountInfo = clubIdToAccountMap.get(club.id);
+                    return (
+                      <TableRow key={club.id} className="hover:bg-muted/30">
+                        <TableCell>
+                          {accountInfo?.logo ? (
+                            <div className="flex items-center justify-center">
+                              <Image
+                                src={accountInfo.logo}
+                                alt={`${club.name} logo`}
+                                width={40}
+                                height={40}
+                                className="rounded object-contain"
+                                style={{
+                                  maxWidth: "40px",
+                                  maxHeight: "40px",
+                                }}
+                                unoptimized
+                              />
+                            </div>
+                          ) : (
+                            <div className="flex items-center justify-center">
+                              <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="font-semibold">
+                          {club.name}
+                          <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                            ID: {club.id}
                           </div>
+                        </TableCell>
+
+                        {filter === "all" ? (
+                          <>
+                            <TableCell>
+                              <a
+                                href={`mailto:${club.email}`}
+                                className="text-primary hover:underline flex items-center gap-1 group"
+                              >
+                                {club.email}
+                              </a>
+                            </TableCell>
+                            <TableCell className="hidden lg:table-cell text-muted-foreground">
+                              {club.phone || "-"}
+                            </TableCell>
+                            <TableCell>
+                              {club.address && club.address !== "No address" ? (
+                                <div className="flex items-center gap-2 max-w-[200px] truncate">
+                                  <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
+                                  <span className="text-sm truncate">
+                                    {club.address}
+                                  </span>
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground text-sm">
+                                  -
+                                </span>
+                              )}
+                            </TableCell>
+                          </>
                         ) : (
-                          <span className="text-muted-foreground text-sm">
-                            -
-                          </span>
+                          <>
+                            <TableCell>
+                              {accountInfo?.userEmail ? (
+                                <a
+                                  href={`mailto:${accountInfo.userEmail}`}
+                                  className="text-primary hover:underline"
+                                >
+                                  {accountInfo.userEmail}
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              {accountInfo?.deliveryEmail ? (
+                                <a
+                                  href={`mailto:${accountInfo.deliveryEmail}`}
+                                  className="text-primary hover:underline"
+                                >
+                                  {accountInfo.deliveryEmail}
+                                </a>
+                              ) : (
+                                <span className="text-muted-foreground">-</span>
+                              )}
+                            </TableCell>
+                          </>
                         )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          {club.address && club.address !== "No address" && (
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              asChild
-                            >
+
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            {filter === "all" && (
+                              <>
+                                {club.address &&
+                                  club.address !== "No address" && (
+                                    <Button variant="secondary" size="sm" asChild>
+                                      <a
+                                        href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                                          club.address
+                                        )}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1"
+                                      >
+                                        <MapPin className="h-3.5 w-3.5" />
+                                        <span>Map</span>
+                                      </a>
+                                    </Button>
+                                  )}
+                                {club.website &&
+                                  club.website !== "No website" && (
+                                    <Button variant="accent" size="sm" asChild>
+                                      <a
+                                        href={club.website}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1"
+                                      >
+                                        <ExternalLink className="h-3.5 w-3.5" />
+                                        <span>Web</span>
+                                      </a>
+                                    </Button>
+                                  )}
+                              </>
+                            )}
+                            <Button variant="primary" size="sm" asChild>
                               <a
-                                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                                  club.address
-                                )}`}
+                                href={`http://localhost:1337/admin/content-manager/collection-types/api::club.club/${club.id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex items-center gap-1"
                               >
-                                <MapPin className="h-3.5 w-3.5" />
-                                <span>Map</span>
+                                Manage
                               </a>
                             </Button>
-                          )}
-                          {club.website && club.website !== "No website" && (
-                            <Button
-                              variant="accent"
-                              size="sm"
-                              asChild
-                            >
-                              <a
-                                href={club.website}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-1"
-                              >
-                                <ExternalLink className="h-3.5 w-3.5" />
-                                <span>Web</span>
-                              </a>
-                            </Button>
-                          )}
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            asChild
-                          >
-                            <a
-                              href={`http://localhost:1337/admin/content-manager/collection-types/api::club.club/${club.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              Manage
-                            </a>
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 ) : (
                   <TableRow>
                     <TableCell colSpan={5} className="h-32 text-center">

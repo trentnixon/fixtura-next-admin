@@ -62,7 +62,7 @@ export default function DisplayClubsTable() {
             />
           </TabsContent>
           <TabsContent value="emails">
-            <ClubEmails />
+            <ClubEmails initialFilter="active" hideAllFilter />
           </TabsContent>
         </SectionContainer>
       </Tabs>
