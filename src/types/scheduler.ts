@@ -40,6 +40,10 @@ export interface SchedulerRollup {
   DaysOfTheWeekGroupedByCount: {
     [key: string]: number;
   };
+  // NEW FIELDS:
+  yesterdaySuccessCount: number;
+  yesterdayFailureCount: number;
+  avgRenderTimeMinutes: number;
 }
 
 // new type getTodaysRenders
@@ -58,5 +62,41 @@ export interface TodaysRenders {
     renderName: string;
     processing: boolean;
     complete: boolean;
+    emailSent: boolean;
+    startedAt: string;
+    updatedAt: string;
+    // NEW Phase 2 Fields
+    failureReason: string | null;
+    queueWaitTimeSeconds: number | null;
+  } | null;
+}
+
+// new type getYesterdaysRenders
+export interface YesterdaysRenders {
+  schedulerId: number;
+  schedulerName: string;
+  scheduledTime: string;
+  accountId: number;
+  accountName: string;
+  accountType: string;
+  accountSport: string;
+  render: {
+    renderId: number;
+    complete: boolean;
+    processing: boolean;
+    emailSent: boolean;
+    startedAt: string;
+    completedAt: string | null;
+    // NEW Phase 2 Fields
+    failureReason: string | null;
+    queueWaitTimeSeconds: number | null;
   };
+}
+
+export interface HealthHistory {
+  date: string;
+  success: number;
+  failed: number;
+  avgDuration: number;
+  totalVolume: number;
 }

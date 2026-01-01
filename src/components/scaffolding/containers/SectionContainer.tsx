@@ -13,6 +13,7 @@ interface SectionContainerProps {
   contentClassName?: string;
   variant?: "default" | "compact";
   action?: ReactNode;
+  icon?: ReactNode;
 }
 
 /**
@@ -40,6 +41,7 @@ export default function SectionContainer({
   contentClassName,
   variant = "default",
   action,
+  icon,
 }: SectionContainerProps) {
   const isCompact = variant === "compact";
 
@@ -55,15 +57,18 @@ export default function SectionContainer({
         )}
       >
         <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-1">
-            <SectionTitle className={isCompact ? "text-base" : undefined}>
-              {title}
-            </SectionTitle>
-            {description && (
-              <ByLine className={isCompact ? "text-xs" : undefined}>
-                {description}
-              </ByLine>
-            )}
+          <div className="flex items-center gap-3 flex-1">
+            {icon && <div className="flex-shrink-0">{icon}</div>}
+            <div className="flex flex-col gap-1">
+              <SectionTitle className={isCompact ? "text-base" : undefined}>
+                {title}
+              </SectionTitle>
+              {description && (
+                <ByLine className={isCompact ? "text-xs" : undefined}>
+                  {description}
+                </ByLine>
+              )}
+            </div>
           </div>
           {action && <div>{action}</div>}
         </div>

@@ -11,64 +11,66 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useGetTomorrowsRenders } from "@/hooks/scheduler/useGetTomorrowsRenders";
 import { TodaysRenders } from "@/types";
-import { EyeIcon, XIcon, CheckIcon } from "lucide-react";
+import { EyeIcon, DatabaseIcon } from "lucide-react";
 import Link from "next/link";
-import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
+import StatusBadge from "@/components/ui-library/badges/StatusBadge";
 
 export default function GetTomorrowsSchedulers() {
-  const { data } = useGetTomorrowsRenders();
+  const { data, isLoading } = useGetTomorrowsRenders();
+
+  if (isLoading) return <div className="p-12 text-center text-slate-400 italic">Syncing tomorrow&apos;s forecast...</div>;
+
   // sort data by accountSport in alphabetical order
-  const sortedData = data?.sort((a, b) => {
+  const sortedData = [...(data || [])].sort((a, b) => {
     if (a.accountSport < b.accountSport) return -1;
     if (a.accountSport > b.accountSport) return 1;
     return 0;
   });
-  // form two objs filter on accountType (Club and Association)
-  const clubSchedulers =
-    sortedData?.filter((scheduler) => scheduler.accountType === "Club") ?? [];
-  const associationSchedulers =
-    sortedData?.filter(
-      (scheduler) => scheduler.accountType === "Association"
-    ) ?? [];
+
+  const clubSchedulers = sortedData.filter((s) => s.accountType === "Club");
+  const associationSchedulers = sortedData.filter((s) => s.accountType === "Association");
+
   return (
-    <ElementContainer
-      title={`Tomorrow's Schedulers (${data?.length || 0})`}
-      subtitle="View schedulers scheduled for tomorrow by account type"
-    >
-      <Tabs defaultValue="club">
-        <TabsList variant="secondary" className="mb-4">
-          <TabsTrigger value="club">Club ({clubSchedulers.length})</TabsTrigger>
-          <TabsTrigger value="association">
-            Association ({associationSchedulers.length})
-          </TabsTrigger>
-        </TabsList>
-        <TabsContent value="club">
-          <Table>
-            <SchedulerTableHeader />
-            <SchedulerTableBody data={clubSchedulers} />
-          </Table>
+    <div className="space-y-6">
+      <Tabs defaultValue="club" className="w-full">
+        <div className="flex items-center justify-between mb-4">
+          <TabsList variant="secondary">
+            <TabsTrigger value="club">Club ({clubSchedulers.length})</TabsTrigger>
+            <TabsTrigger value="association">
+              Association ({associationSchedulers.length})
+            </TabsTrigger>
+          </TabsList>
+        </div>
+        <TabsContent value="club" className="mt-0">
+          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+            <Table>
+              <SchedulerTableHeader />
+              <SchedulerTableBody data={clubSchedulers} />
+            </Table>
+          </div>
         </TabsContent>
-        <TabsContent value="association">
-          <Table>
-            <SchedulerTableHeader />
-            <SchedulerTableBody data={associationSchedulers} />
-          </Table>
+        <TabsContent value="association" className="mt-0">
+          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden shadow-sm">
+            <Table>
+              <SchedulerTableHeader />
+              <SchedulerTableBody data={associationSchedulers} />
+            </Table>
+          </div>
         </TabsContent>
       </Tabs>
-    </ElementContainer>
+    </div>
   );
 }
 
 const SchedulerTableHeader = () => {
   return (
     <TableHeader>
-      <TableRow>
-        <TableHead className="text-left">Account Name</TableHead>
-        <TableHead className="text-center">Account Sport</TableHead>
-        <TableHead className="text-center">Rendered</TableHead>
-        <TableHead className="text-center">Que Complete</TableHead>
-        <TableHead className="text-center">Account</TableHead>
-        <TableHead className="text-center">Scheduler</TableHead>
+      <TableRow className="bg-slate-50/50">
+        <TableHead className="text-left font-semibold">Account Name</TableHead>
+        <TableHead className="text-center font-semibold">Sport</TableHead>
+        <TableHead className="text-center font-semibold">Rendered</TableHead>
+        <TableHead className="text-center font-semibold">Queue</TableHead>
+        <TableHead className="text-center font-semibold">Actions</TableHead>
       </TableRow>
     </TableHeader>
   );
@@ -78,7 +80,7 @@ const SchedulerTableBody = ({ data }: { data: TodaysRenders[] }) => {
   return (
     <TableBody>
       {data?.map((scheduler) => (
-        <TableRow key={scheduler.schedulerId}>
+        <TableRow key={scheduler.schedulerId} className="hover:bg-slate-50/50 transition-colors">
           <TableCell className="text-left font-medium">
             {scheduler.accountName}
           </TableCell>
@@ -86,47 +88,47 @@ const SchedulerTableBody = ({ data }: { data: TodaysRenders[] }) => {
             {scheduler.accountSport}
           </TableCell>
           <TableCell className="text-center">
-            {!scheduler.isRendering ? (
-              <div className="flex justify-center items-center">
-                <CheckIcon className="text-success-500 w-4 h-4" />
-              </div>
-            ) : (
-              <div className="flex justify-center items-center">
-                <XIcon className="text-error-500 w-4 h-4" />
-              </div>
-            )}
+            <StatusBadge
+              status={!scheduler.isRendering}
+              trueLabel="Complete"
+              falseLabel="Rendering"
+              variant={!scheduler.isRendering ? "default" : "info"}
+            />
           </TableCell>
           <TableCell className="text-center">
-            {!scheduler.queued ? (
-              <div className="flex justify-center items-center">
-                <CheckIcon className="text-success-500 w-4 h-4" />
-              </div>
-            ) : (
-              <div className="flex justify-center items-center">
-                <XIcon className="text-error-500 w-4 h-4" />
-              </div>
-            )}
+            <StatusBadge
+              status={!scheduler.queued}
+              trueLabel="Processed"
+              falseLabel="Queued"
+              variant={!scheduler.queued ? "default" : "warning"}
+            />
           </TableCell>
           <TableCell className="text-center">
-            <Link
-              href={`/dashboard/accounts/${scheduler.accountType.toLowerCase()}/${
-                scheduler.accountId
-              }`}
-            >
-              <Button variant="primary" size="icon">
-                <EyeIcon className="h-4 w-4" />
-              </Button>
-            </Link>
-          </TableCell>
-          <TableCell className="text-center">
-            <Link href={`/dashboard/schedulers/${scheduler.schedulerId}`}>
-              <Button variant="secondary" size="icon">
-                <EyeIcon className="h-4 w-4" />
-              </Button>
-            </Link>
+            <div className="flex items-center justify-center gap-2">
+              <Link
+                href={`/dashboard/accounts/${scheduler.accountType.toLowerCase()}/${scheduler.accountId
+                  }`}
+              >
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-brandPrimary-600" title="View Account">
+                  <EyeIcon className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href={`/dashboard/schedulers/${scheduler.schedulerId}`}>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-brandPrimary-600" title="View Scheduler">
+                  <DatabaseIcon className="h-4 w-4" />
+                </Button>
+              </Link>
+            </div>
           </TableCell>
         </TableRow>
       ))}
+      {data?.length === 0 && (
+        <TableRow>
+          <TableCell colSpan={5} className="text-center py-8 text-slate-500 italic">
+            No schedulers for tomorrow
+          </TableCell>
+        </TableRow>
+      )}
     </TableBody>
   );
 };
