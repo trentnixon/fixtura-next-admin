@@ -44,10 +44,7 @@ The `/dashboard/schedulers` route requires a visual and technical update to alig
 - [ ] **Error Distribution Chart:** Implement Pie/Bar chart showing which Sports or Account Types are failing most (using `failureReason`).
 - [ ] **Peak Load Heatmap:** Visualization of when most schedulers are triggered throughout the day vs throughput.
 
-### 8. Predictive Insights & Capacity (Future)
-- [ ] **Queue Clearance Timer:** Implement "Estimated Time to Zero" based on rolling duration averages.
-- [ ] **Capacity Alerting:** Highlight time-of-day slots where `queueWaitTimeSeconds` consistently spikes.
-- [ ] **Sport Stability Index:** Grade sports/templates based on their 30-day success trend.
+
 
 ## Success Criteria
 - [x] The dashboard feels less "boxy" and more integrated with the dashboard theme (Matched /dashboard/orders pattern).
