@@ -16,6 +16,17 @@ export interface SchedulerAttributes {
       };
     };
   };
+  account?: {
+    data: {
+      id: number;
+      attributes: {
+        FirstName: string;
+        LastName: string | null;
+        Sport: string;
+        account_type?: { data: { attributes: { Name: string } } };
+      };
+    };
+  };
 }
 
 export interface Scheduler {

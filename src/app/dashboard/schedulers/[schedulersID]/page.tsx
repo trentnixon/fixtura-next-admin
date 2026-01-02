@@ -8,7 +8,7 @@ import TableOfRenders from "./components/TableofRenders";
 
 export default function SchedulerDetailsPage() {
   return (
-    <CreatePage>
+    <>
       <CreatePageTitle
         title="Scheduler Details"
         byLine="Monitor individual scheduler performance and render history"
@@ -17,6 +17,6 @@ export default function SchedulerDetailsPage() {
         <SchedulerPage />
         <TableOfRenders />
       </PageContainer>
-    </CreatePage>
+    </>
   );
 }

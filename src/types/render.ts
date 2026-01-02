@@ -46,6 +46,10 @@ export interface RenderAttributes {
   grades_in_renders: {
     data: Render[];
   };
+  ai_articles: {
+    data: { id: number; attributes: any }[];
+  };
+  rerenderRequested: boolean;
 }
 
 export interface Render {

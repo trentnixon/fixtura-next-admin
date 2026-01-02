@@ -18,10 +18,15 @@ export async function fetchSchedulerById(
     // Build query parameters using qs
     const query = qs.stringify(
       {
-        populate: [
-          "renders", // Example relation: template
-          "days_of_the_week", // Example relation: tasks
-        ], // Add relations as needed
+        populate: {
+          renders: {
+            populate: ["downloads", "ai_articles"]
+          },
+          days_of_the_week: true,
+          account: {
+            populate: ["account_type"]
+          }
+        },
       },
       { encodeValuesOnly: true } // Serialize parameters for Strapi
     );

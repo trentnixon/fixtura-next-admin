@@ -44,6 +44,8 @@ const TableOfRenders = () => {
             <TableHead className="text-center font-semibold">Complete</TableHead>
             <TableHead className="text-center font-semibold">Processing</TableHead>
             <TableHead className="text-center font-semibold">Emailed</TableHead>
+            <TableHead className="text-center font-semibold text-xs">Assets</TableHead>
+            <TableHead className="text-center font-semibold text-xs">AI</TableHead>
             <TableHead className="text-center font-semibold">Rerender</TableHead>
             <TableHead className="text-center font-semibold">Actions</TableHead>
           </TableRow>
@@ -78,6 +80,12 @@ const TableOfRenders = () => {
                     variant={render.attributes.EmailSent ? "default" : "neutral"}
                   />
                 </TableCell>
+                <TableCell className="text-center font-mono text-[10px] text-slate-500">
+                  {render.attributes.downloads?.data?.length || 0}
+                </TableCell>
+                <TableCell className="text-center font-mono text-[10px] text-slate-500">
+                  {render.attributes.ai_articles?.data?.length || 0}
+                </TableCell>
                 <TableCell className="text-center">
                   <StatusBadge
                     status={render.attributes.forceRerender}
@@ -88,21 +96,24 @@ const TableOfRenders = () => {
                 </TableCell>
                 <TableCell className="text-center">
                   <div className="flex items-center justify-center gap-2">
-                    <Link
-                      href={`${strapiLocation.render}${render.id}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title="View in Strapi"
-                    >
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-brandPrimary-600">
-                        <DatabaseIcon className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                    <Link href={`/dashboard/renders/${render.id}`} title="View Details">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-500 hover:text-brandPrimary-600">
+                    <Button variant="primary" size="icon" asChild className="h-8 w-8">
+                      <Link
+                        href={`/dashboard/renders/${render.id}`}
+                        title="View Details"
+                      >
                         <EyeIcon className="h-4 w-4" />
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
+                    <Button variant="primary" size="icon" asChild className="h-8 w-8">
+                      <Link
+                        href={`${strapiLocation.render}${render.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title="View in Strapi"
+                      >
+                        <DatabaseIcon className="h-4 w-4" />
+                      </Link>
+                    </Button>
                   </div>
                 </TableCell>
               </TableRow>
