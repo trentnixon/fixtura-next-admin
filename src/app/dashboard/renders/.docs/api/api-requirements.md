@@ -115,61 +115,46 @@ When viewing a single render, we should fetch the `attributes` of these relation
 
 To maintain high performance and avoid "Over-Population Stress" on the Strapi server, we will use a multi-route strategy. Instead of one massive query, we break requests down by UI concern:
 
-### Route A: Operational Audit (The Master List)
-**Endpoint**: `/api/renders`
-**Purpose**: Populate the `GlobalRenderTable`.
-- **Query Strategy**: Flat population with counts only.
-- **Population**: `scheduler.account(fields:Name)`, `downloads(count:true)`, `ai_articles(count:true)`.
-- **Server Load**: Low. Minimal relational depth.
+## Custom Strapi Route Architecture
 
-### Route B: Live Telemetry (The Headliners)
-**Endpoint**: `/api/renders/telemetry` (Proposed Custom)
-**Purpose**: Populate the `GlobalRenderRollup` cards.
-- **Expected Payload**:
-  ```json
-  {
-    "activeCount": 5,
-    "failedToday": 12,
-    "successRate24h": 94.2,
-    "systemStatus": "nominal"
-  }
-  ```
-- **Server Load**: Extremely Low. Uses database aggregation (`count`, `avg`) rather than object serialization.
+To maintain high performance and avoid the overhead of the generic Strapi REST API, we are implementing a specialized set of custom routes. These routes target specific database optimized queries (using `knex` or raw queries where appropriate) to provide the dashboard with exact telemetry.
 
-### Route C: Analytical Aggregations (The Charts)
-**Endpoint**: `/api/renders/analytics` (Proposed Custom)
-**Purpose**: Populate the System Throughput and Asset Mix charts.
-- **Query Parameters**: `?period=month` or `?period=week`.
-- **Deduction Engine**: This route should return buckets of data pre-computed by the server to avoid client-side heavy lifting.
-- **Server Load**: Moderate. Only called on dashboard load or filter change.
+### Route A: Operational Audit
+**Endpoint**: `/api/renders/audit`
+**Controller Function**: `findAuditList`
+- **Functionality**: Performs a prioritized join between `renders` and `schedulers` to return a list of the 25 most recent renders. It specifically selects only the counts of associated `downloads` and `ai_articles` per row, avoiding the serialization of full object trees.
+- **Deduction**: Returns a "Complexity Score" per render calculated from the sum of associated metadata relations.
 
-### Route D: Resource Leaders (The Leaderboards)
-**Endpoint**: `/api/renders/account-distribution` (Proposed Custom)
-**Purpose**: Identify large accounts and asset type distribution.
-- **Goal**: Returns the Top 10 Accounts and global counts for `video`, `image`, and `content` asset types.
-- **Server Load**: Moderate.
+### Route B: Live Telemetry
+**Endpoint**: `/api/renders/telemetry`
+**Controller Function**: `getSystemPulse`
+- **Functionality**: A database-level aggregation utility. It runs a `COUNT` on currently `Processing: true` renders and a calculation of the `Complete: true` vs `Complete: false` ratio for the last 24 hours.
+- **Output**: Returns a single small JSON object representing system "heat".
 
-### Route E: Individual Lineage (Deep Audit)
-**Endpoint**: `/api/renders/:id`
-**Purpose**: Full audit of a single render's DNA.
-- **Query Strategy**: Complete relational expansion.
-- **Custom Population**:
-  ```json
-  {
-    "populate": {
-      "scheduler": { "populate": "account" },
-      "downloads": true,
-      "ai_articles": true,
-      "game_results_in_renders": true,
-      "upcoming_games_in_renders": true,
-      "grades_in_renders": {
-        "populate": ["grade", "team"]
-      }
-    }
-  }
-  ```
-- **Custom Option: Data Integrity Check**: A specific flag `?checkIntegrity=true` (Proposed) that compares the expected games in the scheduler against what was actually written to the render's many-to-many relations, highlighting missing data points.
-- **Server Load**: High per-request. Reserved for technical troubleshooting and dispute resolution.
+### Route C: Analytical Aggregations
+**Endpoint**: `/api/renders/analytics`
+**Controller Function**: `getThroughputAnalytics`
+- **Functionality**: Uses a date-truncation grouping to bucket renders into days, weeks, or months. It calculates the average asset production volume per bucket.
+- **Parameters**: `?period=month` | `?period=week`
+- **Performance**: Pre-computes these buckets so the frontend receives a finalized time-series array (e.g., for Recharts).
+
+### Route D: Resource Leaders
+**Endpoint**: `/api/renders/distribution`
+**Controller Function**: `getAccountLeaderboard`
+- **Functionality**: Aggregates render counts and asset creation counts grouped by `account_id`. It identifies the top 10 most "data-heavy" accounts in the system.
+- **Segments**: Groups results by `account_type` (Club/Association) for comparative analysis.
+
+### Route E: Individual Lineage
+**Endpoint**: `/api/renders/lineage/:id`
+**Controller Function**: `getRenderDNA`
+- **Functionality**: The most expensive route. It fetches every attribute of a single render ID and its relations.
+- **Custom Logic**: If `checkIntegrity=true` is passed, the controller performs a cross-reference between the results stored in `game_results_in_renders` and the expected data from the scheduler's logic, returning a `mismatched_data` array.
+
+## Implementation Rules (Backend)
+1. **Custom Controllers**: All routes must bypass the default Strapi `find` and `findOne` methods to ensure optimized SQL queries.
+2. **Selective Selection**: Only return fields required by the UI documentation.
+3. **Caching**: Route B (Telemetry) should have a short-term Cache (e.g., 30s) to prevent DB hammering under high-frequency refreshes.
+
 
 ## Implementation Rules
 1. **Never** request game metadata (`upcoming_games`, `game_results`) in Route A.

@@ -27,16 +27,16 @@ This document outlines the charting and analytical visualizations required for t
 - **Processing Time Heatmap**: A calendar or heatmap showing the average render duration by hour of the day/day of the week. This identifies "Rush Hour" bottlenecks.
 - **Asset Creation Latency**: Tracking how long it takes from `publishedAt` to the final `Download` object being attached.
 
-## Technical Implementation (Recharts)
-- **Colors**:
-    - Video: `brandPrimary` (Indigo)
-    - Image: `brandSecondary` (Teal)
-    - AI: `brandAccent` (Amber)
-- **Interactivity**: All charts must support Tooltips that show absolute values and "Click to Filter" functionality (e.g., clicking the "Club" section in a chart filters the `GlobalRenderTable`).
+## Status: IMPLEMENTED
+The core visualization suite is now live, utilizing Route C (Analytical Aggregations) and Route D (Resource Distribution).
 
-## API Requirements for Analytics
-To support these visualizations without killing performance, we need:
-1. **Aggregated Analytics Endpoint**: `/api/renders/analytics` (Proposed)
-    - Should return pre-computed buckets by month/week.
-2. **Account Summary Endpoint**: `/api/accounts/rendering-leaders`
-    - Should return accounts with the highest asset counts across their history.
+## Technical Implementation (Recharts)
+- **Component**: `RenderAnalyticsDashboard.tsx`
+- **Charts**:
+    - `RenderThroughputChart.tsx`: System capacity and success trends.
+    - `RenderAssetMixChart.tsx`: Production efficiency and ROI metrics.
+    - `RenderResourceLeaders.tsx`: Top 10 heavy-hitter accounts and global cumulative asset mix.
+
+## API Integration
+- **Endpoint**: `/api/renders/analytics` (Route C) - Returns time-series data for throughput and failure rates.
+- **Endpoint**: `/api/renders/distribution` (Route D) - Returns account leaderboards and total asset categorizations.

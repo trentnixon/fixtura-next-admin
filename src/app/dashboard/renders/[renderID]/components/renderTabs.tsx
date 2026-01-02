@@ -4,6 +4,7 @@ import TableDownloads from "./TableDownloads";
 import TableGamesResults from "./TableGameResults";
 import TableUpcomingGames from "./TableUpcomingGames";
 import TableGrades from "./TableGradesInRender";
+import RenderIntegrityAudit from "./RenderIntegrityAudit";
 
 export function RenderTabs() {
   return (
@@ -13,6 +14,9 @@ export function RenderTabs() {
         <TabsTrigger value="gameResults">Game Results</TabsTrigger>
         <TabsTrigger value="upcomingGames">Upcoming Games</TabsTrigger>
         <TabsTrigger value="grades">Grades</TabsTrigger>
+        <TabsTrigger value="audit" className="text-indigo-600 font-bold">
+          Integrity Audit
+        </TabsTrigger>
       </TabsList>
       <TabsContent value="downloads">
         <TableDownloads />
@@ -25,6 +29,9 @@ export function RenderTabs() {
       </TabsContent>
       <TabsContent value="grades">
         <TableGrades />
+      </TabsContent>
+      <TabsContent value="audit">
+        <RenderIntegrityAudit />
       </TabsContent>
     </Tabs>
   );

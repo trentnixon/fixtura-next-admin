@@ -44,10 +44,19 @@ This document outlines the specific UI components to be developed for the `/dash
     - **Asset Grid**: Visual thumbnails of generated images/videos.
     - **AI Preview**: Snippet of the generated AI write-up.
 
-## Standardized Tokens & Icons
-- **Icon Set**: Lucide-React (`Activity`, `PlayCircle`, `Clock`, `Database`, `Eye`, `FileText`, `Video`).
+## Implementation Status
+- ✅ **GlobalRenderRollup**: Implemented in `GlobalRenderRollup.tsx` with live telemetry.
+- ✅ **GlobalRenderTable**: Implemented in `GlobalRenderTable.tsx` with specialized Route A audit data.
+- ✅ **RenderThroughputChart**: Implemented in `RenderThroughputChart.tsx`.
+- ✅ **RenderAssetMixChart**: Implemented in `RenderAssetMixChart.tsx`.
+- ✅ **RenderResourceLeaders**: Implemented in `RenderResourceLeaders.tsx`.
+- ✅ **RenderIntegrityAudit**: Implemented in `RenderIntegrityAudit.tsx` (Individual DNA Audit).
+- 🕒 **GlobalRenderFilters**: Future enhancement for advanced data slicing.
+
+## Standardized Tokens & Icons (Fixtura Admin DS)
+- **Icon Set**: Lucide-React (`Activity`, `PlayCircle`, `Trophy`, `TrendingUp`, `Video`, `Image`, `Fingerprint`).
 - **Color Palette**:
-    - `brandPrimary` (Blue/Indigo) for active/rendering.
-    - `error` (Red) for failures.
-    - `warning` (Amber) for stalled/queued.
-    - `success` (Emerald) for completed.
+    - `Primary` (Indigo): Data aggregations and high-level navigation.
+    - `Emerald`: Success and completion.
+    - `Red/Rose`: Failures and critical telemetry.
+    - `Amber/Yellow`: Assets and resource distribution.

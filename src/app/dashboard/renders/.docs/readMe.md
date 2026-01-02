@@ -14,20 +14,23 @@ The Global Render Monitor is designed for system administrators to track heavy r
 ## Page Infrastructure
 
 - **Path**: `/dashboard/renders/page.tsx`
-- **Hook**: `useGlobalRenders` (To be created) - Fetches a paginated list of all renders with account/scheduler distribution.
-- **Components**:
-    - `GlobalRenderRollup`: Top-level stats (Active, Failed today, Avg time).
-    - `GlobalRenderFilter`: Advanced filtering by Sport, Organization, and Status.
-    - `GlobalRenderTable`: The master list of all recent renders.
+- **Main Components**:
+    - `GlobalRenderRollup`: Live headline metrics (Active, Failures, Success Rate). Powered by `useRenderTelemetry`.
+    - `RenderAnalyticsDashboard`: Historical throughput and asset mix trends. Powered by `useRenderAnalytics`.
+    - `RenderResourceLeaders`: High-volume account leaderboards and global asset distribution. Powered by `useRenderDistribution`.
+    - `GlobalRenderTable`: The master operational audit list. Powered by `useRenderAudit`.
 
-## API Infrastructure
-To ensure performance, data fetching is split into specialized routes documented in the `api/` directory:
+## API & Data Infrastructure
+The dashboard utilizes a specialized multi-route architecture to balance real-time performance with deep analytical insights:
 
-- [**Route A: Operational Audit**](./api/route-a-operational-audit.md) - The master list and table view.
-- [**Route B: Live Telemetry**](./api/route-b-live-telemetry.md) - Real-time headline stats.
-- [**Route C: Analytical Aggregations**](./api/route-c-analytical-aggregations.md) - Pre-computed charts.
-- [**Route D: Resource Leaders**](./api/route-d-resource-leaders.md) - Leaderboards and distribution.
-- [**Route E: Individual Lineage**](./api/route-e-individual-lineage.md) - Deep dive "DNA" audit.
+- [**Route A: Operational Audit**](./api/route-a-operational-audit.md) - Master data synchronization for the audit table.
+- [**Route B: Live Telemetry**](./api/route-b-live-telemetry.md) - High-frequency polling for system health.
+- [**Route C: Analytical Aggregations**](./api/route-c-analytical-aggregations.md) - Time-series data for trend visualization.
+- [**Route D: Resource Leaders**](./api/route-d-resource-leaders.md) - Account-level ROI and product mix analysis.
+- [**Route E: Individual Lineage**](./api/route-e-individual-lineage.md) - Deep "DNA" audit for troubleshooting specific renders.
+
+## Advanced Troubleshooting
+For technical disputes (e.g., "Why is my video missing?"), the system provides an **Integrity Audit** tool within the individual render view (`/dashboard/renders/[renderID]`). This tool performs a full relational expansion to detect discrepancies between scheduler expectations and actual render output.
 
 ## Data Schema Mapping
 Based on the `attributes` provided by the CMS:
