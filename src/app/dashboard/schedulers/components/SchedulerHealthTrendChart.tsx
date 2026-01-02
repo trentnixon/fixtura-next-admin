@@ -19,11 +19,11 @@ export default function SchedulerHealthTrendChart() {
     const chartConfig = {
         success: {
             label: "Success",
-            color: "hsl(var(--success-500))",
+            color: "hsl(142 76% 36%)", // emerald-600
         },
         failed: {
             label: "Failed",
-            color: "hsl(var(--error-500))",
+            color: "hsl(0 84% 60%)", // red-500
         },
     } satisfies ChartConfig;
 

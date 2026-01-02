@@ -11,20 +11,17 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import Text from "@/components/ui-library/foundation/Text";
 import {
-    DatabaseIcon,
-    EyeIcon,
-    CheckCircle2,
-    FileText,
-    Video,
     ChevronLeft,
     ChevronRight
 } from "lucide-react";
-import Link from "next/link";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
-import { Badge } from "@/components/ui/badge";
 import { RenderAuditItem } from "@/types/render";
+import { formatDate } from "@/utils/chart-formatters";
 
 export function GlobalRenderTable() {
     const [page, setPage] = useState(1);
@@ -36,18 +33,36 @@ export function GlobalRenderTable() {
     const renders = data?.data || [];
     const pagination = data?.pagination;
 
-    const getStatusBadge = (render: RenderAuditItem) => {
-        if (render.isGhostRender) {
-            return <Badge variant="warning">Ghost Render</Badge>;
+    // Grouping logic
+    const groupedRenders = renders.reduce((acc, render) => {
+        const accountId = render.account?.accountId || 0;
+        if (!acc[accountId]) {
+            acc[accountId] = {
+                renderId: render.renderId, // Keep latest render ID
+                account: render.account,
+                rendersCount: 0,
+                completeCount: 0,
+                totalDownloads: 0,
+                totalAiArticles: 0,
+                latestRender: render,
+            };
         }
-        if (render.Processing) {
-            return <Badge variant="info" className="animate-pulse">Rendering</Badge>;
-        }
-        if (render.Complete) {
-            return <Badge variant="secondary">Complete</Badge>;
-        }
-        return <Badge variant="outline">Queued</Badge>;
-    };
+        acc[accountId].rendersCount += 1;
+        if (render.Complete) acc[accountId].completeCount += 1;
+        acc[accountId].totalDownloads += render.downloadsCount;
+        acc[accountId].totalAiArticles += render.aiArticlesCount;
+        return acc;
+    }, {} as Record<number, {
+        renderId: number;
+        account: RenderAuditItem['account'];
+        rendersCount: number;
+        completeCount: number;
+        totalDownloads: number;
+        totalAiArticles: number;
+        latestRender: RenderAuditItem;
+    }>);
+
+    const displayItems = Object.values(groupedRenders);
 
     return (
         <div className="space-y-4">
@@ -55,79 +70,94 @@ export function GlobalRenderTable() {
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-slate-50 border-b border-slate-200">
-                            <TableHead className="font-semibold text-slate-900">Render / Entity</TableHead>
-                            <TableHead className="text-center font-semibold text-slate-900">Status</TableHead>
-                            <TableHead className="text-center font-semibold text-slate-900">Output</TableHead>
-                            <TableHead className="text-right font-semibold text-slate-900">Actions</TableHead>
+                            <TableHead className="font-semibold text-slate-900">Organization / Entity</TableHead>
+                            <TableHead className="text-center font-semibold text-slate-900 w-20">Renders</TableHead>
+                            <TableHead className="text-center font-semibold text-slate-900 w-36">Progress</TableHead>
+                            <TableHead className="text-center font-semibold text-slate-900 w-20">Videos</TableHead>
+                            <TableHead className="text-center font-semibold text-slate-900 w-20">Articles</TableHead>
+                            <TableHead className="text-center font-semibold text-slate-900 w-24">Avg Assets</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {renders.map((render) => (
-                            <TableRow key={render.renderId} className="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0">
+                        {displayItems.map((item) => (
+                            <TableRow key={item.account?.accountId || item.renderId} className="hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0 group">
                                 <TableCell className="py-4">
                                     <div className="flex flex-col">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-sm font-bold text-slate-900">
-                                                {render.renderName || "Unnamed Render"}
-                                            </span>
-                                            <span className="text-[10px] text-slate-400 font-mono">#{render.renderId}</span>
-                                        </div>
-                                        {render.account && (
-                                            <div className="flex items-center gap-1.5 mt-1">
-                                                <span className="text-xs text-slate-600 font-medium">{render.account.accountName}</span>
-                                                <span className="text-[10px] text-slate-400">({render.account.accountSport})</span>
-                                                <span className="text-[9px] px-1 rounded bg-slate-100 text-slate-500 border border-slate-200 uppercase font-bold">
-                                                    {render.account.accountType}
-                                                </span>
+                                        {/* Organization Name as primary focus */}
+                                        {item.account && (
+                                            <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                                                <div className="flex items-center gap-1 text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                                                    <span>{item.account.accountName}</span>
+                                                </div>
+                                                <span className="text-[10px] text-slate-400 font-medium">({item.account.accountSport})</span>
+                                                <Badge variant="outline" className="text-[9px] font-black uppercase tracking-wider text-slate-400/80 border-slate-200 h-auto py-0 px-1.5">
+                                                    {item.account.accountType}
+                                                </Badge>
                                             </div>
                                         )}
-                                        <div className="text-[10px] text-slate-400 mt-1 italic">
-                                            {new Date(render.publishedAt).toLocaleString()}
+
+                                        {/* Latest Render Name and ID underneath */}
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-[12px] font-medium text-slate-600 truncate max-w-[250px]" title={item.latestRender.renderName || "Unnamed"}>
+                                                Latest: {item.latestRender.renderName || "Unnamed Render"}
+                                            </span>
+                                            <Badge variant="outline" className="text-[9px] text-slate-400 font-mono bg-slate-50 border-slate-100 px-1.5 py-0 rounded h-auto font-normal">
+                                                {item.latestRender.renderId}
+                                            </Badge>
+                                        </div>
+
+                                        {/* Single Date display for latest activity */}
+                                        <div className="flex items-center gap-1 text-[10px] text-slate-400">
+                                            <span>{formatDate(item.latestRender.publishedAt || item.latestRender.createdAt)}</span>
                                         </div>
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-center">
                                     <div className="flex justify-center">
-                                        {getStatusBadge(render)}
+                                        <Badge variant="secondary" className="font-mono font-bold bg-slate-50 text-slate-700 border-slate-100 text-sm px-2 py-0.5 pointer-events-none">
+                                            {item.rendersCount}
+                                        </Badge>
                                     </div>
-                                    {render.EmailSent && (
-                                        <div className="mt-1 flex items-center justify-center gap-1 text-[9px] text-emerald-600 font-bold uppercase">
-                                            <CheckCircle2 className="h-2.5 w-2.5" />
-                                            Email Sent
-                                        </div>
-                                    )}
                                 </TableCell>
                                 <TableCell className="text-center">
-                                    <div className="flex flex-col items-center gap-1">
+                                    <div className="flex flex-col items-center">
                                         <div className="flex items-center gap-1.5">
-                                            <Video className="h-3 w-3 text-slate-400" />
-                                            <span className="text-xs font-bold text-slate-700">{render.downloadsCount}</span>
-                                        </div>
-                                        <div className="flex items-center gap-1.5">
-                                            <FileText className="h-3 w-3 text-slate-400" />
-                                            <span className="text-xs font-bold text-slate-700">{render.aiArticlesCount}</span>
+                                            <Progress
+                                                value={(item.completeCount / item.rendersCount) * 100}
+                                                className="w-16 h-1.5 border border-slate-200 bg-slate-100"
+                                                indicatorClassName="bg-emerald-500"
+                                            />
+                                            <span className="text-[10px] font-black text-slate-500 font-mono">
+                                                {item.completeCount}/{item.rendersCount}
+                                            </span>
                                         </div>
                                     </div>
                                 </TableCell>
-                                <TableCell className="text-right">
-                                    <div className="flex items-center justify-end gap-2">
-                                        <Button variant="primary" size="icon" asChild className="h-8 w-8">
-                                            <Link href={`/dashboard/renders/${render.renderId}`} title="View Details">
-                                                <EyeIcon className="h-4 w-4" />
-                                            </Link>
-                                        </Button>
-                                        <Button variant="secondary" size="icon" asChild className="h-8 w-8">
-                                            <Link href={`/strapi-deep-link-placeholder/${render.renderId}`} target="_blank" title="View in CMS">
-                                                <DatabaseIcon className="h-4 w-4 text-slate-500" />
-                                            </Link>
-                                        </Button>
+                                <TableCell className="text-center">
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-[11px] font-bold text-slate-700">{item.totalDownloads}</span>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-[11px] font-bold text-slate-700">{item.totalAiArticles}</span>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-center">
+                                    <div className="flex flex-col items-center">
+                                        <Text variant="tiny" weight="bold" className="text-slate-900 font-black">
+                                            {((item.totalDownloads + item.totalAiArticles) / item.rendersCount).toFixed(1)}
+                                        </Text>
+                                        <Text variant="tiny" weight="bold" className="text-[8px] text-slate-400 uppercase tracking-tighter leading-tight">
+                                            Avg/Render
+                                        </Text>
                                     </div>
                                 </TableCell>
                             </TableRow>
                         ))}
-                        {renders.length === 0 && (
+                        {displayItems.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={4} className="text-center py-12 text-slate-400 italic">
+                                <TableCell colSpan={6} className="text-center py-12 text-slate-400 italic">
                                     No renders found
                                 </TableCell>
                             </TableRow>
