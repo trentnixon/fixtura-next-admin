@@ -21,6 +21,11 @@ export interface SchedulerAttributes {
 export interface Scheduler {
   id: number;
   Name: string;
+  accountName?: string;
+  accountType?: string;
+  accountId?: number;
+  organizationName?: string;
+  schedulerName?: string;
   attributes: SchedulerAttributes;
 }
 
