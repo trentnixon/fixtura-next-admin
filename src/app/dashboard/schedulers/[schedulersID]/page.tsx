@@ -1,6 +1,5 @@
 // TODO: Add scheduler details page
 
-import CreatePage from "@/components/scaffolding/containers/createPage";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import SchedulerPage from "./components/SchedulerPage";

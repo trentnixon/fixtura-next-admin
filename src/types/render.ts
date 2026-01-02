@@ -47,7 +47,7 @@ export interface RenderAttributes {
     data: Render[];
   };
   ai_articles: {
-    data: { id: number; attributes: any }[];
+    data: { id: number; attributes: Record<string, unknown> }[];
   };
   rerenderRequested: boolean;
 }

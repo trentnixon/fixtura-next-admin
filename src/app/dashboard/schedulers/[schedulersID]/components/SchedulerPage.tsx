@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useSchedulerByID } from "@/hooks/scheduler/useSchedulerByID";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import StatusBadge from "@/components/ui-library/badges/StatusBadge";
-import { Clock, Calendar, Settings, User, Trophy, ExternalLink, Activity } from "lucide-react";
+import { Clock, Settings, User, Trophy, ExternalLink, Activity } from "lucide-react";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import Link from "next/link";
