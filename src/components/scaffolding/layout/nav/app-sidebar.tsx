@@ -169,6 +169,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         badge: unhandledCount,
       },
     ],
+    assetNav: [
+      {
+        title: "Assets",
+        url: "/dashboard/assets",
+        icon: Mail,
+        isActive: true,
+      },
+
+    ],
     testingNav: [
       {
         title: "Account Scraper Tests",
@@ -209,6 +218,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.accountsNav} title="Accounts" />
         <NavMain items={data.renderNav} title="Renders" />
         <NavMain items={data.sportsDataNav} title="Sports Data" />
+        <NavMain items={data.assetNav} title="Assets" />
         <NavMain items={data.financialNav} title="Financial" />
         <NavMain items={data.communicationNav} title="Communication" />
         <NavMain items={data.testingNav} title="Testing" />
