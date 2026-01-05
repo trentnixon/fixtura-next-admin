@@ -66,14 +66,13 @@ axiosInstance.interceptors.response.use(
       console.error("[Axios Error] Configuration issue", error.message);
     }
 
-    // Throw a standardized error
+    // Throw a standardized error object
     return Promise.reject({
       message: error.message,
       code: error.code,
-      ...(error.response && {
-        status: error.response.status,
-        data: error.response.data,
-      }),
+      status: error.response?.status || null,
+      data: error.response?.data || null,
+      isNetworkError: !error.response && !!error.request,
     });
   }
 );
