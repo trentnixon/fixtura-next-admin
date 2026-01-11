@@ -2,7 +2,14 @@
 
 import { useParams } from "next/navigation";
 import { useSchedulerByID } from "@/hooks/scheduler/useSchedulerByID";
-import { TableBody, TableCell, Table, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  TableBody,
+  TableCell,
+  Table,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { DatabaseIcon, EyeIcon, History } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
@@ -19,7 +26,10 @@ const TableOfRenders = () => {
   const { strapiLocation } = useGlobalContext();
 
   if (isLoading) return <LoadingState message="Loading render history..." />;
-  if (isError || !data) return <ErrorState title="Error" description="Could not load render history" />;
+  if (isError || !data)
+    return (
+      <ErrorState title="Error" description="Could not load render history" />
+    );
 
   const { attributes: scheduler } = data;
   const { renders } = scheduler;
@@ -41,21 +51,36 @@ const TableOfRenders = () => {
         <TableHeader>
           <TableRow className="bg-slate-50/50">
             <TableHead className="text-left font-semibold">Date</TableHead>
-            <TableHead className="text-center font-semibold">Complete</TableHead>
-            <TableHead className="text-center font-semibold">Processing</TableHead>
+            <TableHead className="text-center font-semibold">
+              Complete
+            </TableHead>
+            <TableHead className="text-center font-semibold">
+              Processing
+            </TableHead>
             <TableHead className="text-center font-semibold">Emailed</TableHead>
-            <TableHead className="text-center font-semibold text-xs">Assets</TableHead>
-            <TableHead className="text-center font-semibold text-xs">AI</TableHead>
-            <TableHead className="text-center font-semibold">Rerender</TableHead>
+            <TableHead className="text-center font-semibold text-xs">
+              Assets
+            </TableHead>
+            <TableHead className="text-center font-semibold text-xs">
+              AI
+            </TableHead>
+            <TableHead className="text-center font-semibold">
+              Rerender
+            </TableHead>
             <TableHead className="text-center font-semibold">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {sortedRendersData && sortedRendersData.length > 0 ? (
-            sortedRendersData.map(render => (
-              <TableRow key={render.id} className="hover:bg-slate-50/50 transition-colors">
+            sortedRendersData.map((render) => (
+              <TableRow
+                key={render.id}
+                className="hover:bg-slate-50/50 transition-colors"
+              >
                 <TableCell className="text-left font-medium">
-                  {formatDate(render.attributes.publishedAt)}
+                  {formatDate(
+                    render.attributes.publishedAt || render.attributes.updatedAt
+                  )}
                 </TableCell>
                 <TableCell className="text-center">
                   <StatusBadge
@@ -69,7 +94,9 @@ const TableOfRenders = () => {
                     status={render.attributes.Processing}
                     trueLabel="Running"
                     falseLabel="Idling"
-                    variant={render.attributes.Processing ? "warning" : "neutral"}
+                    variant={
+                      render.attributes.Processing ? "warning" : "neutral"
+                    }
                   />
                 </TableCell>
                 <TableCell className="text-center">
@@ -77,7 +104,9 @@ const TableOfRenders = () => {
                     status={render.attributes.EmailSent}
                     trueLabel="Sent"
                     falseLabel="Pending"
-                    variant={render.attributes.EmailSent ? "default" : "neutral"}
+                    variant={
+                      render.attributes.EmailSent ? "default" : "neutral"
+                    }
                   />
                 </TableCell>
                 <TableCell className="text-center font-mono text-[10px] text-slate-500">
@@ -91,12 +120,19 @@ const TableOfRenders = () => {
                     status={render.attributes.forceRerender}
                     trueLabel="Requested"
                     falseLabel="No"
-                    variant={render.attributes.forceRerender ? "info" : "neutral"}
+                    variant={
+                      render.attributes.forceRerender ? "info" : "neutral"
+                    }
                   />
                 </TableCell>
                 <TableCell className="text-center">
                   <div className="flex items-center justify-center gap-2">
-                    <Button variant="primary" size="icon" asChild className="h-8 w-8">
+                    <Button
+                      variant="primary"
+                      size="icon"
+                      asChild
+                      className="h-8 w-8"
+                    >
                       <Link
                         href={`/dashboard/renders/${render.id}`}
                         title="View Details"
@@ -104,7 +140,12 @@ const TableOfRenders = () => {
                         <EyeIcon className="h-4 w-4" />
                       </Link>
                     </Button>
-                    <Button variant="primary" size="icon" asChild className="h-8 w-8">
+                    <Button
+                      variant="primary"
+                      size="icon"
+                      asChild
+                      className="h-8 w-8"
+                    >
                       <Link
                         href={`${strapiLocation.render}${render.id}`}
                         target="_blank"
@@ -120,7 +161,10 @@ const TableOfRenders = () => {
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-8 text-slate-500 italic">
+              <TableCell
+                colSpan={6}
+                className="text-center py-8 text-slate-500 italic"
+              >
                 No renders available.
               </TableCell>
             </TableRow>
