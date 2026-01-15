@@ -116,3 +116,21 @@ export interface HealthHistory {
   avgDuration: number;
   totalVolume: number;
 }
+
+// Lightweight scheduler type for the details endpoint
+export interface SchedulerDetails {
+  id: number;
+  attributes: {
+    isRendering: boolean;
+    Queued: boolean;
+    updatedAt: string;
+    days_of_the_week: {
+      data: {
+        id: number;
+        attributes: {
+          Name: string;
+        };
+      } | null;
+    };
+  };
+}
