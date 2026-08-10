@@ -80,7 +80,7 @@ export default function ButtonIconsShowcase() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <SubsectionTitle>Icon Only</SubsectionTitle>
-            <span className="text-xs text-muted-foreground">size="icon"</span>
+            <span className="text-xs text-muted-foreground">{'size="icon"'}</span>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button size="icon" variant="primary">

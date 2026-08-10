@@ -20,7 +20,7 @@ export default function ButtonFullWidthShowcase() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <SubsectionTitle>Full Width</SubsectionTitle>
-            <span className="text-xs text-muted-foreground">className="w-full"</span>
+            <span className="text-xs text-muted-foreground">{'className="w-full"'}</span>
           </div>
           <div className="space-y-2 max-w-md">
             <Button variant="primary" className="w-full">

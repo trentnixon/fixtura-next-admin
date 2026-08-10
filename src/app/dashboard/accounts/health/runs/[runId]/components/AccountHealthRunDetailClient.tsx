@@ -55,7 +55,7 @@ export function AccountHealthRunDetailClient({
     if (!q) return "";
     const n = Number(q);
     return Number.isFinite(n) && n > 0 ? String(n) : "";
-  }, [run?.accountId, accountIdFromSearch]);
+  }, [run, accountIdFromSearch]);
 
   const { data: accountDetailsData } = useAccountQuery(orgQueryAccountId);
 

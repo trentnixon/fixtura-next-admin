@@ -63,7 +63,7 @@ export default function ButtonGroupsShowcase() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <SubsectionTitle>Icon Group</SubsectionTitle>
-            <span className="text-xs text-muted-foreground">size="icon" · gap-1</span>
+            <span className="text-xs text-muted-foreground">{'size="icon" · gap-1'}</span>
           </div>
           <div className="flex gap-1">
             <Button size="icon" variant="primary">

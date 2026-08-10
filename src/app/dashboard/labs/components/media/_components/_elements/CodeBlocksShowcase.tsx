@@ -22,7 +22,7 @@ export default function CodeBlocksShowcase() {
           <div className="flex items-center justify-between mb-2">
             <SubsectionTitle>Block</SubsectionTitle>
             <span className="text-xs text-muted-foreground">
-              Code · variant="block"
+              {`Code · variant="block"`}
             </span>
           </div>
           <Code variant="block" className="text-sm">

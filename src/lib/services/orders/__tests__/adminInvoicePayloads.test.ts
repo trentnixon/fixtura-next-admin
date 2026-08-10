@@ -134,8 +134,8 @@ describe("parseAdminInvoicePatchResponse", () => {
   });
 
   it("tolerates missing emailStatus", () => {
-    const { emailStatus: _ignored, ...withoutEmail } = makePatchResponse();
-    const parsed = parseAdminInvoicePatchResponse(withoutEmail);
+    const { aggregate, changedFields } = makePatchResponse();
+    const parsed = parseAdminInvoicePatchResponse({ aggregate, changedFields });
     expect(parsed.emailStatus).toBeUndefined();
   });
 
