@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { ChartContainer } from "@/components/ui/chart";
 import { SubsectionTitle } from "@/components/type/titles";
@@ -22,7 +23,7 @@ function PaletteSwatches({
   labels,
 }: {
   colors: string[];
-  labels: string[];
+  labels: ReactNode[];
 }) {
   return (
     <div className="flex flex-wrap gap-2">
@@ -32,7 +33,7 @@ function PaletteSwatches({
             className="w-8 h-8 rounded border"
             style={{ backgroundColor: color }}
           />
-          <span className="text-xs">{labels[index] || `Color ${index + 1}`}</span>
+          <span className="text-xs">{labels[index] ?? `Color ${index + 1}`}</span>
         </div>
       ))}
     </div>

@@ -104,8 +104,8 @@ function normalizeSingleJobResponse(
     }
   }
 
-  if ("jobId" in o && typeof (o as JobSummary).jobId === "string") {
-    const job = o as JobSummary;
+  if ("jobId" in o && typeof o.jobId === "string") {
+    const job = o as unknown as JobSummary;
     if (job.jobId === expectedJobId) {
       return { job, entries: sortEntries(job.entries ?? []) };
     }
