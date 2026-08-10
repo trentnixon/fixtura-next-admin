@@ -1,8 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { AssociationCompetitionAnalytics } from "@/types/associationInsights";
 import ChartCard from "@/components/modules/charts/ChartCard";
 import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -116,87 +123,76 @@ export default function CompetitionStatsCard({
 
   return (
     <div className="space-y-6">
-      {/* Summary Stats Card */}
-      <Card className="bg-white border shadow-none">
-        <CardHeader className="p-4">
-          <CardTitle>Competition Statistics</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 space-y-6">
-          {/* Summary Stats Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <Stat
-              label="Total Competitions"
-              value={data.totalCompetitions.toLocaleString()}
-            />
-            <Stat
-              label="Active Competitions"
-              value={data.activeCompetitions.toLocaleString()}
-            />
-            <Stat
-              label="Inactive Competitions"
-              value={data.inactiveCompetitions.toLocaleString()}
-            />
-          </div>
+      <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-3">
+        <Stat
+          label="Total Competitions"
+          value={data.totalCompetitions.toLocaleString()}
+        />
+        <Stat
+          label="Active Competitions"
+          value={data.activeCompetitions.toLocaleString()}
+        />
+        <Stat
+          label="Inactive Competitions"
+          value={data.inactiveCompetitions.toLocaleString()}
+        />
+      </div>
 
-          {/* Active/Inactive Breakdown */}
-          {data.inactiveCompetitions > 0 && (
-            <div className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Status Breakdown:</span>
-              <Badge variant="default">{data.activeCompetitions} Active</Badge>
-              <Badge variant="secondary">
-                {data.inactiveCompetitions} Inactive
-              </Badge>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Competitions by Status Chart */}
-      {statusChartData.length > 0 && (
-        <ChartCard
-          title="Competitions by Status"
-          description="Distribution of competitions across different statuses"
-          chartConfig={statusChartConfig}
-          chartClassName="h-[300px]"
-        >
-          <BarChart data={statusChartData}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="name"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => formatNumber(value)}
-            />
-            <ChartTooltip
-              content={<ChartTooltipContent />}
-              formatter={(value: number, name: string) => [
-                formatNumber(value),
-                statusChartConfig[name as keyof typeof statusChartConfig]
-                  ?.label || name,
-              ]}
-            />
-            <Bar
-              dataKey="value"
-              fill="var(--color-value)"
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
-        </ChartCard>
+      {data.inactiveCompetitions > 0 && (
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Status Breakdown:</span>
+          <Badge variant="default">{data.activeCompetitions} Active</Badge>
+          <Badge variant="secondary">
+            {data.inactiveCompetitions} Inactive
+          </Badge>
+        </div>
       )}
 
       {/* Charts Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid gap-6 lg:grid-cols-3">
+        {statusChartData.length > 0 && (
+          <ChartCard
+            title="Competition Status"
+            description="Competitions by current status"
+            chartConfig={statusChartConfig}
+            chartClassName="h-[260px]"
+          >
+            <BarChart data={statusChartData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="name"
+                tickLine={false}
+                tickMargin={10}
+                axisLine={false}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => formatNumber(value)}
+              />
+              <ChartTooltip
+                content={<ChartTooltipContent />}
+                formatter={(value: number, name: string) => [
+                  formatNumber(value),
+                  statusChartConfig[name as keyof typeof statusChartConfig]
+                    ?.label || name,
+                ]}
+              />
+              <Bar
+                dataKey="value"
+                fill="var(--color-value)"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ChartCard>
+        )}
+
         {/* Competition Size Distribution Chart */}
         <ChartCard
-          title="Competition Size Distribution"
-          description="Number of competitions by team size"
+          title="Competition Size"
+          description="Competitions by team size"
           chartConfig={sizeChartConfig}
-          chartClassName="h-[300px]"
+          chartClassName="h-[260px]"
         >
           <BarChart data={sizeChartData}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -228,10 +224,10 @@ export default function CompetitionStatsCard({
 
         {/* Competition Grade Distribution Chart */}
         <ChartCard
-          title="Competition Grade Distribution"
-          description="Number of competitions by grade count"
+          title="Competition Grades"
+          description="Competitions by grade count"
           chartConfig={gradeChartConfig}
-          chartClassName="h-[300px]"
+          chartClassName="h-[260px]"
         >
           <BarChart data={gradeChartData}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -261,15 +257,74 @@ export default function CompetitionStatsCard({
           </BarChart>
         </ChartCard>
       </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <DistributionTable
+          title="Status Buckets"
+          valueLabel="Competitions"
+          rows={statusChartData.map((row) => ({
+            label: row.name,
+            value: row.value,
+          }))}
+        />
+        <DistributionTable
+          title="Team Size Buckets"
+          valueLabel="Competitions"
+          rows={sizeChartData}
+        />
+        <DistributionTable
+          title="Grade Buckets"
+          valueLabel="Competitions"
+          rows={gradeChartData}
+        />
+      </div>
     </div>
   );
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="space-y-1">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="text-2xl font-semibold">{value}</p>
+    <div className="border-b border-slate-200 px-4 py-3 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
+      <p className="text-xs font-medium uppercase text-slate-500">{label}</p>
+      <p className="mt-1 text-lg font-semibold text-slate-900">{value}</p>
+    </div>
+  );
+}
+
+function DistributionTable({
+  title,
+  valueLabel,
+  rows,
+}: {
+  title: string;
+  valueLabel: string;
+  rows: Array<{ label: string; value: number }>;
+}) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white">
+      <div className="border-b border-slate-200 px-4 py-3">
+        <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
+      </div>
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-slate-50 hover:bg-slate-50">
+            <TableHead>Range</TableHead>
+            <TableHead className="text-right">{valueLabel}</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.label}>
+              <TableCell className="text-sm font-medium text-slate-900">
+                {row.label}
+              </TableCell>
+              <TableCell className="text-right">
+                {row.value.toLocaleString()}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }

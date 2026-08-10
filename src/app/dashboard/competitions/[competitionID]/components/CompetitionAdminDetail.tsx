@@ -9,10 +9,12 @@ import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import { SnapshotSection } from "./CompetitionAdminDetail/sections/SnapshotSection";
+import { toAssociationAccountOptionFromCompetition } from "@/utils/associationAccountSelection";
 import { AssociationInsightsSection } from "./CompetitionAdminDetail/sections/AssociationOverviewSection";
 import { AnalyticsSection } from "./CompetitionAdminDetail/sections/AnalyticsSection";
 import { GradesSection } from "./CompetitionAdminDetail/sections/GradesSection";
 import { TeamsSection } from "./CompetitionAdminDetail/sections/TeamsSection";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function formatDate(value: string | null): string {
   if (!value) return "—";
@@ -23,6 +25,7 @@ function formatDate(value: string | null): string {
   return new Intl.DateTimeFormat("en-AU", {
     dateStyle: "medium",
     timeStyle: "short",
+    timeZone: "Australia/Sydney",
   }).format(date);
 }
 
@@ -33,7 +36,7 @@ export default function CompetitionAdminDetail() {
 
   const { data, isLoading, isFetching, isError, error, refetch } =
     useCompetitionAdminDetail(
-      Number.isNaN(competitionId) ? undefined : competitionId
+      Number.isNaN(competitionId) ? undefined : competitionId,
     );
 
   if (isLoading && !data) {
@@ -59,6 +62,10 @@ export default function CompetitionAdminDetail() {
 
   const { meta, association, counts, analytics, grades, clubs } = data;
 
+  const associationAccounts = (association?.accounts ?? []).map(
+    toAssociationAccountOptionFromCompetition,
+  );
+
   return (
     <>
       <CreatePageTitle
@@ -66,33 +73,44 @@ export default function CompetitionAdminDetail() {
         byLine={
           association
             ? `${association.name} • ${meta.season ?? "Season unknown"}`
-            : meta.season ?? "Season unknown"
+            : (meta.season ?? "Season unknown")
         }
         byLineBottom={`Status: ${meta.status} • Last synced ${formatDate(
-          meta.lastSyncedAt
+          meta.lastSyncedAt,
         )}`}
       />
 
       <PageContainer padding="xs" spacing="lg">
-        <SnapshotSection
-          meta={meta}
-          counts={counts}
-          accountCoverage={analytics.summary.accountCoverage}
-          timeline={analytics.summary.timeline}
-          strapiLocation={strapiLocation}
-          isFetching={isFetching}
-          associationId={association?.id ?? null}
-        />
-        <AssociationInsightsSection
-          association={association}
-          insights={analytics.insights}
-        />
+        <Tabs defaultValue="snapshot" className="w-full">
+          <TabsList variant="primary" className="mb-4">
+            <TabsTrigger value="snapshot">Competition Snapshot</TabsTrigger>
+            <TabsTrigger value="grades">Grades</TabsTrigger>
+            <TabsTrigger value="teams">Teams</TabsTrigger>
+          </TabsList>
 
-        <TeamsSection teams={analytics.tables.teams} clubs={clubs} />
+          <TabsContent value="snapshot" className="space-y-6">
+            <SnapshotSection
+              meta={meta}
+              counts={counts}
+              accountCoverage={analytics.summary.accountCoverage}
+              timeline={analytics.summary.timeline}
+              strapiLocation={strapiLocation}
+              isFetching={isFetching}
+              associationAccounts={associationAccounts}
+              associationId={association?.id ?? null}
+            />
+            <AssociationInsightsSection association={association} />
+            <AnalyticsSection analytics={analytics} />
+          </TabsContent>
 
-        <AnalyticsSection analytics={analytics} />
+          <TabsContent value="grades">
+            <GradesSection grades={grades} />
+          </TabsContent>
 
-        <GradesSection grades={grades} />
+          <TabsContent value="teams">
+            <TeamsSection teams={analytics.tables.teams} clubs={clubs} />
+          </TabsContent>
+        </Tabs>
       </PageContainer>
     </>
   );

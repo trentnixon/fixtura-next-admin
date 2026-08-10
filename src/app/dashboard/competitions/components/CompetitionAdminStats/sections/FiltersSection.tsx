@@ -1,5 +1,7 @@
+import { Dispatch, SetStateAction } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -7,9 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-
-import { Dispatch, SetStateAction } from "react";
 
 interface FiltersSectionProps {
   associationInput: string;
@@ -31,16 +30,21 @@ export function FiltersSection({
   isAssociationInvalid,
 }: FiltersSectionProps) {
   return (
-    <div className="flex flex-wrap items-end gap-4">
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="association-filter">Association ID</Label>
+    <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end lg:w-auto lg:justify-end">
+      <div className="w-full min-w-[180px] space-y-1 sm:w-auto">
+        <Label
+          htmlFor="association-filter"
+          className="text-xs font-medium uppercase text-slate-500"
+        >
+          Association ID
+        </Label>
         <Input
           id="association-filter"
           type="number"
           placeholder="All associations"
           value={associationInput}
           onChange={(event) => setAssociationInput(event.target.value)}
-          className="w-[180px]"
+          className="h-9"
           min={0}
         />
         {isAssociationInvalid && (
@@ -50,8 +54,13 @@ export function FiltersSection({
         )}
       </div>
 
-      <div className="flex flex-col gap-2">
-        <Label htmlFor="season-filter">Season</Label>
+      <div className="w-full min-w-[180px] space-y-1 sm:w-auto">
+        <Label
+          htmlFor="season-filter"
+          className="text-xs font-medium uppercase text-slate-500"
+        >
+          Season
+        </Label>
         <Select
           value={seasonFilter ?? "all"}
           onValueChange={(value) => {
@@ -62,7 +71,7 @@ export function FiltersSection({
             }
           }}
         >
-          <SelectTrigger id="season-filter" className="w-[180px]">
+          <SelectTrigger id="season-filter" className="h-9">
             <SelectValue placeholder="All seasons" />
           </SelectTrigger>
           <SelectContent>
@@ -77,8 +86,8 @@ export function FiltersSection({
       </div>
 
       {isFetching && (
-        <Badge variant="outline" className="h-min">
-          Refreshing…
+        <Badge variant="outline" className="h-9 w-fit bg-slate-50">
+          Refreshing...
         </Badge>
       )}
     </div>

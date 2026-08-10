@@ -1,11 +1,12 @@
 "use client";
 
 import { AccountAnalytics } from "@/types/analytics";
-import StatCard from "@/components/ui-library/metrics/StatCard";
 import { LoadingState } from "@/components/ui-library";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SectionTitle } from "@/components/type/titles";
-import { TrendingUp, DollarSign, Calendar, CreditCard } from "lucide-react";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { Badge } from "@/components/ui/badge";
+import { TrendingUp } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /**
  * FinancialOverview Component
@@ -23,11 +24,15 @@ export default function FinancialOverview({
   if (!analytics) {
     return (
       <LoadingState variant="skeleton" message="Loading financial overview...">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="border rounded-lg p-6">
-              <Skeleton className="h-4 w-32 mb-4" />
-              <Skeleton className="h-10 w-40" />
+            <div
+              key={i}
+              className="border-b border-r border-slate-200 px-4 py-3 last:border-r-0 sm:[&:nth-child(2n)]:border-r-0 lg:border-b-0 lg:[&:nth-child(2n)]:border-r lg:last:border-r-0"
+            >
+              <Skeleton className="mb-3 h-3 w-28" />
+              <Skeleton className="h-6 w-24" />
+              <Skeleton className="mt-2 h-3 w-36" />
             </div>
           ))}
         </div>
@@ -44,14 +49,14 @@ export default function FinancialOverview({
     orderHistory?.orders?.filter(
       (order) =>
         order.amount > 0 &&
-        !order.subscriptionTier?.toLowerCase().includes("trial")
+        !order.subscriptionTier?.toLowerCase().includes("trial"),
     ) || [];
 
   // Get the most recent paid order amount, or use average if no recent order
   const mostRecentPaidOrder =
     paidOrders.length > 0
       ? paidOrders.sort(
-          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
         )[0]
       : null;
 
@@ -60,85 +65,113 @@ export default function FinancialOverview({
     (orderHistory?.paidOrders > 0
       ? orderHistory.totalSpent / orderHistory.paidOrders
       : 0);
+  const paidOrderCount = orderHistory?.paidOrders || 0;
+  const totalSeasonRevenue = `$${(
+    (orderHistory?.totalSpent || 0) / 100
+  ).toLocaleString("en-AU", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+  const formattedSeasonPassValue = `$${(seasonPassValue / 100).toLocaleString(
+    "en-AU",
+    {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    },
+  )}`;
+  const renewalStatus = analytics?.currentSubscription?.isActive
+    ? "Active"
+    : "Inactive";
+  const lastSeasonPassDate = mostRecentPaidOrder?.date
+    ? new Date(mostRecentPaidOrder.date).toLocaleDateString("en-AU", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : paymentStatus?.lastPaymentDate
+      ? new Date(paymentStatus.lastPaymentDate).toLocaleDateString("en-AU", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "Never";
 
   return (
-    <div className="space-y-6">
-      <SectionTitle className="flex items-center gap-2">
-        <TrendingUp className="w-5 h-5 text-blue-500" />
-        Financial Overview
-      </SectionTitle>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Season Revenue */}
-        <StatCard
-          title="Total Season Revenue"
-          value={`$${((orderHistory?.totalSpent || 0) / 100).toLocaleString(
-            "en-AU",
-            {
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            }
-          )}`}
-          icon={<DollarSign className="h-5 w-5" />}
-          description={`${orderHistory?.paidOrders || 0} season pass${
-            (orderHistory?.paidOrders || 0) !== 1 ? "es" : ""
+    <SectionContainer
+      title="Financial Overview"
+      description="Season pass revenue and subscription timing"
+      variant="compact"
+      icon={<TrendingUp className="h-4 w-4 text-slate-500" />}
+      contentClassName="p-0"
+    >
+      <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
+        <FinancialMetric
+          label="Total Season Revenue"
+          value={totalSeasonRevenue}
+          helper={`${paidOrderCount} season pass${
+            paidOrderCount !== 1 ? "es" : ""
           } purchased`}
-          variant="primary"
         />
-
-        {/* Annual Season Pass Value */}
-        <StatCard
-          title="Season Pass Value"
-          value={`$${(seasonPassValue / 100).toLocaleString("en-AU", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`}
-          icon={<TrendingUp className="h-5 w-5" />}
-          description="Annual billing cycle"
-          variant="secondary"
+        <FinancialMetric
+          label="Season Pass Value"
+          value={formattedSeasonPassValue}
+          helper="Annual billing cycle"
         />
-
-        {/* Renewal Status */}
-        <StatCard
-          title="Renewal Status"
-          value={
-            analytics?.currentSubscription?.isActive ? "Active" : "Inactive"
-          }
-          icon={<Calendar className="h-5 w-5" />}
-          description={`${orderHistory?.paidOrders || 0} season${
-            (orderHistory?.paidOrders || 0) !== 1 ? "s" : ""
+        <FinancialMetric
+          label="Renewal Status"
+          value={renewalStatus}
+          helper={`${paidOrderCount} season${
+            paidOrderCount !== 1 ? "s" : ""
           } subscribed`}
-          variant="accent"
+          status={analytics?.currentSubscription?.isActive ? "active" : "muted"}
         />
-
-        {/* Last Season Pass Purchase */}
-        <StatCard
-          title="Last Season Pass"
-          value={
-            mostRecentPaidOrder?.date
-              ? new Date(mostRecentPaidOrder.date).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "2-digit",
-                })
-              : paymentStatus?.lastPaymentDate
-              ? new Date(paymentStatus.lastPaymentDate).toLocaleDateString(
-                  "en-US",
-                  {
-                    month: "short",
-                    day: "numeric",
-                    year: "2-digit",
-                  }
-                )
-              : "Never"
-          }
-          icon={<CreditCard className="h-5 w-5" />}
-          description={`${orderHistory?.paidOrders || 0} season${
-            (orderHistory?.paidOrders || 0) !== 1 ? "s" : ""
+        <FinancialMetric
+          label="Last Season Pass"
+          value={lastSeasonPassDate}
+          helper={`${paidOrderCount} season${
+            paidOrderCount !== 1 ? "s" : ""
           } total`}
-          variant="light"
         />
       </div>
+    </SectionContainer>
+  );
+}
+
+function FinancialMetric({
+  label,
+  value,
+  helper,
+  status,
+}: {
+  label: string;
+  value: string;
+  helper: string;
+  status?: "active" | "muted";
+}) {
+  return (
+    <div className="border-b border-r border-slate-200 px-4 py-3 last:border-r-0 sm:[&:nth-child(2n)]:border-r-0 lg:border-b-0 lg:[&:nth-child(2n)]:border-r lg:last:border-r-0">
+      <p className="text-xs font-medium uppercase text-slate-500">{label}</p>
+      <div className="mt-1 flex min-h-6 items-center gap-2">
+        {status ? (
+          <Badge
+            variant="outline"
+            className={cn(
+              "rounded-full text-xs",
+              status === "active" &&
+                "border-emerald-200 bg-emerald-50 text-emerald-700",
+              status === "muted" &&
+                "border-slate-200 bg-slate-50 text-slate-600",
+            )}
+          >
+            {value}
+          </Badge>
+        ) : (
+          <p className="truncate text-lg font-semibold leading-none text-slate-900">
+            {value}
+          </p>
+        )}
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">{helper}</p>
     </div>
   );
 }

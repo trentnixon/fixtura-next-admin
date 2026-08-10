@@ -2,7 +2,11 @@
 
 import axiosInstance from "@/lib/axios";
 import { AxiosError } from "axios";
-import { SubscriptionTrends } from "@/types/analytics";
+import {
+  isAnalyticsResponse,
+  SubscriptionTrends,
+  SubscriptionTrendsResponse,
+} from "@/types/analytics";
 
 /**
  * Fetches subscription trends analytics from the Order Analytics API
@@ -18,9 +22,9 @@ export async function fetchSubscriptionTrends(): Promise<SubscriptionTrends> {
       "[fetchSubscriptionTrends] Fetching subscription trends analytics"
     );
 
-    const response = await axiosInstance.get<SubscriptionTrends>(
-      "/orders/analytics/subscription-trends"
-    );
+    const response = await axiosInstance.get<
+      SubscriptionTrends | SubscriptionTrendsResponse
+    >("/orders/analytics/subscription-trends");
 
     // Log the full response for debugging
     console.log(
@@ -28,14 +32,18 @@ export async function fetchSubscriptionTrends(): Promise<SubscriptionTrends> {
       JSON.stringify(response.data, null, 2)
     );
 
-    // Check if response has expected structure (API returns data directly)
-    if (!response.data) {
+    const payload = response.data;
+    if (!payload) {
       throw new Error(
         "Invalid response structure from subscription trends API"
       );
     }
 
-    return response.data;
+    if (isAnalyticsResponse<SubscriptionTrends>(payload)) {
+      return payload.data;
+    }
+
+    return payload;
   } catch (error) {
     if (error instanceof AxiosError) {
       // Axios-specific error handling

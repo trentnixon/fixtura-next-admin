@@ -1,8 +1,27 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import Link from "next/link";
+import { useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  ArrowUpDown,
+  Search,
+  X,
+} from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Pagination,
+  PaginationInfo,
+  PaginationNext,
+  PaginationPages,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   Table,
   TableBody,
@@ -11,26 +30,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import {
-  Pagination,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationPages,
-  PaginationInfo,
-} from "@/components/ui/pagination";
 import { ClubInsight } from "@/types/clubInsights";
-import { ArrowUpDown, ArrowUp, ArrowDown, Search, X } from "lucide-react";
 
-/**
- * ClubsTable Component
- *
- * Advanced table with search, filtering, sorting, and pagination.
- * Displays clubs data with all metrics.
- */
 interface ClubsTableProps {
   clubs: ClubInsight[];
 }
@@ -54,14 +55,12 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [minTeams, setMinTeams] = useState<number | undefined>(undefined);
   const [minCompetitions, setMinCompetitions] = useState<number | undefined>(
-    undefined
+    undefined,
   );
 
-  // Filter data by search query and thresholds
   const filteredData = useMemo(() => {
     let filtered = clubs;
 
-    // Apply search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(
@@ -69,29 +68,24 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
           club.name.toLowerCase().includes(query) ||
           club.sport.toLowerCase().includes(query) ||
           club.associationNames.some((name) =>
-            name.toLowerCase().includes(query)
-          )
+            name.toLowerCase().includes(query),
+          ),
       );
     }
 
-    // Apply team count threshold (>=)
     if (minTeams !== undefined) {
-      filtered = filtered.filter((club) => {
-        return club.teamCount >= minTeams;
-      });
+      filtered = filtered.filter((club) => club.teamCount >= minTeams);
     }
 
-    // Apply competition count threshold (>=)
     if (minCompetitions !== undefined) {
-      filtered = filtered.filter((club) => {
-        return club.competitionCount >= minCompetitions;
-      });
+      filtered = filtered.filter(
+        (club) => club.competitionCount >= minCompetitions,
+      );
     }
 
     return filtered;
   }, [clubs, searchQuery, minTeams, minCompetitions]);
 
-  // Sort data
   const sortedData = useMemo(() => {
     if (!sortField || !sortDirection) return filteredData;
 
@@ -126,19 +120,18 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
 
       if (sortDirection === "asc") {
         return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
       }
+      return aValue < bValue ? 1 : -1;
     });
   }, [filteredData, sortField, sortDirection]);
 
-  // Paginate sorted data
   const totalPages = Math.ceil(sortedData.length / ITEMS_PER_PAGE);
   const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
-  const paginatedData = sortedData.slice(startIndex, endIndex);
+  const paginatedData = sortedData.slice(
+    startIndex,
+    startIndex + ITEMS_PER_PAGE,
+  );
 
-  // Handle sorting
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       if (sortDirection === "asc") {
@@ -153,20 +146,19 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
       setSortField(field);
       setSortDirection("asc");
     }
-    setCurrentPage(1); // Reset to first page on sort
+    setCurrentPage(1);
   };
 
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) {
-      return <ArrowUpDown className="h-4 w-4 ml-1 text-muted-foreground" />;
+      return <ArrowUpDown className="ml-1 h-4 w-4 text-muted-foreground" />;
     }
     if (sortDirection === "asc") {
-      return <ArrowUp className="h-4 w-4 ml-1" />;
+      return <ArrowUp className="ml-1 h-4 w-4" />;
     }
-    return <ArrowDown className="h-4 w-4 ml-1" />;
+    return <ArrowDown className="ml-1 h-4 w-4" />;
   };
 
-  // Reset filters
   const handleResetFilters = () => {
     setSearchQuery("");
     setSortField(null);
@@ -184,7 +176,7 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
 
   if (clubs.length === 0) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
+      <div className="py-8 text-center text-muted-foreground">
         <p className="text-sm">No clubs found</p>
       </div>
     );
@@ -192,20 +184,18 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
 
   return (
     <div className="space-y-4">
-      {/* Search and Filters */}
-      <div className="flex flex-col lg:flex-row gap-4 items-end">
-        {/* Search */}
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+      <div className="flex flex-col items-end gap-4 lg:flex-row">
+        <div className="relative max-w-md flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search by name, sport, or association..."
             value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
+            onChange={(event) => {
+              setSearchQuery(event.target.value);
               setCurrentPage(1);
             }}
-            className="pl-10 pr-10 h-9"
+            className="h-9 pl-10 pr-10"
           />
           {searchQuery && (
             <Button
@@ -215,92 +205,83 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
                 setSearchQuery("");
                 setCurrentPage(1);
               }}
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-transparent"
+              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0 hover:bg-transparent"
             >
               <X className="h-3 w-3" />
             </Button>
           )}
         </div>
 
-        {/* Team Count Threshold */}
-        <div className="flex items-end gap-2">
-          <div className="space-y-1 min-w-[120px]">
-            <Label
-              htmlFor="teams-filter"
-              className="text-xs text-muted-foreground"
-            >
-              Team Count (≥)
-            </Label>
-            <Input
-              id="teams-filter"
-              type="number"
-              placeholder="More than"
-              value={minTeams ?? ""}
-              onChange={(e) => {
-                const value =
-                  e.target.value === ""
-                    ? undefined
-                    : parseInt(e.target.value, 10);
-                setMinTeams(value);
-                setCurrentPage(1);
-              }}
-              min="0"
-              className="text-sm h-9"
-            />
-          </div>
+        <div className="min-w-[120px] space-y-1">
+          <Label
+            htmlFor="teams-filter"
+            className="text-xs text-muted-foreground"
+          >
+            Min teams
+          </Label>
+          <Input
+            id="teams-filter"
+            type="number"
+            placeholder="More than"
+            value={minTeams ?? ""}
+            onChange={(event) => {
+              const value =
+                event.target.value === ""
+                  ? undefined
+                  : parseInt(event.target.value, 10);
+              setMinTeams(value);
+              setCurrentPage(1);
+            }}
+            min="0"
+            className="h-9 text-sm"
+          />
         </div>
 
-        {/* Competition Count Threshold */}
-        <div className="flex items-end gap-2">
-          <div className="space-y-1 min-w-[120px]">
-            <Label
-              htmlFor="competitions-filter"
-              className="text-xs text-muted-foreground"
-            >
-              Competition Count (≥)
-            </Label>
-            <Input
-              id="competitions-filter"
-              type="number"
-              placeholder="More than"
-              value={minCompetitions ?? ""}
-              onChange={(e) => {
-                const value =
-                  e.target.value === ""
-                    ? undefined
-                    : parseInt(e.target.value, 10);
-                setMinCompetitions(value);
-                setCurrentPage(1);
-              }}
-              min="0"
-              className="text-sm h-9"
-            />
-          </div>
+        <div className="min-w-[150px] space-y-1">
+          <Label
+            htmlFor="competitions-filter"
+            className="text-xs text-muted-foreground"
+          >
+            Min competitions
+          </Label>
+          <Input
+            id="competitions-filter"
+            type="number"
+            placeholder="More than"
+            value={minCompetitions ?? ""}
+            onChange={(event) => {
+              const value =
+                event.target.value === ""
+                  ? undefined
+                  : parseInt(event.target.value, 10);
+              setMinCompetitions(value);
+              setCurrentPage(1);
+            }}
+            min="0"
+            className="h-9 text-sm"
+          />
         </div>
 
-        {/* Reset Filters */}
         {hasActiveFilters && (
           <Button
             variant="outline"
             onClick={handleResetFilters}
-            className="whitespace-nowrap h-9"
+            className="h-9 whitespace-nowrap"
           >
             Reset Filters
           </Button>
         )}
       </div>
 
-      {/* Results Count */}
       <div className="text-sm text-muted-foreground">
         Showing {paginatedData.length} of {sortedData.length} results
         {filteredData.length !== clubs.length &&
           ` (filtered from ${clubs.length} total)`}
       </div>
 
-      {/* Table */}
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-slate-50 hover:bg-slate-50">
             <TableHead>
               <Button
                 variant="ghost"
@@ -328,7 +309,7 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleSort("associationCount")}
-                className="h-auto p-0 font-semibold hover:bg-transparent"
+                className="ml-auto h-auto p-0 font-semibold hover:bg-transparent"
               >
                 Associations
                 {getSortIcon("associationCount")}
@@ -339,7 +320,7 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleSort("teamCount")}
-                className="h-auto p-0 font-semibold hover:bg-transparent"
+                className="ml-auto h-auto p-0 font-semibold hover:bg-transparent"
               >
                 Teams
                 {getSortIcon("teamCount")}
@@ -350,14 +331,14 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
                 variant="ghost"
                 size="sm"
                 onClick={() => handleSort("competitionCount")}
-                className="h-auto p-0 font-semibold hover:bg-transparent"
+                className="ml-auto h-auto p-0 font-semibold hover:bg-transparent"
               >
                 Competitions
                 {getSortIcon("competitionCount")}
               </Button>
             </TableHead>
             <TableHead className="text-center">Account</TableHead>
-            <TableHead className="text-right">View</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -365,7 +346,7 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
             <TableRow>
               <TableCell
                 colSpan={7}
-                className="text-center text-muted-foreground py-8"
+                className="py-8 text-center text-muted-foreground"
               >
                 No results found. Try adjusting your filters.
               </TableCell>
@@ -373,10 +354,10 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
           ) : (
             paginatedData.map((club) => (
               <TableRow key={club.id}>
-                <TableCell className="font-medium">
+                <TableCell>
                   <div className="flex items-center gap-3">
-                    {club.logoUrl && (
-                      <div className="relative h-8 w-8 flex-shrink-0">
+                    <div className="relative flex h-8 w-8 flex-shrink-0 items-center justify-center overflow-hidden rounded-md border border-slate-200 bg-slate-50">
+                      {club.logoUrl ? (
                         <Image
                           src={club.logoUrl}
                           alt={`${club.name} logo`}
@@ -384,12 +365,27 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
                           className="object-contain"
                           sizes="32px"
                         />
-                      </div>
-                    )}
-                    <span>{club.name}</span>
+                      ) : (
+                        <span className="text-xs font-semibold text-slate-500">
+                          {club.name.slice(0, 1).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-slate-900">
+                        {club.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        ID {club.id}
+                      </p>
+                    </div>
                   </div>
                 </TableCell>
-                <TableCell>{club.sport}</TableCell>
+                <TableCell>
+                  <Badge variant="secondary" className="text-xs">
+                    {club.sport}
+                  </Badge>
+                </TableCell>
                 <TableCell className="text-right">
                   <div className="flex flex-col items-end">
                     <span>{club.associationCount.toLocaleString()}</span>
@@ -411,18 +407,21 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
                 <TableCell className="text-center">
                   {club.hasAccount ? (
                     <Badge variant="primary" className="text-xs">
-                      Yes
+                      Linked
                     </Badge>
                   ) : (
                     <Badge variant="outline" className="text-xs">
-                      No
+                      Missing
                     </Badge>
                   )}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end">
-                    <Button variant="accent" size="sm" asChild>
-                      <Link href={`/dashboard/club/${club.id}`}>View</Link>
+                    <Button variant="primary" size="sm" asChild>
+                      <Link href={`/dashboard/club/${club.id}`}>
+                        View
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Link>
                     </Button>
                   </div>
                 </TableCell>
@@ -432,7 +431,6 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
         </TableBody>
       </Table>
 
-      {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-between">
           <Pagination
@@ -448,7 +446,7 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
               itemsPerPage={ITEMS_PER_PAGE}
               className="mr-auto"
             />
-            <div className="flex items-center gap-1 ml-auto">
+            <div className="ml-auto flex items-center gap-1">
               <PaginationPrevious />
               <PaginationPages />
               <PaginationNext />
@@ -459,4 +457,3 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
     </div>
   );
 }
-

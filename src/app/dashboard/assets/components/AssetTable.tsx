@@ -1,4 +1,3 @@
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -8,6 +7,8 @@ import { useCreateAsset } from "@/hooks/assets/useCreateAsset";
 import { useUpdateAsset } from "@/hooks/assets/useUpdateAsset";
 import { useDeleteAsset } from "@/hooks/assets/useDeleteAsset";
 import { Button } from "@/components/ui/button";
+import ErrorState from "@/components/ui-library/states/ErrorState";
+import LoadingState from "@/components/ui-library/states/LoadingState";
 import {
   Sheet,
   SheetContent,
@@ -35,9 +36,13 @@ export function AssetTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSport, setSelectedSport] = useState<string>("Cricket");
   const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [editingAsset, setEditingAsset] = useState<Asset | undefined>(undefined);
+  const [editingAsset, setEditingAsset] = useState<Asset | undefined>(
+    undefined,
+  );
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [assetToDelete, setAssetToDelete] = useState<Asset | undefined>(undefined);
+  const [assetToDelete, setAssetToDelete] = useState<Asset | undefined>(
+    undefined,
+  );
 
   const buildFilters = () => {
     const filters: any = { Sport: selectedSport };
@@ -52,6 +57,7 @@ export function AssetTable() {
     isLoading,
     isError,
     error,
+    refetch,
   } = useAssets({
     page,
     pageSize: 20,
@@ -89,7 +95,9 @@ export function AssetTable() {
       setIsSheetOpen(false);
       setEditingAsset(undefined);
     } catch (err) {
-      toast.error(editingAsset ? "Failed to update asset" : "Failed to create asset");
+      toast.error(
+        editingAsset ? "Failed to update asset" : "Failed to create asset",
+      );
       console.error(err);
     }
   };
@@ -107,8 +115,19 @@ export function AssetTable() {
     }
   };
 
-  if (isLoading) return <div className="p-4">Loading assets...</div>;
-  if (isError) return <div className="p-4 text-red-500">Error loading assets: {error?.message}</div>;
+  if (isLoading) {
+    return <LoadingState message="Loading assets..." />;
+  }
+
+  if (isError) {
+    return (
+      <ErrorState
+        error={error}
+        title="Failed to load assets"
+        onRetry={() => refetch()}
+      />
+    );
+  }
 
   const assets = assetsData?.data || [];
   const meta = assetsData?.meta?.pagination;
@@ -155,16 +174,22 @@ export function AssetTable() {
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
         <SheetContent className="w-full sm:max-w-2xl overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>{editingAsset ? "Edit Asset" : "Create New Asset"}</SheetTitle>
+            <SheetTitle>
+              {editingAsset ? "Edit Asset" : "Create New Asset"}
+            </SheetTitle>
             <SheetDescription>
-              {editingAsset ? "Update the asset details below." : "Fill in the details to create a new asset."}
+              {editingAsset
+                ? "Update the asset details below."
+                : "Fill in the details to create a new asset."}
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6">
             <AssetForm
               asset={editingAsset}
               onSubmit={handleFormSubmit}
-              isSubmitting={createMutation.isPending || updateMutation.isPending}
+              isSubmitting={
+                createMutation.isPending || updateMutation.isPending
+              }
               onCancel={() => setIsSheetOpen(false)}
             />
           </div>
@@ -177,11 +202,18 @@ export function AssetTable() {
           <DialogHeader>
             <DialogTitle>Delete Asset</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &ldquo;{assetToDelete?.attributes.Name}&rdquo;? This action cannot be undone.
+              Are you sure you want to delete &ldquo;
+              {assetToDelete?.attributes.Name}&rdquo;? This action cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Cancel
+            </Button>
             <Button
               variant="destructive"
               onClick={handleConfirmDelete}

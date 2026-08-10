@@ -17,6 +17,9 @@ interface GlobalContextType {
     grade: string;
     team: string;
     rerenderRequest: string;
+    accountHealthRun: string;
+    accountHealthItem: string;
+    scraperArtifact: string;
     fixture: {
       cricket: string;
     };
@@ -51,6 +54,9 @@ const GlobalProvider = ({ children }: { children: ReactNode }) => {
     grade: `${Domain.strapi}/admin/content-manager/collection-types/api::grade.grade/`,
     team: `${Domain.strapi}/admin/content-manager/collection-types/api::team.team/`,
     rerenderRequest: `${Domain.strapi}/admin/content-manager/collection-types/api::rerender-request.rerender-request/`,
+    accountHealthRun: `${Domain.strapi}/admin/content-manager/collection-types/api::account-health-run.account-health-run/`,
+    accountHealthItem: `${Domain.strapi}/admin/content-manager/collection-types/api::account-health-item.account-health-item/`,
+    scraperArtifact: `${Domain.strapi}/admin/content-manager/collection-types/api::fixtura-scraper-artifact.fixtura-scraper-artifact/`,
     fixture: {
       cricket: `${Domain.strapi}/admin/content-manager/collection-types/api::game-meta-data.game-meta-data/`,
     },

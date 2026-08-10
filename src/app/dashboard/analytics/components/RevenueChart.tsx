@@ -9,7 +9,14 @@ import ChartCard, {
   ChartSummaryStat,
 } from "@/components/modules/charts/ChartCard";
 import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, CartesianGrid, XAxis, YAxis } from "recharts";
+import {
+  BarChart,
+  Bar,
+  CartesianGrid,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { formatCurrency } from "@/utils/chart-formatters";
 import { DollarSign, TrendingUp, Calendar } from "lucide-react";
 import type { ChartConfig } from "@/components/ui/chart";
@@ -98,29 +105,37 @@ export function RevenueChart() {
 
   return (
     <ChartCard
-      title="Monthly Revenue Trends"
-      description="Revenue breakdown by month"
+      title="Monthly Revenue"
+      description="Revenue breakdown by month."
       icon={DollarSign}
       chartConfig={chartConfig}
       summaryStats={summaryStats}
-      variant="elevated"
     >
-      <BarChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis
-          dataKey="month"
-          angle={-45}
-          textAnchor="end"
-          height={80}
-          fontSize={12}
-        />
-        <YAxis tickFormatter={(value) => formatCurrency(value)} fontSize={12} />
-        <ChartTooltip
-          content={<ChartTooltipContent />}
-          formatter={(value) => formatCurrency(Number(value))}
-        />
-        <Bar dataKey="revenue" fill="var(--color-revenue)" />
-      </BarChart>
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+          <XAxis
+            dataKey="month"
+            angle={-45}
+            textAnchor="end"
+            height={80}
+            fontSize={12}
+          />
+          <YAxis
+            tickFormatter={(value) => formatCurrency(value)}
+            fontSize={12}
+          />
+          <ChartTooltip
+            content={<ChartTooltipContent />}
+            formatter={(value) => formatCurrency(Number(value))}
+          />
+          <Bar
+            dataKey="revenue"
+            fill="var(--color-revenue)"
+            radius={[4, 4, 0, 0]}
+          />
+        </BarChart>
+      </ResponsiveContainer>
     </ChartCard>
   );
 }

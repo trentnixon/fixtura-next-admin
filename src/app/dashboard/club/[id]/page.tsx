@@ -8,6 +8,7 @@ import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ClubHeader from "./components/ClubHeader";
 import StatisticsOverview from "./components/StatisticsOverview";
 import AssociationsList from "./components/AssociationsList";
@@ -28,7 +29,6 @@ export default function ClubAdminDetailPage() {
   const { data, isLoading, error, refetch, isFetching } =
     useClubAdminDetail(clubId);
 
-  // Invalid ID
   if (!clubId) {
     return (
       <>
@@ -41,7 +41,7 @@ export default function ClubAdminDetailPage() {
           <ErrorState
             error={
               new Error(
-                "Invalid club ID. The route expects a numeric ID parameter."
+                "Invalid club ID. The route expects a numeric ID parameter.",
               )
             }
             onRetry={() => window.location.reload()}
@@ -51,7 +51,6 @@ export default function ClubAdminDetailPage() {
     );
   }
 
-  // Loading
   if (isLoading && !data) {
     return (
       <>
@@ -67,7 +66,6 @@ export default function ClubAdminDetailPage() {
     );
   }
 
-  // Error
   if (error) {
     return (
       <>
@@ -91,7 +89,18 @@ export default function ClubAdminDetailPage() {
   }
 
   if (!data?.data) {
-    return null;
+    return (
+      <>
+        <CreatePageTitle
+          title="Club Detail"
+          byLine={`Club ID: ${clubId}`}
+          byLineBottom="Loading club data..."
+        />
+        <PageContainer padding="md" spacing="lg">
+          <LoadingState message="Loading club admin detail..." />
+        </PageContainer>
+      </>
+    );
   }
 
   const {
@@ -108,55 +117,70 @@ export default function ClubAdminDetailPage() {
     <>
       <CreatePageTitle
         title={club.name}
-        byLine={`${club.sport} • Club ID: ${clubId}`}
+        byLine={`${club.sport} - Club ID: ${clubId}`}
         byLineBottom={isFetching ? "Refreshing..." : "Club Admin Detail"}
       />
       <PageContainer padding="md" spacing="lg">
-        {/* 1. Club Header */}
-        <ClubHeader club={club} />
+        <Tabs defaultValue="snapshot" className="w-full">
+          <TabsList variant="primary" className="mb-4">
+            <TabsTrigger value="snapshot">Club Snapshot</TabsTrigger>
+            <TabsTrigger value="competitions">Competitions</TabsTrigger>
+            <TabsTrigger value="teams">Teams</TabsTrigger>
+            <TabsTrigger value="associations">Associations</TabsTrigger>
+            <TabsTrigger value="accounts">Accounts</TabsTrigger>
+            <TabsTrigger value="insights">Insights</TabsTrigger>
+          </TabsList>
 
-        {/* 2. Statistics Overview */}
-        <StatisticsOverview statistics={statistics} />
+          <TabsContent value="snapshot" className="space-y-6">
+            <ClubHeader club={club} statistics={statistics} />
+            <StatisticsOverview statistics={statistics} />
+          </TabsContent>
 
-        {/* 3. Associations */}
-        <SectionContainer
-          title="Associations"
-          description="Associations this club participates in, with competition and team counts."
-        >
-          <AssociationsList associations={associations} />
-        </SectionContainer>
+          <TabsContent value="competitions">
+            <SectionContainer
+              title="Competitions"
+              description={`${competitions.length} competition(s) this club is involved in, including timeline and participation.`}
+            >
+              <CompetitionsList competitions={competitions} />
+            </SectionContainer>
+          </TabsContent>
 
-        {/* 4. Teams */}
-        <SectionContainer
-          title="Teams"
-          description="Teams for this club with competition and grade context."
-        >
-          <TeamsList teams={teams} />
-        </SectionContainer>
+          <TabsContent value="teams">
+            <SectionContainer
+              title="Teams"
+              description={`${teams.length} team(s) for this club with competition and grade context.`}
+            >
+              <TeamsList teams={teams} />
+            </SectionContainer>
+          </TabsContent>
 
-        {/* 5. Competitions */}
-        <SectionContainer
-          title="Competitions"
-          description="Competitions this club is involved in, including timeline and participation."
-        >
-          <CompetitionsList competitions={competitions} />
-        </SectionContainer>
+          <TabsContent value="associations">
+            <SectionContainer
+              title="Associations"
+              description={`${associations.length} association(s) this club participates in.`}
+            >
+              <AssociationsList associations={associations} />
+            </SectionContainer>
+          </TabsContent>
 
-        {/* 6. Accounts */}
-        <SectionContainer
-          title="Accounts"
-          description="Accounts linked to this club and their subscription status."
-        >
-          <AccountsList accounts={accounts} />
-        </SectionContainer>
+          <TabsContent value="accounts">
+            <SectionContainer
+              title="Accounts"
+              description={`${accounts.length} account(s) linked to this club and their subscription status.`}
+            >
+              <AccountsList accounts={accounts} />
+            </SectionContainer>
+          </TabsContent>
 
-        {/* 7. Insights */}
-        <SectionContainer
-          title="Insights"
-          description="Analytics and insights for this club (visualisation to be iterated in later phases)."
-        >
-          <InsightsSection insights={insights} />
-        </SectionContainer>
+          <TabsContent value="insights">
+            <SectionContainer
+              title="Insights"
+              description="Analytics and insights for this club."
+            >
+              <InsightsSection insights={insights} />
+            </SectionContainer>
+          </TabsContent>
+        </Tabs>
       </PageContainer>
     </>
   );

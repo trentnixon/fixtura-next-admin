@@ -1,29 +1,36 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use server";
 
 import axiosInstance from "@/lib/axios";
-import { AxiosError } from "axios";
 import qs from "qs";
 import { Scheduler } from "@/types/scheduler";
+import { handleApiError } from "@/lib/services/utils/error-handler";
 
 interface ListSchedulersResponse {
   data: Scheduler[];
 }
 
-export async function fetchListSchedulers(searchTerm?: string): Promise<Scheduler[]> {
+export async function fetchListSchedulers(
+  searchTerm?: string
+): Promise<Scheduler[]> {
   try {
     const query = qs.stringify(
       {
-        filters: searchTerm ? {
-          $or: [
-            { Name: { $contains: searchTerm } },
-            { id: isNaN(Number(searchTerm)) ? undefined : Number(searchTerm) }
-          ].filter(Boolean)
-        } : {},
+        filters: searchTerm
+          ? {
+              $or: [
+                { Name: { $contains: searchTerm } },
+                {
+                  id: isNaN(Number(searchTerm))
+                    ? undefined
+                    : Number(searchTerm),
+                },
+              ].filter(Boolean),
+            }
+          : {},
         pagination: {
-          limit: 10
+          limit: 10,
         },
-        populate: ["account"]
+        populate: ["account"],
       },
       { encodeValuesOnly: true }
     );
@@ -33,11 +40,7 @@ export async function fetchListSchedulers(searchTerm?: string): Promise<Schedule
     );
 
     return response.data.data;
-  } catch (error: any) {
-    if (error instanceof AxiosError) {
-      console.error("[Axios Error] Failed to list schedulers:", error.message);
-      throw new Error("Failed to search schedulers");
-    }
-    throw error;
+  } catch (error) {
+    handleApiError(error, "fetchListSchedulers");
   }
 }

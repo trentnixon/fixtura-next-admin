@@ -18,6 +18,7 @@ import {
   AlertCircle,
   Search,
   ImageIcon,
+  type LucideIcon,
 } from "lucide-react";
 import Image from "next/image";
 import {
@@ -26,8 +27,6 @@ import {
 } from "@/lib/utils/unsubscribedEmails";
 import { useEffect, useState, useMemo } from "react";
 import { useAccountsQuery } from "@/hooks/accounts/useAccountsQuery";
-import MetricGrid from "@/components/ui-library/metrics/MetricGrid";
-import StatCard from "@/components/ui-library/metrics/StatCard";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,6 +45,33 @@ interface AssociationEmailsProps {
   hideAllFilter?: boolean;
 }
 
+function ContactMetric({
+  icon: Icon,
+  label,
+  value,
+  detail,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  detail: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 border-b border-slate-200 p-4 last:border-b-0 md:border-b-0 md:border-l md:first:border-l-0">
+      <div className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-100 text-slate-600">
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
+        <p className="text-lg font-semibold text-slate-900">{value}</p>
+        <p className="truncate text-xs text-muted-foreground">{detail}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function AssociationEmails({
   initialFilter = "active",
   hideAllFilter = false,
@@ -55,7 +81,7 @@ export default function AssociationEmails({
   const [unsubscribedEmails, setUnsubscribedEmails] = useState<string[]>([]);
   const [unsubscribedLoading, setUnsubscribedLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "active" | "inactive">(
-    initialFilter
+    initialFilter,
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -81,16 +107,16 @@ export default function AssociationEmails({
   const activeAssociationIds = useMemo(() => {
     return new Set(
       accountsData?.associations.active.flatMap((acc) =>
-        acc.associations.map((a) => a.id)
-      ) || []
+        acc.associations.map((a) => a.id),
+      ) || [],
     );
   }, [accountsData]);
 
   const inactiveAssociationIds = useMemo(() => {
     return new Set(
       accountsData?.associations.inactive.flatMap((acc) =>
-        acc.associations.map((a) => a.id)
-      ) || []
+        acc.associations.map((a) => a.id),
+      ) || [],
     );
   }, [accountsData]);
 
@@ -163,14 +189,19 @@ export default function AssociationEmails({
 
   if (isLoading || unsubscribedLoading || accountsLoading) {
     return (
-      <LoadingState variant="default" message="Loading association contacts..." />
+      <LoadingState
+        variant="default"
+        message="Loading association contacts..."
+      />
     );
   }
 
   if (error) {
     return (
       <ErrorState
-        error={error instanceof Error ? error : new Error("Failed to load data")}
+        error={
+          error instanceof Error ? error : new Error("Failed to load data")
+        }
         onRetry={refetch}
       />
     );
@@ -189,10 +220,10 @@ export default function AssociationEmails({
   // Calculate statistics
   const totalAssociations = data.data.length;
   const activeSubscribedAssociations = data.data.filter((association) =>
-    activeAssociationIds.has(association.id)
+    activeAssociationIds.has(association.id),
   ).length;
   const inactiveSubscribedAssociations = data.data.filter((association) =>
-    inactiveAssociationIds.has(association.id)
+    inactiveAssociationIds.has(association.id),
   ).length;
 
   // Function to download CSV for SendGrid
@@ -207,7 +238,7 @@ export default function AssociationEmails({
         association.email &&
         association.email.trim() !== "" &&
         isValidEmail(association.email.trim()) &&
-        !isEmailUnsubscribed(association.email, unsubscribedEmails)
+        !isEmailUnsubscribed(association.email, unsubscribedEmails),
     );
 
     const isAccountView = filter !== "all";
@@ -219,8 +250,9 @@ export default function AssociationEmails({
     const csvRows = validAssociations.map((association) => {
       if (isAccountView) {
         const accountInfo = associationIdToAccountMap.get(association.id);
-        return `"${association.name}","${association.id}","${accountInfo?.userEmail || ""
-          }","${accountInfo?.deliveryEmail || ""}"`;
+        return `"${association.name}","${association.id}","${
+          accountInfo?.userEmail || ""
+        }","${accountInfo?.deliveryEmail || ""}"`;
       }
       return `"${association.name}","${association.id}","${association.email}"`;
     });
@@ -233,8 +265,9 @@ export default function AssociationEmails({
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `association-contacts-${filter}-${new Date().toISOString().split("T")[0]
-      }.csv`
+      `association-contacts-${filter}-${
+        new Date().toISOString().split("T")[0]
+      }.csv`,
     );
     link.style.visibility = "hidden";
     document.body.appendChild(link);
@@ -243,41 +276,35 @@ export default function AssociationEmails({
   };
 
   return (
-    <div className="space-y-6 mt-4">
-      {/* Statistics Cards */}
-      <MetricGrid columns={3} gap="md">
-        <StatCard
-          title="Total Associations"
-          value={totalAssociations}
-          icon={<Users className="h-5 w-5" />}
-          variant="light"
-          description="Total associations in the system"
-        />
-        <StatCard
-          title="Active Subscriptions"
-          value={activeSubscribedAssociations}
-          icon={<CreditCard className="h-5 w-5" />}
-          variant="primary"
-          description="Associations with active orders"
-        />
-        <StatCard
-          title="Inactive Subscriptions"
-          value={inactiveSubscribedAssociations}
-          icon={<AlertCircle className="h-5 w-5" />}
-          variant="accent"
-          description="Associations with no active orders"
-        />
-      </MetricGrid>
-
-      {/* Main Table Section */}
+    <div className="mt-4 space-y-4">
       <SectionContainer
         title="Association Contact Information"
         description="Manage and export contact details for association accounts"
         variant="default"
       >
+        <div className="mb-4 grid overflow-hidden rounded-md border bg-white md:grid-cols-3">
+          <ContactMetric
+            icon={Users}
+            label="Total Associations"
+            value={totalAssociations.toLocaleString()}
+            detail="Contacts available"
+          />
+          <ContactMetric
+            icon={CreditCard}
+            label="Active Subscriptions"
+            value={activeSubscribedAssociations.toLocaleString()}
+            detail="Linked to active accounts"
+          />
+          <ContactMetric
+            icon={AlertCircle}
+            label="Inactive Subscriptions"
+            value={inactiveSubscribedAssociations.toLocaleString()}
+            detail="No active account order"
+          />
+        </div>
         <div className="space-y-4">
           {/* Controls: Search, Filters, Download */}
-          <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-muted/30 p-4 rounded-lg">
+          <div className="flex flex-col items-center justify-between gap-3 rounded-md border bg-slate-50/60 p-3 md:flex-row">
             <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto flex-1">
               <div className="relative w-full sm:w-80">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -291,7 +318,7 @@ export default function AssociationEmails({
               <div className="flex gap-2">
                 {!hideAllFilter && (
                   <Button
-                    variant={filter === "all" ? "secondary" : "primary"}
+                    variant={filter === "all" ? "primary" : "secondary"}
                     size="sm"
                     onClick={() => setFilter("all")}
                   >
@@ -299,14 +326,14 @@ export default function AssociationEmails({
                   </Button>
                 )}
                 <Button
-                  variant={filter === "active" ? "secondary" : "primary"}
+                  variant={filter === "active" ? "primary" : "secondary"}
                   size="sm"
                   onClick={() => setFilter("active")}
                 >
                   Active
                 </Button>
                 <Button
-                  variant={filter === "inactive" ? "secondary" : "primary"}
+                  variant={filter === "inactive" ? "primary" : "secondary"}
                   size="sm"
                   onClick={() => setFilter("inactive")}
                 >
@@ -316,7 +343,7 @@ export default function AssociationEmails({
             </div>
 
             <Button
-              variant="secondary"
+              variant="accent"
               size="sm"
               onClick={downloadCSV}
               className="w-full md:w-auto flex items-center gap-2"
@@ -327,8 +354,9 @@ export default function AssociationEmails({
           </div>
 
           {/* Results Summary */}
-          <div className="text-sm text-muted-foreground px-2">
-            Showing {paginatedAssociations.length} of {filteredAssociations.length} contacts
+          <div className="px-1 text-sm text-muted-foreground">
+            Showing {paginatedAssociations.length} of{" "}
+            {filteredAssociations.length} contacts
             {filteredAssociations.length !== totalAssociations &&
               ` (filtered from ${totalAssociations})`}
           </div>
@@ -337,7 +365,7 @@ export default function AssociationEmails({
           <div className="rounded-md border bg-card overflow-hidden">
             <Table>
               <TableHeader>
-                <TableRow className="bg-muted/50">
+                <TableRow className="bg-slate-50 hover:bg-slate-50">
                   <TableHead className="w-[60px]">Logo</TableHead>
                   <TableHead>Association Name</TableHead>
                   {filter === "all" ? (
@@ -354,14 +382,16 @@ export default function AssociationEmails({
                       <TableHead>Delivery Email</TableHead>
                     </>
                   )}
-                  <TableHead className="w-[100px] text-right">Actions</TableHead>
+                  <TableHead className="w-[100px] text-right">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedAssociations.length > 0 ? (
                   paginatedAssociations.map((association) => {
                     const accountInfo = associationIdToAccountMap.get(
-                      association.id
+                      association.id,
                     );
                     return (
                       <TableRow
@@ -390,11 +420,13 @@ export default function AssociationEmails({
                             </div>
                           )}
                         </TableCell>
-                        <TableCell className="font-semibold">
-                          {association.name}
-                          <div className="text-[10px] text-muted-foreground font-mono mt-0.5">
-                            ID: {association.id}
-                          </div>
+                        <TableCell>
+                          <p className="text-sm font-medium text-slate-900">
+                            {association.name}
+                          </p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">
+                            Association ID {association.id}
+                          </p>
                         </TableCell>
 
                         {filter === "all" ? (
@@ -412,7 +444,7 @@ export default function AssociationEmails({
                             </TableCell>
                             <TableCell>
                               {association.address &&
-                                association.address !== "No address" ? (
+                              association.address !== "No address" ? (
                                 <div className="flex items-center gap-2 max-w-[200px] truncate">
                                   <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
                                   <span className="text-sm truncate">
@@ -461,10 +493,14 @@ export default function AssociationEmails({
                               <>
                                 {association.address &&
                                   association.address !== "No address" && (
-                                    <Button variant="secondary" size="sm" asChild>
+                                    <Button
+                                      variant="secondary"
+                                      size="sm"
+                                      asChild
+                                    >
                                       <a
                                         href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-                                          association.address
+                                          association.address,
                                         )}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
@@ -507,7 +543,10 @@ export default function AssociationEmails({
                   })
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-32 text-center">
+                    <TableCell
+                      colSpan={filter === "all" ? 6 : 5}
+                      className="h-32 text-center"
+                    >
                       <div className="flex flex-col items-center justify-center text-muted-foreground">
                         <Search className="h-8 w-8 mb-2 opacity-20" />
                         <p>No associations found matching your search</p>

@@ -11,7 +11,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Users, Trophy, Building2 } from "lucide-react";
 import StatusBadge from "@/components/ui-library/badges/StatusBadge";
 import EmptyState from "@/components/ui-library/states/EmptyState";
 
@@ -21,7 +20,14 @@ interface TeamsListProps {
 
 export default function TeamsList({ teams }: TeamsListProps) {
   const sortedTeams = useMemo(() => {
-    return [...teams].sort((a, b) => a.name.localeCompare(b.name));
+    return [...teams].sort((a, b) => {
+      const competitionA = a.competition?.name ?? "";
+      const competitionB = b.competition?.name ?? "";
+      if (competitionA !== competitionB) {
+        return competitionA.localeCompare(competitionB);
+      }
+      return a.name.localeCompare(b.name);
+    });
   }, [teams]);
 
   if (sortedTeams.length === 0) {
@@ -35,12 +41,11 @@ export default function TeamsList({ teams }: TeamsListProps) {
   }
 
   return (
-    <Table>
+    <Table className="min-w-[760px]">
       <TableHeader>
-        <TableRow>
-          <TableHead className="w-[260px]">Team</TableHead>
-          <TableHead>Competition</TableHead>
-          <TableHead>Association</TableHead>
+        <TableRow className="bg-slate-50 hover:bg-slate-50">
+          <TableHead className="min-w-[260px]">Team</TableHead>
+          <TableHead className="min-w-[260px]">Competition</TableHead>
           <TableHead>Grade</TableHead>
           <TableHead>Status</TableHead>
         </TableRow>
@@ -49,50 +54,54 @@ export default function TeamsList({ teams }: TeamsListProps) {
         {sortedTeams.map((team) => (
           <TableRow key={team.id}>
             <TableCell>
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium truncate">{team.name}</span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-slate-900">
+                  {team.name}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Team #{team.id}
+                </p>
               </div>
             </TableCell>
             <TableCell>
               {team.competition ? (
-                <div className="flex flex-col gap-0.5">
-                  <span className="text-sm font-medium">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-900">
                     {team.competition.name}
-                  </span>
-                  {team.competition.status && (
-                    <span className="text-xs text-muted-foreground">
-                      {team.competition.status}
-                    </span>
-                  )}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {team.competition.association?.name ?? "No association"}
+                  </p>
                 </div>
               ) : (
-                <span className="text-xs text-muted-foreground">—</span>
-              )}
-            </TableCell>
-            <TableCell>
-              {team.competition?.association ? (
-                <div className="flex items-center gap-1.5">
-                  <Building2 className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    {team.competition.association.name}
-                  </span>
-                </div>
-              ) : (
-                <span className="text-xs text-muted-foreground">—</span>
+                <span className="text-sm text-muted-foreground">-</span>
               )}
             </TableCell>
             <TableCell>
               {team.grade ? (
-                <Badge
-                  variant="outline"
-                  className="flex w-fit items-center gap-1 font-normal"
-                >
-                  <Trophy className="h-3 w-3" />
-                  <span>{team.grade.name}</span>
-                </Badge>
+                <div className="flex flex-wrap gap-1.5">
+                  <Badge variant="outline" className="bg-slate-50">
+                    {team.grade.name}
+                  </Badge>
+                  {team.grade.gender && (
+                    <Badge
+                      variant="outline"
+                      className="bg-white text-slate-600"
+                    >
+                      {team.grade.gender}
+                    </Badge>
+                  )}
+                  {team.grade.ageGroup && (
+                    <Badge
+                      variant="outline"
+                      className="bg-white text-slate-600"
+                    >
+                      {team.grade.ageGroup}
+                    </Badge>
+                  )}
+                </div>
               ) : (
-                <span className="text-xs text-muted-foreground">—</span>
+                <span className="text-sm text-muted-foreground">-</span>
               )}
             </TableCell>
             <TableCell>
@@ -109,5 +118,3 @@ export default function TeamsList({ teams }: TeamsListProps) {
     </Table>
   );
 }
-
-

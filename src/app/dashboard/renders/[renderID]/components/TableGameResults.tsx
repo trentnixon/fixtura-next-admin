@@ -13,7 +13,7 @@ import {
 import { useFetchGamesCricket } from "@/hooks/games/useFetchGamesCricket";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { EyeIcon } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import EmptyState from "@/components/ui-library/states/EmptyState";
@@ -22,14 +22,17 @@ import { Fixture } from "@/types/fixture";
 
 // Helper function to group fixtures by grade
 function groupByGrade(fixtures: Fixture[]): Record<string, Fixture[]> {
-  return fixtures.reduce((acc, fixture) => {
-    const grade = fixture.gradeName || "Uncategorized";
-    if (!acc[grade]) {
-      acc[grade] = [];
-    }
-    acc[grade].push(fixture);
-    return acc;
-  }, {} as Record<string, Fixture[]>);
+  return fixtures.reduce(
+    (acc, fixture) => {
+      const grade = fixture.gradeName || "Uncategorized";
+      if (!acc[grade]) {
+        acc[grade] = [];
+      }
+      acc[grade].push(fixture);
+      return acc;
+    },
+    {} as Record<string, Fixture[]>,
+  );
 }
 
 export default function TableGamesResults() {
@@ -90,12 +93,12 @@ export default function TableGamesResults() {
         >
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-slate-50 hover:bg-slate-50">
                 <TableHead>Round</TableHead>
-                <TableHead>Ground</TableHead>
                 <TableHead>Teams</TableHead>
+                <TableHead>Ground</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>View</TableHead>
+                <TableHead className="text-right">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -105,16 +108,30 @@ export default function TableGamesResults() {
 
                 return (
                   <TableRow key={id}>
-                    <TableCell>{round || "N/A"}</TableCell>
-                    <TableCell>{ground || "N/A"}</TableCell>
                     <TableCell>
-                      {teamHome || "N/A"} vs {teamAway || "N/A"}
+                      <span className="text-sm font-medium text-slate-900">
+                        {round || "N/A"}
+                      </span>
                     </TableCell>
-                    <TableCell>{status || "N/A"}</TableCell>
                     <TableCell>
-                      <Link href={`/dashboard/fixtures/${id}`}>
-                        <Button variant="accent">
-                          <EyeIcon className="h-4 w-4" />
+                      <div className="text-sm font-medium text-slate-900">
+                        {teamHome || "N/A"} vs {teamAway || "N/A"}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Fixture ID {id}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-600">
+                      {ground || "N/A"}
+                    </TableCell>
+                    <TableCell className="text-sm text-slate-600">
+                      {status || "N/A"}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Link href={`/dashboard/fixtures/${id}`} passHref>
+                        <Button variant="primary" size="sm">
+                          View
+                          <ArrowRight className="h-4 w-4" />
                         </Button>
                       </Link>
                     </TableCell>

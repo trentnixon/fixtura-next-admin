@@ -1,6 +1,15 @@
 "use client";
 
 import { useParams } from "next/navigation";
+import Link from "next/link";
+import {
+  ArrowRight,
+  Calendar,
+  CheckIcon,
+  DatabaseIcon,
+  XIcon,
+} from "lucide-react";
+
 import { useAccountQuery } from "@/hooks/accounts/useAccountQuery";
 import {
   Table,
@@ -10,23 +19,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { CheckIcon, DatabaseIcon, EyeIcon, XIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useGlobalContext } from "@/components/providers/GlobalContext";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { LoadingState, ErrorState, EmptyState } from "@/components/ui-library";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import MetricGrid from "@/components/ui-library/metrics/MetricGrid";
-import StatCard from "@/components/ui-library/metrics/StatCard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCompetitionAssociationDrilldown } from "@/hooks/competitions/useCompetitionAssociationDrilldown";
 import { useCompetitionClubDrilldown } from "@/hooks/competitions/useCompetitionClubDrilldown";
+import { CompetitionAssociationCompetition } from "@/types/competitionAssociationDrilldown";
+import { CompetitionClubCompetition } from "@/types/competitionClubDrilldown";
+
+type CompetitionRow =
+  | CompetitionAssociationCompetition
+  | CompetitionClubCompetition;
 
 function formatDate(value: string | null) {
   if (!value) {
-    return "—";
+    return "-";
   }
 
   const date = new Date(value);
@@ -61,7 +71,7 @@ export default function CompetitionsTab() {
     isError: isAssociationError,
     error: associationError,
   } = useCompetitionAssociationDrilldown(
-    isAssociationAccount ? organizationId : undefined
+    isAssociationAccount ? organizationId : undefined,
   );
 
   const {
@@ -136,154 +146,23 @@ export default function CompetitionsTab() {
         title={`Association Competitions (${associationSummary.competitionCount})`}
         variant="compact"
       >
-        <div className="space-y-6">
-          <MetricGrid columns={3} gap="lg">
-            <StatCard
-              title="Total Competitions"
-              value={associationSummary.competitionCount}
-              description="All competitions for this association"
-              icon={<EyeIcon className="h-5 w-5" />}
-              variant="primary"
-            />
-            <StatCard
-              title="Active Competitions"
-              value={associationSummary.activeCompetitions}
-              description="Currently active competitions"
-              icon={<CheckIcon className="h-5 w-5" />}
-              variant="accent"
-            />
-            <StatCard
-              title="Inactive Competitions"
-              value={associationSummary.inactiveCompetitions}
-              description="Historical competitions"
-              icon={<XIcon className="h-5 w-5" />}
-              variant="secondary"
-            />
-          </MetricGrid>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>{association.name}</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-              <span>Sport: {association.sport ?? "—"}</span>
-              <span>PlayHQ ID: {association.playHqId ?? "—"}</span>
-              <Badge
-                variant={association.hasFixturaAccount ? "default" : "outline"}
-              >
-                {association.hasFixturaAccount
-                  ? "Fixtura Account Linked"
-                  : "Fixtura Account Missing"}
-              </Badge>
-              {association.accounts.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {association.accounts.map((account) => {
-                    const fallbackName = [account.firstName, account.lastName]
-                      .filter(Boolean)
-                      .join(" ");
-                    const accountLabel =
-                      account.name ??
-                      (fallbackName ? fallbackName : `Account #${account.id}`);
-
-                    return (
-                      <Badge key={account.id} variant="secondary">
-                        {accountLabel}
-                      </Badge>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <div className="space-y-4">
+          <CompetitionSummaryStrip
+            total={associationSummary.competitionCount}
+            active={associationSummary.activeCompetitions}
+            inactive={associationSummary.inactiveCompetitions}
+            label={association.name}
+            sport={association.sport}
+            playHqId={association.playHqId}
+            hasFixturaAccount={association.hasFixturaAccount}
+          />
 
           {associationCompetitions.length ? (
             <ScrollArea className="h-[600px]">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-left">Competition</TableHead>
-                    <TableHead className="text-center">Season</TableHead>
-                    <TableHead className="text-center">Status</TableHead>
-                    <TableHead className="text-center">Grades</TableHead>
-                    <TableHead className="text-center">Teams</TableHead>
-                    <TableHead className="text-center">Clubs</TableHead>
-                    <TableHead className="text-center">Start</TableHead>
-                    <TableHead className="text-center">End</TableHead>
-                    <TableHead className="text-center">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {associationCompetitions.map((competition) => (
-                    <TableRow key={competition.id}>
-                      <TableCell className="text-left font-medium">
-                        {competition.name}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {competition.season ?? "—"}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <div className="flex justify-center">
-                          <Badge
-                            className={`${
-                              competition.isActive
-                                ? "bg-success-500"
-                                : "bg-slate-500"
-                            } text-white border-0 rounded-full w-6 h-6 p-0 flex items-center justify-center`}
-                          >
-                            {competition.isActive ? (
-                              <CheckIcon size="12" />
-                            ) : (
-                              <XIcon size="12" />
-                            )}
-                          </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-center font-semibold">
-                        {competition.counts.gradeCount}
-                      </TableCell>
-                      <TableCell className="text-center font-semibold">
-                        {competition.counts.teamCount}
-                      </TableCell>
-                      <TableCell className="text-center font-semibold">
-                        {competition.counts.clubCount}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {formatDate(competition.timeframe.start)}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        {formatDate(competition.timeframe.end)}
-                      </TableCell>
-                      <TableCell className="text-center space-x-2">
-                        <Button variant="primary" size="sm" asChild>
-                          <Link
-                            href={`/dashboard/competitions/${competition.id}`}
-                          >
-                            <EyeIcon size="16" />
-                          </Link>
-                        </Button>
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          asChild
-                          disabled={!strapiLocation?.competition}
-                        >
-                          <Link
-                            href={
-                              strapiLocation?.competition
-                                ? `${strapiLocation.competition}${competition.id}`
-                                : "#"
-                            }
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <DatabaseIcon size="16" />
-                          </Link>
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <CompetitionsTable
+                competitions={associationCompetitions}
+                strapiCompetitionBase={strapiLocation?.competition}
+              />
             </ScrollArea>
           ) : (
             <EmptyState
@@ -296,7 +175,6 @@ export default function CompetitionsTab() {
     );
   }
 
-  // Club drilldown
   if (isClubError) {
     return (
       <SectionContainer title="Competitions" variant="compact">
@@ -331,157 +209,24 @@ export default function CompetitionsTab() {
       title={`Club Competitions (${clubSummary.competitionCount})`}
       variant="compact"
     >
-      <div className="space-y-6">
-        <MetricGrid columns={3} gap="lg">
-          <StatCard
-            title="Total Competitions"
-            value={clubSummary.competitionCount}
-            description="All competitions this club participates in"
-            icon={<EyeIcon className="h-5 w-5" />}
-            variant="primary"
-          />
-          <StatCard
-            title="Active Competitions"
-            value={clubSummary.activeCompetitions}
-            description="Currently active competitions"
-            icon={<CheckIcon className="h-5 w-5" />}
-            variant="accent"
-          />
-          <StatCard
-            title="Inactive Competitions"
-            value={clubSummary.inactiveCompetitions}
-            description="Historical competitions"
-            icon={<XIcon className="h-5 w-5" />}
-            variant="secondary"
-          />
-        </MetricGrid>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>{club.name}</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-            <span>Sport: {club.sport ?? "—"}</span>
-            <span>PlayHQ ID: {club.playHqId ?? "—"}</span>
-            <Badge variant={club.hasFixturaAccount ? "default" : "outline"}>
-              {club.hasFixturaAccount
-                ? "Fixtura Account Linked"
-                : "Fixtura Account Missing"}
-            </Badge>
-            {club.association && club.association.name && (
-              <Badge variant="secondary">
-                Association: {club.association.name}
-              </Badge>
-            )}
-            {club.accounts.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {club.accounts.map((account) => {
-                  const fallbackName = [account.firstName, account.lastName]
-                    .filter(Boolean)
-                    .join(" ");
-                  const accountLabel =
-                    account.name ??
-                    (fallbackName ? fallbackName : `Account #${account.id}`);
-
-                  return (
-                    <Badge key={account.id} variant="secondary">
-                      {accountLabel}
-                    </Badge>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      <div className="space-y-4">
+        <CompetitionSummaryStrip
+          total={clubSummary.competitionCount}
+          active={clubSummary.activeCompetitions}
+          inactive={clubSummary.inactiveCompetitions}
+          label={club.name}
+          sport={club.sport}
+          playHqId={club.playHqId}
+          hasFixturaAccount={club.hasFixturaAccount}
+          associationName={club.association?.name ?? null}
+        />
 
         {clubCompetitions.length ? (
           <ScrollArea className="h-[600px]">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-left">Competition</TableHead>
-                  <TableHead className="text-center">Season</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-center">Grades</TableHead>
-                  <TableHead className="text-center">Teams</TableHead>
-                  <TableHead className="text-center">Clubs</TableHead>
-                  <TableHead className="text-center">Start</TableHead>
-                  <TableHead className="text-center">End</TableHead>
-                  <TableHead className="text-center">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {clubCompetitions.map((competition) => (
-                  <TableRow key={competition.id}>
-                    <TableCell className="text-left font-medium">
-                      {competition.name}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {competition.season ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center">
-                        <Badge
-                          className={`${
-                            competition.isActive
-                              ? "bg-success-500"
-                              : "bg-slate-500"
-                          } text-white border-0 rounded-full w-6 h-6 p-0 flex items-center justify-center`}
-                        >
-                          {competition.isActive ? (
-                            <CheckIcon size="12" />
-                          ) : (
-                            <XIcon size="12" />
-                          )}
-                        </Badge>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center font-semibold">
-                      {competition.counts.gradeCount}
-                    </TableCell>
-                    <TableCell className="text-center font-semibold">
-                      {competition.counts.teamCount}
-                    </TableCell>
-                    <TableCell className="text-center font-semibold">
-                      {competition.counts.clubCount}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {formatDate(competition.timeframe.start)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {formatDate(competition.timeframe.end)}
-                    </TableCell>
-                    <TableCell className="text-center space-x-2">
-                      <Button variant="primary" size="sm" asChild>
-                        <Link
-                          href={`/dashboard/competitions/${competition.id}`}
-                        >
-                          <EyeIcon size="16" />
-                        </Link>
-                      </Button>
-                      <Button
-                        variant="primary"
-                        size="sm"
-                        asChild
-                        disabled={!strapiLocation?.competition}
-                      >
-                        <Link
-                          href={
-                            strapiLocation?.competition
-                              ? `${strapiLocation.competition}${competition.id}`
-                              : "#"
-                          }
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <DatabaseIcon size="16" />
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <CompetitionsTable
+              competitions={clubCompetitions}
+              strapiCompetitionBase={strapiLocation?.competition}
+            />
           </ScrollArea>
         ) : (
           <EmptyState
@@ -491,5 +236,157 @@ export default function CompetitionsTab() {
         )}
       </div>
     </SectionContainer>
+  );
+}
+
+function CompetitionSummaryStrip({
+  total,
+  active,
+  inactive,
+  label,
+  sport,
+  playHqId,
+  hasFixturaAccount,
+  associationName,
+}: {
+  total: number;
+  active: number;
+  inactive: number;
+  label: string;
+  sport: string | null;
+  playHqId: string | null;
+  hasFixturaAccount: boolean;
+  associationName?: string | null;
+}) {
+  return (
+    <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white lg:grid-cols-[1.4fr_repeat(3,minmax(120px,0.5fr))]">
+      <div className="border-b border-slate-200 px-4 py-3 lg:border-b-0 lg:border-r">
+        <p className="truncate text-sm font-medium text-slate-900">{label}</p>
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          <span>{sport ?? "Sport unknown"}</span>
+          <span>PlayHQ ID: {playHqId ?? "-"}</span>
+          {associationName && <span>Association: {associationName}</span>}
+          <Badge
+            variant="outline"
+            className="rounded-full border-slate-200 bg-slate-50 text-slate-700"
+          >
+            {hasFixturaAccount ? "Fixtura linked" : "Fixtura missing"}
+          </Badge>
+        </div>
+      </div>
+      <SummaryMetric label="Total" value={total} />
+      <SummaryMetric label="Active" value={active} />
+      <SummaryMetric label="Inactive" value={inactive} />
+    </div>
+  );
+}
+
+function SummaryMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="border-b border-slate-200 px-4 py-3 last:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0">
+      <p className="text-xs font-medium uppercase text-slate-500">{label}</p>
+      <p className="mt-1 text-lg font-semibold leading-none text-slate-900">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function CompetitionsTable({
+  competitions,
+  strapiCompetitionBase,
+}: {
+  competitions: CompetitionRow[];
+  strapiCompetitionBase?: string;
+}) {
+  return (
+    <Table className="min-w-[860px]">
+      <TableHeader>
+        <TableRow className="bg-slate-50 hover:bg-slate-50">
+          <TableHead className="min-w-[280px]">Competition</TableHead>
+          <TableHead>Status</TableHead>
+          <TableHead className="min-w-[150px]">Dates</TableHead>
+          <TableHead className="text-right">Grades</TableHead>
+          <TableHead className="text-right">Teams</TableHead>
+          <TableHead className="text-right">Clubs</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {competitions.map((competition) => (
+          <TableRow key={competition.id}>
+            <TableCell>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-slate-900">
+                  {competition.name}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {competition.season ?? `Competition #${competition.id}`}
+                </p>
+              </div>
+            </TableCell>
+            <TableCell>
+              <Badge
+                variant="outline"
+                className={`rounded-full ${
+                  competition.isActive
+                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                    : "border-slate-200 bg-slate-50 text-slate-600"
+                }`}
+              >
+                {competition.isActive ? (
+                  <CheckIcon className="h-3.5 w-3.5" />
+                ) : (
+                  <XIcon className="h-3.5 w-3.5" />
+                )}
+                {competition.isActive ? "Active" : "Inactive"}
+              </Badge>
+            </TableCell>
+            <TableCell>
+              <div className="space-y-1 text-xs text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="h-3.5 w-3.5" />
+                  <span>{formatDate(competition.timeframe.start)}</span>
+                </div>
+                <div className="pl-5">
+                  {formatDate(competition.timeframe.end)}
+                </div>
+              </div>
+            </TableCell>
+            <TableCell className="text-right font-medium text-slate-900">
+              {competition.counts.gradeCount}
+            </TableCell>
+            <TableCell className="text-right font-medium text-slate-900">
+              {competition.counts.teamCount}
+            </TableCell>
+            <TableCell className="text-right font-medium text-slate-900">
+              {competition.counts.clubCount}
+            </TableCell>
+            <TableCell className="text-right">
+              <div className="flex items-center justify-end gap-2">
+                <Button variant="primary" size="sm" asChild>
+                  <Link href={`/dashboard/competitions/${competition.id}`}>
+                    View
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+                {strapiCompetitionBase && (
+                  <Button variant="secondary" size="sm" asChild>
+                    <a
+                      href={`${strapiCompetitionBase}${competition.id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      CMS
+                      <DatabaseIcon className="h-4 w-4" />
+                    </a>
+                  </Button>
+                )}
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

@@ -24,7 +24,7 @@ import {
 import { useFixtureDetails } from "@/hooks/fixtures/useFixtureDetails";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import { isAfter, isBefore, startOfDay, parseISO } from "date-fns";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { useSorting } from "./_utils/useSorting";
 import { SearchInput } from "./_utils/SearchInput";
 import { formatDate } from "./_utils/dateUtils";
@@ -69,7 +69,7 @@ export function AssociationFixturesTable({
     // Apply grade filter
     if (selectedGrade !== "all") {
       filtered = filtered.filter(
-        (fixture) => fixture.grade?.name === selectedGrade
+        (fixture) => fixture.grade?.name === selectedGrade,
       );
     }
 
@@ -167,7 +167,7 @@ export function AssociationFixturesTable({
       if (fixture.grade?.name) {
         gradeMap.set(
           fixture.grade.name,
-          (gradeMap.get(fixture.grade.name) || 0) + 1
+          (gradeMap.get(fixture.grade.name) || 0) + 1,
         );
       }
     });
@@ -191,14 +191,14 @@ export function AssociationFixturesTable({
       >
         <div className="flex items-center justify-between mb-6">
           <div></div>
-          <Button variant="outline" size="sm" onClick={onBack}>
+          <Button variant="secondary" size="sm" onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to Associations
           </Button>
         </div>
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-slate-50 hover:bg-slate-50">
               <TableHead>
                 <Skeleton className="h-4 w-24" />
               </TableHead>
@@ -264,7 +264,7 @@ export function AssociationFixturesTable({
       >
         <div className="flex items-center justify-between mb-6">
           <div></div>
-          <Button variant="outline" size="sm" onClick={onBack}>
+          <Button variant="secondary" size="sm" onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to Associations
           </Button>
@@ -289,7 +289,7 @@ export function AssociationFixturesTable({
       >
         <div className="flex items-center justify-between mb-6">
           <div></div>
-          <Button variant="outline" size="sm" onClick={onBack}>
+          <Button variant="secondary" size="sm" onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to Associations
           </Button>
@@ -307,15 +307,15 @@ export function AssociationFixturesTable({
       description="Fixture data for the selected association"
       variant="compact"
     >
-      <div className="space-y-4 mb-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4 flex-1">
+      <div className="mb-6 space-y-4">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_200px_180px]">
             {/* Team Search */}
             <SearchInput
               value={teamSearchQuery}
               onChange={setTeamSearchQuery}
               placeholder="Search by team name..."
-              className="flex-1 max-w-md"
+              className="min-w-0"
             />
 
             {/* Grade Filter */}
@@ -350,113 +350,124 @@ export function AssociationFixturesTable({
               </SelectContent>
             </Select>
           </div>
-          <Button variant="outline" size="sm" onClick={onBack}>
+          <Button variant="secondary" size="sm" onClick={onBack}>
             <ArrowLeft className="h-4 w-4 mr-1" />
             Back to Associations
           </Button>
         </div>
       </div>
 
-      <div className="space-y-6">
-        {Object.keys(groupedFixtures).length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">
-            No fixtures found
-            {selectedGrade !== "all" ? ` for ${selectedGrade}` : ""}.
-          </p>
-        ) : (
-          Object.entries(groupedFixtures).map(([gradeName, gradeFixtures]) => (
-            <div key={gradeName} className="space-y-2">
-              <div className="flex items-center justify-between px-2 py-1 bg-muted/50 rounded-md">
-                <h3 className="font-semibold text-sm">
-                  {gradeName} ({gradeFixtures.length} fixture
-                  {gradeFixtures.length !== 1 ? "s" : ""})
-                </h3>
-              </div>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-auto p-0 font-semibold hover:bg-transparent"
-                        onClick={() => handleSort("date")}
-                      >
-                        Date
-                        {getSortIcon("date")}
-                      </Button>
-                    </TableHead>
-                    <TableHead>Teams</TableHead>
-                    <TableHead>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-auto p-0 font-semibold hover:bg-transparent"
-                        onClick={() => handleSort("round")}
-                      >
-                        Round
-                        {getSortIcon("round")}
-                      </Button>
-                    </TableHead>
-                    <TableHead>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-auto p-0 font-semibold hover:bg-transparent"
-                        onClick={() => handleSort("grade")}
-                      >
-                        Grade
-                        {getSortIcon("grade")}
-                      </Button>
-                    </TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-auto p-0 font-semibold hover:bg-transparent"
-                        onClick={() => handleSort("status")}
-                      >
-                        Status
-                        {getSortIcon("status")}
-                      </Button>
-                    </TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {gradeFixtures.map((fixture) => (
-                    <TableRow
-                      key={fixture.id}
-                      className={getRowColorClass(fixture.status)}
-                    >
-                      <TableCell>{formatDate(fixture.date)}</TableCell>
-                      <TableCell className="text-sm">
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-slate-50 hover:bg-slate-50">
+            <TableHead>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto p-0 font-semibold hover:bg-transparent"
+                onClick={() => handleSort("date")}
+              >
+                Date
+                {getSortIcon("date")}
+              </Button>
+            </TableHead>
+            <TableHead>Fixture</TableHead>
+            <TableHead>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto p-0 font-semibold hover:bg-transparent"
+                onClick={() => handleSort("round")}
+              >
+                Round
+                {getSortIcon("round")}
+              </Button>
+            </TableHead>
+            <TableHead>Type</TableHead>
+            <TableHead>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-auto p-0 font-semibold hover:bg-transparent"
+                onClick={() => handleSort("status")}
+              >
+                Status
+                {getSortIcon("status")}
+              </Button>
+            </TableHead>
+            <TableHead className="text-right">Action</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {Object.keys(groupedFixtures).length === 0 ? (
+            <TableRow>
+              <TableCell
+                colSpan={6}
+                className="py-8 text-center text-sm text-muted-foreground"
+              >
+                No fixtures found
+                {selectedGrade !== "all" ? ` for ${selectedGrade}` : ""}.
+              </TableCell>
+            </TableRow>
+          ) : (
+            Object.entries(groupedFixtures).flatMap(
+              ([gradeName, gradeFixtures]) => [
+                <TableRow
+                  key={`${gradeName}-header`}
+                  className="bg-slate-50/80 hover:bg-slate-50/80"
+                >
+                  <TableCell colSpan={6} className="py-2">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm font-medium text-slate-900">
+                        {gradeName}
+                      </div>
+                      <Badge variant="outline">
+                        {gradeFixtures.length} fixture
+                        {gradeFixtures.length !== 1 ? "s" : ""}
+                      </Badge>
+                    </div>
+                  </TableCell>
+                </TableRow>,
+                ...gradeFixtures.map((fixture) => (
+                  <TableRow
+                    key={fixture.id}
+                    className={getRowColorClass(fixture.status)}
+                  >
+                    <TableCell className="whitespace-nowrap text-sm">
+                      {formatDate(fixture.date)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm font-medium text-slate-900">
                         {getTeamsDisplay(fixture)}
-                      </TableCell>
-                      <TableCell>{fixture.round || "N/A"}</TableCell>
-                      <TableCell>{fixture.grade?.name || "N/A"}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{fixture.type || "N/A"}</Badge>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(fixture.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="accent"
-                          onClick={() => handleViewDetails(fixture.id)}
-                        >
-                          View Details
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          ))
-        )}
-      </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        {fixture.competition?.name ?? "Competition unknown"}
+                      </div>
+                    </TableCell>
+                    <TableCell className="whitespace-nowrap text-sm">
+                      {fixture.round || "N/A"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{fixture.type || "N/A"}</Badge>
+                    </TableCell>
+                    <TableCell>{getStatusBadge(fixture.status)}</TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={() => handleViewDetails(fixture.id)}
+                      >
+                        View
+                        <ArrowRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )),
+              ],
+            )
+          )}
+        </TableBody>
+      </Table>
     </SectionContainer>
   );
 }

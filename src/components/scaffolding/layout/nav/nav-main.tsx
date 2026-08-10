@@ -40,6 +40,25 @@ export function NavMain({
 }) {
   const pathname = usePathname();
 
+  function getActiveSubItemUrl(
+    subItems: { url: string }[] | undefined
+  ): string | null {
+    if (!pathname || !subItems?.length) {
+      return null;
+    }
+
+    const matches = subItems.filter(
+      (subItem) =>
+        pathname === subItem.url || pathname.startsWith(`${subItem.url}/`)
+    );
+
+    if (matches.length === 0) {
+      return null;
+    }
+
+    return matches.sort((a, b) => b.url.length - a.url.length)[0]?.url ?? null;
+  }
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>{title}</SidebarGroupLabel>
@@ -82,22 +101,30 @@ export function NavMain({
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <SidebarMenuSub>
-                        {item.items?.map((subItem) => (
-                          <SidebarMenuSubItem key={subItem.title}>
-                            <SidebarMenuSubButton asChild isActive={isCurrent}>
-                              <a
-                                href={subItem.url}
-                                className={
-                                  pathname === subItem.url
-                                    ? "font-semibold text-blue-500"
-                                    : ""
-                                }
+                        {item.items?.map((subItem) => {
+                          const activeSubItemUrl = getActiveSubItemUrl(item.items);
+                          const isSubItemActive = activeSubItemUrl === subItem.url;
+
+                          return (
+                            <SidebarMenuSubItem key={subItem.title}>
+                              <SidebarMenuSubButton
+                                asChild
+                                isActive={isSubItemActive}
                               >
-                                <span>{subItem.title}</span>
-                              </a>
-                            </SidebarMenuSubButton>
-                          </SidebarMenuSubItem>
-                        ))}
+                                <a
+                                  href={subItem.url}
+                                  className={
+                                    isSubItemActive
+                                      ? "font-semibold text-white"
+                                      : ""
+                                  }
+                                >
+                                  <span>{subItem.title}</span>
+                                </a>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          );
+                        })}
                       </SidebarMenuSub>
                     </CollapsibleContent>
                   </>

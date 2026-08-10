@@ -14,11 +14,15 @@ The Global Render Monitor is designed for system administrators to track heavy r
 ## Page Infrastructure
 
 - **Path**: `/dashboard/renders/page.tsx`
+- **Tabs**: Render Snapshot | Analytics | Operational Audit (Accounts tab removed — leaderboard lives on Snapshot only)
 - **Main Components**:
-    - `GlobalRenderRollup`: Live headline metrics (Active, Failures, Success Rate). Powered by `useRenderTelemetry`.
-    - `RenderAnalyticsDashboard`: Historical throughput and asset mix trends. Powered by `useRenderAnalytics`.
-    - `RenderResourceLeaders`: High-volume account leaderboards and global asset distribution. Powered by `useRenderDistribution`.
-    - `GlobalRenderTable`: The master operational audit list. Powered by `useRenderAudit`.
+    - `GlobalRenderRollup`: Live headline render metrics. `useRenderTelemetry` → `GET /renders/telemetry`
+    - `AssetRunSnapshotSection`: Rollup (last 25 runs) + table. `useAccountAssetRunGlobalStatus` → `GET /account-asset-runs/status`
+    - `RenderResourceLeaders`: Leaderboard (12 months) + asset mix (all time). `useRenderDistribution` — no mock fallback
+    - `RenderAnalyticsDashboard`: Time-series charts. `useRenderAnalytics` — empty `data: []` shows EmptyState
+    - `GlobalRenderTable`: One row per render, ghost badge. `useRenderAudit` → `GET /renders/audit`
+- **Shared**: `GlobalAccountAssetRunTable` (also used on home dashboard Renders tab)
+- **CMS comms**: `.comms/admin-renders-page-cms-responses-2026-05-29.md`
 
 ## API & Data Infrastructure
 The dashboard utilizes a specialized multi-route architecture to balance real-time performance with deep analytical insights:

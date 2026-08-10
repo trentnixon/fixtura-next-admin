@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -13,7 +12,7 @@ import {
 import { DatePatterns } from "@/types/associationInsights";
 import ChartCard from "@/components/modules/charts/ChartCard";
 import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, CartesianGrid, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import { formatNumber } from "@/utils/chart-formatters";
 import type { ChartConfig } from "@/components/ui/chart";
 
@@ -85,59 +84,26 @@ export default function CompetitionDatePatternsCard({
 
   return (
     <div className="space-y-6">
-      {/* Summary Stats Card */}
-      <Card className="bg-white border shadow-none">
-        <CardHeader className="p-4">
-          <CardTitle>Competition Date Patterns</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4 space-y-6">
-          {/* Average Duration */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted">
-              <span className="text-sm font-medium">Average Competition Duration</span>
-              <span className="text-lg font-semibold">
-                {data.averageCompetitionDurationDays.toFixed(1)} days
-              </span>
-            </div>
-          </div>
-
-          {/* Date Range */}
-          <div className="space-y-2">
-            <h4 className="text-sm font-semibold">Date Range</h4>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Metric</TableHead>
-                  <TableHead className="text-right">Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow>
-                  <TableCell className="font-medium">Earliest Start Date</TableCell>
-                  <TableCell className="text-right">
-                    {formatDate(data.earliestStartDate)}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium">Latest End Date</TableCell>
-                  <TableCell className="text-right">
-                    {formatDate(data.latestEndDate)}
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white md:grid-cols-3">
+        <Stat
+          label="Avg Duration"
+          value={`${data.averageCompetitionDurationDays.toFixed(1)} days`}
+        />
+        <Stat
+          label="Earliest Start"
+          value={formatDate(data.earliestStartDate)}
+        />
+        <Stat label="Latest End" value={formatDate(data.latestEndDate)} />
+      </div>
 
       {/* Temporal Patterns Chart */}
       <ChartCard
-        title="Competitions Starting & Ending"
-        description="Number of competitions starting and ending this month and next month"
+        title="Competition Timeline"
+        description="Monthly breakdown of competition activity"
         chartConfig={temporalChartConfig}
-        chartClassName="h-[300px]"
+        chartClassName="h-[260px]"
       >
-        <BarChart data={temporalChartData}>
+        <LineChart data={temporalChartData}>
           <CartesianGrid strokeDasharray="3 3" vertical={false} />
           <XAxis
             dataKey="name"
@@ -158,18 +124,65 @@ export default function CompetitionDatePatternsCard({
                 ?.label || name,
             ]}
           />
-          <Bar
+          <Line
+            type="monotone"
             dataKey="starting"
-            fill="var(--color-starting)"
-            radius={[4, 4, 0, 0]}
+            stroke="var(--color-starting)"
+            strokeWidth={2}
+            dot={{ r: 3 }}
+            activeDot={{ r: 5 }}
           />
-          <Bar
+          <Line
+            type="monotone"
             dataKey="ending"
-            fill="var(--color-ending)"
-            radius={[4, 4, 0, 0]}
+            stroke="var(--color-ending)"
+            strokeWidth={2}
+            dot={{ r: 3 }}
+            activeDot={{ r: 5 }}
           />
-        </BarChart>
+        </LineChart>
       </ChartCard>
+
+      <div className="rounded-md border border-slate-200 bg-white">
+        <div className="border-b border-slate-200 px-4 py-3">
+          <h4 className="text-sm font-semibold text-slate-900">
+            Monthly Activity
+          </h4>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50 hover:bg-slate-50">
+              <TableHead>Period</TableHead>
+              <TableHead className="text-right">Starting</TableHead>
+              <TableHead className="text-right">Ending</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {temporalChartData.map((row) => (
+              <TableRow key={row.name}>
+                <TableCell className="text-sm font-medium text-slate-900">
+                  {row.name}
+                </TableCell>
+                <TableCell className="text-right">
+                  {row.starting.toLocaleString()}
+                </TableCell>
+                <TableCell className="text-right">
+                  {row.ending.toLocaleString()}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border-b border-slate-200 px-4 py-3 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0">
+      <p className="text-xs font-medium uppercase text-slate-500">{label}</p>
+      <p className="mt-1 text-lg font-semibold text-slate-900">{value}</p>
     </div>
   );
 }

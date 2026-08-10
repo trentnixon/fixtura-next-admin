@@ -2,66 +2,47 @@
 "use server";
 
 import axiosInstance from "@/lib/axios";
+import { AxiosError } from "axios";
 import { RenderAnalyticsResponse, AnalyticsPeriod } from "@/types/render";
 
 /**
  * Fetches the render analytics (chart data) for the Global Render Monitor.
  * Uses the specialized custom endpoint /renders/analytics.
  */
-export async function fetchRenderAnalytics(period: AnalyticsPeriod = "day"): Promise<RenderAnalyticsResponse> {
+export async function fetchRenderAnalytics(
+  period: AnalyticsPeriod = "day"
+): Promise<RenderAnalyticsResponse> {
   try {
     const response = await axiosInstance.get<RenderAnalyticsResponse>(
       `/renders/analytics?period=${period}`
     );
 
-    // If data is missing or empty, return mock data
-    if (!response.data || !response.data.data || response.data.data.length === 0) {
-      console.warn("Render analytics API returned empty data, using mock fallback");
-      return generateMockAnalytics(period);
+    if (!response.data) {
+      throw new Error("Render analytics response is missing");
     }
 
-    return response.data;
+    return {
+      ...response.data,
+      data: response.data.data ?? [],
+    };
   } catch (error: any) {
-    console.warn("Failed to fetch render analytics, using mock fallback due to error:", error.message);
-    return generateMockAnalytics(period);
-  }
-}
+    if (error instanceof AxiosError) {
+      console.error("[Axios Error] Failed to fetch render analytics:", {
+        message: error.message,
+        url: error.config?.url,
+        status: error.response?.status,
+        data: error.response?.data,
+      });
 
-function generateMockAnalytics(period: AnalyticsPeriod): RenderAnalyticsResponse {
-  const data: any[] = [];
-  const now = new Date();
-  const count = period === "day" ? 24 : period === "week" ? 7 : 30;
-
-  for (let i = 0; i < count; i++) {
-    const date = new Date(now);
-    if (period === "day") {
-      date.setHours(now.getHours() - (count - 1 - i));
-    } else {
-      date.setDate(now.getDate() - (count - 1 - i));
+      throw new Error(
+        error.response?.data?.message ||
+          `Failed to fetch render analytics: ${error.response?.status || "Unknown error"}`
+      );
     }
 
-    // Generate somewhat realistic data with some randomness
-    const baseVolume = Math.floor(Math.random() * 15) + 5;
-    const failures = Math.random() > 0.8 ? Math.floor(Math.random() * 3) : 0;
-
-    data.push({
-      period: period,
-      date: date.toISOString(),
-      renderVolume: baseVolume - failures,
-      assetDensity: Math.floor(Math.random() * 5) + 2,
-      failureCount: failures,
-      failureRate: failures / baseVolume,
-      totalRenders: baseVolume,
-      totalAssets: (baseVolume - failures) * (Math.floor(Math.random() * 5) + 2),
-    });
+    console.error("[Unexpected Error] Failed to fetch render analytics:", error);
+    throw new Error(
+      "An unexpected error occurred while fetching render analytics."
+    );
   }
-
-  return {
-    period,
-    range: {
-      start: data[0].date,
-      end: data[data.length - 1].date,
-    },
-    data,
-  };
 }

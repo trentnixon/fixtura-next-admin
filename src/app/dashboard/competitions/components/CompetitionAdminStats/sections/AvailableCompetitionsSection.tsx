@@ -26,7 +26,14 @@ import {
   PaginationPrevious,
   PaginationInfo,
 } from "@/components/ui/pagination";
-import { Search, ArrowUpDown, ArrowUp, ArrowDown, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  ArrowUpDown,
+  Search,
+  X,
+} from "lucide-react";
 import { Label } from "@/components/ui/label";
 
 import { CompetitionAdminStatsAvailableCompetition } from "@/types/competitionAdminStats";
@@ -48,7 +55,7 @@ interface AvailableCompetitionsSectionProps {
 }
 
 function renderSizeCategoryBadge(
-  category: CompetitionAdminStatsAvailableCompetition["sizeCategory"]
+  category: CompetitionAdminStatsAvailableCompetition["sizeCategory"],
 ) {
   const labelMap: Record<
     CompetitionAdminStatsAvailableCompetition["sizeCategory"],
@@ -73,7 +80,7 @@ export function AvailableCompetitionsSection({
   const [sportFilter, setSportFilter] = useState<string>("all");
   const [sortField, setSortField] = useState<SortField | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection | null>(
-    null
+    null,
   );
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(ITEMS_PER_PAGE_OPTIONS[0]);
@@ -218,12 +225,11 @@ export function AvailableCompetitionsSection({
 
   return (
     <SectionContainer
-      title="Available Competitions"
-      description="Search, filter, and sort competitions returned by the admin stats endpoint."
+      title="Competitions"
+      description="Search, sort, and open competition detail records."
     >
-
       <div className="space-y-4">
-        <div className="flex flex-wrap gap-4 items-end">
+        <div className="flex flex-wrap items-end gap-4">
           <div className="flex flex-col gap-2">
             <Label htmlFor="competition-search" className="text-sm font-medium">
               Search
@@ -334,16 +340,22 @@ export function AvailableCompetitionsSection({
             size="sm"
             disabled={!hasActiveFilters}
             onClick={handleResetFilters}
-            variant="accent"
+            variant="outline"
           >
-            Reset filters
+            Reset Filters
           </Button>
         </div>
 
-        <div className="overflow-x-auto border border-slate-200 rounded-xl">
+        <div className="text-sm text-muted-foreground">
+          Showing {paginatedData.length} of {sortedData.length} results
+          {filteredData.length !== competitions.length &&
+            ` (filtered from ${competitions.length} total)`}
+        </div>
+
+        <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-slate-50 hover:bg-slate-50">
                 <TableHead className="min-w-[200px]">
                   <button
                     type="button"
@@ -415,9 +427,9 @@ export function AvailableCompetitionsSection({
                   <TableCell className="font-medium">
                     {competition.name}
                   </TableCell>
-                  <TableCell>{competition.season ?? "—"}</TableCell>
-                  <TableCell>{competition.associationName ?? "—"}</TableCell>
-                  <TableCell>{competition.sport ?? "—"}</TableCell>
+                  <TableCell>{competition.season ?? "-"}</TableCell>
+                  <TableCell>{competition.associationName ?? "-"}</TableCell>
+                  <TableCell>{competition.sport ?? "-"}</TableCell>
                   <TableCell className="text-right">
                     {formatNumber(competition.gradeCount)}
                   </TableCell>
@@ -430,12 +442,13 @@ export function AvailableCompetitionsSection({
                   <TableCell className="text-right">
                     {competition.durationDays
                       ? `${competition.durationDays} days`
-                      : "—"}
+                      : "-"}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button asChild size="sm" variant="accent">
+                    <Button asChild size="sm" variant="primary">
                       <Link href={`/dashboard/competitions/${competition.id}`}>
                         View
+                        <ArrowRight className="h-3.5 w-3.5" />
                       </Link>
                     </Button>
                   </TableCell>

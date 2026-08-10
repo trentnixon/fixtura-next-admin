@@ -17,11 +17,30 @@ import {
 import { ChartConfig } from "@/components/ui/chart";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { BarChart3, CalendarDays, Gauge } from "lucide-react";
+
+const competitionTabs = [
+  {
+    value: "snapshot",
+    label: "Snapshot",
+    icon: Gauge,
+  },
+  {
+    value: "timeline",
+    label: "Timeline",
+    icon: CalendarDays,
+  },
+  {
+    value: "coverage",
+    label: "Coverage",
+    icon: BarChart3,
+  },
+] as const;
 
 export default function CompetitionAdminStats() {
   const [associationInput, setAssociationInput] = useState<string>("");
   const [seasonFilter, setSeasonFilter] = useState<string | undefined>(
-    undefined
+    undefined,
   );
 
   const associationIdFilter = useMemo(() => {
@@ -38,7 +57,7 @@ export default function CompetitionAdminStats() {
       associationId: associationIdFilter,
       season: seasonFilter,
     }),
-    [associationIdFilter, seasonFilter]
+    [associationIdFilter, seasonFilter],
   );
 
   const { data, isLoading, isFetching, isError, error, refetch } =
@@ -53,7 +72,7 @@ export default function CompetitionAdminStats() {
 
     return buildSeasonChartData(
       data.tables.available,
-      data.summary.breakdowns.bySeason
+      data.summary.breakdowns.bySeason,
     );
   }, [data]);
 
@@ -105,7 +124,7 @@ export default function CompetitionAdminStats() {
         color: `hsl(var(--chart-${(index % 5) + 1}))`,
       },
     }),
-    {} as ChartConfig
+    {} as ChartConfig,
   );
 
   const timingChartConfig: ChartConfig = {
@@ -133,41 +152,55 @@ export default function CompetitionAdminStats() {
   );
 
   return (
-    <div className="space-y-6">
+    <Tabs defaultValue="snapshot" className="w-full min-w-0 max-w-full">
+      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <TabsList className="h-auto w-full flex-wrap justify-start rounded-md bg-slate-100 p-1 lg:w-auto">
+          {competitionTabs.map((tab) => {
+            const Icon = tab.icon;
 
-      <Tabs defaultValue="available">
-        <TabsList>
-          <TabsTrigger value="available">Available Competitions</TabsTrigger>
-          <TabsTrigger value="gantt">Gantt Chart</TabsTrigger>
-          <TabsTrigger value="upcoming">Upcoming Competitions</TabsTrigger>
+            return (
+              <TabsTrigger
+                key={tab.value}
+                value={tab.value}
+                className="min-h-10 gap-2"
+              >
+                <Icon className="h-4 w-4" />
+                {tab.label}
+              </TabsTrigger>
+            );
+          })}
         </TabsList>
-        <TabsContent value="available">
-          <AvailableCompetitionsSection competitions={data.tables.available} />
-        </TabsContent>
-        <TabsContent value="gantt">
-          <GanttSection competitions={data.tables.available} />
-        </TabsContent>
-        <TabsContent value="upcoming">
-          <OverviewSection
-            summary={data.summary}
-            filters={filters}
-            competitions={data.tables.available}
-          />
-        </TabsContent>
-      </Tabs>
 
+        <div className="flex justify-start lg:justify-end">{filters}</div>
+      </div>
 
+      <TabsContent value="snapshot" className="mt-6 space-y-6">
+        <OverviewSection
+          summary={data.summary}
+          competitions={data.tables.available}
+        />
+        <AvailableCompetitionsSection competitions={data.tables.available} />
+      </TabsContent>
 
-      <DistributionsSection
-        statusChartData={statusChartData}
-        timingChartData={timingChartData}
-        sizeCategoryChartData={sizeCategoryChartData}
-        seasonChartData={seasonChartData}
-        statusChartConfig={statusChartConfig}
-        timingChartConfig={timingChartConfig}
-        sizeCategoryChartConfig={sizeCategoryChartConfig}
-        seasonChartConfig={seasonChartConfig}
-      />
-    </div>
+      <TabsContent
+        value="timeline"
+        className="mt-6 min-w-0 max-w-full overflow-hidden"
+      >
+        <GanttSection competitions={data.tables.available} />
+      </TabsContent>
+
+      <TabsContent value="coverage" className="mt-6 space-y-6">
+        <DistributionsSection
+          statusChartData={statusChartData}
+          timingChartData={timingChartData}
+          sizeCategoryChartData={sizeCategoryChartData}
+          seasonChartData={seasonChartData}
+          statusChartConfig={statusChartConfig}
+          timingChartConfig={timingChartConfig}
+          sizeCategoryChartConfig={sizeCategoryChartConfig}
+          seasonChartConfig={seasonChartConfig}
+        />
+      </TabsContent>
+    </Tabs>
   );
 }

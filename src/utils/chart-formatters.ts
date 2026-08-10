@@ -5,24 +5,27 @@
  * These utilities provide consistent formatting across all chart types.
  */
 
+/** Fixed timezone so SSR (Node) and client (browser) produce identical strings. */
+const DISPLAY_TIME_ZONE = "Australia/Sydney";
+
 /**
  * Format a duration value to a human-readable string
  *
- * @param value - Duration value (in seconds or milliseconds)
- * @param unit - Unit of the input value ('seconds' | 'milliseconds')
+ * @param value - Duration value (in milliseconds by default)
+ * @param unit - Unit of the input value ('seconds' | 'milliseconds'). Default: 'milliseconds'
  * @returns Formatted duration string (e.g., "2.5s", "1.2m", "500ms")
  *
  * @example
  * ```ts
- * formatDuration(2.5) // "2.5s"
- * formatDuration(0.5, 'seconds') // "500ms"
+ * formatDuration(1500) // "1.5s" (milliseconds default)
+ * formatDuration(500) // "500ms"
+ * formatDuration(2.5, 'seconds') // "2.5s"
  * formatDuration(3600, 'seconds') // "1.0h"
- * formatDuration(1500, 'milliseconds') // "1.5s"
  * ```
  */
 export function formatDuration(
   value: number,
-  unit: "seconds" | "milliseconds" = "seconds"
+  unit: "seconds" | "milliseconds" = "milliseconds"
 ): string {
   const seconds = unit === "milliseconds" ? value / 1000 : value;
 
@@ -37,6 +40,43 @@ export function formatDuration(
     return `${(seconds / 60).toFixed(1)}m`;
   }
   return `${(seconds / 3600).toFixed(1)}h`;
+}
+
+/**
+ * Duration for UI where raw milliseconds should not appear (e.g. scraper heartbeat charts).
+ * Uses seconds below one minute, then minutes, then hours.
+ */
+export function formatDurationNoMillis(valueMs: number): string {
+  if (!Number.isFinite(valueMs) || valueMs < 0) return "—";
+  const s = valueMs / 1000;
+  if (s < 60) {
+    if (s < 0.05) return "0s";
+    return s < 10 ? `${s.toFixed(1)}s` : `${Math.round(s)}s`;
+  }
+  const m = s / 60;
+  if (m < 60) {
+    return m >= 10 ? `${Math.round(m)}m` : `${m.toFixed(1)}m`;
+  }
+  const h = m / 60;
+  return h >= 10 ? `${Math.round(h)}h` : `${h.toFixed(1)}h`;
+}
+
+/**
+ * Wall-clock style duration for admin UI (no ms): `1h 40m 28s`, `5m 12s`, `45s`.
+ * Omits zero units (e.g. `2h` not `2h 0m 0s`).
+ */
+export function formatDurationReadable(valueMs: number): string {
+  if (!Number.isFinite(valueMs) || valueMs < 0) return "—";
+  let totalSec = Math.floor(valueMs / 1000);
+  const h = Math.floor(totalSec / 3600);
+  totalSec -= h * 3600;
+  const m = Math.floor(totalSec / 60);
+  const s = totalSec - m * 60;
+  const parts: string[] = [];
+  if (h > 0) parts.push(`${h}h`);
+  if (m > 0) parts.push(`${m}m`);
+  if (s > 0 || parts.length === 0) parts.push(`${s}s`);
+  return parts.join(" ");
 }
 
 /**
@@ -152,6 +192,7 @@ export function formatRelativeTime(
       month: "short",
       day: "numeric",
       year: "numeric",
+      timeZone: DISPLAY_TIME_ZONE,
     });
   } catch {
     return typeof dateString === "string" ? dateString : fallback;
@@ -185,6 +226,7 @@ export function formatDate(
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: DISPLAY_TIME_ZONE,
     });
   } catch {
     return typeof dateString === "string" ? dateString : fallback;
@@ -209,6 +251,7 @@ export function formatDateShort(dateString: string | Date): string {
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
+      timeZone: DISPLAY_TIME_ZONE,
     });
   } catch {
     return typeof dateString === "string" ? dateString : "";

@@ -5,19 +5,24 @@ import { useMemo } from "react";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RenderHeader from "./components/renderHeader";
 import RenderOverview from "./components/renderOverview";
-import { RenderTabs } from "./components/renderTabs";
 import { useRendersQuery } from "@/hooks/renders/useRendersQuery";
 import { useGetAccountDetailsFromRenderId } from "@/hooks/renders/useGetAccountDetailsFromRenderId";
 import { formatDate } from "@/lib/utils";
 import RenderCostBreakdown from "@/app/dashboard/budget/components/RenderCostBreakdown";
+import RenderIntegrityAudit from "./components/RenderIntegrityAudit";
+import TableDownloads from "./components/TableDownloads";
+import TableGamesResults from "./components/TableGameResults";
+import TableGrades from "./components/TableGradesInRender";
+import TableUpcomingGames from "./components/TableUpcomingGames";
 
 export default function RenderID() {
   const { renderID } = useParams();
   const { data: render } = useRendersQuery(renderID as string);
   const { data: accountDetails } = useGetAccountDetailsFromRenderId(
-    renderID as string
+    renderID as string,
   );
 
   // Convert renderID string to number for rollup hook
@@ -39,8 +44,8 @@ export default function RenderID() {
       ? `${accountName} - ${render.Name}`
       : `${accountName} - Render Details`
     : render?.Name
-    ? `Render Details - ${render.Name}`
-    : "Render Details";
+      ? `Render Details - ${render.Name}`
+      : "Render Details";
 
   // Build byLine with Render ID and account info
   const byLineParts = [];
@@ -50,7 +55,7 @@ export default function RenderID() {
   if (accountDetails?.account?.Sport) {
     byLineParts.push(accountDetails.account.Sport);
   }
-  const byLine = byLineParts.join(" · ");
+  const byLine = byLineParts.join(" - ");
 
   // Build byLineBottom with description and last updated date
   const description = render?.Name
@@ -70,24 +75,80 @@ export default function RenderID() {
       />
       <PageContainer padding="md" spacing="lg">
         <RenderHeader render={render} />
-        <RenderOverview />
-
-        {/* Cost Analytics Section */}
-        {renderIdNumber && (
-          <SectionContainer
-            title="Cost Analytics"
-            description="Cost breakdown and performance metrics for this render"
+        <Tabs defaultValue="snapshot" className="w-full">
+          <TabsList
+            variant="primary"
+            className="mb-4 h-auto flex-wrap justify-start gap-1"
           >
-            <RenderCostBreakdown renderId={renderIdNumber} />
-          </SectionContainer>
-        )}
+            <TabsTrigger value="snapshot">Render Snapshot</TabsTrigger>
+            <TabsTrigger value="cost">Cost</TabsTrigger>
+            <TabsTrigger value="downloads">Downloads</TabsTrigger>
+            <TabsTrigger value="gameResults">Game Results</TabsTrigger>
+            <TabsTrigger value="upcomingGames">Upcoming Games</TabsTrigger>
+            <TabsTrigger value="grades">Grades</TabsTrigger>
+            <TabsTrigger value="audit">Integrity Audit</TabsTrigger>
+          </TabsList>
 
-        <SectionContainer
-          title="Render Data"
-          description="Downloads, game results, upcoming games, and grades associated with this render."
-        >
-          <RenderTabs />
-        </SectionContainer>
+          <TabsContent value="snapshot">
+            <RenderOverview />
+          </TabsContent>
+
+          <TabsContent value="cost">
+            {renderIdNumber ? (
+              <SectionContainer
+                title="Cost Analytics"
+                description="Cost breakdown and performance metrics for this render."
+              >
+                <RenderCostBreakdown renderId={renderIdNumber} />
+              </SectionContainer>
+            ) : null}
+          </TabsContent>
+
+          <TabsContent value="downloads">
+            <SectionContainer
+              title="Downloads"
+              description="Generated assets and downloadable files for this render."
+            >
+              <TableDownloads />
+            </SectionContainer>
+          </TabsContent>
+
+          <TabsContent value="gameResults">
+            <SectionContainer
+              title="Game Results"
+              description="Result fixtures included in this render."
+            >
+              <TableGamesResults />
+            </SectionContainer>
+          </TabsContent>
+
+          <TabsContent value="upcomingGames">
+            <SectionContainer
+              title="Upcoming Games"
+              description="Scheduled fixtures included in this render."
+            >
+              <TableUpcomingGames />
+            </SectionContainer>
+          </TabsContent>
+
+          <TabsContent value="grades">
+            <SectionContainer
+              title="Grades"
+              description="Grades associated with this render."
+            >
+              <TableGrades />
+            </SectionContainer>
+          </TabsContent>
+
+          <TabsContent value="audit">
+            <SectionContainer
+              title="Integrity Audit"
+              description="Operational checks for render completeness and related data."
+            >
+              <RenderIntegrityAudit />
+            </SectionContainer>
+          </TabsContent>
+        </Tabs>
       </PageContainer>
     </>
   );

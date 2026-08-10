@@ -1,6 +1,17 @@
 "use client";
 
 import { useMemo } from "react";
+import Link from "next/link";
+import {
+  ArrowRight,
+  CheckCircle2,
+  CreditCard,
+  Mail,
+  ShoppingCart,
+  User,
+  XCircle,
+} from "lucide-react";
+
 import { AccountDetail } from "@/types/associationDetail";
 import {
   Table,
@@ -11,155 +22,157 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/ui-library/badges/StatusBadge";
-import {
-  Mail,
-  User,
-  CreditCard,
-  CheckCircle2,
-  XCircle,
-  ShoppingCart,
-} from "lucide-react";
 
-/**
- * AccountsList Component
- *
- * Main accounts list component displaying:
- * - Accounts sorted by lastName, firstName, then creation date
- * - Table format for better density
- * - Empty state handling
- */
 interface AccountsListProps {
   accounts: AccountDetail[];
 }
 
 export default function AccountsList({ accounts }: AccountsListProps) {
-  // Sort accounts: lastName, firstName, then by ID (as proxy for creation date)
   const sortedAccounts = useMemo(() => {
     return [...accounts].sort((a, b) => {
-      // Sort by lastName (nulls last)
       if (a.lastName !== b.lastName) {
         if (a.lastName === null) return 1;
         if (b.lastName === null) return -1;
         return a.lastName.localeCompare(b.lastName);
       }
-      // Then by firstName (nulls last)
       if (a.firstName !== b.firstName) {
         if (a.firstName === null) return 1;
         if (b.firstName === null) return -1;
         return a.firstName.localeCompare(b.firstName);
       }
-      // Then by ID (as proxy for creation date - lower ID = earlier creation)
       return a.id - b.id;
     });
   }, [accounts]);
 
   if (sortedAccounts.length === 0) {
     return (
-      <div className="p-8 text-center border rounded-md bg-slate-50">
-        <p className="text-muted-foreground">
-          No accounts found for this association.
+      <div className="rounded-md border border-dashed border-slate-300 px-4 py-5">
+        <p className="text-sm font-medium text-slate-900">
+          No linked association accounts
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          This association does not have any Fixtura accounts connected yet.
         </p>
       </div>
     );
   }
 
   return (
-    <Table>
+    <Table className="min-w-[780px]">
       <TableHeader>
-        <TableRow>
-          <TableHead>Account</TableHead>
+        <TableRow className="bg-slate-50 hover:bg-slate-50">
+          <TableHead className="min-w-[280px]">Account</TableHead>
           <TableHead>Type</TableHead>
           <TableHead>Tier</TableHead>
           <TableHead>Status</TableHead>
           <TableHead>Setup</TableHead>
-          <TableHead className="text-right">Order</TableHead>
+          <TableHead>Order</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {sortedAccounts.map((account) => (
-          <TableRow key={account.id}>
-            <TableCell>
-              <div className="flex flex-col">
-                <span className="font-medium">
-                  {[account.firstName, account.lastName]
-                    .filter(Boolean)
-                    .join(" ") || "Unnamed Account"}
-                </span>
-                {account.email && (
-                  <a
-                    href={`mailto:${account.email}`}
-                    className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mt-0.5"
-                  >
-                    <Mail className="h-3 w-3" />
-                    {account.email}
-                  </a>
-                )}
-              </div>
-            </TableCell>
-            <TableCell>
-              {account.accountType && (
-                <Badge
-                  variant="outline"
-                  className="flex w-fit items-center gap-1 font-normal"
-                >
-                  <User className="h-3 w-3" />
-                  {account.accountType.name}
-                </Badge>
-              )}
-            </TableCell>
-            <TableCell>
-              {account.subscriptionTier && (
-                <Badge
-                  variant="outline"
-                  className="flex w-fit items-center gap-1 font-normal"
-                >
-                  <CreditCard className="h-3 w-3" />
-                  {account.subscriptionTier.name}
-                </Badge>
-              )}
-            </TableCell>
-            <TableCell>
-              <StatusBadge
-                status={account.isActive}
-                trueLabel="Active"
-                falseLabel="Inactive"
-                variant={account.isActive ? "default" : "neutral"}
-              />
-            </TableCell>
-            <TableCell>
-              <div className="flex items-center gap-1.5">
-                {account.isSetup ? (
-                  <>
-                    <CheckCircle2 className="h-4 w-4 text-green-600" />
-                    <span className="text-sm text-muted-foreground">
-                      Complete
-                    </span>
-                  </>
+        {sortedAccounts.map((account) => {
+          const displayName =
+            [account.firstName, account.lastName].filter(Boolean).join(" ") ||
+            "Unnamed Account";
+
+          return (
+            <TableRow key={account.id}>
+              <TableCell>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-900">
+                    {displayName}
+                  </p>
+                  {account.email ? (
+                    <a
+                      href={`mailto:${account.email}`}
+                      className="mt-1 flex items-center gap-1 text-xs text-muted-foreground hover:text-primary"
+                    >
+                      <Mail className="h-3 w-3" />
+                      {account.email}
+                    </a>
+                  ) : (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Account #{account.id}
+                    </p>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                {account.accountType ? (
+                  <Badge variant="outline" className="gap-1 bg-slate-50">
+                    <User className="h-3 w-3" />
+                    {account.accountType.name}
+                  </Badge>
                 ) : (
-                  <>
-                    <XCircle className="h-4 w-4 text-yellow-600" />
-                    <span className="text-sm text-muted-foreground">
-                      Pending
-                    </span>
-                  </>
+                  <span className="text-sm text-muted-foreground">-</span>
                 )}
-              </div>
-            </TableCell>
-            <TableCell className="text-right">
-              {account.hasActiveOrder && (
-                <Badge
-                  variant="outline"
-                  className="inline-flex items-center gap-1 bg-green-50 border-green-500 text-green-700"
-                >
-                  <ShoppingCart className="h-3 w-3" />
-                  <span className="text-xs">Active</span>
-                </Badge>
-              )}
-            </TableCell>
-          </TableRow>
-        ))}
+              </TableCell>
+              <TableCell>
+                {account.subscriptionTier ? (
+                  <Badge variant="outline" className="gap-1 bg-slate-50">
+                    <CreditCard className="h-3 w-3" />
+                    {account.subscriptionTier.name}
+                  </Badge>
+                ) : (
+                  <span className="text-sm text-muted-foreground">-</span>
+                )}
+              </TableCell>
+              <TableCell>
+                <StatusBadge
+                  status={account.isActive}
+                  trueLabel="Active"
+                  falseLabel="Inactive"
+                  variant={account.isActive ? "default" : "neutral"}
+                />
+              </TableCell>
+              <TableCell>
+                <SetupStatus complete={account.isSetup} />
+              </TableCell>
+              <TableCell>
+                {account.hasActiveOrder ? (
+                  <Badge
+                    variant="outline"
+                    className="gap-1 border-emerald-200 bg-emerald-50 text-emerald-700"
+                  >
+                    <ShoppingCart className="h-3 w-3" />
+                    Active
+                  </Badge>
+                ) : (
+                  <span className="text-sm text-muted-foreground">-</span>
+                )}
+              </TableCell>
+              <TableCell className="text-right">
+                <Button variant="primary" size="sm" asChild>
+                  <Link href={`/dashboard/accounts/association/${account.id}`}>
+                    View
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </TableCell>
+            </TableRow>
+          );
+        })}
       </TableBody>
     </Table>
+  );
+}
+
+function SetupStatus({ complete }: { complete: boolean }) {
+  const Icon = complete ? CheckCircle2 : XCircle;
+
+  return (
+    <span
+      className={
+        complete
+          ? "inline-flex items-center gap-1.5 text-sm text-emerald-700"
+          : "inline-flex items-center gap-1.5 text-sm text-amber-700"
+      }
+    >
+      <Icon className="h-4 w-4" />
+      {complete ? "Complete" : "Pending"}
+    </span>
   );
 }

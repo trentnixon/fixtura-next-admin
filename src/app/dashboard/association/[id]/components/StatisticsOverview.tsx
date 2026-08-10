@@ -1,36 +1,30 @@
 "use client";
 
+import { useMemo } from "react";
 import {
-  Trophy,
-  Users,
-  Building2,
-  Target,
-  CreditCard,
-  TestTube,
-  BarChart3,
-} from "lucide-react";
-import { AssociationStatistics } from "@/types/associationDetail";
-import ChartCard, {
-  ChartSummaryStat,
-} from "@/components/modules/charts/ChartCard";
-import { BarChart, Bar, CartesianGrid, XAxis, YAxis } from "recharts";
+  Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from "recharts";
+import { BarChart3, PieChart as PieChartIcon, Trophy } from "lucide-react";
+
+import ChartCard from "@/components/modules/charts/ChartCard";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import {
   ChartConfig,
+  ChartLegend,
+  ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { AssociationStatistics } from "@/types/associationDetail";
 
-/**
- * StatisticsOverview Component
- *
- * Main statistics overview card displaying:
- * - Competition statistics (total, active, upcoming, completed, byStatus breakdown)
- * - Grade statistics (total, withTeams, withoutTeams)
- * - Club statistics (total, active, withCompetitions)
- * - Team statistics (total, acrossCompetitions, acrossGrades)
- * - Account statistics (total, active, withOrders)
- * - Trial status indicator (if applicable)
- */
 interface StatisticsOverviewProps {
   statistics: AssociationStatistics;
 }
@@ -38,138 +32,135 @@ interface StatisticsOverviewProps {
 export default function StatisticsOverview({
   statistics,
 }: StatisticsOverviewProps) {
-  const { competitions, grades, clubs, teams, accounts, trial } = statistics;
+  const { competitions, grades, clubs, teams, accounts } = statistics;
 
-  // Prepare data for the chart
-  const chartData = [
-    {
-      name: "Competitions",
-      total: competitions.total,
-      active: competitions.active,
-      fill: "var(--color-competitions)",
-    },
-    {
-      name: "Grades",
-      total: grades.total,
-      active: grades.withTeams, // Using withTeams as proxy for 'active' in this context
-      fill: "var(--color-grades)",
-    },
-    {
-      name: "Clubs",
-      total: clubs.total,
-      active: clubs.active,
-      fill: "var(--color-clubs)",
-    },
-    {
-      name: "Teams",
-      total: teams.total,
-      active: teams.acrossCompetitions, // Using acrossCompetitions as proxy for 'active'
-      fill: "var(--color-teams)",
-    },
-    {
-      name: "Accounts",
-      total: accounts.total,
-      active: accounts.active,
-      fill: "var(--color-accounts)",
-    },
+  const entityTotalsConfig: ChartConfig = useMemo(
+    () => ({
+      total: { label: "Total", color: "hsl(var(--chart-1))" },
+    }),
+    [],
+  );
+
+  const competitionStatusConfig: ChartConfig = useMemo(
+    () => ({
+      count: { label: "Competitions", color: "hsl(var(--chart-2))" },
+    }),
+    [],
+  );
+
+  const gradeCoverageConfig: ChartConfig = useMemo(
+    () => ({
+      count: { label: "Grades", color: "hsl(var(--chart-3))" },
+    }),
+    [],
+  );
+
+  const entityTotalsData = [
+    { label: "Competitions", total: competitions.total },
+    { label: "Grades", total: grades.total },
+    { label: "Clubs", total: clubs.total },
+    { label: "Teams", total: teams.total },
+    { label: "Accounts", total: accounts.total },
   ];
 
-  const chartConfig = {
-    total: {
-      label: "Total",
-      color: "hsl(var(--chart-1))",
-    },
-    active: {
-      label: "Active",
-      color: "hsl(var(--chart-2))",
-    },
-    competitions: {
-      label: "Competitions",
-      color: "hsl(var(--chart-1))",
-    },
-    grades: {
-      label: "Grades",
-      color: "hsl(var(--chart-2))",
-    },
-    clubs: {
-      label: "Clubs",
-      color: "hsl(var(--chart-3))",
-    },
-    teams: {
-      label: "Teams",
-      color: "hsl(var(--chart-4))",
-    },
-    accounts: {
-      label: "Accounts",
-      color: "hsl(var(--chart-5))",
-    },
-  } satisfies ChartConfig;
-
-  // Prepare summary stats
-  const summaryStats: ChartSummaryStat[] = [
-    {
-      icon: Trophy,
-      label: "Competitions",
-      value: competitions.total.toString(),
-    },
-    {
-      icon: Target,
-      label: "Grades",
-      value: grades.total.toString(),
-    },
-    {
-      icon: Building2,
-      label: "Clubs",
-      value: clubs.total.toString(),
-    },
-    {
-      icon: Users,
-      label: "Teams",
-      value: teams.total.toString(),
-    },
-    {
-      icon: CreditCard,
-      label: "Accounts",
-      value: accounts.total.toString(),
-    },
+  const competitionStatusData = [
+    { label: "Active", count: competitions.active },
+    { label: "Upcoming", count: competitions.upcoming },
+    { label: "Completed", count: competitions.completed },
   ];
 
-  if (trial) {
-    summaryStats.push({
-      icon: TestTube,
-      label: "Trial",
-      value: trial.hasTrial ? (trial.isActive ? "Active" : "Inactive") : "No",
-    });
-  }
+  const gradeCoverageData = [
+    { label: "With teams", count: grades.withTeams },
+    { label: "Without teams", count: grades.withoutTeams },
+  ];
 
   return (
-    <ChartCard
+    <SectionContainer
       title="Statistics Overview"
-      description="Comprehensive statistics for competitions, grades, clubs, teams, and accounts"
-      icon={BarChart3}
-      chartConfig={chartConfig}
-      summaryStats={summaryStats}
+      description="Visualise association volume, competition status, and grade coverage."
     >
-      <BarChart data={chartData}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-        <XAxis
-          dataKey="name"
-          tickLine={false}
-          tickMargin={10}
-          axisLine={false}
-        />
-        <YAxis tickLine={false} axisLine={false} />
-        <ChartTooltip
-          cursor={false}
-          content={<ChartTooltipContent indicator="dashed" />}
-        />
-        <Bar dataKey="total" fill="var(--color-total)" radius={[4, 4, 0, 0]} />
-        <Bar
-          dataKey="active"
-          fill="var(--color-active)"
-          radius={[4, 4, 0, 0]}
-        />
-      </BarChart>
-    </ChartCard>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <ChartCard
+          title="Entity Totals"
+          description="Core entities linked to this association."
+          icon={BarChart3}
+          chartConfig={entityTotalsConfig}
+        >
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={entityTotalsData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="label"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis allowDecimals={false} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar
+                dataKey="total"
+                fill="hsl(var(--chart-1))"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard
+          title="Competition Status"
+          description="Active, upcoming, and completed competitions."
+          icon={Trophy}
+          chartConfig={competitionStatusConfig}
+        >
+          <ResponsiveContainer width="100%" height={300}>
+            <BarChart data={competitionStatusData}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="label"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 12 }}
+              />
+              <YAxis allowDecimals={false} />
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Bar
+                dataKey="count"
+                fill="hsl(var(--chart-2))"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartCard>
+
+        <ChartCard
+          title="Grade Team Coverage"
+          description="Grades with and without discovered teams."
+          icon={PieChartIcon}
+          chartConfig={gradeCoverageConfig}
+        >
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={gradeCoverageData}
+                dataKey="count"
+                nameKey="label"
+                innerRadius={60}
+                outerRadius={100}
+                paddingAngle={4}
+              >
+                {gradeCoverageData.map((entry, index) => (
+                  <Cell
+                    key={entry.label}
+                    fill={`hsl(var(--chart-${(index % 5) + 1}))`}
+                  />
+                ))}
+              </Pie>
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <ChartLegend content={<ChartLegendContent />} />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartCard>
+      </div>
+    </SectionContainer>
   );
 }

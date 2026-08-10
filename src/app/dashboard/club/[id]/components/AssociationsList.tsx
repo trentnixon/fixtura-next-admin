@@ -1,7 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import { ClubAssociationDetail } from "@/types/clubAdminDetail";
 import {
   Table,
@@ -11,8 +13,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, Trophy, Users, Eye } from "lucide-react";
 import StatusBadge from "@/components/ui-library/badges/StatusBadge";
 import EmptyState from "@/components/ui-library/states/EmptyState";
 
@@ -25,9 +27,7 @@ export default function AssociationsList({
 }: AssociationsListProps) {
   const sortedAssociations = useMemo(() => {
     return [...associations].sort((a, b) => {
-      if (b.teamCount !== a.teamCount) {
-        return b.teamCount - a.teamCount;
-      }
+      if (b.teamCount !== a.teamCount) return b.teamCount - a.teamCount;
       if (b.competitionCount !== a.competitionCount) {
         return b.competitionCount - a.competitionCount;
       }
@@ -46,32 +46,47 @@ export default function AssociationsList({
   }
 
   return (
-    <Table>
+    <Table className="min-w-[760px]">
       <TableHeader>
-        <TableRow>
-          <TableHead className="w-[260px]">Association</TableHead>
+        <TableRow className="bg-slate-50 hover:bg-slate-50">
+          <TableHead className="min-w-[280px]">Association</TableHead>
           <TableHead>Sport</TableHead>
           <TableHead>Status</TableHead>
-          <TableHead className="text-center">Competitions</TableHead>
-          <TableHead className="text-center">Teams</TableHead>
-          <TableHead className="text-center">View</TableHead>
+          <TableHead className="text-right">Competitions</TableHead>
+          <TableHead className="text-right">Teams</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {sortedAssociations.map((association) => (
           <TableRow key={association.id}>
             <TableCell>
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-muted-foreground" />
-                <span className="font-medium truncate">{association.name}</span>
+              <div className="flex min-w-0 items-center gap-3">
+                {association.logoUrl && (
+                  <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-md border bg-white p-1">
+                    <Image
+                      src={association.logoUrl}
+                      alt={`${association.name} logo`}
+                      fill
+                      className="object-contain p-1"
+                      unoptimized
+                    />
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-slate-900">
+                    {association.name}
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Association #{association.id}
+                  </p>
+                </div>
               </div>
             </TableCell>
             <TableCell>
-              {association.sport ? (
-                <span className="text-sm">{association.sport}</span>
-              ) : (
-                <span className="text-xs text-muted-foreground">—</span>
-              )}
+              <Badge variant="outline" className="bg-slate-50 text-slate-600">
+                {association.sport || "-"}
+              </Badge>
             </TableCell>
             <TableCell>
               <StatusBadge
@@ -81,30 +96,33 @@ export default function AssociationsList({
                 variant={association.isActive ? "default" : "neutral"}
               />
             </TableCell>
-            <TableCell className="text-center">
-              <div className="flex items-center justify-center gap-1.5">
-                <Trophy className="h-4 w-4 text-muted-foreground" />
-                <span className="font-semibold">
-                  {association.competitionCount}
-                </span>
-              </div>
+            <TableCell className="text-right font-medium text-slate-900">
+              {association.competitionCount}
             </TableCell>
-            <TableCell className="text-center">
-              <div className="flex items-center justify-center gap-1.5">
-                <Users className="h-4 w-4 text-muted-foreground" />
-                <span className="font-semibold">{association.teamCount}</span>
-              </div>
+            <TableCell className="text-right font-medium text-slate-900">
+              {association.teamCount}
             </TableCell>
-            <TableCell className="text-center">
-              <Button variant="accent" size="sm" asChild>
-                <Link
-                  href={`/dashboard/association/${association.id}`}
-                  className="flex items-center gap-1"
-                >
-                  <Eye className="h-3.5 w-3.5" />
-                  <span className="hidden sm:inline">View</span>
-                </Link>
-              </Button>
+            <TableCell className="text-right">
+              <div className="flex items-center justify-end gap-2">
+                {association.href && (
+                  <Button variant="primary" size="sm" asChild>
+                    <a
+                      href={association.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      PlayHQ
+                      <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </Button>
+                )}
+                <Button variant="accent" size="sm" asChild>
+                  <Link href={`/dashboard/association/${association.id}`}>
+                    View
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
             </TableCell>
           </TableRow>
         ))}

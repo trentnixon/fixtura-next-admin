@@ -15,6 +15,8 @@ export const CHECKOUT_STATUS_OPTIONS: Array<{
 }> = [
   { value: "active", label: "Active" },
   { value: "canceled", label: "Canceled" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "invoice_issued", label: "Invoice Issued" },
   { value: "past_due", label: "Past Due" },
   { value: "incomplete", label: "Incomplete" },
   { value: "incomplete_expired", label: "Incomplete Expired" },

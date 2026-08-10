@@ -152,7 +152,7 @@ const config: Config = {
           "5": "hsl(var(--chart-5))",
         },
         sidebar: {
-          DEFAULT: "#e2e8f0",
+          DEFAULT: "#06162b",
           foreground: "hsl(var(--sidebar-foreground))",
           primary: "hsl(var(--sidebar-primary))",
           "primary-foreground": "hsl(var(--sidebar-primary-foreground))",

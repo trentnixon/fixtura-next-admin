@@ -33,9 +33,12 @@ const robotoCondensed = Roboto_Condensed({
 export const metadata: Metadata = {
   title: "Fixtura Admin",
   description: "Fixtura Admin",
+  manifest: "/site.webmanifest",
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+    ],
     apple: "/apple-touch-icon.png",
   },
 };

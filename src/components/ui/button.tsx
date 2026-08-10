@@ -18,7 +18,7 @@ const buttonVariants = cva(
         accent:
           "rounded-full border border-brandAccent-600 bg-background text-brandAccent-600 shadow-sm hover:bg-brandAccent-600 hover:text-white",
         destructive:
-          "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+          "rounded-full border border-destructive bg-background text-destructive shadow-sm hover:bg-destructive hover:text-white hover:border-destructive",
         outline:
           "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
         ghost: "hover:bg-accent hover:text-accent-foreground",
@@ -40,7 +40,7 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
 

@@ -51,7 +51,7 @@ Reusable UI component library for common patterns and states:
 - `metrics/StatCard.tsx`: Enhanced metric card with optional trend indicator
 - `metrics/MetricGrid.tsx`: Responsive grid container for metric cards
 
-Showcase: `/dashboard/ui` for interactive component testing with examples for:
+Showcase: `/dashboard/labs/components` for interactive component testing with examples for:
 
 - Foundation (Typography, Colors, Icons, Layout)
 - Forms & Inputs

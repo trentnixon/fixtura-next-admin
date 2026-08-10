@@ -124,6 +124,9 @@ export default function OrderEditForm({
         paid: "complete",
         incomplete: "incomplete",
         canceled: "canceled",
+        cancelled: "cancelled",
+        invoice_issued: "invoice_issued",
+        "invoice issued": "invoice_issued",
         pending: "incomplete",
         past_due: "past_due",
       };

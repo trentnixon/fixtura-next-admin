@@ -4,7 +4,11 @@ This folder contains shared dashboard components that provide live data overview
 
 ## Files
 
-- `LiveOverview.tsx`: Live data overview component showing current rendering status and queue information
+- `LiveOverview.tsx`: Orchestrates the dashboard live snapshot (renders, fleet, revenue, recent scrape jobs)
+- `live-snapshot/`: Subcomponents for the expanded live snapshot section
+  - `LiveSnapshotMetricStrip.tsx`: Dense KPI strip
+  - `RecentScrapeJobsTable.tsx`: Last five scraper jobs table
+  - `liveSnapshotRevenue.ts`: Revenue period helpers (MTD/QTD/YTD)
 - `SchedulerRollupData.tsx`: Scheduler data aggregation component for displaying scheduler statistics and metrics
 
 ## Relations
@@ -18,6 +22,7 @@ This folder contains shared dashboard components that provide live data overview
 - Internal:
   - `../../components/`: UI components and scaffolding
   - `../accounts/components/overview/tabs/components/metricCard.tsx`: Metric card component
+  - `../data/utils/formatScrapeScope.ts`: Scraper scope labels
   - `../../../../hooks/`: Custom React hooks for data fetching
   - `../../../../types/`: TypeScript interfaces and type definitions
 - External:

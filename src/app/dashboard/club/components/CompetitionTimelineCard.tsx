@@ -5,6 +5,14 @@ import { CompetitionTimelineEntry } from "@/types/clubInsights";
 import ChartCard from "@/components/modules/charts/ChartCard";
 import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   ComposedChart,
   Area,
   Bar,
@@ -30,7 +38,6 @@ interface CompetitionTimelineCardProps {
 export default function CompetitionTimelineCard({
   data,
 }: CompetitionTimelineCardProps) {
-  // Sort data chronologically by month
   const sortedData = useMemo(() => {
     return [...data].sort((a, b) => {
       const dateA = new Date(a.month + "-01");
@@ -39,7 +46,6 @@ export default function CompetitionTimelineCard({
     });
   }, [data]);
 
-  // Format month for display (e.g., "2024-09" -> "Sep 2024")
   const formatMonth = (month: string) => {
     const [year, monthNum] = month.split("-");
     const date = new Date(parseInt(year), parseInt(monthNum) - 1);
@@ -49,7 +55,6 @@ export default function CompetitionTimelineCard({
     });
   };
 
-  // Create chart config
   const chartConfig: ChartConfig = {
     competitionsActive: {
       label: "Active Competitions",
@@ -82,53 +87,91 @@ export default function CompetitionTimelineCard({
   }
 
   return (
-    <ChartCard
-      title="Competition Timeline"
-      description="Monthly breakdown of competition activity"
-      chartConfig={chartConfig}
-      chartClassName="h-[400px]"
-    >
-      <ComposedChart data={sortedData}>
-        <CartesianGrid strokeDasharray="3 3" vertical={false} />
-        <XAxis
-          dataKey="month"
-          tickLine={false}
-          tickMargin={10}
-          axisLine={false}
-          minTickGap={32}
-          tickFormatter={formatMonth}
-        />
-        <YAxis
-          tickLine={false}
-          axisLine={false}
-          tickFormatter={(value) => formatNumber(value)}
-        />
-        <ChartTooltip
-          cursor={false}
-          content={<ChartTooltipContent indicator="dashed" />}
-          labelFormatter={(value) => formatMonth(value as string)}
-        />
-        <Area
-          dataKey="competitionsActive"
-          type="monotone"
-          fill="var(--color-competitionsActive)"
-          fillOpacity={0.4}
-          stroke="var(--color-competitionsActive)"
-          strokeWidth={2}
-        />
-        <Bar
-          dataKey="competitionsStarting"
-          fill="var(--color-competitionsStarting)"
-          radius={[4, 4, 0, 0]}
-          barSize={8}
-        />
-        <Bar
-          dataKey="competitionsEnding"
-          fill="var(--color-competitionsEnding)"
-          radius={[4, 4, 0, 0]}
-          barSize={8}
-        />
-      </ComposedChart>
-    </ChartCard>
+    <div className="space-y-6">
+      <ChartCard
+        title="Competition Timeline"
+        description="Monthly breakdown of competition activity"
+        chartConfig={chartConfig}
+        chartClassName="h-[320px]"
+      >
+        <ComposedChart data={sortedData}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+          <XAxis
+            dataKey="month"
+            tickLine={false}
+            tickMargin={10}
+            axisLine={false}
+            minTickGap={32}
+            tickFormatter={formatMonth}
+          />
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(value) => formatNumber(value)}
+          />
+          <ChartTooltip
+            cursor={false}
+            content={<ChartTooltipContent indicator="dashed" />}
+            labelFormatter={(value) => formatMonth(value as string)}
+          />
+          <Area
+            dataKey="competitionsActive"
+            type="monotone"
+            fill="var(--color-competitionsActive)"
+            fillOpacity={0.4}
+            stroke="var(--color-competitionsActive)"
+            strokeWidth={2}
+          />
+          <Bar
+            dataKey="competitionsStarting"
+            fill="var(--color-competitionsStarting)"
+            radius={[4, 4, 0, 0]}
+            barSize={8}
+          />
+          <Bar
+            dataKey="competitionsEnding"
+            fill="var(--color-competitionsEnding)"
+            radius={[4, 4, 0, 0]}
+            barSize={8}
+          />
+        </ComposedChart>
+      </ChartCard>
+
+      <div className="rounded-md border border-slate-200 bg-white">
+        <div className="border-b border-slate-200 px-4 py-3">
+          <h4 className="text-sm font-semibold text-slate-900">
+            Monthly Activity
+          </h4>
+        </div>
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50 hover:bg-slate-50">
+              <TableHead>Month</TableHead>
+              <TableHead className="text-right">Starting</TableHead>
+              <TableHead className="text-right">Ending</TableHead>
+              <TableHead className="text-right">Active</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedData.map((row) => (
+              <TableRow key={row.month}>
+                <TableCell className="text-sm font-medium text-slate-900">
+                  {formatMonth(row.month)}
+                </TableCell>
+                <TableCell className="text-right">
+                  {row.competitionsStarting.toLocaleString()}
+                </TableCell>
+                <TableCell className="text-right">
+                  {row.competitionsEnding.toLocaleString()}
+                </TableCell>
+                <TableCell className="text-right">
+                  {row.competitionsActive.toLocaleString()}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </div>
   );
 }

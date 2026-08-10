@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button, type ButtonProps } from "@/components/ui/button";
 import { P } from "@/components/type/type";
 import { H4 } from "@/components/type/titles";
 import {
@@ -33,6 +33,8 @@ interface AccountSyncButtonProps {
     | "link"
     | "primary"
     | "accent";
+  /** Match compact header actions e.g. next to Open */
+  size?: ButtonProps["size"];
 }
 
 /**
@@ -45,6 +47,7 @@ export default function AccountSyncButton({
   accountId,
   accountType,
   variant = "outline",
+  size = "default",
 }: AccountSyncButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [errorState, setErrorState] = useState<{
@@ -100,6 +103,7 @@ export default function AccountSyncButton({
     <>
       <Button
         variant={variant}
+        size={size}
         onClick={handleButtonClick}
         disabled={isPending}
         className={isPending ? "opacity-50 cursor-not-allowed" : ""}

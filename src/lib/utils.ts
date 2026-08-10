@@ -16,9 +16,18 @@ export function formatDate(date: string) {
 export function daysFromToday(date: string) {
   const today = new Date();
   const updatedAt = new Date(date);
-  const diffTime = Math.abs(today.getTime() - updatedAt.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return diffDays;
+  const utcToday = Date.UTC(
+    today.getUTCFullYear(),
+    today.getUTCMonth(),
+    today.getUTCDate()
+  );
+  const utcUpdated = Date.UTC(
+    updatedAt.getUTCFullYear(),
+    updatedAt.getUTCMonth(),
+    updatedAt.getUTCDate()
+  );
+  const diffTime = Math.abs(utcToday - utcUpdated);
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
 export function calculateCompetitionTimeline(

@@ -8,6 +8,7 @@ import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import AssociationHeader from "./components/AssociationHeader";
 import StatisticsOverview from "./components/StatisticsOverview";
 import CompetitionsList from "./components/CompetitionsList";
@@ -78,7 +79,7 @@ export default function AssociationDetailPage() {
           <ErrorState
             error={
               new Error(
-                "Invalid association ID. Please provide a valid numeric ID."
+                "Invalid association ID. Please provide a valid numeric ID.",
               )
             }
             onRetry={() => window.location.reload()}
@@ -93,14 +94,8 @@ export default function AssociationDetailPage() {
     return null;
   }
 
-  const {
-    association,
-    statistics,
-    competitions,
-    clubs,
-    accounts,
-    insights,
-  } = data.data;
+  const { association, statistics, competitions, clubs, accounts, insights } =
+    data.data;
 
   return (
     <>
@@ -110,49 +105,59 @@ export default function AssociationDetailPage() {
         byLineBottom={isFetching ? "Refreshing..." : "Association Detail"}
       />
       <PageContainer padding="md" spacing="lg">
-        {/* 1. Association Header */}
-        <AssociationHeader association={association} />
-        {/* 2. Statistics Overview */}
-        <StatisticsOverview statistics={statistics} />
+        <Tabs defaultValue="snapshot" className="w-full">
+          <TabsList variant="primary" className="mb-4">
+            <TabsTrigger value="snapshot">Association Snapshot</TabsTrigger>
+            <TabsTrigger value="competitions">Competitions</TabsTrigger>
+            <TabsTrigger value="clubs">Clubs</TabsTrigger>
+            <TabsTrigger value="accounts">Accounts</TabsTrigger>
+            <TabsTrigger value="insights">Insights</TabsTrigger>
+          </TabsList>
 
-        {/* 3. Competitions Section */}
-        {competitions.length > 0 && (
-          <SectionContainer
-            title="Competitions"
-            description={`${competitions.length} competition(s) with timeline and details`}
-          >
-            <CompetitionsList competitions={competitions} />
-          </SectionContainer>
-        )}
+          <TabsContent value="snapshot" className="space-y-6">
+            <AssociationHeader
+              association={association}
+              associationId={associationId}
+            />
+            <StatisticsOverview statistics={statistics} />
+          </TabsContent>
 
-        {/* 4. Clubs Section */}
-        {clubs.length > 0 && (
-          <SectionContainer
-            title="Clubs"
-            description={`${clubs.length} club(s) participating in this association`}
-          >
-            <ClubsList clubs={clubs} />
-          </SectionContainer>
-        )}
+          <TabsContent value="competitions">
+            <SectionContainer
+              title="Competitions"
+              description={`${competitions.length} competition(s) with timeline and details`}
+            >
+              <CompetitionsList competitions={competitions} />
+            </SectionContainer>
+          </TabsContent>
 
-        {/* 5. Accounts Section */}
-        {accounts.length > 0 && (
-          <SectionContainer
-            title="Accounts"
-            description={`${accounts.length} account(s) associated with this association`}
-          >
-            <AccountsList accounts={accounts} />
-          </SectionContainer>
-        )}
+          <TabsContent value="clubs">
+            <SectionContainer
+              title="Clubs"
+              description={`${clubs.length} club(s) participating in this association`}
+            >
+              <ClubsList clubs={clubs} />
+            </SectionContainer>
+          </TabsContent>
 
-        {/* 6. Insights Section */}
-        <SectionContainer
-          title="Insights"
-          description="Analytics and insights (Phase 8 - Coming Soon)"
-        >
-          <InsightsSection insights={insights} />
-        </SectionContainer>
+          <TabsContent value="accounts">
+            <SectionContainer
+              title="Accounts"
+              description={`${accounts.length} account(s) associated with this association`}
+            >
+              <AccountsList accounts={accounts} />
+            </SectionContainer>
+          </TabsContent>
 
+          <TabsContent value="insights">
+            <SectionContainer
+              title="Insights"
+              description="Analytics and insights (Phase 8 - Coming Soon)"
+            >
+              <InsightsSection insights={insights} />
+            </SectionContainer>
+          </TabsContent>
+        </Tabs>
       </PageContainer>
     </>
   );

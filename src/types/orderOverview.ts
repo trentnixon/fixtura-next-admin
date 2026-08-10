@@ -1,6 +1,8 @@
 export type CheckoutStatus =
   | "active"
   | "canceled"
+  | "cancelled"
+  | "invoice_issued"
   | "past_due"
   | "incomplete"
   | "incomplete_expired"

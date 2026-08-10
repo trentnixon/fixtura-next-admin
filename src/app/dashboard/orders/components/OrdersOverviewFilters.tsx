@@ -39,6 +39,8 @@ const CHECKOUT_STATUS_OPTIONS: Array<{
   { value: "incomplete", label: "Incomplete" },
   { value: "incomplete_expired", label: "Incomplete expired" },
   { value: "canceled", label: "Canceled" },
+  { value: "cancelled", label: "Cancelled" },
+  { value: "invoice_issued", label: "Invoice Issued" },
 ];
 
 export function OrdersOverviewFilters({

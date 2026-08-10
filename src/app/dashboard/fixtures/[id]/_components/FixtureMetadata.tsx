@@ -1,48 +1,20 @@
 "use client";
 
-import { CalendarClock } from "lucide-react";
-import { SingleFixtureDetailResponse } from "@/types/fixtureDetail";
-import { format } from "date-fns";
+import { Hash } from "lucide-react";
+
 import { Text } from "@/components/ui-library";
 
 interface FixtureMetadataProps {
-  data: SingleFixtureDetailResponse;
+  fixtureId: number;
 }
 
-export default function FixtureMetadata({ data }: FixtureMetadataProps) {
-  const { context } = data;
-
-  // Format timestamp helper
-  const formatTimestamp = (timestamp: string | null): string | null => {
-    if (!timestamp) return null;
-    try {
-      return format(new Date(timestamp), "MMM d, yyyy, h:mm a");
-    } catch {
-      return timestamp;
-    }
-  };
-
-  const createdDate = formatTimestamp(context.admin.createdAt);
-  const updatedDate = formatTimestamp(context.admin.updatedAt);
-
+export default function FixtureMetadata({ fixtureId }: FixtureMetadataProps) {
   return (
-    <div className="flex items-center gap-4">
-      <CalendarClock className="w-4 h-4 text-muted-foreground" />
-      {createdDate && (
-        <Text variant="muted" as="span">
-          Created: {createdDate}
-        </Text>
-      )}
-      {updatedDate && createdDate && (
-        <Text variant="muted" as="span">
-          •
-        </Text>
-      )}
-      {updatedDate && (
-        <Text variant="muted" as="span">
-          Updated: {updatedDate}
-        </Text>
-      )}
+    <div className="flex items-center gap-2 text-xs">
+      <Hash className="h-3.5 w-3.5 text-muted-foreground" />
+      <Text variant="muted" as="span">
+        CMS fixture {fixtureId}
+      </Text>
     </div>
   );
 }

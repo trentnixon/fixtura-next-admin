@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFixtureInsights } from "@/hooks/fixtures/useFixtureInsights";
 import ErrorState from "@/components/ui-library/states/ErrorState";
+import { ArrowRight } from "lucide-react";
 import { useSorting } from "./_utils/useSorting";
 import { SearchInput } from "./_utils/SearchInput";
 import { formatDateRange } from "./_utils/dateUtils";
@@ -54,7 +55,7 @@ export function AssociationSelector({ onSelect }: AssociationSelectorProps) {
         return association.associationName
           .toLowerCase()
           .includes(searchQuery.toLowerCase());
-      }
+      },
     );
 
     // Apply sorting
@@ -97,8 +98,8 @@ export function AssociationSelector({ onSelect }: AssociationSelectorProps) {
   if (isLoading) {
     return (
       <SectionContainer
-        title="Select an Association"
-        description="Choose an association to view its fixtures"
+        title="Associations"
+        description="Search, sort, and open association fixture records."
         variant="compact"
       >
         <Table>
@@ -160,8 +161,8 @@ export function AssociationSelector({ onSelect }: AssociationSelectorProps) {
   if (error) {
     return (
       <SectionContainer
-        title="Select an Association"
-        description="Choose an association to view its fixtures"
+        title="Associations"
+        description="Search, sort, and open association fixture records."
         variant="compact"
       >
         <ErrorState
@@ -178,8 +179,8 @@ export function AssociationSelector({ onSelect }: AssociationSelectorProps) {
   if (associations.length === 0) {
     return (
       <SectionContainer
-        title="Select an Association"
-        description="Choose an association to view its fixtures"
+        title="Associations"
+        description="Search, sort, and open association fixture records."
         variant="compact"
       >
         <p className="text-center text-muted-foreground py-8">
@@ -191,8 +192,8 @@ export function AssociationSelector({ onSelect }: AssociationSelectorProps) {
 
   return (
     <SectionContainer
-      title="Select an Association"
-      description="Choose an association to view its fixtures"
+      title="Associations"
+      description="Search, sort, and open association fixture records."
       variant="compact"
     >
       <div className="space-y-4">
@@ -214,7 +215,7 @@ export function AssociationSelector({ onSelect }: AssociationSelectorProps) {
 
         <Table>
           <TableHeader>
-            <TableRow>
+            <TableRow className="bg-slate-50 hover:bg-slate-50">
               <TableHead>
                 <Button
                   variant="ghost"
@@ -222,7 +223,7 @@ export function AssociationSelector({ onSelect }: AssociationSelectorProps) {
                   className="h-auto p-0 font-semibold hover:bg-transparent"
                   onClick={() => handleSort("name")}
                 >
-                  Association Name
+                  Association
                   {getSortIcon("name")}
                 </Button>
               </TableHead>
@@ -259,14 +260,14 @@ export function AssociationSelector({ onSelect }: AssociationSelectorProps) {
                   {getSortIcon("gradeCount")}
                 </Button>
               </TableHead>
-              <TableHead className="text-right">Date Range</TableHead>
+              <TableHead>Date Range</TableHead>
               <TableHead className="text-right">Action</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {associations.map((association) => (
               <TableRow key={association.associationId}>
-                <TableCell className="font-medium text-left">
+                <TableCell>
                   <div className="flex items-center gap-3">
                     {association.logoUrl && (
                       <div className="relative h-8 w-8 flex-shrink-0">
@@ -280,28 +281,36 @@ export function AssociationSelector({ onSelect }: AssociationSelectorProps) {
                         />
                       </div>
                     )}
-                    <span>{association.associationName}</span>
+                    <div>
+                      <div className="text-sm font-medium text-slate-900">
+                        {association.associationName}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Association ID {association.associationId}
+                      </div>
+                    </div>
                   </div>
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right font-medium tabular-nums">
                   {association.fixtureCount}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right tabular-nums">
                   {association.competitionCount}
                 </TableCell>
-                <TableCell className="text-right">
+                <TableCell className="text-right tabular-nums">
                   {association.gradeCount}
                 </TableCell>
-                <TableCell className="text-sm text-muted-foreground text-right">
+                <TableCell className="text-xs text-muted-foreground">
                   {formatDateRange(association.dateRange)}
                 </TableCell>
                 <TableCell className="text-right">
                   <Button
                     size="sm"
-                    variant="accent"
+                    variant="primary"
                     onClick={() => onSelect(association.associationId)}
                   >
-                    Select
+                    View
+                    <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
                 </TableCell>
               </TableRow>

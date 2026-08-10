@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Suspense } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -10,8 +11,12 @@ import {
   FileCode,
   Trophy,
   BarChart3,
-  TestTube,
+  Database,
   FlaskConical,
+  Beaker,
+  Palette,
+  Map,
+  Layers,
   DollarSign,
   Mail,
   CalendarDays,
@@ -102,6 +107,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     ],
     sportsDataNav: [
       {
+        title: "Data / Scraping",
+        url: "/dashboard/data",
+        icon: Database,
+        isActive: true,
+      },
+      {
         title: "Associations",
         url: "/dashboard/association",
         icon: Network,
@@ -144,6 +155,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/dashboard/orders",
         icon: FileCode,
         isActive: true,
+        items: [
+          { title: "Overview", url: "/dashboard/orders" },
+          { title: "Invoices", url: "/dashboard/orders/invoices" },
+        ],
       },
     ],
 
@@ -178,17 +193,35 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       },
 
     ],
-    testingNav: [
+    labsNav: [
       {
-        title: "Account Scraper Tests",
-        url: "/dashboard/fetchAccountTests",
-        icon: TestTube,
+        title: "Labs Home",
+        url: "/dashboard/labs",
+        icon: Beaker,
         isActive: true,
       },
       {
-        title: "Result Scraper Tests",
-        url: "/dashboard/fetchTests",
+        title: "Component Lab",
+        url: "/dashboard/labs/components",
+        icon: Palette,
+        isActive: true,
+      },
+      {
+        title: "Data Fetch Lab",
+        url: "/dashboard/labs/data-fetch",
         icon: FlaskConical,
+        isActive: true,
+      },
+      {
+        title: "Route Lab",
+        url: "/dashboard/labs/routes",
+        icon: Map,
+        isActive: true,
+      },
+      {
+        title: "Feature Lab",
+        url: "/dashboard/labs/features",
+        icon: Layers,
         isActive: true,
       },
     ],
@@ -202,7 +235,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton size="lg">
               <div>
                 <SignedIn>
-                  <UserButton />
+                  <Suspense fallback={null}>
+                    <UserButton />
+                  </Suspense>
                 </SignedIn>
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -221,7 +256,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavMain items={data.assetNav} title="Assets" />
         <NavMain items={data.financialNav} title="Financial" />
         <NavMain items={data.communicationNav} title="Communication" />
-        <NavMain items={data.testingNav} title="Testing" />
+        <NavMain items={data.labsNav} title="Labs" />
       </SidebarContent>
       <SidebarFooter>
         <S className="text-center">Fixtura</S>

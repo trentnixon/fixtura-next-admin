@@ -9,11 +9,14 @@ import { fetchGlobalAnalytics } from "@/lib/services/analytics/fetchGlobalAnalyt
  *
  * @returns UseQueryResult with global analytics data
  */
-export function useGlobalAnalytics(): UseQueryResult<GlobalAnalytics, Error> {
+export function useGlobalAnalytics(options?: {
+  refetchInterval?: number | false;
+}): UseQueryResult<GlobalAnalytics, Error> {
   return useQuery<GlobalAnalytics, Error>({
     queryKey: ["analytics", "global"],
     queryFn: () => fetchGlobalAnalytics(),
     staleTime: 5 * 60 * 1000, // 5 minutes
+    refetchInterval: options?.refetchInterval,
     retry: 3, // Retry failed requests
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000), // Exponential backoff
   });

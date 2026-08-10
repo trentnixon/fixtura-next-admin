@@ -10,6 +10,22 @@ This folder contains API service functions that handle all external data fetchin
 - `fetchAccounts.ts`: Retrieves paginated list of accounts with filtering capabilities
 - `fetchAccountsSummary.ts`: Gets aggregated account statistics and analytics data
 
+### account-health/
+
+- `fetchAccountHealthGlobalStatus.ts`: GET /account/health/status — global data refresh run overview
+- `fetchAccountHealthAccountStatus.ts`: GET /account/:id/health/status — per-account health summary
+- `fetchAccountHealthRunStatus.ts`: GET /account/health/runs/:runId/status — single run with steps
+- `extractAccountHealthError.ts`: Shared Strapi error message parsing for account-health services
+- `triggerAccountHealthRunOnDemand.ts`: POST /account/:id/health/run-on-demand — queue full season data refresh (on-demand trigger)
+
+### account-asset-run/
+
+- `triggerAccountAssetRunOnDemand.ts`: POST /account-asset-runs/account/:id/trigger — queue asset_only or full run (`not_ready` / `skipped` are 200 envelopes)
+- `fetchAccountAssetRunStatus.ts`: GET /account-asset-runs/:id/status — full run detail
+- `fetchAccountAssetRunLatest.ts`: GET /account-asset-runs/account/:id/latest — same shape as status or null
+- `fetchAccountAssetRunGlobalStatus.ts`: GET /account-asset-runs/status — slim recent rows
+- `extractAccountAssetRunError.ts`: Strapi error parsing for asset-run services
+
 ### association/
 
 - `fetchAssociationInsights.ts`: Fetches comprehensive association admin insights including overview statistics, grade/club distributions, competition insights, and detailed per-association metrics with optional sport filtering
@@ -27,7 +43,14 @@ This folder contains API service functions that handle all external data fetchin
 ### data-collection/
 
 - `updateAccountOnly.ts`: Triggers lightweight account metadata updates via Redis Bull queue
-- `fetchAccountDataCollection.ts`: Fetches comprehensive account-specific data collection statistics including entity statistics, performance metrics, error analysis, temporal patterns, account health scoring, and time series data
+- `triggerGradesCompsSingleScrape.ts`: Triggers single-competition grades scrape via POST /api/competition/trigger-grades-comps-single-scrape (CMS enqueues to scrape:grades-comps-single)
+- `triggerGradesLookupTeamsScrape.ts`: Triggers grade-teams scrape via POST /api/grade-teams/trigger-grades-lookup-teams-scrape (CMS enqueues to scrape:grades-lookup-teams)
+- `triggerGradesLookupTeamsSingleScrape.ts`: Triggers single-competition grades-teams scrape via POST /api/competition/trigger-grades-lookup-teams-single-scrape (CMS enqueues to scrape:grades-lookup-teams-single)
+- `triggerClubActiveCheckScrape.ts`: Triggers club active check (PlayHQ inactive-org detection) via POST /api/club/trigger-club-active-check-scrape (CMS enqueues to scrape:club-active-check)
+- `triggerResultSingleScrape.ts`: Triggers single-fixture result scrape via POST /api/game-meta-data/trigger-result-single-scrape (CMS enqueues to scrape:result-single)
+- `triggerResultBatchScrape.ts`: Triggers batch result scrape via POST /api/game-meta-data/trigger-result-batch-scrape (CMS enqueues to scrape:result-batch, grade or competition scope)
+- `fetchScraperLogs.ts`: Lists grouped scraper jobs from GET fixtura-scraper/logs (optional `jobId` query param when CMS supports it)
+- `fetchScraperLogByJobId.ts`: Loads one job with full `entries` for `/dashboard/data/[jobId]` (list+jobId, then path fallback)
 
 ### downloads/
 

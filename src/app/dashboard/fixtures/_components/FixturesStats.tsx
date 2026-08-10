@@ -1,5 +1,6 @@
 "use client";
 
+import type { ElementType } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Calendar,
@@ -15,9 +16,51 @@ import {
 import { useFixtureInsights } from "@/hooks/fixtures/useFixtureInsights";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
-import MetricGrid from "@/components/ui-library/metrics/MetricGrid";
-import StatCard from "@/components/ui-library/metrics/StatCard";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+interface CompactMetric {
+  title: string;
+  value: string | number;
+  icon: ElementType;
+  description: string;
+}
+
+function MetricStrip({ metrics }: { metrics: CompactMetric[] }) {
+  return (
+    <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
+      {metrics.map((metric, index) => {
+        const Icon = metric.icon;
+
+        return (
+          <div
+            key={metric.title}
+            className={cn(
+              "flex min-h-24 items-center gap-3 border-slate-200 p-4",
+              index < metrics.length - 1 && "border-b sm:border-r",
+              index === 1 && "sm:border-r-0 lg:border-r",
+              index >= 2 && "sm:border-b-0",
+            )}
+          >
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600">
+              <Icon className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {metric.title}
+              </p>
+              <p className="text-xl font-semibold tabular-nums text-slate-900">
+                {metric.value}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">
+                {metric.description}
+              </p>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export function FixturesStats() {
   const { data, isLoading, error, refetch } = useFixtureInsights();
@@ -27,42 +70,32 @@ export function FixturesStats() {
     return (
       <div className="space-y-6">
         <SectionContainer
-          title="Fixture Statistics"
-          description="Overview of fixture status"
+          title="Fixture Snapshot"
+          description="Loading fixture coverage..."
         >
-          <MetricGrid columns={4}>
+          <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-              <Card key={i}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-4 rounded" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-8 w-16 mb-2" />
-                  <Skeleton className="h-3 w-32" />
-                </CardContent>
-              </Card>
+              <div key={i} className="space-y-2 border-slate-200 p-4">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-7 w-16" />
+                <Skeleton className="h-3 w-32" />
+              </div>
             ))}
-          </MetricGrid>
+          </div>
         </SectionContainer>
         <SectionContainer
           title="System Scope"
-          description="Total entities in the system"
+          description="Loading entity coverage..."
         >
-          <MetricGrid columns={4}>
+          <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-              <Card key={i}>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-4 w-4 rounded" />
-                </CardHeader>
-                <CardContent>
-                  <Skeleton className="h-8 w-16 mb-2" />
-                  <Skeleton className="h-3 w-32" />
-                </CardContent>
-              </Card>
+              <div key={i} className="space-y-2 border-slate-200 p-4">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-7 w-16" />
+                <Skeleton className="h-3 w-32" />
+              </div>
             ))}
-          </MetricGrid>
+          </div>
         </SectionContainer>
       </div>
     );
@@ -107,30 +140,26 @@ export function FixturesStats() {
     {
       title: "Total Fixtures",
       value: stats.total,
-      icon: <Calendar className="h-4 w-4" />,
+      icon: Calendar,
       description: "All fixtures in system",
-      variant: "primary" as const,
     },
     {
       title: "Scheduled",
       value: stats.scheduled,
-      icon: <Clock className="h-4 w-4" />,
+      icon: Clock,
       description: "Upcoming fixtures",
-      variant: "accent" as const,
     },
     {
       title: "In Progress",
       value: stats.inProgress,
-      icon: <PlayCircle className="h-4 w-4" />,
+      icon: PlayCircle,
       description: "Currently active",
-      variant: "secondary" as const,
     },
     {
       title: "Completed",
       value: stats.completed,
-      icon: <CheckCircle2 className="h-4 w-4" />,
+      icon: CheckCircle2,
       description: "Finished fixtures",
-      variant: "light" as const,
     },
   ];
 
@@ -138,30 +167,26 @@ export function FixturesStats() {
     {
       title: "Associations",
       value: stats.associations,
-      icon: <Building2 className="h-4 w-4" />,
+      icon: Building2,
       description: "Active associations",
-      variant: "light" as const,
     },
     {
       title: "Competitions",
       value: stats.competitions,
-      icon: <Trophy className="h-4 w-4" />,
+      icon: Trophy,
       description: "Active competitions",
-      variant: "light" as const,
     },
     {
       title: "Grades",
       value: stats.grades,
-      icon: <GraduationCap className="h-4 w-4" />,
+      icon: GraduationCap,
       description: "Active grades",
-      variant: "light" as const,
     },
     {
       title: "Grounds",
       value: stats.grounds,
-      icon: <MapPin className="h-4 w-4" />,
+      icon: MapPin,
       description: "Venues used",
-      variant: "light" as const,
     },
   ];
 
@@ -169,37 +194,24 @@ export function FixturesStats() {
     {
       title: "Fixtures / Competition",
       value: stats.avgPerComp.toFixed(1),
-      icon: <BarChart3 className="h-4 w-4" />,
+      icon: BarChart3,
       description: "Average fixtures per comp",
-      variant: "light" as const,
     },
     {
       title: "Fixtures / Association",
       value: stats.avgPerAssoc.toFixed(1),
-      icon: <BarChart3 className="h-4 w-4" />,
+      icon: BarChart3,
       description: "Average fixtures per assoc",
-      variant: "light" as const,
     },
   ];
 
   return (
     <div className="space-y-6">
       <SectionContainer
-        title="Fixture Statistics"
-        description="Overview of fixture status"
+        title="Fixture Snapshot"
+        description="Current fixture status across the system."
       >
-        <MetricGrid columns={4}>
-          {statusCards.map((stat) => (
-            <StatCard
-              key={stat.title}
-              title={stat.title}
-              value={stat.value}
-              icon={stat.icon}
-              description={stat.description}
-              variant={stat.variant}
-            />
-          ))}
-        </MetricGrid>
+        <MetricStrip metrics={statusCards} />
       </SectionContainer>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -208,37 +220,42 @@ export function FixturesStats() {
             title="System Scope"
             description="Total entities in the system"
           >
-            <MetricGrid columns={4}>
-              {scopeCards.map((stat) => (
-                <StatCard
-                  key={stat.title}
-                  title={stat.title}
-                  value={stat.value}
-                  icon={stat.icon}
-                  description={stat.description}
-                  variant={stat.variant}
-                />
-              ))}
-            </MetricGrid>
+            <MetricStrip metrics={scopeCards} />
           </SectionContainer>
         </div>
         <div>
-          <SectionContainer
-            title="Averages"
-            description="System wide averages"
-          >
-            <MetricGrid columns={2}>
-              {averageCards.map((stat) => (
-                <StatCard
-                  key={stat.title}
-                  title={stat.title}
-                  value={stat.value}
-                  icon={stat.icon}
-                  description={stat.description}
-                  variant={stat.variant}
-                />
-              ))}
-            </MetricGrid>
+          <SectionContainer title="Averages" description="System wide averages">
+            <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-1">
+              {averageCards.map((metric, index) => {
+                const Icon = metric.icon;
+
+                return (
+                  <div
+                    key={metric.title}
+                    className={cn(
+                      "flex items-center gap-3 border-slate-200 p-4",
+                      index === 0 &&
+                        "border-b sm:border-b-0 sm:border-r lg:border-b lg:border-r-0",
+                    )}
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600">
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                        {metric.title}
+                      </p>
+                      <p className="text-xl font-semibold tabular-nums text-slate-900">
+                        {metric.value}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {metric.description}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </SectionContainer>
         </div>
       </div>

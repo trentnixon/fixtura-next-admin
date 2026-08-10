@@ -35,11 +35,16 @@ export default function SportFilter({
   onSportChange,
 }: SportFilterProps) {
   return (
-    <div className="justify-end w-full flex items-center">
-      <div className="space-y-2 max-w-md min-w-md w-full">
-        <Label htmlFor="sport-filter">Filter by Sport</Label>
+    <div className="flex w-full items-center justify-end lg:w-auto">
+      <div className="w-full min-w-[220px] space-y-1 lg:w-auto">
+        <Label
+          htmlFor="sport-filter"
+          className="text-xs font-medium uppercase text-slate-500"
+        >
+          Sport filter
+        </Label>
         <Select value={selectedSport} onValueChange={onSportChange}>
-          <SelectTrigger id="sport-filter">
+          <SelectTrigger id="sport-filter" className="h-9">
             <SelectValue placeholder="Select a sport" />
           </SelectTrigger>
           <SelectContent>

@@ -5,6 +5,14 @@ import { Distributions } from "@/types/clubInsights";
 import ChartCard from "@/components/modules/charts/ChartCard";
 import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
   BarChart,
   Bar,
   CartesianGrid,
@@ -31,7 +39,6 @@ interface DistributionsCardProps {
 }
 
 export default function DistributionsCard({ data }: DistributionsCardProps) {
-  // Prepare data for teams distribution chart
   const teamsChartData = useMemo(() => {
     return [
       {
@@ -62,7 +69,6 @@ export default function DistributionsCard({ data }: DistributionsCardProps) {
     ];
   }, [data.clubsByTeams]);
 
-  // Prepare data for competitions distribution chart
   const competitionsChartData = useMemo(() => {
     return [
       {
@@ -93,7 +99,6 @@ export default function DistributionsCard({ data }: DistributionsCardProps) {
     ];
   }, [data.clubsByCompetitions]);
 
-  // Prepare data for associations distribution chart
   const associationsChartData = useMemo(() => {
     return [
       {
@@ -119,7 +124,6 @@ export default function DistributionsCard({ data }: DistributionsCardProps) {
     ];
   }, [data.clubsByAssociations]);
 
-  // Prepare data for account coverage pie chart
   const accountCoverageChartData = useMemo(() => {
     return [
       {
@@ -134,10 +138,9 @@ export default function DistributionsCard({ data }: DistributionsCardProps) {
         name: "With Trials",
         value: data.clubsByAccountCoverage.withTrials,
       },
-    ].filter((item) => item.value > 0); // Only show segments with data
+    ].filter((item) => item.value > 0);
   }, [data.clubsByAccountCoverage]);
 
-  // Create chart configs
   const teamsChartConfig: ChartConfig = {
     value: {
       label: "Clubs",
@@ -159,7 +162,6 @@ export default function DistributionsCard({ data }: DistributionsCardProps) {
     },
   };
 
-  // Create chart config for account coverage pie chart
   const accountCoverageChartConfig = useMemo(() => {
     const config: ChartConfig = {};
     accountCoverageChartData.forEach((item, index) => {
@@ -173,14 +175,12 @@ export default function DistributionsCard({ data }: DistributionsCardProps) {
 
   return (
     <div className="space-y-6">
-      {/* Charts Grid Layout - 2 columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Teams Distribution Chart */}
+      <div className="grid gap-6 lg:grid-cols-3">
         <ChartCard
           title="Clubs by Teams"
           description="Number of clubs by team count"
           chartConfig={teamsChartConfig}
-          chartClassName="h-[300px]"
+          chartClassName="h-[260px]"
         >
           <BarChart data={teamsChartData}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -207,12 +207,11 @@ export default function DistributionsCard({ data }: DistributionsCardProps) {
           </BarChart>
         </ChartCard>
 
-        {/* Competitions Distribution Chart */}
         <ChartCard
           title="Clubs by Competitions"
           description="Number of clubs by competition count"
           chartConfig={competitionsChartConfig}
-          chartClassName="h-[300px]"
+          chartClassName="h-[260px]"
         >
           <BarChart data={competitionsChartData}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -239,12 +238,11 @@ export default function DistributionsCard({ data }: DistributionsCardProps) {
           </BarChart>
         </ChartCard>
 
-        {/* Associations Distribution Chart */}
         <ChartCard
           title="Clubs by Associations"
           description="Number of clubs by association count"
           chartConfig={associationsChartConfig}
-          chartClassName="h-[300px]"
+          chartClassName="h-[260px]"
         >
           <BarChart data={associationsChartData}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -270,15 +268,17 @@ export default function DistributionsCard({ data }: DistributionsCardProps) {
             />
           </BarChart>
         </ChartCard>
+      </div>
 
-        {/* Account Coverage Distribution Pie Chart */}
+      <div className="grid gap-6 lg:grid-cols-3">
         {accountCoverageChartData.length > 0 ? (
           <ChartCard
             title="Clubs by Account Coverage"
             description="Distribution of clubs by account coverage"
             chartConfig={accountCoverageChartConfig}
-            chartClassName="h-[300px]"
+            chartClassName="h-[260px]"
             emptyStateMessage="No account coverage data available"
+            cardClassName="lg:col-span-2"
           >
             <PieChart>
               <Pie
@@ -315,7 +315,51 @@ export default function DistributionsCard({ data }: DistributionsCardProps) {
             </PieChart>
           </ChartCard>
         ) : null}
+
+        <BucketTable title="Team Buckets" rows={teamsChartData} />
       </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <BucketTable title="Competition Buckets" rows={competitionsChartData} />
+        <BucketTable title="Association Buckets" rows={associationsChartData} />
+        <BucketTable title="Account Coverage" rows={accountCoverageChartData} />
+      </div>
+    </div>
+  );
+}
+
+function BucketTable({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: Array<{ name: string; label?: string; value: number }>;
+}) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white">
+      <div className="border-b border-slate-200 px-4 py-3">
+        <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
+      </div>
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-slate-50 hover:bg-slate-50">
+            <TableHead>Bucket</TableHead>
+            <TableHead className="text-right">Clubs</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.name}>
+              <TableCell className="text-sm font-medium text-slate-900">
+                {row.label ?? row.name}
+              </TableCell>
+              <TableCell className="text-right">
+                {row.value.toLocaleString()}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }

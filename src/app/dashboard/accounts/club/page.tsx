@@ -1,5 +1,6 @@
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
+import AccountsBreadcrumbHeader from "../components/AccountsBreadcrumbHeader";
 import DisplayClubsTable from "./components/ClubsTable";
 
 export default function ClubsPage() {
@@ -7,10 +8,11 @@ export default function ClubsPage() {
     <>
       <CreatePageTitle
         title="Club Accounts"
-        byLine="View, manage, and search all club accounts"
-        byLineBottom="Includes club status, contact info, and management tools"
+        byLine="Operational account directory for club subscriptions"
+        byLineBottom="Subscription status, contacts, setup state, and account actions"
       />
       <PageContainer padding="xs" spacing="lg">
+        <AccountsBreadcrumbHeader currentPage="Club accounts" />
         <DisplayClubsTable />
       </PageContainer>
     </>

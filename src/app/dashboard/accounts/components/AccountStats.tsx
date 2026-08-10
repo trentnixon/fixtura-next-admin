@@ -2,120 +2,103 @@
 
 import { useMemo } from "react";
 import { AccountLookupItem } from "@/types/adminAccountLookup";
-import StatCard from "@/components/ui-library/metrics/StatCard";
-import MetricGrid from "@/components/ui-library/metrics/MetricGrid";
 import ChartCard from "@/components/modules/charts/ChartCard";
 import { getPrimaryShadesColorArray } from "@/utils/chart-colors";
 import {
-  CreditCard,
   AlertTriangle,
-  Trophy,
-  CheckCircle2,
-  PieChart as PieChartIcon,
   BarChart3,
   Calendar,
+  CheckCircle2,
+  CreditCard,
+  PieChart as PieChartIcon,
+  Trophy,
 } from "lucide-react";
 import {
-  ChartTooltip,
-  ChartTooltipContent,
+  ChartConfig,
   ChartLegend,
   ChartLegendContent,
-  ChartConfig,
+  ChartTooltip,
+  ChartTooltipContent,
 } from "@/components/ui/chart";
 import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
   Bar,
+  BarChart,
+  CartesianGrid,
+  Cell,
+  Pie,
+  PieChart,
   XAxis,
   YAxis,
-  CartesianGrid,
 } from "recharts";
 
 interface AccountStatsProps {
   accounts: AccountLookupItem[];
 }
 
-/**
- * Stats cards and charts component for account tables
- * Displays subscription overview, expiring accounts, sport distribution, and charts
- */
 export default function AccountStats({ accounts }: AccountStatsProps) {
-  // Calculate stats
   const stats = useMemo(() => {
     const total = accounts.length;
-    const active = accounts.filter((a) => a.hasActiveOrder).length;
+    const active = accounts.filter((account) => account.hasActiveOrder).length;
     const inactive = total - active;
-    const activePercentage = total > 0 ? Math.round((active / total) * 100) : 0;
-    const inactivePercentage =
-      total > 0 ? Math.round((inactive / total) * 100) : 0;
 
-    // Expiring soon counts
     const expiring30 = accounts.filter(
-      (a) =>
-        a.hasActiveOrder &&
-        a.daysLeftOnSubscription !== null &&
-        a.daysLeftOnSubscription <= 30
+      (account) =>
+        account.hasActiveOrder &&
+        account.daysLeftOnSubscription !== null &&
+        account.daysLeftOnSubscription <= 30,
     ).length;
     const expiring60 = accounts.filter(
-      (a) =>
-        a.hasActiveOrder &&
-        a.daysLeftOnSubscription !== null &&
-        a.daysLeftOnSubscription <= 60 &&
-        a.daysLeftOnSubscription > 30
+      (account) =>
+        account.hasActiveOrder &&
+        account.daysLeftOnSubscription !== null &&
+        account.daysLeftOnSubscription <= 60 &&
+        account.daysLeftOnSubscription > 30,
     ).length;
     const expiring90 = accounts.filter(
-      (a) =>
-        a.hasActiveOrder &&
-        a.daysLeftOnSubscription !== null &&
-        a.daysLeftOnSubscription <= 90 &&
-        a.daysLeftOnSubscription > 60
+      (account) =>
+        account.hasActiveOrder &&
+        account.daysLeftOnSubscription !== null &&
+        account.daysLeftOnSubscription <= 90 &&
+        account.daysLeftOnSubscription > 60,
     ).length;
 
-    // Sport distribution
     const sportCounts: Record<string, number> = {};
     accounts.forEach((account) => {
       const sport = account.Sport || "Unknown";
       sportCounts[sport] = (sportCounts[sport] || 0) + 1;
     });
 
-    // Setup status
-    const setupComplete = accounts.filter((a) => a.isSetup).length;
+    const setupComplete = accounts.filter((account) => account.isSetup).length;
     const notSetup = total - setupComplete;
     const setupPercentage =
       total > 0 ? Math.round((setupComplete / total) * 100) : 0;
 
     return {
-      total,
       active,
-      inactive,
-      activePercentage,
-      inactivePercentage,
       expiring30,
       expiring60,
       expiring90,
-      sportCounts,
-      setupComplete,
+      inactive,
       notSetup,
+      setupComplete,
       setupPercentage,
+      sportCounts,
+      total,
     };
   }, [accounts]);
 
-  // Get primary shades for pie chart
   const primaryShades = getPrimaryShadesColorArray();
 
-  // Prepare chart data
   const subscriptionPieData = [
-    { name: "Active", value: stats.active, color: primaryShades[1] }, // Light shade (70%)
-    { name: "Inactive", value: stats.inactive, color: primaryShades[3] }, // Dark shade (20%)
+    { name: "Active", value: stats.active, color: primaryShades[1] },
+    { name: "Inactive", value: stats.inactive, color: primaryShades[3] },
   ];
 
   const sportBarData = Object.entries(stats.sportCounts).map(
     ([sport, count]) => ({
       sport,
       count,
-    })
+    }),
   );
 
   const expirationTimelineData = [
@@ -130,8 +113,8 @@ export default function AccountStats({ accounts }: AccountStatsProps) {
   ];
 
   const pieChartConfig = {
-    Active: { label: "Active Subscriptions", color: primaryShades[1] }, // Light shade (70%)
-    Inactive: { label: "Inactive Subscriptions", color: primaryShades[3] }, // Dark shade (20%)
+    Active: { label: "Active Subscriptions", color: primaryShades[1] },
+    Inactive: { label: "Inactive Subscriptions", color: primaryShades[3] },
   } satisfies ChartConfig;
 
   const sportBarChartConfig = {
@@ -148,56 +131,73 @@ export default function AccountStats({ accounts }: AccountStatsProps) {
     },
   } satisfies ChartConfig;
 
+  const metricItems = [
+    {
+      detail: `${stats.active} active / ${stats.inactive} inactive`,
+      icon: CreditCard,
+      label: "Total Accounts",
+      value: stats.total,
+    },
+    {
+      detail: `${stats.expiring60} in 31-60 days`,
+      icon: AlertTriangle,
+      label: "Expiring Soon",
+      value: stats.expiring30,
+    },
+    {
+      detail:
+        Object.entries(stats.sportCounts)
+          .slice(0, 2)
+          .map(([sport, count]) => `${sport}: ${count}`)
+          .join(" / ") || "No sport data",
+      icon: Trophy,
+      label: "Sports",
+      value: Object.keys(stats.sportCounts).length,
+    },
+    {
+      detail: `${stats.setupComplete} complete / ${stats.notSetup} pending`,
+      icon: CheckCircle2,
+      label: "Setup Complete",
+      value: `${stats.setupPercentage}%`,
+    },
+  ];
+
   return (
-    <div className="space-y-6">
-      {/* Stats Cards Grid */}
-      <MetricGrid columns={4} gap="lg">
-        {/* Subscription Overview Card */}
-        <StatCard
-          title="Subscription Overview"
-          value={stats.total}
-          icon={<CreditCard className="h-5 w-5" />}
-          description={`${stats.active} active (${stats.activePercentage}%) • ${stats.inactive} inactive (${stats.inactivePercentage}%)`}
-          variant="primary"
-        />
+    <div className="space-y-5">
+      <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
+        {metricItems.map((item) => {
+          const Icon = item.icon;
 
-        {/* Expiring Soon Card */}
-        <StatCard
-          title="Expiring Soon"
-          value={stats.expiring30}
-          icon={<AlertTriangle className="h-5 w-5" />}
-          description={`${stats.expiring60} in 31-60 days • ${stats.expiring90} in 61-90 days`}
-          variant="accent"
-        />
+          return (
+            <div
+              key={item.label}
+              className="flex items-center gap-3 border-b border-slate-200 px-4 py-3 last:border-b-0 sm:[&:nth-last-child(-n+2)]:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0"
+            >
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600">
+                <Icon className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {item.label}
+                </div>
+                <div className="mt-0.5 flex items-baseline gap-2">
+                  <span className="text-lg font-semibold text-slate-950">
+                    {item.value}
+                  </span>
+                  <span className="truncate text-xs text-muted-foreground">
+                    {item.detail}
+                  </span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
 
-        {/* Accounts by Sport Card */}
-        <StatCard
-          title="By Sport"
-          value={Object.keys(stats.sportCounts).length}
-          icon={<Trophy className="h-5 w-5" />}
-          description={Object.entries(stats.sportCounts)
-            .slice(0, 3)
-            .map(([sport, count]) => `${sport}: ${count}`)
-            .join(" • ")}
-          variant="secondary"
-        />
-
-        {/* Setup Status Card */}
-        <StatCard
-          title="Setup Status"
-          value={stats.setupComplete}
-          icon={<CheckCircle2 className="h-5 w-5" />}
-          description={`${stats.setupPercentage}% complete • ${stats.notSetup} pending`}
-          variant="light"
-        />
-      </MetricGrid>
-
-      {/* Charts Grid */}
-      <MetricGrid columns={2} gap="lg">
-        {/* Subscription Status Pie Chart */}
+      <div className="grid gap-6 lg:grid-cols-3">
         <ChartCard
           title="Subscription Status"
-          description="Distribution of active vs inactive subscriptions"
+          description="Active vs inactive subscriptions"
           icon={PieChartIcon}
           chartConfig={pieChartConfig}
           chartClassName="h-[250px]"
@@ -211,12 +211,12 @@ export default function AccountStats({ accounts }: AccountStatsProps) {
               label={({ name, percent }) =>
                 `${name}: ${(percent * 100).toFixed(0)}%`
               }
-              outerRadius={80}
+              outerRadius={76}
               fill="#8884d8"
               dataKey="value"
             >
-              {subscriptionPieData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
+              {subscriptionPieData.map((entry) => (
+                <Cell key={entry.name} fill={entry.color} />
               ))}
             </Pie>
             <ChartTooltip content={<ChartTooltipContent />} />
@@ -224,10 +224,9 @@ export default function AccountStats({ accounts }: AccountStatsProps) {
           </PieChart>
         </ChartCard>
 
-        {/* Accounts by Sport Bar Chart */}
         <ChartCard
           title="Accounts by Sport"
-          description="Number of accounts per sport type"
+          description="Account count by sport"
           icon={BarChart3}
           chartConfig={sportBarChartConfig}
           chartClassName="h-[250px]"
@@ -249,33 +248,32 @@ export default function AccountStats({ accounts }: AccountStatsProps) {
             />
           </BarChart>
         </ChartCard>
-      </MetricGrid>
 
-      {/* Expiration Timeline Chart */}
-      <ChartCard
-        title="Subscription Expiration Timeline"
-        description="Accounts expiring in different time periods"
-        icon={Calendar}
-        chartConfig={expirationTimelineChartConfig}
-        chartClassName="h-[250px]"
-      >
-        <BarChart data={expirationTimelineData}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} />
-          <XAxis
-            dataKey="period"
-            tickLine={false}
-            axisLine={false}
-            tickMargin={8}
-          />
-          <YAxis tickLine={false} axisLine={false} />
-          <ChartTooltip content={<ChartTooltipContent />} />
-          <Bar
-            dataKey="count"
-            fill="hsl(var(--chart-2))"
-            radius={[4, 4, 0, 0]}
-          />
-        </BarChart>
-      </ChartCard>
+        <ChartCard
+          title="Expiration Timeline"
+          description="Active accounts grouped by days remaining"
+          icon={Calendar}
+          chartConfig={expirationTimelineChartConfig}
+          chartClassName="h-[250px]"
+        >
+          <BarChart data={expirationTimelineData}>
+            <CartesianGrid strokeDasharray="3 3" vertical={false} />
+            <XAxis
+              dataKey="period"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+            />
+            <YAxis tickLine={false} axisLine={false} />
+            <ChartTooltip content={<ChartTooltipContent />} />
+            <Bar
+              dataKey="count"
+              fill="hsl(var(--chart-2))"
+              radius={[4, 4, 0, 0]}
+            />
+          </BarChart>
+        </ChartCard>
+      </div>
     </div>
   );
 }

@@ -45,13 +45,13 @@ body .bodyCopy {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --sidebar-background: 204 35% 90%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
+    --sidebar-background: 214 63% 14%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 0 0% 100%;
+    --sidebar-primary-foreground: 214 63% 14%;
+    --sidebar-accent: 214 40% 22%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 214 30% 28%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {

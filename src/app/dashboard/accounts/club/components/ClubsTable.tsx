@@ -32,48 +32,66 @@ export default function DisplayClubsTable() {
   const allClubs = [...activeClubs, ...inactiveClubs];
 
   return (
-    <>
-      {/* Active Accounts Table */}
-      <Tabs defaultValue="active">
-        <TabsList variant="secondary" className="mb-4">
-          <TabsTrigger value="active">
-            Active Subscriptions ({activeClubs.length})
-          </TabsTrigger>
-          <TabsTrigger value="inactive">
-            Inactive Subscriptions ({inactiveClubs.length})
-          </TabsTrigger>
-          <TabsTrigger value="emails">Contacts</TabsTrigger>
-        </TabsList>
-
-        <SectionContainer
-          title="Club Accounts"
-          description="View, manage, and search all club accounts"
-        >
-          <TabsContent value="active">
-            <AccountTable
-              accounts={activeClubs}
-              emptyMessage="No clubs with active subscriptions available."
-            />
-          </TabsContent>
-          <TabsContent value="inactive">
-            <AccountTable
-              accounts={inactiveClubs}
-              emptyMessage="No clubs with inactive subscriptions available."
-            />
-          </TabsContent>
-          <TabsContent value="emails">
-            <ClubEmails initialFilter="active" hideAllFilter />
-          </TabsContent>
-        </SectionContainer>
-      </Tabs>
-
-      {/* Stats Cards & Charts */}
-      <SectionContainer
-        title="Club Statistics"
-        description="Overview of club accounts and subscription status"
+    <Tabs defaultValue="snapshot" className="space-y-4">
+      <TabsList
+        variant="secondary"
+        className="h-auto flex-wrap justify-start gap-1 rounded-md"
       >
-        <AccountStats accounts={allClubs} />
-      </SectionContainer>
-    </>
+        <TabsTrigger value="snapshot">Club Snapshot</TabsTrigger>
+        <TabsTrigger value="active">
+          Active Subscriptions ({activeClubs.length})
+        </TabsTrigger>
+        <TabsTrigger value="inactive">
+          Inactive Subscriptions ({inactiveClubs.length})
+        </TabsTrigger>
+        <TabsTrigger value="emails">Contacts</TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="snapshot">
+        <SectionContainer
+          title="Club Snapshot"
+          description="Subscription coverage, setup status, and account mix"
+          variant="compact"
+        >
+          <AccountStats accounts={allClubs} />
+        </SectionContainer>
+      </TabsContent>
+
+      <TabsContent value="active">
+        <SectionContainer
+          title="Active Club Accounts"
+          description="Club accounts with current subscriptions"
+          variant="compact"
+        >
+          <AccountTable
+            accounts={activeClubs}
+            emptyMessage="No clubs with active subscriptions available."
+          />
+        </SectionContainer>
+      </TabsContent>
+
+      <TabsContent value="inactive">
+        <SectionContainer
+          title="Inactive Club Accounts"
+          description="Club accounts without an active subscription"
+          variant="compact"
+        >
+          <AccountTable
+            accounts={inactiveClubs}
+            emptyMessage="No clubs with inactive subscriptions available."
+          />
+        </SectionContainer>
+      </TabsContent>
+
+      <TabsContent value="emails">
+        <SectionContainer
+          title="Club Contacts"
+          description="Search, review, and export club contact details"
+          variant="compact"
+        >
+          <ClubEmails initialFilter="active" hideAllFilter />
+        </SectionContainer>
+      </TabsContent>
+    </Tabs>
   );
 }

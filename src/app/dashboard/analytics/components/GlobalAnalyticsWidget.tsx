@@ -17,35 +17,93 @@ import { formatCurrency, formatPercentage } from "@/utils/chart-formatters";
 import {
   calculateActivityRate,
   calculateRevenuePerAccount,
-  getLatestEntry,
 } from "@/lib/utils/analytics";
 import ChartCard, {
   ChartSummaryStat,
 } from "@/components/modules/charts/ChartCard";
 import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid } from "recharts";
-import StatCard from "@/components/ui-library/metrics/StatCard";
-import {
-  Users,
-  DollarSign,
-  TrendingUp,
-  Shield,
-  BarChart3,
-  Calendar,
-} from "lucide-react";
+import { Users, DollarSign, TrendingUp, Shield, BarChart3 } from "lucide-react";
 import type { ChartConfig } from "@/components/ui/chart";
+
+interface MetricStripItem {
+  label: string;
+  value: string | number;
+  meta: string;
+}
+
+function MetricStrip({ items }: { items: MetricStripItem[] }) {
+  return (
+    <div className="grid overflow-hidden rounded-md border bg-white sm:grid-cols-2 lg:grid-cols-4">
+      {items.map((item) => (
+        <div
+          key={item.label}
+          className="border-b px-4 py-3 last:border-b-0 sm:[&:nth-last-child(-n+2)]:border-b-0 sm:[&:nth-child(odd)]:border-r lg:border-b-0 lg:border-r lg:last:border-r-0"
+        >
+          <div className="text-xs font-medium uppercase tracking-normal text-muted-foreground">
+            {item.label}
+          </div>
+          <div className="mt-1 text-xl font-semibold text-slate-900">
+            {item.value}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">{item.meta}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function DistributionPanel({
+  title,
+  description,
+  entries,
+  total,
+}: {
+  title: string;
+  description: string;
+  entries: [string, number][];
+  total?: number;
+}) {
+  return (
+    <Card className="rounded-md border shadow-none">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium text-slate-900">
+          {title}
+        </CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {entries.length === 0 ? (
+          <div className="text-sm text-muted-foreground">No data available</div>
+        ) : (
+          entries.map(([label, value]) => {
+            const percentage = total ? (value / total) * 100 : value;
+
+            return (
+              <div key={label} className="space-y-1">
+                <div className="flex items-center justify-between gap-3 text-sm">
+                  <span className="font-medium text-slate-900">{label}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {total
+                      ? `${value} (${formatPercentage(percentage)})`
+                      : formatPercentage(value)}
+                  </span>
+                </div>
+                <Progress value={percentage} className="h-1.5" />
+              </div>
+            );
+          })
+        )}
+      </CardContent>
+    </Card>
+  );
+}
 
 /**
  * GlobalAnalyticsWidget Component
  *
- * Displays comprehensive system-wide metrics with in-depth analysis including:
- * - Account overview (total, active, inactive, types)
- * - Subscription analysis (tiers, distribution, values)
- * - Trial conversion metrics
- * - Revenue trends (monthly, quarterly, growth)
- * - Churn and retention analysis
- * - Customer lifetime value
- * - Sports distribution (cricket-focused)
+ * Displays compact system-wide account, revenue, trial, retention, and
+ * distribution metrics for the analytics snapshot tab.
  */
 export function GlobalAnalyticsWidget() {
   const { data, isLoading, error, refetch } = useGlobalAnalytics();
@@ -54,7 +112,7 @@ export function GlobalAnalyticsWidget() {
     return (
       <LoadingState variant="skeleton">
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             {[...Array(4)].map((_, i) => (
               <Card key={i}>
                 <CardHeader>
@@ -94,26 +152,21 @@ export function GlobalAnalyticsWidget() {
   }
 
   const analytics = data;
-
-  // Calculate derived metrics
   const activityRate = calculateActivityRate(
     analytics.activeAccounts || 0,
-    analytics.totalAccounts || 0
+    analytics.totalAccounts || 0,
   );
   const revenuePerAccount = calculateRevenuePerAccount(
     analytics.revenueTrends?.totalRevenue || 0,
-    analytics.activeAccounts || 0
+    analytics.activeAccounts || 0,
   );
-  const latestMonthlyRevenue = getLatestEntry(
-    analytics.revenueTrends?.monthlyRevenue || {}
-  );
-  // Transform monthly revenue data for chart
+
   const chartData = Object.entries(
-    analytics.revenueTrends?.monthlyRevenue || {}
+    analytics.revenueTrends?.monthlyRevenue || {},
   )
     .map(([month, revenue]) => ({
       month,
-      revenue: revenue / 100, // Convert cents to dollars
+      revenue: revenue / 100,
     }))
     .reverse()
     .slice(0, 12);
@@ -135,82 +188,63 @@ export function GlobalAnalyticsWidget() {
       icon: TrendingUp,
       label: "Avg/Month",
       value: formatCurrency(
-        (analytics.revenueTrends?.averageMonthlyRevenue || 0) / 100
+        (analytics.revenueTrends?.averageMonthlyRevenue || 0) / 100,
       ),
     },
     {
-      icon: Calendar,
-      label: "Latest Month",
-      value: latestMonthlyRevenue
-        ? formatCurrency(latestMonthlyRevenue[1] / 100)
-        : "N/A",
+      icon: Shield,
+      label: "Retention",
+      value: formatPercentage(analytics.churnRates?.retentionRate || 0),
     },
   ];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-      {/* Main Content Section - 3 columns */}
-      <div className="lg:col-span-3 space-y-6">
-        {/* Top: Key Metrics (4 cards) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <StatCard
-            title="Total Accounts"
-            value={analytics.totalAccounts || 0}
-            icon={<Users className="h-5 w-5" />}
-            description={`${
-              analytics.activeAccounts || 0
-            } active • ${formatPercentage(activityRate)} activity rate`}
-            variant="primary"
-          />
-
-          <StatCard
-            title="Total Revenue"
-            value={formatCurrency(
-              (analytics.revenueTrends?.totalRevenue || 0) / 100
-            )}
-            icon={<DollarSign className="h-5 w-5" />}
-            description={`Avg: ${formatCurrency(
-              (analytics.revenueTrends?.averageMonthlyRevenue || 0) / 100
-            )}/mo`}
-            trend={analytics.revenueTrends?.growthRate}
-            variant="accent"
-          />
-
-          <StatCard
-            title="Conversion Rate"
-            value={formatPercentage(
-              analytics.trialConversionRates?.conversionRate || 0
-            )}
-            icon={<TrendingUp className="h-5 w-5" />}
-            description={`${
+    <div className="space-y-6">
+      <MetricStrip
+        items={[
+          {
+            label: "Accounts",
+            value: analytics.totalAccounts || 0,
+            meta: `${analytics.activeAccounts || 0} active / ${formatPercentage(
+              activityRate,
+            )} activity`,
+          },
+          {
+            label: "Revenue",
+            value: formatCurrency(
+              (analytics.revenueTrends?.totalRevenue || 0) / 100,
+            ),
+            meta: `${formatCurrency(
+              (analytics.revenueTrends?.averageMonthlyRevenue || 0) / 100,
+            )} avg monthly`,
+          },
+          {
+            label: "Trial Conversion",
+            value: formatPercentage(
+              analytics.trialConversionRates?.conversionRate || 0,
+            ),
+            meta: `${
               analytics.trialConversionRates?.convertedTrials || 0
-            } converted • ${
-              analytics.trialConversionRates?.totalTrials || 0
-            } total trials`}
-            variant="secondary"
-          />
+            } of ${analytics.trialConversionRates?.totalTrials || 0} trials`,
+          },
+          {
+            label: "Retention",
+            value: formatPercentage(analytics.churnRates?.retentionRate || 0),
+            meta: `${analytics.churnRates?.totalChurned || 0} churned / ${formatPercentage(
+              analytics.churnRates?.churnRate || 0,
+            )} churn`,
+          },
+        ]}
+      />
 
-          <StatCard
-            title="Retention Rate"
-            value={formatPercentage(analytics.churnRates?.retentionRate || 0)}
-            icon={<Shield className="h-5 w-5" />}
-            description={`${
-              analytics.churnRates?.totalChurned || 0
-            } churned • ${formatPercentage(
-              analytics.churnRates?.churnRate || 0
-            )} churn rate`}
-            variant="primary"
-          />
-        </div>
-
-        {/* Middle: Revenue Trends (full width) */}
+      <div className="grid gap-6 lg:grid-cols-3">
         <ChartCard
-          title="Revenue Trends"
-          description="Monthly and quarterly revenue over time"
+          title="Revenue"
+          description="Last 12 monthly revenue periods."
           icon={TrendingUp}
           chartConfig={chartConfig}
           summaryStats={revenueSummaryStats}
-          variant="elevated"
+          cardClassName="lg:col-span-2"
           chartClassName="h-[250px]"
         >
           <LineChart
@@ -241,36 +275,35 @@ export function GlobalAnalyticsWidget() {
             />
           </LineChart>
         </ChartCard>
-      </div>
 
-      {/* Sidebar Section - 1 column */}
-      <div className="lg:col-span-1 flex flex-col gap-6">
-        {/* Customer Value */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">
-              Customer Value
-            </CardTitle>
-            <CardDescription>Lifetime value metrics</CardDescription>
+        <Card className="rounded-md border shadow-none">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium text-slate-900">
+                Customer Value
+              </CardTitle>
+            </div>
+            <CardDescription>Lifetime value metrics.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-muted-foreground">Avg CLV</span>
               <span className="text-sm font-semibold">
                 {formatCurrency(
-                  (analytics.averageCustomerLifetimeValue || 0) / 100
+                  (analytics.averageCustomerLifetimeValue || 0) / 100,
                 )}
               </span>
             </div>
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between gap-3">
               <span className="text-sm text-muted-foreground">Median CLV</span>
               <span className="text-sm font-semibold">
                 {formatCurrency(
-                  (analytics.medianCustomerLifetimeValue || 0) / 100
+                  (analytics.medianCustomerLifetimeValue || 0) / 100,
                 )}
               </span>
             </div>
-            <div className="flex justify-between items-center pt-2 border-t">
+            <div className="flex items-center justify-between gap-3 border-t pt-3">
               <span className="text-sm text-muted-foreground">
                 Per Active Account
               </span>
@@ -280,60 +313,30 @@ export function GlobalAnalyticsWidget() {
             </div>
           </CardContent>
         </Card>
+      </div>
 
-        {/* Sports Distribution */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">
-              Sports Distribution
-            </CardTitle>
-            <CardDescription>Cricket-focused breakdown</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {Object.entries(analytics.sportsDistribution || {}).map(
-              ([sport, percentage]) => (
-                <div key={sport} className="space-y-1">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">{sport}</span>
-                    <span className="text-sm font-medium">
-                      {formatPercentage(percentage)}
-                    </span>
-                  </div>
-                  <Progress value={percentage} className="h-2" />
-                </div>
-              )
-            )}
-          </CardContent>
-        </Card>
-        {/* Account Types */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm font-medium">Account Types</CardTitle>
-            <CardDescription>Distribution by type</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              {Object.entries(analytics.accountTypesDistribution || {}).map(
-                ([type, count]) => {
-                  const percentage = analytics.totalAccounts
-                    ? (count / analytics.totalAccounts) * 100
-                    : 0;
-                  return (
-                    <div key={type}>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm">{type}</span>
-                        <span className="text-sm font-medium">
-                          {count} ({formatPercentage(percentage)})
-                        </span>
-                      </div>
-                      <Progress value={percentage} className="h-2" />
-                    </div>
-                  );
-                }
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <DistributionPanel
+          title="Account Types"
+          description="Distribution by account type."
+          entries={Object.entries(analytics.accountTypesDistribution || {})}
+          total={analytics.totalAccounts || 0}
+        />
+        <DistributionPanel
+          title="Sports"
+          description="Sport coverage across accounts."
+          entries={Object.entries(analytics.sportsDistribution || {})}
+        />
+        <DistributionPanel
+          title="Subscription Tiers"
+          description="Current subscription mix."
+          entries={Object.entries(
+            analytics.subscriptionTierDistribution?.distribution || {},
+          )}
+          total={
+            analytics.subscriptionTierDistribution?.totalSubscriptions || 0
+          }
+        />
       </div>
     </div>
   );

@@ -3,51 +3,51 @@ import {
   useQueryClient,
   UseMutationResult,
 } from "@tanstack/react-query";
-import {
-  processAssociationDirect,
-  ProcessAssociationDirectRequest,
-  ProcessAssociationDirectResponse,
-} from "@/lib/services/association/processAssociationDirect";
+import { triggerAssociationSingleScrape } from "@/lib/services/data-collection/triggerAssociationSingleScrape";
+import type {
+  TriggerAssociationSingleScrapeRequest,
+  TriggerAssociationSingleScrapeSuccessResponse,
+} from "@/types/triggerAssociationSingleScrape";
 import { toast } from "sonner";
 
 /**
- * Hook for triggering direct association processing via POST /api/association/process-direct
+ * Hook for triggering single-association scrape via POST /api/association-overview-queues/trigger-association-single-scrape
  *
- * This hook queues a background job to process association data directly by organization ID,
- * without requiring an associated user account. The job is processed asynchronously
- * by the ScrapeAccountSync worker.
+ * This hook queues a background job to scrape the association's PlayHQ page directly.
+ * The CMS resolves the URL from association.href and enqueues to scrape:association-single.
  *
  * @returns Mutation hook with loading states, error handling, and toast notifications
  */
 export function useProcessAssociationDirect(): UseMutationResult<
-  ProcessAssociationDirectResponse,
+  TriggerAssociationSingleScrapeSuccessResponse,
   Error,
-  ProcessAssociationDirectRequest
+  TriggerAssociationSingleScrapeRequest
 > {
   const queryClient = useQueryClient();
 
   return useMutation<
-    ProcessAssociationDirectResponse,
+    TriggerAssociationSingleScrapeSuccessResponse,
     Error,
-    ProcessAssociationDirectRequest
+    TriggerAssociationSingleScrapeRequest
   >({
-    mutationFn: async (request: ProcessAssociationDirectRequest) => {
-      return await processAssociationDirect(request);
+    mutationFn: async (request: TriggerAssociationSingleScrapeRequest) => {
+      return await triggerAssociationSingleScrape(request);
     },
-    onSuccess: (data: ProcessAssociationDirectResponse) => {
+    onSuccess: (data, variables) => {
       console.log(
-        "[Mutation Success] Association direct processing queued:",
+        "[Mutation Success] Single association scrape queued:",
         data
       );
 
-      // Show success notification
+      // Show success notification with job details
       toast.success(
-        data.message || "Association processing job queued successfully"
+        data.message ||
+          `Scrape job queued (Job ID: ${data.jobId}, Queue: ${data.queueName})`
       );
 
-      // Optionally invalidate related queries if needed
+      // Invalidate related queries
       queryClient.invalidateQueries({
-        queryKey: ["associationDetail", data.associationId.toString()],
+        queryKey: ["associationDetail", variables.associationId.toString()],
       });
     },
     onError: (error: Error) => {

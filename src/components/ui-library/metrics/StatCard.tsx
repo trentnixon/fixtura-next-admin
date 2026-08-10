@@ -24,7 +24,7 @@ const statCardVariants = cva(
     defaultVariants: {
       variant: "light",
     },
-  }
+  },
 );
 
 interface StatCardProps extends VariantProps<typeof statCardVariants> {
@@ -80,7 +80,7 @@ export default function StatCard({
     variant === "secondary" && "bg-brandSecondary-500",
     variant === "accent" && "bg-brandAccent-500",
     variant === "light" && "bg-slate-400",
-    variant === "dark" && "bg-slate-600"
+    variant === "dark" && "bg-slate-600",
   );
 
   // Value text color based on variant
@@ -93,7 +93,7 @@ export default function StatCard({
       variant !== "primary" &&
       variant !== "secondary" &&
       variant !== "accent" &&
-      "text-slate-900"
+      "text-slate-900",
   );
 
   // Title text color based on variant
@@ -106,7 +106,7 @@ export default function StatCard({
       variant !== "primary" &&
       variant !== "secondary" &&
       variant !== "accent" &&
-      "text-slate-600"
+      "text-slate-600",
   );
 
   // Description text color based on variant
@@ -119,7 +119,7 @@ export default function StatCard({
       variant !== "primary" &&
       variant !== "secondary" &&
       variant !== "accent" &&
-      "text-slate-500"
+      "text-slate-500",
   );
 
   return (
@@ -127,14 +127,14 @@ export default function StatCard({
       {/* Accent stripe at top */}
       <div className={accentStripeClass} />
 
-      <CardContent className="p-6">
+      <CardContent className="p-4">
         {/* Header: Icon and Value */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="mb-3 flex items-start justify-between">
           <div className="flex-1 min-w-0">
             <Title
               className={cn(
-                "m-0 p-0 text-3xl font-bold tracking-tight",
-                valueColorClass
+                "m-0 p-0 text-2xl font-bold leading-none tracking-tight",
+                valueColorClass,
               )}
             >
               {typeof value === "number" ? value.toLocaleString() : value}
@@ -143,7 +143,7 @@ export default function StatCard({
           {icon && (
             <div
               className={cn(
-                "ml-4 flex-shrink-0 p-2 rounded-lg",
+                "ml-3 flex-shrink-0 rounded-md p-1.5",
                 variant === "primary" &&
                   "bg-brandPrimary-50 text-brandPrimary-600",
                 variant === "secondary" &&
@@ -151,7 +151,7 @@ export default function StatCard({
                 variant === "accent" &&
                   "bg-brandAccent-50 text-brandAccent-600",
                 variant === "light" && "bg-slate-50 text-slate-600",
-                variant === "dark" && "bg-slate-800 text-slate-300"
+                variant === "dark" && "bg-slate-800 text-slate-300",
               )}
             >
               {icon}
@@ -160,15 +160,15 @@ export default function StatCard({
         </div>
 
         {/* Title */}
-        <ByLine className={cn("text-sm font-medium mb-3", titleColorClass)}>
+        <ByLine className={cn("mb-2 text-sm font-medium", titleColorClass)}>
           {title}
         </ByLine>
 
         {/* Footer: Description and Trend */}
         <div
           className={cn(
-            "flex items-center justify-between gap-4 pt-3 border-t",
-            isDark ? "border-slate-700" : "border-slate-200/50"
+            "flex items-center justify-between gap-3 border-t pt-2.5",
+            isDark ? "border-slate-700" : "border-slate-200/50",
           )}
         >
           {description && (
@@ -185,7 +185,7 @@ export default function StatCard({
                 isNeutral &&
                   (isDark
                     ? "bg-slate-800 text-slate-400"
-                    : "bg-slate-50 text-slate-500")
+                    : "bg-slate-50 text-slate-500"),
               )}
             >
               {isPositive && <TrendingUp className="h-3.5 w-3.5" />}
@@ -200,7 +200,7 @@ export default function StatCard({
         </div>
 
         {/* Action area */}
-        {action && <div className="mt-4 flex justify-end">{action}</div>}
+        {action && <div className="mt-3 flex justify-end">{action}</div>}
       </CardContent>
     </Card>
   );

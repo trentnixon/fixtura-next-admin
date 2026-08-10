@@ -1,21 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import Image from "next/image";
 import {
+  ChevronDown,
   Mail,
   Phone,
   MapPin,
   ExternalLink,
   Globe,
   Loader2,
+  Layers,
   RefreshCw,
+  Search,
+  Users,
 } from "lucide-react";
 import { AssociationDetail } from "@/types/associationDetail";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/ui-library/badges/StatusBadge";
 import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useProcessAssociationDirect } from "@/hooks/association/useProcessAssociationDirect";
+import { useTriggerGradesBatchScrape } from "@/hooks/association/useTriggerGradesBatchScrape";
+import { useTriggerGradesLookupTeamsBatchScrape } from "@/hooks/association/useTriggerGradesLookupTeamsBatchScrape";
+import { useTriggerFixtureDiscoveryAssociationBatch } from "@/hooks/association/useTriggerFixtureDiscoveryAssociationBatch";
 import {
   Dialog,
   DialogContent,
@@ -36,10 +51,13 @@ import {
  */
 interface AssociationHeaderProps {
   association: AssociationDetail;
+  /** Association ID from the route `/dashboard/association/[id]` — used for scrape triggers */
+  associationId: number;
 }
 
 export default function AssociationHeader({
   association,
+  associationId,
 }: AssociationHeaderProps) {
   const {
     name,
@@ -50,7 +68,6 @@ export default function AssociationHeader({
     location,
     website,
     href,
-    playHqId,
   } = association;
 
   // Build location string
@@ -66,15 +83,14 @@ export default function AssociationHeader({
   const googleMapsUrl = location?.coordinates
     ? `https://www.google.com/maps/search/?api=1&query=${location.coordinates.lat},${location.coordinates.lng}`
     : locationString
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        locationString
-      )}`
-    : null;
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+          locationString,
+        )}`
+      : null;
 
   const hasContactDetails =
     contactDetails?.phone || contactDetails?.email || contactDetails?.address;
   const hasLocation = location && (locationString || location.coordinates);
-  const hasLinks = website?.website || href || playHqId;
 
   return (
     <div className="space-y-8">
@@ -108,76 +124,67 @@ export default function AssociationHeader({
               falseLabel="Inactive Association"
               variant={isActive ? "default" : "neutral"}
             />
-            <ProcessDirectButton associationId={association.id} />
+            <AssociationHeaderActions
+              associationId={associationId}
+              websiteUrl={website?.website ?? null}
+              playHqUrl={href ?? null}
+            />
           </div>
         </div>
       </div>
 
       {/* Details Grid */}
-      {(hasContactDetails || hasLocation || hasLinks) && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {(hasContactDetails || hasLocation) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Contact Details */}
           {hasContactDetails && (
             <ElementContainer
               title="Contact Details"
               border
-              padding="md"
+              padding="none"
               className="h-full"
             >
-              <div className="space-y-4">
-                {contactDetails.phone && (
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg shrink-0">
-                      <Phone className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="space-y-1 overflow-hidden">
-                      <p className="text-xs font-medium text-gray-500 uppercase">
-                        Phone
-                      </p>
-                      <a
-                        href={`tel:${contactDetails.phone}`}
-                        className="block text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 hover:underline truncate"
-                      >
-                        {contactDetails.phone}
-                      </a>
-                    </div>
-                  </div>
-                )}
+              <div className="divide-y divide-slate-200">
+                <DetailRow icon={<Phone className="h-4 w-4" />} label="Phone">
+                  {contactDetails.phone ? (
+                    <a
+                      href={`tel:${contactDetails.phone}`}
+                      className="truncate text-sm font-medium text-slate-900 hover:text-brandPrimary-700"
+                    >
+                      {contactDetails.phone}
+                    </a>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      Not provided
+                    </span>
+                  )}
+                </DetailRow>
 
-                {contactDetails.email && (
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg shrink-0">
-                      <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="space-y-1 overflow-hidden w-full">
-                      <p className="text-xs font-medium text-gray-500 uppercase">
-                        Email
-                      </p>
-                      <a
-                        href={`mailto:${contactDetails.email}`}
-                        className="block text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 hover:underline truncate"
-                        title={contactDetails.email}
-                      >
-                        {contactDetails.email}
-                      </a>
-                    </div>
-                  </div>
-                )}
+                <DetailRow icon={<Mail className="h-4 w-4" />} label="Email">
+                  {contactDetails.email ? (
+                    <a
+                      href={`mailto:${contactDetails.email}`}
+                      className="truncate text-sm font-medium text-slate-900 hover:text-brandPrimary-700"
+                      title={contactDetails.email}
+                    >
+                      {contactDetails.email}
+                    </a>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      Not provided
+                    </span>
+                  )}
+                </DetailRow>
 
                 {contactDetails.address && (
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg shrink-0">
-                      <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-gray-500 uppercase">
-                        Address
-                      </p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {contactDetails.address}
-                      </p>
-                    </div>
-                  </div>
+                  <DetailRow
+                    icon={<MapPin className="h-4 w-4" />}
+                    label="Address"
+                  >
+                    <span className="text-sm font-medium text-slate-900">
+                      {contactDetails.address}
+                    </span>
+                  </DetailRow>
                 )}
               </div>
             </ElementContainer>
@@ -188,98 +195,32 @@ export default function AssociationHeader({
             <ElementContainer
               title="Location"
               border
-              padding="md"
+              padding="none"
               className="h-full"
             >
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg shrink-0">
-                    <MapPin className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-gray-500 uppercase">
-                      Address
-                    </p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {locationString}
-                    </p>
-                  </div>
-                </div>
+              <div className="divide-y divide-slate-200">
+                <DetailRow
+                  icon={<MapPin className="h-4 w-4" />}
+                  label="Address"
+                >
+                  <span className="text-sm font-medium text-slate-900">
+                    {locationString ?? "Not provided"}
+                  </span>
+                </DetailRow>
 
                 {googleMapsUrl && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-start"
-                    asChild
-                  >
-                    <a
-                      href={googleMapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      View on Google Maps
-                    </a>
-                  </Button>
-                )}
-              </div>
-            </ElementContainer>
-          )}
-
-          {/* Links */}
-          {hasLinks && (
-            <ElementContainer
-              title="Quick Links"
-              border
-              padding="md"
-              className="h-full"
-            >
-              <div className="space-y-3">
-                {website?.website && (
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start h-auto py-3"
-                    asChild
-                  >
-                    <a
-                      href={website.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <div className="p-1 bg-purple-50 dark:bg-purple-900/20 rounded mr-3">
-                        <Globe className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                      </div>
-                      <div className="flex flex-col items-start overflow-hidden">
-                        <span className="text-sm font-medium">Website</span>
-                        <span className="text-xs text-muted-foreground font-normal truncate max-w-[180px]">
-                          {website.website}
-                        </span>
-                      </div>
-                      <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground shrink-0" />
-                    </a>
-                  </Button>
-                )}
-
-                {href && (
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start h-auto py-3"
-                    asChild
-                  >
-                    <a href={href} target="_blank" rel="noopener noreferrer">
-                      <div className="p-1 bg-orange-50 dark:bg-orange-900/20 rounded mr-3">
-                        <ExternalLink className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="text-sm font-medium">PlayHQ</span>
-                        <span className="text-xs text-muted-foreground font-normal">
-                          View on PlayHQ
-                        </span>
-                      </div>
-                      <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground shrink-0" />
-                    </a>
-                  </Button>
+                  <div className="flex justify-end px-4 py-3">
+                    <Button variant="primary" size="sm" asChild>
+                      <a
+                        href={googleMapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Google Maps
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  </div>
                 )}
               </div>
             </ElementContainer>
@@ -290,40 +231,178 @@ export default function AssociationHeader({
   );
 }
 
-/**
- * ProcessDirectButton Component
- *
- * Button to trigger direct association processing via the API with confirmation dialog
- */
-function ProcessDirectButton({ associationId }: { associationId: number }) {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+function DetailRow({
+  icon,
+  label,
+  children,
+}: {
+  icon: ReactNode;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 px-4 py-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-slate-50 text-slate-500">
+          {icon}
+        </div>
+        <p className="text-xs font-medium uppercase text-slate-500">{label}</p>
+      </div>
+      <div className="min-w-0 text-right">{children}</div>
+    </div>
+  );
+}
+
+interface AssociationHeaderActionsProps {
+  associationId: number;
+  websiteUrl: string | null;
+  playHqUrl: string | null;
+}
+
+function AssociationHeaderActions({
+  associationId,
+  websiteUrl,
+  playHqUrl,
+}: AssociationHeaderActionsProps) {
+  const [processDialogOpen, setProcessDialogOpen] = useState(false);
+  const [gradesDialogOpen, setGradesDialogOpen] = useState(false);
+  const [lookupTeamsDialogOpen, setLookupTeamsDialogOpen] = useState(false);
+  const [fixtureDiscoveryDialogOpen, setFixtureDiscoveryDialogOpen] =
+    useState(false);
+
   const processAssociationDirect = useProcessAssociationDirect();
+  const triggerGradesBatch = useTriggerGradesBatchScrape();
+  const triggerLookupTeamsBatch = useTriggerGradesLookupTeamsBatchScrape();
+  const triggerFixtureDiscovery = useTriggerFixtureDiscoveryAssociationBatch();
+  const hasLinks = websiteUrl || playHqUrl;
+
+  const openDialogAfterMenuCloses = (openDialog: () => void) => {
+    window.setTimeout(openDialog, 0);
+  };
 
   const handleProcessDirect = async () => {
     try {
       await processAssociationDirect.mutateAsync({ associationId });
-      setIsDialogOpen(false); // Close dialog on success
+      setProcessDialogOpen(false);
     } catch (error) {
-      // Error handling is done in the hook
       console.error("Error processing association:", error);
-      // Keep dialog open on error so user can retry or cancel
+    }
+  };
+
+  const handleGradesBatch = async () => {
+    try {
+      await triggerGradesBatch.mutateAsync({ associationId });
+      setGradesDialogOpen(false);
+    } catch {
+      // Toasts handled in hook.
+    }
+  };
+
+  const handleLookupTeamsBatch = async () => {
+    try {
+      await triggerLookupTeamsBatch.mutateAsync({ associationId });
+      setLookupTeamsDialogOpen(false);
+    } catch {
+      // Toasts handled in hook.
+    }
+  };
+
+  const handleFixtureDiscovery = async () => {
+    try {
+      await triggerFixtureDiscovery.mutateAsync({ associationId });
+      setFixtureDiscoveryDialogOpen(false);
+    } catch {
+      // Toasts handled in hook.
     }
   };
 
   return (
     <>
-      <Button
-        onClick={() => setIsDialogOpen(true)}
-        disabled={processAssociationDirect.isPending}
-        variant="accent"
-        size="sm"
-      >
-        <RefreshCw className="h-4 w-4 mr-2" />
-        Process Direct
-      </Button>
+      {hasLinks && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="primary" size="sm">
+              <ExternalLink className="h-4 w-4" />
+              Open
+              <ChevronDown className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-64">
+            <DropdownMenuLabel>Quick links</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {websiteUrl && (
+              <DropdownMenuItem asChild>
+                <a href={websiteUrl} target="_blank" rel="noopener noreferrer">
+                  <Globe className="h-4 w-4" />
+                  Website
+                </a>
+              </DropdownMenuItem>
+            )}
+            {playHqUrl && (
+              <DropdownMenuItem asChild>
+                <a href={playHqUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-4 w-4" />
+                  View on PlayHQ
+                </a>
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
 
-      {/* Confirmation Dialog */}
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="accent" size="sm">
+            <RefreshCw className="h-4 w-4" />
+            Data actions
+            <ChevronDown className="h-3.5 w-3.5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-64">
+          <DropdownMenuLabel>Queue background jobs</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            disabled={processAssociationDirect.isPending}
+            onSelect={() =>
+              openDialogAfterMenuCloses(() => setProcessDialogOpen(true))
+            }
+          >
+            <RefreshCw className="h-4 w-4" />
+            Process Direct
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={triggerGradesBatch.isPending}
+            onSelect={() =>
+              openDialogAfterMenuCloses(() => setGradesDialogOpen(true))
+            }
+          >
+            <Layers className="h-4 w-4" />
+            Grades batch scrape
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={triggerLookupTeamsBatch.isPending}
+            onSelect={() =>
+              openDialogAfterMenuCloses(() => setLookupTeamsDialogOpen(true))
+            }
+          >
+            <Users className="h-4 w-4" />
+            Lookup teams batch
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            disabled={triggerFixtureDiscovery.isPending}
+            onSelect={() =>
+              openDialogAfterMenuCloses(() =>
+                setFixtureDiscoveryDialogOpen(true)
+              )
+            }
+          >
+            <Search className="h-4 w-4" />
+            Fixture discovery batch
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Dialog open={processDialogOpen} onOpenChange={setProcessDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
@@ -331,24 +410,16 @@ function ProcessDirectButton({ associationId }: { associationId: number }) {
               Confirm Association Processing
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to trigger direct processing for this
-              association? This will queue a background job to process
-              association data, including competitions, clubs, and games. The
-              job will be processed asynchronously.
+              This will queue a background job to scrape the association&apos;s
+              PlayHQ page and update the association overview. The job will be
+              processed asynchronously.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <div className="text-sm space-y-1">
-              <p>
-                <span className="font-medium">Association ID:</span>{" "}
-                {associationId}
-              </p>
-            </div>
-          </div>
+          <AssociationDialogBody associationId={associationId} />
           <DialogFooter>
             <Button
               variant="secondary"
-              onClick={() => setIsDialogOpen(false)}
+              onClick={() => setProcessDialogOpen(false)}
               disabled={processAssociationDirect.isPending}
             >
               Cancel
@@ -373,6 +444,157 @@ function ProcessDirectButton({ associationId }: { associationId: number }) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={gradesDialogOpen} onOpenChange={setGradesDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Layers className="h-5 w-5 text-brandSecondary-600" />
+              Confirm Grades Batch Scrape
+            </DialogTitle>
+            <DialogDescription>
+              Queue a background job to refresh grades for every competition
+              linked to this association. Work happens asynchronously and is
+              separate from Process Direct.
+            </DialogDescription>
+          </DialogHeader>
+          <AssociationDialogBody associationId={associationId} />
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => setGradesDialogOpen(false)}
+              disabled={triggerGradesBatch.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleGradesBatch}
+              disabled={triggerGradesBatch.isPending}
+            >
+              {triggerGradesBatch.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Queuing...
+                </>
+              ) : (
+                <>
+                  <Layers className="h-4 w-4" />
+                  Confirm scrape
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={lookupTeamsDialogOpen}
+        onOpenChange={setLookupTeamsDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Users className="h-5 w-5 text-brandSecondary-600" />
+              Confirm Grades Lookup Teams Batch
+            </DialogTitle>
+            <DialogDescription>
+              Queue a background job on{" "}
+              <span className="font-mono text-xs">
+                scrape:grades-lookup-teams-batch
+              </span>
+              . The CMS loads targets from this association context and runs the
+              ladder team lookup asynchronously.
+            </DialogDescription>
+          </DialogHeader>
+          <AssociationDialogBody associationId={associationId} />
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => setLookupTeamsDialogOpen(false)}
+              disabled={triggerLookupTeamsBatch.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleLookupTeamsBatch}
+              disabled={triggerLookupTeamsBatch.isPending}
+            >
+              {triggerLookupTeamsBatch.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Queuing...
+                </>
+              ) : (
+                <>
+                  <Users className="h-4 w-4" />
+                  Confirm scrape
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={fixtureDiscoveryDialogOpen}
+        onOpenChange={setFixtureDiscoveryDialogOpen}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Search className="h-5 w-5 text-brandSecondary-600" />
+              Confirm Fixture Discovery Batch
+            </DialogTitle>
+            <DialogDescription>
+              This will queue fixture discovery for every eligible grade under
+              this association. The CMS will load the association, scan its
+              competitions and grades, and enqueue one fixture_discovery job per
+              grade with a usable URL. Work runs asynchronously.
+            </DialogDescription>
+          </DialogHeader>
+          <AssociationDialogBody associationId={associationId} />
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              onClick={() => setFixtureDiscoveryDialogOpen(false)}
+              disabled={triggerFixtureDiscovery.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleFixtureDiscovery}
+              disabled={triggerFixtureDiscovery.isPending}
+            >
+              {triggerFixtureDiscovery.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Queuing...
+                </>
+              ) : (
+                <>
+                  <Search className="h-4 w-4" />
+                  Confirm discovery
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
+  );
+}
+
+function AssociationDialogBody({ associationId }: { associationId: number }) {
+  return (
+    <div className="py-4">
+      <div className="text-sm space-y-1">
+        <p>
+          <span className="font-medium">Association ID:</span> {associationId}
+        </p>
+      </div>
+    </div>
   );
 }

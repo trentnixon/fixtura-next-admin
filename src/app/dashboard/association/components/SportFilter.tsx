@@ -13,7 +13,7 @@ import { SportFilter as SportFilterType } from "@/types/associationInsights";
 /**
  * SportFilter Component
  *
- * Dropdown filter for selecting sport (All, Cricket, AFL, Hockey, Netball, Basketball)
+ * Dropdown filter for selecting sport (Cricket, AFL, Hockey, Netball, Basketball)
  * Updates the query when changed
  */
 interface SportFilterProps {
@@ -34,26 +34,23 @@ export default function SportFilterComponent({
   onSportChange,
 }: SportFilterProps) {
   const handleValueChange = (value: string) => {
-    if (value === "all") {
-      onSportChange(undefined);
-    } else {
-      onSportChange(value as SportFilterType);
-    }
+    onSportChange(value as SportFilterType);
   };
 
   return (
-    <div className="justify-end w-full flex items-center">
-      <div className="space-y-2 max-w-md min-w-md w-full">
-        <Label htmlFor="sport-filter">Filter by Sport</Label>
-        <Select
-          value={selectedSport || "all"}
-          onValueChange={handleValueChange}
+    <div className="flex w-full items-center justify-end">
+      <div className="flex w-full max-w-sm items-center gap-3">
+        <Label
+          htmlFor="sport-filter"
+          className="whitespace-nowrap text-xs font-medium uppercase text-slate-500"
         >
-          <SelectTrigger id="sport-filter">
+          Sport
+        </Label>
+        <Select value={selectedSport} onValueChange={handleValueChange}>
+          <SelectTrigger id="sport-filter" className="h-9">
             <SelectValue placeholder="Select a sport" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Sports</SelectItem>
             {SPORTS.map((sport) => (
               <SelectItem key={sport.value} value={sport.value}>
                 {sport.label}

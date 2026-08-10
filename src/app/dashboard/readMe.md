@@ -64,6 +64,17 @@ Team management pages:
 - `[teamID]/`: Individual team detail pages
 - `components/`: Team-related components and data display
 
+### labs/
+
+Admin experimentation hub (`/dashboard/labs`):
+
+- `page.tsx`: Labs hub (Component, Data Fetch, Route, Feature labs)
+- `components/`: Component Lab (design system showcase; formerly `dashboard/ui`)
+- `data-fetch/`: Scraper test dashboards (formerly `fetchTests`, `fetchAccountTests`)
+- `routes/`, `features/`: Route and feature prototypes
+
+Legacy URLs `/dashboard/ui`, `/dashboard/fetchTests`, and `/dashboard/fetchAccountTests` redirect here.
+
 ### Root Files
 
 - `page.tsx`: Main dashboard overview page with live data and scheduler rollup

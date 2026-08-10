@@ -9,12 +9,14 @@ import { fetchAdminOrderOverview } from "@/lib/services/orders/fetchAdminOrderOv
 const DEFAULT_STALE_TIME = 60 * 1000; // 1 minute
 
 export function useAdminOrderOverview(
-  params: FetchOrderOverviewParams = {}
+  params: FetchOrderOverviewParams = {},
+  options?: { refetchInterval?: number | false }
 ): UseQueryResult<OrderOverviewResponse, Error> {
   return useQuery<OrderOverviewResponse, Error>({
     queryKey: ["orders", "admin-overview", params],
     queryFn: () => fetchAdminOrderOverview(params),
     staleTime: DEFAULT_STALE_TIME,
+    refetchInterval: options?.refetchInterval,
     refetchOnWindowFocus: false,
     retry: 2,
     retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),

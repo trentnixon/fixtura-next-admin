@@ -4,7 +4,7 @@ This folder contains render management pages and components for the Fixtura Admi
 
 ## Files
 
-- `page.tsx`: Main renders listing page (currently placeholder)
+- `page.tsx`: Global render monitor (Snapshot, Analytics, Operational Audit tabs)
 - `[renderID]/page.tsx`: Individual render detail page with comprehensive data display using PageContainer and SectionContainer
 - `[renderID]/components/`: Detailed render components including:
   - `renderHeader.tsx`: Action buttons and status flags component
@@ -15,7 +15,7 @@ This folder contains render management pages and components for the Fixtura Admi
   - `TableGameResults.tsx`: Table component for displaying game results
   - `TableGradesInRender.tsx`: Table component for displaying grades in render
   - `TableUpcomingGames.tsx`: Table component for displaying upcoming games
-- `components/`: Shared render components (currently empty)
+- `components/`: Global monitor components (`GlobalRenderRollup`, `AssetRunSnapshotSection`, `GlobalRenderTable`, charts, leaders)
 
 ## Relations
 

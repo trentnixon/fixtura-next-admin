@@ -27,7 +27,14 @@ import {
   PaginationPages,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { ArrowDown, ArrowUp, ArrowUpDown, Search, X } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  ArrowUpDown,
+  Search,
+  X,
+} from "lucide-react";
 import { OrderOverviewRow } from "@/types/orderOverview";
 import {
   formatCurrency,
@@ -40,14 +47,7 @@ interface OrdersOverviewTableProps {
   currency?: string | null;
 }
 
-type SortField =
-  | "account"
-  | "orderLength"
-  | "createdAt"
-  | "updatedAt"
-  | "paidUpIn"
-  | "total"
-  | null;
+type SortField = "account" | "orderLength" | "updatedAt" | "total" | null;
 type SortDirection = "asc" | "desc" | null;
 
 const DEFAULT_CURRENCY = "AUD";
@@ -61,7 +61,6 @@ import {
 } from "../utils/badgeHelpers";
 import {
   calculateOrderLengthDays,
-  calculateElapsedMs,
   formatElapsedTime,
   formatOrderLength,
 } from "../utils/dateHelpers";
@@ -122,7 +121,9 @@ export function OrdersOverviewTable({
 
       const matchesEndingSoon =
         endingSoonFilter === "all" ||
-        (endingSoonFilter === "yes" ? order.isExpiringSoon : !order.isExpiringSoon);
+        (endingSoonFilter === "yes"
+          ? order.isExpiringSoon
+          : !order.isExpiringSoon);
 
       return (
         matchesSearch &&
@@ -164,21 +165,9 @@ export function OrdersOverviewTable({
           compareValue = aValue - bValue;
           break;
         }
-        case "createdAt": {
-          const aValue = new Date(a.createdAt).getTime();
-          const bValue = new Date(b.createdAt).getTime();
-          compareValue = aValue - bValue;
-          break;
-        }
         case "updatedAt": {
           const aValue = new Date(a.updatedAt).getTime();
           const bValue = new Date(b.updatedAt).getTime();
-          compareValue = aValue - bValue;
-          break;
-        }
-        case "paidUpIn": {
-          const aValue = calculateElapsedMs(a.createdAt, a.updatedAt) ?? -1;
-          const bValue = calculateElapsedMs(b.createdAt, b.updatedAt) ?? -1;
           compareValue = aValue - bValue;
           break;
         }
@@ -261,7 +250,7 @@ export function OrdersOverviewTable({
     <div className="space-y-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-base font-semibold">Orders</h3>
+          <h3 className="text-base font-semibold text-slate-900">Orders</h3>
           <p className="text-sm text-muted-foreground">
             Showing {formatNumber(paginatedOrders.length)} of{" "}
             {formatNumber(sortedOrders.length)} results
@@ -276,7 +265,7 @@ export function OrdersOverviewTable({
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search by account or payment status…"
+            placeholder="Search by account, order, or payment status..."
             value={searchQuery}
             onChange={(event) => {
               setSearchQuery(event.target.value);
@@ -363,10 +352,10 @@ export function OrdersOverviewTable({
       </div>
 
       <div className="overflow-x-auto rounded-md border">
-        <Table>
+        <Table className="min-w-[920px]">
           <TableHeader>
-            <TableRow>
-              <TableHead>
+            <TableRow className="bg-slate-50 hover:bg-slate-50">
+              <TableHead className="min-w-[260px]">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -377,11 +366,10 @@ export function OrdersOverviewTable({
                   {getSortIcon("account")}
                 </Button>
               </TableHead>
-              <TableHead className="text-center">Payment Status</TableHead>
-              <TableHead className="text-center">Payment Channel</TableHead>
-              <TableHead className="text-center">Active</TableHead>
-              <TableHead className="text-center">Ending Soon</TableHead>
-              <TableHead className="text-right">
+              <TableHead>Payment</TableHead>
+              <TableHead>Channel</TableHead>
+              <TableHead>Activity</TableHead>
+              <TableHead>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -396,33 +384,11 @@ export function OrdersOverviewTable({
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleSort("createdAt")}
-                  className="h-auto p-0 font-semibold hover:bg-transparent"
-                >
-                  Created
-                  {getSortIcon("createdAt")}
-                </Button>
-              </TableHead>
-              <TableHead className="text-right">
-                <Button
-                  variant="ghost"
-                  size="sm"
                   onClick={() => handleSort("updatedAt")}
-                  className="h-auto p-0 font-semibold hover:bg-transparent"
+                  className="h-auto w-full justify-end p-0 font-semibold hover:bg-transparent"
                 >
                   Updated
                   {getSortIcon("updatedAt")}
-                </Button>
-              </TableHead>
-              <TableHead className="text-right">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleSort("paidUpIn")}
-                  className="h-auto w-full justify-end p-0 font-semibold hover:bg-transparent"
-                >
-                  Paid up in
-                  {getSortIcon("paidUpIn")}
                 </Button>
               </TableHead>
               <TableHead className="text-right">
@@ -436,14 +402,14 @@ export function OrdersOverviewTable({
                   {getSortIcon("total")}
                 </Button>
               </TableHead>
-              <TableHead className="text-center">View</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {paginatedOrders.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={11}
+                  colSpan={8}
                   className="py-8 text-center text-sm text-muted-foreground"
                 >
                   No orders match your criteria. Try adjusting filters or
@@ -453,8 +419,17 @@ export function OrdersOverviewTable({
             ) : (
               paginatedOrders.map((order) => (
                 <TableRow key={order.id}>
-                  <TableCell>{order.account.name ?? "—"}</TableCell>
-                  <TableCell className="text-center">
+                  <TableCell>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-slate-900">
+                        {order.account.name ?? "Unassigned account"}
+                      </p>
+                      <p className="mt-1 truncate text-xs text-muted-foreground">
+                        {order.name ?? `Order #${order.id}`} / Order #{order.id}
+                      </p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
                     {order.paymentStatus ? (
                       <Badge
                         variant={formatStatusBadgeVariant(order.paymentStatus)}
@@ -463,62 +438,67 @@ export function OrdersOverviewTable({
                         {toTitleCase(order.paymentStatus)}
                       </Badge>
                     ) : (
-                      <span className="text-muted-foreground">—</span>
+                      <span className="text-xs text-muted-foreground">-</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-center">
+                  <TableCell>
                     {order.paymentChannel ? (
                       <Badge
                         variant="outline"
                         className={getPaymentChannelBadgeClassName(
-                          order.paymentChannel
+                          order.paymentChannel,
                         )}
                       >
                         {toTitleCase(order.paymentChannel)}
                       </Badge>
                     ) : (
-                      <span className="text-muted-foreground">—</span>
+                      <span className="text-xs text-muted-foreground">-</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-center">
-                    <Badge
-                      variant={order.isActive ? "primary" : "outline"}
-                      className={getActiveBadgeClassName(order.isActive)}
-                    >
-                      {order.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-center">
-                    <Badge
-                      variant={order.isExpiringSoon ? "default" : "primary"}
-                      className={getEndingSoonBadgeClassName(
-                        order.isExpiringSoon
+                  <TableCell>
+                    <div className="flex flex-wrap gap-1.5">
+                      <Badge
+                        variant={order.isActive ? "primary" : "outline"}
+                        className={getActiveBadgeClassName(order.isActive)}
+                      >
+                        {order.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                      {order.isExpiringSoon && (
+                        <Badge
+                          variant="default"
+                          className={getEndingSoonBadgeClassName(true)}
+                        >
+                          Ending soon
+                        </Badge>
                       )}
-                    >
-                      {order.isExpiringSoon ? "Yes" : "No"}
-                    </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="text-sm text-slate-900">
+                      {formatOrderLength(order.startDate, order.endDate)}
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      Created {formatDate(order.createdAt)}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right text-xs text-muted-foreground">
-                    {formatOrderLength(order.startDate, order.endDate)}
-                  </TableCell>
-                  <TableCell className="text-right text-xs text-muted-foreground">
-                    {formatDate(order.createdAt)}
-                  </TableCell>
-                  <TableCell className="text-right text-xs text-muted-foreground">
-                    {formatDate(order.updatedAt)}
-                  </TableCell>
-                  <TableCell className="text-right text-xs text-muted-foreground">
-                    {formatElapsedTime(order.createdAt, order.updatedAt)}
+                    <div>{formatDate(order.updatedAt)}</div>
+                    <div className="mt-1">
+                      {formatElapsedTime(order.createdAt, order.updatedAt)}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right font-medium">
                     {formatCurrency(
                       centsToUnits(order.totals.amount),
-                      order.totals.currency ?? currencyCode
+                      order.totals.currency ?? currencyCode,
                     )}
                   </TableCell>
-                  <TableCell className="text-center">
-                    <Button variant="accent" size="sm" asChild>
-                      <Link href={`/dashboard/orders/${order.id}`}>View</Link>
+                  <TableCell className="text-right">
+                    <Button variant="primary" size="sm" asChild>
+                      <Link href={`/dashboard/orders/${order.id}`}>
+                        View
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
                     </Button>
                   </TableCell>
                 </TableRow>

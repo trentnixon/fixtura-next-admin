@@ -128,7 +128,7 @@ export function ClubGanttSection({ clubs }: ClubGanttSectionProps) {
 
       // Calculate duration in days for display
       const durationDays = Math.ceil(
-        (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)
+        (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
       );
 
       return {
@@ -157,7 +157,7 @@ export function ClubGanttSection({ clubs }: ClubGanttSectionProps) {
     if (sortByDate) {
       // Sort by start date (current behavior)
       return [...ganttFeatures].sort(
-        (a, b) => a.startAt.getTime() - b.startAt.getTime()
+        (a, b) => a.startAt.getTime() - b.startAt.getTime(),
       );
     } else {
       // Sort alphabetically by name
@@ -197,13 +197,13 @@ export function ClubGanttSection({ clubs }: ClubGanttSectionProps) {
   const stats = useMemo(() => {
     const totalClubs = clubs.length;
     const clubsWithDateRangeObject = clubs.filter(
-      (club) => club.competitionDateRange !== null
+      (club) => club.competitionDateRange !== null,
     ).length;
     const clubsWithValidDates = clubs.filter(
       (club) =>
         club.competitionDateRange &&
         club.competitionDateRange.earliestStartDate &&
-        club.competitionDateRange.latestEndDate
+        club.competitionDateRange.latestEndDate,
     ).length;
     const clubsWithNullDates = clubsWithDateRangeObject - clubsWithValidDates;
     const clubsWithoutDateRanges = totalClubs - clubsWithDateRangeObject;
@@ -297,8 +297,10 @@ export function ClubGanttSection({ clubs }: ClubGanttSectionProps) {
       description={`Gantt chart showing ${ganttFeatures.length} club${
         ganttFeatures.length !== 1 ? "s" : ""
       } with competition date information`}
+      className="min-w-0 overflow-hidden"
+      contentClassName="min-w-0 overflow-hidden"
     >
-      <div className="space-y-4">
+      <div className="min-w-0 space-y-4">
         {/* Statistics Display */}
         <div className="text-xs text-muted-foreground border-b pb-3 -mt-2">
           <p>
@@ -347,8 +349,13 @@ export function ClubGanttSection({ clubs }: ClubGanttSectionProps) {
             />
           </div>
         </div>
-        <div className="h-[700px] md:w-[800px] lg:w-[1000px] xl:w-[1550px] rounded-lg border">
-          <GanttProvider range="monthly" zoom={100}>
+        <div className="h-[min(70vh,700px)] min-h-[420px] w-full min-w-0 max-w-full overflow-hidden rounded-md border border-slate-200">
+          <GanttProvider
+            range="monthly"
+            zoom={100}
+            className="h-full w-full min-w-0 max-w-full overflow-auto"
+            style={{ contain: "layout size" }}
+          >
             <GanttContent
               sortedFeatures={sortedFeatures}
               getWeightColorDynamic={getWeightColorDynamic}
@@ -437,10 +444,10 @@ function GanttContent({
                         <span>
                           {new Date(feature.startAt).toLocaleDateString(
                             "en-AU",
-                            { day: "numeric", month: "short" }
+                            { day: "numeric", month: "short" },
                           )}
                         </span>
-                        <span>→</span>
+                        <span>-</span>
                         <span>
                           {feature.endAt
                             ? new Date(feature.endAt).toLocaleDateString(
@@ -449,7 +456,7 @@ function GanttContent({
                                   day: "numeric",
                                   month: "short",
                                   year: "numeric",
-                                }
+                                },
                               )
                             : "N/A"}
                         </span>

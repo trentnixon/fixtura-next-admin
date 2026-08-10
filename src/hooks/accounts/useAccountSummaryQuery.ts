@@ -2,7 +2,9 @@ import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { AccountSummary } from "@/types/account";
 import { fetchAccountsSummary } from "@/lib/services/accounts/fetchAccountsSummary";
 
-export function useAccountSummaryQuery(): UseQueryResult<
+export function useAccountSummaryQuery(options?: {
+  refetchInterval?: number | false;
+}): UseQueryResult<
   { data: AccountSummary },
   Error
 > {
@@ -11,6 +13,7 @@ export function useAccountSummaryQuery(): UseQueryResult<
     queryFn: () => fetchAccountsSummary(), // Fetch account by ID
     enabled: true, // Only run query if accountId is provided
     retry: 3, // Retry failed requests
+    refetchInterval: options?.refetchInterval,
     retryDelay: attempt => Math.min(1000 * 2 ** attempt, 10000), // Exponential backoff
   });
 }

@@ -83,7 +83,7 @@ export function OrdersOverviewTimeline({
   });
 
   const data = Array.from(timelineMap.values()).sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
   );
 
   const summaryStats: ChartSummaryStat[] = [
@@ -92,8 +92,8 @@ export function OrdersOverviewTimeline({
       label: "Range",
       value:
         timeline.range.start && timeline.range.end
-          ? `${formatDateShort(timeline.range.start)} – ${formatDateShort(
-              timeline.range.end
+          ? `${formatDateShort(timeline.range.start)} - ${formatDateShort(
+              timeline.range.end,
             )}`
           : "Dynamic",
     },
@@ -107,7 +107,7 @@ export function OrdersOverviewTimeline({
       label: "Revenue",
       value: formatCurrency(
         centsToUnits(timeline.totals.revenueCollected),
-        currencyCode
+        currencyCode,
       ),
     },
   ];

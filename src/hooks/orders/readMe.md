@@ -8,6 +8,9 @@ React Query hooks for the orders domain. Provides client-side access to admin or
 - `useAdminOrderDetail.ts`: Fetches detailed order information for a single order, including payment, schedule, account, and customer data.
 - `useAdminOrderUpdate.ts`: Mutation hook for updating an admin order with automatic cache invalidation.
 - `useAdminCreateInvoice.ts`: Mutation hook for creating a manual invoice order with automatic cache invalidation. Independent of Stripe integration.
+- `useAdminInvoices.ts`: List query for invoice workspace queue.
+- `useAdminInvoiceDetail.ts`: Detail query for combined invoice aggregate.
+- `useAdminInvoiceUpdate.ts`: PATCH mutation with detail cache update, list invalidation, `retry: false`.
 
 ## Relations
 

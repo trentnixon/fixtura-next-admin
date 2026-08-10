@@ -113,6 +113,10 @@ export function getCheckoutBadgeClassName(
     return "rounded-full bg-emerald-500 text-white border-0";
   }
 
+  if (normalized === "invoice_issued") {
+    return "rounded-full bg-amber-500 text-white border-0";
+  }
+
   if (
     [
       "incomplete",

@@ -7,15 +7,39 @@ import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import EmptyState from "@/components/ui-library/states/EmptyState";
 import { formatPercentage } from "@/utils/chart-formatters";
-import StatCard from "@/components/ui-library/metrics/StatCard";
 import ChartCard from "@/components/modules/charts/ChartCard";
 import { Users, TrendingUp, Clock, BarChart3, Target } from "lucide-react";
 import type { ChartConfig } from "@/components/ui/chart";
 
+function MetricStrip({
+  items,
+}: {
+  items: { label: string; value: string | number; meta: string }[];
+}) {
+  return (
+    <div className="grid overflow-hidden rounded-md border bg-white md:grid-cols-3">
+      {items.map((item) => (
+        <div
+          key={item.label}
+          className="border-b px-4 py-3 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0"
+        >
+          <div className="text-xs font-medium uppercase tracking-normal text-muted-foreground">
+            {item.label}
+          </div>
+          <div className="mt-1 text-xl font-semibold text-slate-900">
+            {item.value}
+          </div>
+          <div className="mt-1 text-xs text-muted-foreground">{item.meta}</div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 /**
  * TrialConversionWidget Component
  *
- * Displays trial conversion funnels showing progress through different stages.
+ * Displays trial conversion funnel and compact trial performance metrics.
  */
 export function TrialConversionWidget() {
   const { data, isLoading, error, refetch } = useTrialAnalytics();
@@ -23,7 +47,7 @@ export function TrialConversionWidget() {
   if (isLoading) {
     return (
       <LoadingState variant="skeleton">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid gap-4 md:grid-cols-3">
           {[...Array(4)].map((_, i) => (
             <Card key={i}>
               <CardHeader>
@@ -67,38 +91,30 @@ export function TrialConversionWidget() {
     analytics.conversionRatesByAccountType?.overallConversionRate || 0;
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <StatCard
-        title="Total Trials"
-        value={funnel?.totalTrials || 0}
-        icon={<Users className="h-5 w-5" />}
-        description={`${
-          analytics.trialStartEndPatterns?.activeTrials || 0
-        } active`}
-        variant="primary"
-      />
-
-      <StatCard
-        title="Converted Trials"
-        value={funnel?.convertedTrials || 0}
-        icon={<TrendingUp className="h-5 w-5" />}
-        description={`${formatPercentage(conversionRate)} conversion`}
-        variant="accent"
-      />
-
-      <StatCard
-        title="Average Duration"
-        value={`${analytics.trialDurationAnalysis?.averageDuration || 0} days`}
-        icon={<Clock className="h-5 w-5" />}
-        description={`${
-          analytics.trialDurationAnalysis?.optimalDuration || 0
-        } optimal`}
-        variant="secondary"
+    <div className="space-y-6">
+      <MetricStrip
+        items={[
+          {
+            label: "Total Trials",
+            value: funnel?.totalTrials || 0,
+            meta: `${analytics.trialStartEndPatterns?.activeTrials || 0} active`,
+          },
+          {
+            label: "Converted",
+            value: funnel?.convertedTrials || 0,
+            meta: `${formatPercentage(conversionRate)} conversion`,
+          },
+          {
+            label: "Average Duration",
+            value: `${analytics.trialDurationAnalysis?.averageDuration || 0} days`,
+            meta: `${analytics.trialDurationAnalysis?.optimalDuration || 0} optimal`,
+          },
+        ]}
       />
 
       <ChartCard
         title="Conversion Funnel"
-        description="Trial progression through stages"
+        description="Trial progression through stages."
         icon={Target}
         chartConfig={
           {
@@ -122,21 +138,22 @@ export function TrialConversionWidget() {
             value: formatPercentage(conversionRate),
           },
         ]}
-        variant="elevated"
         chartClassName="h-auto"
       >
-        <div className="space-y-2 pt-4">
+        <div className="space-y-3 pt-2">
           {funnel?.funnelStages?.map((stage) => (
             <div key={stage.stage} className="space-y-1">
-              <div className="flex items-center justify-between text-sm">
-                <span className="font-medium">{stage.stage}</span>
-                <span className="text-muted-foreground">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="font-medium text-slate-900">
+                  {stage.stage}
+                </span>
+                <span className="text-xs text-muted-foreground">
                   {stage.count} ({formatPercentage(stage.percentage, 1)})
                 </span>
               </div>
-              <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
                 <div
-                  className="bg-primary h-full transition-all"
+                  className="h-full bg-primary transition-all"
                   style={{ width: `${stage.percentage}%` }}
                 />
               </div>

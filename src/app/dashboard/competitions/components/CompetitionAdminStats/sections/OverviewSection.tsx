@@ -1,169 +1,171 @@
+import type { ReactNode } from "react";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
-import MetricGrid from "@/components/ui-library/metrics/MetricGrid";
-import StatCard from "@/components/ui-library/metrics/StatCard";
-import { Activity, CalendarDays, Clock, Trophy } from "lucide-react";
-
+import { Badge } from "@/components/ui/badge";
 import { CompetitionAdminStatsResponse } from "@/types/competitionAdminStats";
-import { ReactNode } from "react";
-import { formatDuration, formatNumber } from "../helpers";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+  Activity,
+  CalendarDays,
+  CalendarRange,
+  Clock,
+  Trophy,
+} from "lucide-react";
+import { formatDuration, formatNumber } from "../helpers";
 
 interface OverviewSectionProps {
   summary: CompetitionAdminStatsResponse["summary"];
-  filters: ReactNode;
   competitions: CompetitionAdminStatsResponse["tables"]["available"];
 }
 
-function getUpcomingCompetitions(
-  competitions: CompetitionAdminStatsResponse["tables"]["available"]
+function getUpcomingCount(
+  competitions: CompetitionAdminStatsResponse["tables"]["available"],
 ) {
   const now = Date.now();
   const thirtyDaysFromNow = now + 30 * 24 * 60 * 60 * 1000;
 
-  return competitions
-    .filter((competition) => {
-      if (!competition.startDate) {
-        return false;
-      }
-      const start = new Date(competition.startDate);
-      if (Number.isNaN(start.getTime())) {
-        return false;
-      }
-      const time = start.getTime();
-      return time > now && time <= thirtyDaysFromNow;
-    })
-    .sort((a, b) => {
-      const sportA = (a.sport ?? "").toLowerCase();
-      const sportB = (b.sport ?? "").toLowerCase();
+  return competitions.filter((competition) => {
+    if (!competition.startDate) {
+      return false;
+    }
 
-      if (sportA !== sportB) {
-        if (sportA === "") return 1;
-        if (sportB === "") return -1;
-        return sportA.localeCompare(sportB);
-      }
-
-      const dateA = new Date(a.startDate ?? 0).getTime();
-      const dateB = new Date(b.startDate ?? 0).getTime();
-      return dateA - dateB;
-    });
+    const start = new Date(competition.startDate).getTime();
+    return !Number.isNaN(start) && start > now && start <= thirtyDaysFromNow;
+  }).length;
 }
 
 export function OverviewSection({
   summary,
-  filters,
   competitions,
 }: OverviewSectionProps) {
+  const upcomingCount = getUpcomingCount(competitions);
+
   return (
     <SectionContainer
-      title="Competition Overview"
-      description="Summary statistics for competitions currently visible through the CMS admin endpoint."
-      action={filters}
+      title="Competition Snapshot"
+      description="Current scope, status, and timing coverage for the active filters."
+      action={
+        <Badge variant="outline" className="w-fit bg-slate-50">
+          CMS stats
+        </Badge>
+      }
+      contentClassName="p-0"
     >
-      <MetricGrid columns={4} gap="lg">
-        <StatCard
-          title="Total Competitions"
+      <div className="grid overflow-hidden bg-white sm:grid-cols-2 xl:grid-cols-4">
+        <SnapshotMetric
+          title="Competitions"
           value={formatNumber(summary.totals.competitions)}
-          description={`${formatNumber(
-            summary.totals.active
-          )} active • ${formatNumber(summary.totals.inactive)} inactive`}
-          icon={<Activity className="h-5 w-5" />}
-          variant="primary"
+          detail={`${formatNumber(summary.totals.active)} active`}
+          supporting={`${formatNumber(summary.totals.inactive)} inactive`}
+          detailLabel="status"
+          supportingLabel="status"
+          icon={<Activity className="h-4 w-4" />}
+          tone="blue"
         />
-        <StatCard
+        <SnapshotMetric
           title="Started"
           value={formatNumber(summary.timing.started)}
-          description={`${formatNumber(summary.timing.upcoming)} upcoming`}
-          icon={<Clock className="h-5 w-5" />}
-          variant="accent"
+          detail={`${formatNumber(summary.timing.upcoming)} upcoming`}
+          supporting={`${formatNumber(upcomingCount)} next 30 days`}
+          detailLabel="schedule"
+          supportingLabel="near term"
+          icon={<Clock className="h-4 w-4" />}
+          tone="emerald"
         />
-        <StatCard
-          title="No Start Date"
+        <SnapshotMetric
+          title="Missing Dates"
           value={formatNumber(summary.timing.withoutStartDate)}
-          description="Competitions awaiting kickoff scheduling"
-          icon={<CalendarDays className="h-5 w-5" />}
-          variant="secondary"
+          detail="No start date"
+          supporting={`${formatNumber(summary.timing.started)} dated`}
+          detailLabel="gap"
+          supportingLabel="coverage"
+          icon={<CalendarDays className="h-4 w-4" />}
+          tone="amber"
         />
-        <StatCard
-          title="Average Duration"
+        <SnapshotMetric
+          title="Duration"
           value={formatDuration(summary.duration.averageDays)}
-          description={`Shortest: ${formatDuration(
-            summary.duration.shortestDays
-          )} • Longest: ${formatDuration(summary.duration.longestDays)}`}
-          icon={<Trophy className="h-5 w-5" />}
-          variant="light"
+          detail={`${formatDuration(summary.duration.shortestDays)} shortest`}
+          supporting={`${formatDuration(summary.duration.longestDays)} longest`}
+          detailLabel="average"
+          supportingLabel="range"
+          icon={<Trophy className="h-4 w-4" />}
+          tone="slate"
         />
-      </MetricGrid>
-      <div className="mt-8 space-y-3">
-        <div className="flex items-center justify-between">
-          <h4 className="text-base font-semibold text-slate-900">
-            Upcoming Competitions
-          </h4>
-          <span className="text-sm text-muted-foreground">
-            Showing next 5 start dates
+      </div>
+
+      <div className="flex flex-col gap-2 border-t border-slate-200 bg-slate-50 px-4 py-3 text-sm sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2 text-xs text-slate-600">
+          <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1">
+            {formatNumber(summary.totals.competitions)} competitions
+          </span>
+          <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1">
+            {formatNumber(summary.timing.upcoming)} upcoming
+          </span>
+          <span className="rounded-md border border-slate-200 bg-white px-2.5 py-1">
+            {formatNumber(summary.timing.withoutStartDate)} missing dates
           </span>
         </div>
-
-        <div className="overflow-x-auto border border-slate-200 rounded-xl">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="min-w-[220px]">Competition</TableHead>
-                <TableHead className="min-w-[160px]">Association</TableHead>
-                <TableHead className="min-w-[160px]">Sport</TableHead>
-                <TableHead className="text-right">Start Date</TableHead>
-                <TableHead className="text-right">Grades</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {getUpcomingCompetitions(competitions).map((competition) => {
-                const start = competition.startDate
-                  ? new Date(competition.startDate)
-                  : null;
-                return (
-                  <TableRow key={competition.id}>
-                    <TableCell className="font-medium">
-                      {competition.name}
-                    </TableCell>
-                    <TableCell>{competition.associationName ?? "—"}</TableCell>
-                    <TableCell>{competition.sport ?? "—"}</TableCell>
-                    <TableCell className="text-right">
-                      {start
-                        ? start.toLocaleDateString("en-AU", {
-                            day: "numeric",
-                            month: "long",
-                            year: "numeric",
-                          })
-                        : "—"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatNumber(competition.gradeCount)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button asChild size="sm" variant="accent">
-                        <Link
-                          href={`/dashboard/competitions/${competition.id}`}
-                        >
-                          View
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </div>
+        <span className="flex items-center gap-1 text-xs font-medium text-slate-500">
+          <CalendarRange className="h-3.5 w-3.5" />
+          Next 30 days: {formatNumber(upcomingCount)}
+        </span>
       </div>
     </SectionContainer>
+  );
+}
+
+function SnapshotMetric({
+  title,
+  value,
+  detail,
+  supporting,
+  detailLabel,
+  supportingLabel,
+  icon,
+  tone,
+}: {
+  title: string;
+  value: string;
+  detail: string;
+  supporting: string;
+  detailLabel: string;
+  supportingLabel: string;
+  icon: ReactNode;
+  tone: "blue" | "emerald" | "amber" | "slate";
+}) {
+  const toneClassNames = {
+    blue: "bg-blue-50 text-blue-700",
+    emerald: "bg-emerald-50 text-emerald-700",
+    amber: "bg-amber-50 text-amber-700",
+    slate: "bg-slate-100 text-slate-600",
+  };
+
+  return (
+    <div className="min-w-0 border-b border-slate-200 px-4 py-4 last:border-b-0 sm:[&:nth-child(odd)]:border-r xl:border-b-0 xl:border-r xl:last:border-r-0">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="truncate text-xs font-medium uppercase text-slate-500">
+            {title}
+          </p>
+          <p className="mt-1 text-2xl font-semibold leading-none text-slate-950">
+            {value}
+          </p>
+        </div>
+        <div
+          className={`flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-md ${toneClassNames[tone]}`}
+        >
+          {icon}
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="rounded-md bg-slate-50 px-2.5 py-2">
+          <div className="font-semibold text-slate-800">{detail}</div>
+          <div className="mt-0.5 text-slate-500">{detailLabel}</div>
+        </div>
+        <div className="rounded-md bg-slate-50 px-2.5 py-2">
+          <div className="font-semibold text-slate-800">{supporting}</div>
+          <div className="mt-0.5 text-slate-500">{supportingLabel}</div>
+        </div>
+      </div>
+    </div>
   );
 }

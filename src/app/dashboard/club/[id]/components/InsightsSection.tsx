@@ -1,19 +1,7 @@
 "use client";
 
 import { ClubInsights } from "@/types/clubAdminDetail";
-import {
-  BarChart3,
-  TrendingUp,
-  CalendarClock,
-  Activity,
-} from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Activity, BarChart3, CalendarClock, TrendingUp } from "lucide-react";
 import {
   ChartTooltip,
   ChartTooltipContent,
@@ -21,15 +9,16 @@ import {
 } from "@/components/ui/chart";
 import ChartCard from "@/components/modules/charts/ChartCard";
 import {
-  BarChart,
+  Area,
   Bar,
+  BarChart,
   CartesianGrid,
+  ComposedChart,
+  Line,
+  LineChart,
+  ResponsiveContainer,
   XAxis,
   YAxis,
-  LineChart,
-  Line,
-  ComposedChart,
-  Area,
 } from "recharts";
 import EmptyState from "@/components/ui-library/states/EmptyState";
 
@@ -104,7 +93,7 @@ export default function InsightsSection({ insights }: InsightsSectionProps) {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-6 lg:grid-cols-3">
       {hasTimeline && (
         <ChartCard
           title="Competition Timeline"
@@ -113,49 +102,51 @@ export default function InsightsSection({ insights }: InsightsSectionProps) {
           chartConfig={timelineConfig}
           chartClassName="h-64"
         >
-          <ComposedChart data={insights.competitionTimeline}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              tickMargin={8}
-              axisLine={false}
-              minTickGap={32}
-              tickFormatter={(value) => {
-                const date = new Date(value);
-                return date.toLocaleDateString("en-US", {
-                  month: "short",
-                  year: "2-digit",
-                });
-              }}
-            />
-            <YAxis tickLine={false} axisLine={false} />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="dashed" />}
-            />
-            <Area
-              dataKey="competitions"
-              type="step"
-              fill="var(--color-competitions)"
-              fillOpacity={0.4}
-              stroke="var(--color-competitions)"
-            />
-            <Bar
-              dataKey="starting"
-              stackId="events"
-              fill="var(--color-starting)"
-              radius={[4, 4, 0, 0]}
-              barSize={4}
-            />
-            <Bar
-              dataKey="ending"
-              stackId="events"
-              fill="var(--color-ending)"
-              radius={[4, 4, 0, 0]}
-              barSize={4}
-            />
-          </ComposedChart>
+          <ResponsiveContainer width="100%" height={260}>
+            <ComposedChart data={insights.competitionTimeline}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                tickMargin={8}
+                axisLine={false}
+                minTickGap={32}
+                tickFormatter={(value) => {
+                  const date = new Date(value);
+                  return date.toLocaleDateString("en-AU", {
+                    month: "short",
+                    year: "2-digit",
+                  });
+                }}
+              />
+              <YAxis tickLine={false} axisLine={false} />
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent indicator="dashed" />}
+              />
+              <Area
+                dataKey="competitions"
+                type="step"
+                fill="var(--color-competitions)"
+                fillOpacity={0.4}
+                stroke="var(--color-competitions)"
+              />
+              <Bar
+                dataKey="starting"
+                stackId="events"
+                fill="var(--color-starting)"
+                radius={[4, 4, 0, 0]}
+                barSize={4}
+              />
+              <Bar
+                dataKey="ending"
+                stackId="events"
+                fill="var(--color-ending)"
+                radius={[4, 4, 0, 0]}
+                barSize={4}
+              />
+            </ComposedChart>
+          </ResponsiveContainer>
         </ChartCard>
       )}
 
@@ -167,36 +158,38 @@ export default function InsightsSection({ insights }: InsightsSectionProps) {
           chartConfig={activityConfig}
           chartClassName="h-64"
         >
-          <BarChart data={insights.activityPatterns.byMonth}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="month"
-              tickLine={false}
-              tickMargin={8}
-              axisLine={false}
-              minTickGap={24}
-            />
-            <YAxis tickLine={false} axisLine={false} />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="dashed" />}
-            />
-            <Bar
-              dataKey="competitionsActive"
-              fill="var(--color-competitionsActive)"
-              radius={[4, 4, 0, 0]}
-            />
-            <Bar
-              dataKey="competitionsStarted"
-              fill="var(--color-competitionsStarted)"
-              radius={[4, 4, 0, 0]}
-            />
-            <Bar
-              dataKey="competitionsEnded"
-              fill="var(--color-competitionsEnded)"
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={insights.activityPatterns.byMonth}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="month"
+                tickLine={false}
+                tickMargin={8}
+                axisLine={false}
+                minTickGap={24}
+              />
+              <YAxis tickLine={false} axisLine={false} />
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent indicator="dashed" />}
+              />
+              <Bar
+                dataKey="competitionsActive"
+                fill="var(--color-competitionsActive)"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                dataKey="competitionsStarted"
+                fill="var(--color-competitionsStarted)"
+                radius={[4, 4, 0, 0]}
+              />
+              <Bar
+                dataKey="competitionsEnded"
+                fill="var(--color-competitionsEnded)"
+                radius={[4, 4, 0, 0]}
+              />
+            </BarChart>
+          </ResponsiveContainer>
         </ChartCard>
       )}
 
@@ -208,140 +201,135 @@ export default function InsightsSection({ insights }: InsightsSectionProps) {
           chartConfig={growthConfig}
           chartClassName="h-64"
         >
-          <LineChart
-            data={mergeGrowthSeries(
-              insights.growthTrends.competitionsOverTime,
-              insights.growthTrends.teamsOverTime
-            )}
-          >
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="year"
-              tickLine={false}
-              tickMargin={8}
-              axisLine={false}
-            />
-            <YAxis tickLine={false} axisLine={false} />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="line" />}
-            />
-            <Line
-              type="monotone"
-              dataKey="competitions"
-              stroke="var(--color-competitions)"
-              strokeWidth={2}
-              dot={false}
-            />
-            <Line
-              type="monotone"
-              dataKey="teams"
-              stroke="var(--color-teams)"
-              strokeWidth={2}
-              dot={false}
-            />
-          </LineChart>
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart
+              data={mergeGrowthSeries(
+                insights.growthTrends.competitionsOverTime,
+                insights.growthTrends.teamsOverTime,
+              )}
+            >
+              <CartesianGrid strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="year"
+                tickLine={false}
+                tickMargin={8}
+                axisLine={false}
+              />
+              <YAxis tickLine={false} axisLine={false} />
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent indicator="line" />}
+              />
+              <Line
+                type="monotone"
+                dataKey="competitions"
+                stroke="var(--color-competitions)"
+                strokeWidth={2}
+                dot={false}
+              />
+              <Line
+                type="monotone"
+                dataKey="teams"
+                stroke="var(--color-teams)"
+                strokeWidth={2}
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </ChartCard>
       )}
 
       {hasStartDates && (
-        <Card className="shadow-none bg-slate-50 border rounded-md">
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <CalendarClock className="h-5 w-5 text-muted-foreground" />
-              <CardTitle className="text-lg font-semibold">
-                Competition Start Dates
-              </CardTitle>
-            </div>
-            <CardDescription>
-              Upcoming and recent competition starts for this club.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-2">
-            <div>
-              <h4 className="text-sm font-semibold mb-2">Upcoming</h4>
-              <ul className="space-y-2 text-sm">
-                {insights.competitionStartDates.upcoming.slice(0, 5).map(
-                  (item) => (
-                    <li
-                      key={`upcoming-${item.competitionId}-${item.startDate}`}
-                      className="flex flex-col"
-                    >
-                      <span className="font-medium">
-                        {item.competitionName}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {item.daysUntilStart} days until start
-                        {item.association
-                          ? ` • ${item.association.name}`
-                          : ""}
-                      </span>
-                    </li>
-                  )
-                )}
-                {insights.competitionStartDates.upcoming.length === 0 && (
-                  <li className="text-xs text-muted-foreground">
-                    No upcoming competitions.
-                  </li>
-                )}
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-sm font-semibold mb-2">Recent</h4>
-              <ul className="space-y-2 text-sm">
-                {insights.competitionStartDates.recent.slice(0, 5).map(
-                  (item) => (
-                    <li
-                      key={`recent-${item.competitionId}-${item.startDate}`}
-                      className="flex flex-col"
-                    >
-                      <span className="font-medium">
-                        {item.competitionName}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        Started {item.daysSinceStart} days ago
-                        {item.association
-                          ? ` • ${item.association.name}`
-                          : ""}
-                      </span>
-                    </li>
-                  )
-                )}
-                {insights.competitionStartDates.recent.length === 0 && (
-                  <li className="text-xs text-muted-foreground">
-                    No recent competition starts.
-                  </li>
-                )}
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
+        <ChartCard
+          title="Competition Start Dates"
+          description="Upcoming and recent competition starts for this club."
+          icon={CalendarClock}
+          chartConfig={{}}
+          chartClassName="h-auto"
+        >
+          <div className="grid gap-4 md:grid-cols-2">
+            <CompetitionDateList
+              title="Upcoming"
+              emptyLabel="No upcoming competitions."
+              items={insights.competitionStartDates.upcoming
+                .slice(0, 5)
+                .map((item) => ({
+                  key: `upcoming-${item.competitionId}-${item.startDate}`,
+                  name: item.competitionName,
+                  detail: `${item.daysUntilStart} days until start${
+                    item.association ? ` - ${item.association.name}` : ""
+                  }`,
+                }))}
+            />
+            <CompetitionDateList
+              title="Recent"
+              emptyLabel="No recent competition starts."
+              items={insights.competitionStartDates.recent
+                .slice(0, 5)
+                .map((item) => ({
+                  key: `recent-${item.competitionId}-${item.startDate}`,
+                  name: item.competitionName,
+                  detail: `Started ${item.daysSinceStart} days ago${
+                    item.association ? ` - ${item.association.name}` : ""
+                  }`,
+                }))}
+            />
+          </div>
+        </ChartCard>
       )}
+    </div>
+  );
+}
+
+function CompetitionDateList({
+  title,
+  emptyLabel,
+  items,
+}: {
+  title: string;
+  emptyLabel: string;
+  items: { key: string; name: string; detail: string }[];
+}) {
+  return (
+    <div>
+      <h4 className="mb-2 text-sm font-semibold">{title}</h4>
+      <ul className="space-y-2 text-sm">
+        {items.map((item) => (
+          <li key={item.key} className="flex flex-col">
+            <span className="font-medium">{item.name}</span>
+            <span className="text-xs text-muted-foreground">{item.detail}</span>
+          </li>
+        ))}
+        {items.length === 0 && (
+          <li className="text-xs text-muted-foreground">{emptyLabel}</li>
+        )}
+      </ul>
     </div>
   );
 }
 
 function mergeGrowthSeries(
   competitions: { year: number; count: number }[],
-  teams: { year: number; count: number }[]
+  teams: { year: number; count: number }[],
 ) {
   const byYear = new Map<
     number,
     { year: number; competitions?: number; teams?: number }
   >();
 
-  for (const c of competitions ?? []) {
-    const existing = byYear.get(c.year) ?? { year: c.year };
-    existing.competitions = c.count;
-    byYear.set(c.year, existing);
+  for (const competition of competitions ?? []) {
+    const existing = byYear.get(competition.year) ?? {
+      year: competition.year,
+    };
+    existing.competitions = competition.count;
+    byYear.set(competition.year, existing);
   }
 
-  for (const t of teams ?? []) {
-    const existing = byYear.get(t.year) ?? { year: t.year };
-    existing.teams = t.count;
-    byYear.set(t.year, existing);
+  for (const team of teams ?? []) {
+    const existing = byYear.get(team.year) ?? { year: team.year };
+    existing.teams = team.count;
+    byYear.set(team.year, existing);
   }
 
   return Array.from(byYear.values()).sort((a, b) => a.year - b.year);
 }
-

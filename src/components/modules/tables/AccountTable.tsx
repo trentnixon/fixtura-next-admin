@@ -1,28 +1,29 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Button } from "@/components/ui/button";
+import { useMemo, useState } from "react";
+import SafeImage from "@/components/ui-library/media/SafeImage";
+import { isUsableImageSrc } from "@/lib/utils/imageSrc";
+import { usePathname, useRouter } from "next/navigation";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { AccountLookupItem } from "@/types/adminAccountLookup";
-import {
+  ArrowDown,
+  ArrowRight,
+  ArrowUp,
+  ArrowUpDown,
+  ImageIcon,
   Search,
   X,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  ImageIcon,
 } from "lucide-react";
-import { SubscriptionBadge } from "./SubscriptionBadge";
-import Image from "next/image";
-import { useRouter, usePathname } from "next/navigation";
+import { AccountLookupItem } from "@/types/adminAccountLookup";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Pagination,
+  PaginationInfo,
+  PaginationNext,
+  PaginationPages,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   Select,
   SelectContent,
@@ -31,27 +32,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
-  Pagination,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationPages,
-  PaginationInfo,
-} from "@/components/ui/pagination";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import EmptyState from "@/components/ui-library/states/EmptyState";
+import { SubscriptionBadge } from "./SubscriptionBadge";
 
 interface AccountsTableProps {
   accounts: AccountLookupItem[];
   emptyMessage: string;
 }
 
-type SortField = "firstName" | "sport" | "email" | "subscription" | null;
+type SortField = "firstName" | "sport" | "subscription" | null;
 type SortDirection = "asc" | "desc" | null;
 
 export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
   const router = useRouter();
   const pathname = usePathname();
 
-  // State for search, filters, sorting, and pagination
   const [searchQuery, setSearchQuery] = useState("");
   const [sportFilter, setSportFilter] = useState<string>("all");
   const [clubFilter, setClubFilter] = useState<string>("all");
@@ -61,62 +63,51 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
-  // Get unique sports for filter dropdown
+  const isAssociationRoute = pathname.split("/").pop() === "association";
+  const accountType = isAssociationRoute ? "association" : "club";
+
   const uniqueSports = useMemo(() => {
     const sports = new Set<string>();
     accounts.forEach((account) => {
-      if (account.Sport) {
-        sports.add(account.Sport);
-      }
+      if (account.Sport) sports.add(account.Sport);
     });
     return Array.from(sports).sort();
   }, [accounts]);
 
-  // Get unique clubs for filter dropdown
   const uniqueClubs = useMemo(() => {
     const clubs = new Set<string>();
     accounts.forEach((account) => {
       account.clubs.forEach((club) => {
-        if (club.name) {
-          clubs.add(club.name);
-        }
+        if (club.name) clubs.add(club.name);
       });
     });
     return Array.from(clubs).sort();
   }, [accounts]);
 
-  // Get unique associations for filter dropdown
   const uniqueAssociations = useMemo(() => {
     const associations = new Set<string>();
     accounts.forEach((account) => {
-      account.associations.forEach((assoc) => {
-        if (assoc.name) {
-          associations.add(assoc.name);
-        }
+      account.associations.forEach((association) => {
+        if (association.name) associations.add(association.name);
       });
     });
     return Array.from(associations).sort();
   }, [accounts]);
 
-  // Filter data
   const filteredData = useMemo(() => {
     return accounts.filter((account) => {
       const id = account.id.toString();
       const firstName = account.FirstName?.toLowerCase() || "";
       const sport = account.Sport?.toLowerCase() || "";
       const email = account.email?.toLowerCase() || "";
-
-      // Get club names
       const clubNames = account.clubs
         .map((club) => club.name?.toLowerCase() || "")
         .join(" ");
-
-      // Get association names
       const associationNames = account.associations
-        .map((assoc) => assoc.name?.toLowerCase() || "")
+        .map((association) => association.name?.toLowerCase() || "")
         .join(" ");
-
       const searchLower = searchQuery.toLowerCase();
+
       const matchesSearch =
         searchQuery === "" ||
         id.includes(searchLower) ||
@@ -128,26 +119,25 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
 
       const matchesSport =
         sportFilter === "all" || account.Sport === sportFilter;
-
       const matchesClub =
         clubFilter === "all" ||
         account.clubs.some((club) => club.name === clubFilter);
-
       const matchesAssociation =
         associationFilter === "all" ||
-        account.associations.some((assoc) => assoc.name === associationFilter);
+        account.associations.some(
+          (association) => association.name === associationFilter,
+        );
 
       return matchesSearch && matchesSport && matchesClub && matchesAssociation;
     });
-  }, [accounts, searchQuery, sportFilter, clubFilter, associationFilter]);
+  }, [accounts, associationFilter, clubFilter, searchQuery, sportFilter]);
 
-  // Sort data
   const sortedData = useMemo(() => {
     return [...filteredData].sort((a, b) => {
       if (!sortField || !sortDirection) return 0;
 
-      let aValue: string | number | boolean;
-      let bValue: string | number | boolean;
+      let aValue: string | number;
+      let bValue: string | number;
 
       switch (sortField) {
         case "firstName":
@@ -158,55 +148,34 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
           aValue = (a.Sport || "").toLowerCase();
           bValue = (b.Sport || "").toLowerCase();
           break;
-        case "email":
-          aValue = (a.email || "").toLowerCase();
-          bValue = (b.email || "").toLowerCase();
-          break;
         case "subscription":
-          // Sort by hasActiveOrder first, then by daysLeftOnSubscription
           if (a.hasActiveOrder !== b.hasActiveOrder) {
-            aValue = a.hasActiveOrder ? 1 : 0;
-            bValue = b.hasActiveOrder ? 1 : 0;
-            // For subscription sorting, we want active subscriptions first
-            // So we need to handle this differently in the comparison
-            if (sortDirection === "asc") {
-              return a.hasActiveOrder ? -1 : 1;
-            } else {
-              return a.hasActiveOrder ? 1 : -1;
-            }
-          } else {
-            // Both have same active status, sort by days left
-            aValue = a.daysLeftOnSubscription ?? -1;
-            bValue = b.daysLeftOnSubscription ?? -1;
+            return sortDirection === "asc"
+              ? a.hasActiveOrder
+                ? -1
+                : 1
+              : a.hasActiveOrder
+                ? 1
+                : -1;
           }
+          aValue = a.daysLeftOnSubscription ?? -1;
+          bValue = b.daysLeftOnSubscription ?? -1;
           break;
         default:
           return 0;
       }
 
-      if (typeof aValue === "string" && typeof bValue === "string") {
-        if (sortDirection === "asc") {
-          return aValue > bValue ? 1 : -1;
-        } else {
-          return aValue < bValue ? 1 : -1;
-        }
-      } else {
-        if (sortDirection === "asc") {
-          return aValue > bValue ? 1 : -1;
-        } else {
-          return aValue < bValue ? 1 : -1;
-        }
+      if (sortDirection === "asc") {
+        return aValue > bValue ? 1 : -1;
       }
+      return aValue < bValue ? 1 : -1;
     });
-  }, [filteredData, sortField, sortDirection]);
+  }, [filteredData, sortDirection, sortField]);
 
-  // Paginate sorted data
   const totalPages = Math.ceil(sortedData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const paginatedData = sortedData.slice(startIndex, endIndex);
+  const paginatedData = sortedData.slice(startIndex, startIndex + itemsPerPage);
 
-  // Handle sorting
   const handleSort = (field: SortField) => {
     if (sortField === field) {
       if (sortDirection === "asc") {
@@ -221,20 +190,19 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
       setSortField(field);
       setSortDirection("asc");
     }
-    setCurrentPage(1); // Reset to first page on sort
+    setCurrentPage(1);
   };
 
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) {
-      return <ArrowUpDown className="h-4 w-4 ml-1 text-muted-foreground" />;
+      return <ArrowUpDown className="ml-1 h-4 w-4 text-muted-foreground" />;
     }
     if (sortDirection === "asc") {
-      return <ArrowUp className="h-4 w-4 ml-1" />;
+      return <ArrowUp className="ml-1 h-4 w-4" />;
     }
-    return <ArrowDown className="h-4 w-4 ml-1" />;
+    return <ArrowDown className="ml-1 h-4 w-4" />;
   };
 
-  // Reset filters
   const handleResetFilters = () => {
     setSearchQuery("");
     setSportFilter("all");
@@ -252,25 +220,21 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
     associationFilter !== "all" ||
     sortField;
 
-  const handleNavigate = (accountId: number, type: string) => {
-    router.push(`/dashboard/accounts/${type}/${accountId}`);
+  const handleNavigate = (accountId: number) => {
+    router.push(`/dashboard/accounts/${accountType}/${accountId}`);
   };
-
-  const lastItemInPathname = pathname.split("/").pop();
 
   return (
     <div className="space-y-4">
-      {/* Search and Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        {/* Search */}
+      <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50/60 p-3 lg:flex-row lg:items-center">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search by ID, Name, Email, Sport, Club, or Association..."
+            placeholder="Search accounts, email, sport, or organisation..."
             value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
+            onChange={(event) => {
+              setSearchQuery(event.target.value);
               setCurrentPage(1);
             }}
             className="pl-10 pr-10"
@@ -283,14 +247,13 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
                 setSearchQuery("");
                 setCurrentPage(1);
               }}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0"
+              className="absolute right-2 top-1/2 h-6 w-6 -translate-y-1/2 p-0"
             >
               <X className="h-3 w-3" />
             </Button>
           )}
         </div>
 
-        {/* Sport Filter */}
         {uniqueSports.length > 0 && (
           <Select
             value={sportFilter}
@@ -299,7 +262,7 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
               setCurrentPage(1);
             }}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full lg:w-[180px]">
               <SelectValue placeholder="Filter by sport" />
             </SelectTrigger>
             <SelectContent>
@@ -313,8 +276,7 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
           </Select>
         )}
 
-        {/* Club Filter */}
-        {uniqueClubs.length > 0 && (
+        {!isAssociationRoute && uniqueClubs.length > 0 && (
           <Select
             value={clubFilter}
             onValueChange={(value) => {
@@ -322,7 +284,7 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
               setCurrentPage(1);
             }}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full lg:w-[180px]">
               <SelectValue placeholder="Filter by club" />
             </SelectTrigger>
             <SelectContent>
@@ -336,8 +298,7 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
           </Select>
         )}
 
-        {/* Association Filter */}
-        {uniqueAssociations.length > 0 && (
+        {isAssociationRoute && uniqueAssociations.length > 0 && (
           <Select
             value={associationFilter}
             onValueChange={(value) => {
@@ -345,7 +306,7 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
               setCurrentPage(1);
             }}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full lg:w-[220px]">
               <SelectValue placeholder="Filter by association" />
             </SelectTrigger>
             <SelectContent>
@@ -359,7 +320,6 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
           </Select>
         )}
 
-        {/* Reset Filters */}
         {hasActiveFilters && (
           <Button
             variant="accent"
@@ -371,176 +331,172 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
         )}
       </div>
 
-      {/* Results Count */}
-      <div className="text-sm text-muted-foreground">
+      <div className="px-1 text-sm text-muted-foreground">
         Showing {paginatedData.length} of {sortedData.length} results
         {filteredData.length !== accounts.length &&
           ` (filtered from ${accounts.length} total)`}
       </div>
 
-      {/* Table */}
       {paginatedData.length > 0 ? (
         <>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[60px]">Logo</TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("firstName")}
-                    className="h-auto p-0 font-semibold hover:bg-transparent"
-                  >
-                    First Name
-                    {getSortIcon("firstName")}
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("email")}
-                    className="h-auto p-0 font-semibold hover:bg-transparent"
-                  >
-                    Email
-                    {getSortIcon("email")}
-                  </Button>
-                </TableHead>
-                <TableHead>Club</TableHead>
-                <TableHead>Association</TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("sport")}
-                    className="h-auto p-0 font-semibold hover:bg-transparent"
-                  >
-                    Sport
-                    {getSortIcon("sport")}
-                  </Button>
-                </TableHead>
-                <TableHead>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleSort("subscription")}
-                    className="h-auto p-0 font-semibold hover:bg-transparent"
-                  >
-                    Subscription
-                    {getSortIcon("subscription")}
-                  </Button>
-                </TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedData.map((account) => {
-                // Check if account is expiring soon (<30 days)
-                const isExpiringSoon =
-                  account.hasActiveOrder &&
-                  account.daysLeftOnSubscription !== null &&
-                  account.daysLeftOnSubscription <= 30;
+          <div className="overflow-hidden rounded-md border border-slate-200 bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50 hover:bg-slate-50">
+                  <TableHead className="w-[56px]">Logo</TableHead>
+                  <TableHead>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleSort("firstName")}
+                      className="h-auto p-0 font-semibold hover:bg-transparent"
+                    >
+                      Account
+                      {getSortIcon("firstName")}
+                    </Button>
+                  </TableHead>
+                  <TableHead>
+                    {isAssociationRoute ? "Association" : "Club"}
+                  </TableHead>
+                  <TableHead className="hidden lg:table-cell">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleSort("sport")}
+                      className="h-auto p-0 font-semibold hover:bg-transparent"
+                    >
+                      Sport
+                      {getSortIcon("sport")}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleSort("subscription")}
+                      className="ml-auto h-auto p-0 font-semibold hover:bg-transparent"
+                    >
+                      Subscription
+                      {getSortIcon("subscription")}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="w-[110px] text-right">
+                    Actions
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {paginatedData.map((account) => {
+                  const isExpiringSoon =
+                    account.hasActiveOrder &&
+                    account.daysLeftOnSubscription !== null &&
+                    account.daysLeftOnSubscription <= 30;
+                  const organisations = isAssociationRoute
+                    ? account.associations
+                    : account.clubs;
 
-                return (
-                  <TableRow
-                    key={account.id}
-                    className={
-                      isExpiringSoon
-                        ? "bg-yellow-50/50 hover:bg-yellow-100/50 border-l-4 border-l-yellow-500"
-                        : ""
-                    }
-                  >
-                    <TableCell>
-                      {account.logo?.url ? (
-                        <div className="flex items-center justify-center">
-                          <Image
-                            src={account.logo.url}
-                            alt={`${account.FirstName || "Account"} logo`}
-                            width={40}
-                            height={40}
-                            className="rounded object-contain"
-                            style={{
-                              maxWidth: "40px",
-                              maxHeight: "40px",
-                            }}
-                            unoptimized
-                          />
+                  return (
+                    <TableRow
+                      key={account.id}
+                      className={
+                        isExpiringSoon
+                          ? "border-l-4 border-l-amber-500 bg-amber-50/50 hover:bg-amber-100/50"
+                          : ""
+                      }
+                    >
+                      <TableCell>
+                        {isUsableImageSrc(account.logo?.url) ? (
+                          <div className="flex items-center justify-center">
+                            <SafeImage
+                              src={account.logo?.url}
+                              alt={`${account.FirstName || "Account"} logo`}
+                              width={36}
+                              height={36}
+                              className="rounded object-contain"
+                              style={{
+                                maxHeight: "36px",
+                                maxWidth: "36px",
+                              }}
+                            />
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-center">
+                            <ImageIcon className="h-5 w-5 text-muted-foreground" />
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-slate-900">
+                            {account.FirstName || "Unnamed account"}
+                          </p>
+                          <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs text-muted-foreground">
+                            <span>Account ID {account.id}</span>
+                            {account.email && (
+                              <a
+                                href={`mailto:${account.email}`}
+                                className="hover:text-slate-900 hover:underline"
+                              >
+                                {account.email}
+                              </a>
+                            )}
+                          </div>
                         </div>
-                      ) : (
-                        <div className="flex items-center justify-center">
-                          <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                        </div>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {account.FirstName}
-                    </TableCell>
-                    <TableCell>
-                      {account.email ? (
-                        <a
-                          href={`mailto:${account.email}`}
-                          className="text-primary hover:underline"
+                      </TableCell>
+                      <TableCell>
+                        {organisations.length > 0 ? (
+                          <div className="flex flex-col gap-1">
+                            {organisations.map((organisation) => (
+                              <span
+                                key={organisation.id}
+                                className="text-sm text-slate-700"
+                              >
+                                {organisation.name || "Not provided"}
+                              </span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">
+                            Not provided
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {account.Sport ? (
+                          <Badge variant="outline" className="font-medium">
+                            {account.Sport}
+                          </Badge>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">
+                            Not provided
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <SubscriptionBadge
+                          hasActiveOrder={account.hasActiveOrder}
+                          daysLeftOnSubscription={
+                            account.daysLeftOnSubscription
+                          }
+                        />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="primary"
+                          size="sm"
+                          onClick={() => handleNavigate(account.id)}
                         >
-                          {account.email}
-                        </a>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {account.clubs.length > 0 ? (
-                        <div className="flex flex-col gap-1">
-                          {account.clubs.map((club) => (
-                            <span key={club.id} className="text-sm">
-                              {club.name || "—"}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {account.associations.length > 0 ? (
-                        <div className="flex flex-col gap-1">
-                          {account.associations.map((assoc) => (
-                            <span key={assoc.id} className="text-sm">
-                              {assoc.name || "—"}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell>{account.Sport}</TableCell>
-                    <TableCell>
-                      <SubscriptionBadge
-                        hasActiveOrder={account.hasActiveOrder}
-                        daysLeftOnSubscription={account.daysLeftOnSubscription}
-                      />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="primary"
-                        onClick={() =>
-                          handleNavigate(
-                            account.id,
-                            lastItemInPathname || "clubs"
-                          )
-                        }
-                      >
-                        View Account
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                          View
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </div>
 
-          {/* Pagination */}
           {totalPages > 0 && (
             <div className="flex items-center justify-between">
               <Pagination
@@ -556,7 +512,7 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
                   itemsPerPage={itemsPerPage}
                   className="mr-auto"
                 />
-                <div className="flex items-center gap-1 ml-auto">
+                <div className="ml-auto flex items-center gap-1">
                   <PaginationPrevious />
                   <PaginationPages />
                   <PaginationNext />
@@ -567,19 +523,9 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
         </>
       ) : (
         <EmptyState
-          title={
-            searchQuery ||
-            sportFilter !== "all" ||
-            clubFilter !== "all" ||
-            associationFilter !== "all"
-              ? "No results found"
-              : "No accounts"
-          }
+          title={hasActiveFilters ? "No results found" : "No accounts"}
           description={
-            searchQuery ||
-            sportFilter !== "all" ||
-            clubFilter !== "all" ||
-            associationFilter !== "all"
+            hasActiveFilters
               ? "No accounts match your filters. Try adjusting your search or filters."
               : emptyMessage
           }

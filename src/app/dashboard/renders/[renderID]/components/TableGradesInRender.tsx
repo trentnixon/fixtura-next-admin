@@ -13,10 +13,11 @@ import {
 import { useRendersQuery } from "@/hooks/renders/useRendersQuery";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { EyeIcon } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import EmptyState from "@/components/ui-library/states/EmptyState";
+import { Badge } from "@/components/ui/badge";
 
 export default function TableGrades() {
   const { renderID } = useParams();
@@ -88,12 +89,12 @@ export default function TableGrades() {
     <div className="space-y-4">
       <Table>
         <TableHeader>
-          <TableRow>
+          <TableRow className="bg-slate-50 hover:bg-slate-50">
             <TableHead>Grade Name</TableHead>
             <TableHead>Days Played</TableHead>
             <TableHead>Gender</TableHead>
             <TableHead>Age Group</TableHead>
-            <TableHead>View</TableHead>
+            <TableHead className="text-right">Action</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -105,14 +106,32 @@ export default function TableGrades() {
 
             return (
               <TableRow key={id}>
-                <TableCell>{gradeName || "N/A"}</TableCell>
-                <TableCell>{daysPlayed || "N/A"}</TableCell>
-                <TableCell>{gender || "N/A"}</TableCell>
-                <TableCell>{ageGroup || "N/A"}</TableCell>
                 <TableCell>
+                  <div className="text-sm font-medium text-slate-900">
+                    {gradeName || "N/A"}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Grade ID {gradeId}
+                  </div>
+                </TableCell>
+                <TableCell className="text-sm text-slate-600">
+                  {daysPlayed || "N/A"}
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="bg-slate-50">
+                    {gender || "N/A"}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="bg-slate-50">
+                    {ageGroup || "N/A"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
                   <Link href={`/dashboard/grades/${gradeId}`}>
-                    <Button variant="accent">
-                      <EyeIcon className="h-4 w-4" />
+                    <Button variant="primary" size="sm">
+                      View
+                      <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
                 </TableCell>

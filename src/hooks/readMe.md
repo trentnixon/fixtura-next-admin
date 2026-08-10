@@ -4,13 +4,19 @@ This folder contains custom React hooks that provide data fetching, state manage
 
 ## Files
 
+### account-asset-run/
+
+- `useTriggerAccountAssetRunOnDemand.ts`: Mutation POST account-asset-runs trigger; toasts queued / blocking / skipped; invalidates asset-run queries
+- `useAccountAssetRunLatest.ts`: GET latest run per account; polls while run active (~12s)
+- `useAccountAssetRunStatus.ts`: GET single run detail; polls while active
+- `useAccountAssetRunGlobalStatus.ts`: GET global slim asset-run list (dashboard); polls when any row active
+
 ### accounts/
 
 - `useAccountQuery.ts`: Fetches individual account details by ID with caching
 - `useAccountsQuery.ts`: Retrieves paginated list of accounts with filtering
 - `useAccountSummaryQuery.ts`: Gets aggregated account statistics and analytics
 - `useUpdateAccountOnly.ts`: Mutation hook for triggering lightweight account metadata updates
-- `useAccountDataCollectionQuery.ts`: Fetches comprehensive account-specific data collection statistics including entity statistics, performance metrics, error analysis, temporal patterns, and time series data
 
 ### association/
 
@@ -21,6 +27,10 @@ This folder contains custom React hooks that provide data fetching, state manage
 
 - `useCompetitionsQuery.ts`: Fetches competitions for specific organization with account type filtering
 - `useFetchCompetitionByID.ts`: Retrieves single competition details with populated relations
+- `useCompetitionAdminDetail.ts`: Fetches admin detail for a single competition (drilldown)
+- `useTriggerGradesCompsSingleScrape.ts`: Mutation hook for triggering single-competition grades scrape via POST /api/competition/trigger-grades-comps-single-scrape
+- `useTriggerGradesLookupTeamsScrape.ts`: Mutation hook for triggering grade-teams lookup scrape via POST /api/grade-teams/trigger-grades-lookup-teams-scrape
+- `useTriggerGradesLookupTeamsSingleScrape.ts`: Mutation hook for triggering single-competition grades-teams scrape via POST /api/competition/trigger-grades-lookup-teams-single-scrape
 
 ### downloads/
 
@@ -42,11 +52,18 @@ This folder contains custom React hooks that provide data fetching, state manage
 - `useFixtureInsights.ts`: Fetches comprehensive fixture insights including overview statistics, categorized summaries (by association, competition, grade), charts, and distributions with 5-minute cache
 - `useFixtureDetails.ts`: Fetches filtered fixture details based on optional filters (association, grade, competition) with 2-minute cache
 - `useSingleFixtureDetail.ts`: Fetches comprehensive detailed information about a single fixture by ID including core fixture data, related entities, validation scoring, and administrative metadata with 2-minute cache
+- `useTriggerResultSingleScrape.ts`: Mutation hook for triggering single-fixture result scrape via POST /api/game-meta-data/trigger-result-single-scrape (queue scrape:result-single)
 
 ### fetch-tests/
 
 - `useFetchTestsQuery.ts`: Fetches all fetch test data including test runs, summary, and charts
 - `useFetchTestByIdQuery.ts`: Fetches detailed test information by ID with performance metrics and system info
+
+### data-collection/
+
+- `useScraperLogs.ts`: Paginated scraper job list for the Data page (polls when jobs are in progress)
+- `useScraperLogByJobId.ts`: Single job + entries for `/dashboard/data/[jobId]` (polls while in progress)
+- `useTriggerResultBatchScrape.ts`: Mutation hook for batch result scrape via POST /api/game-meta-data/trigger-result-batch-scrape (queue scrape:result-batch; grade or competition scope)
 
 ### games/
 

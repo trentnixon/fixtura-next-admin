@@ -1,7 +1,14 @@
 "use client";
 
 import { useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { GradesAndClubsAnalytics } from "@/types/associationInsights";
 import ChartCard from "@/components/modules/charts/ChartCard";
 import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -99,32 +106,18 @@ export default function GradesAndClubsStatsCard({
 
   return (
     <div className="space-y-6">
-      {/* Summary Stats Card */}
-      <Card className="bg-white border shadow-none">
-        <CardHeader className="p-4">
-          <CardTitle>Grades & Clubs Statistics</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Stat
-              label="Total Grades"
-              value={data.totalGrades.toLocaleString()}
-            />
-            <Stat
-              label="Total Clubs"
-              value={data.totalClubs.toLocaleString()}
-            />
-            <Stat
-              label="Avg Grades/Association"
-              value={data.averageGradesPerAssociation.toFixed(2)}
-            />
-            <Stat
-              label="Avg Clubs/Association"
-              value={data.averageClubsPerAssociation.toFixed(2)}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
+        <Stat label="Total Grades" value={data.totalGrades.toLocaleString()} />
+        <Stat label="Total Clubs" value={data.totalClubs.toLocaleString()} />
+        <Stat
+          label="Avg Grades/Association"
+          value={data.averageGradesPerAssociation.toFixed(2)}
+        />
+        <Stat
+          label="Avg Clubs/Association"
+          value={data.averageClubsPerAssociation.toFixed(2)}
+        />
+      </div>
 
       {/* Charts Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -133,7 +126,7 @@ export default function GradesAndClubsStatsCard({
           title="Grade Distribution"
           description="Number of associations by grade count"
           chartConfig={gradeChartConfig}
-          chartClassName="h-[300px]"
+          chartClassName="h-[260px]"
         >
           <BarChart data={gradeChartData}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -168,7 +161,7 @@ export default function GradesAndClubsStatsCard({
           title="Club Distribution"
           description="Number of associations by club count"
           chartConfig={clubChartConfig}
-          chartClassName="h-[300px]"
+          chartClassName="h-[260px]"
         >
           <BarChart data={clubChartData}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
@@ -198,15 +191,56 @@ export default function GradesAndClubsStatsCard({
           </BarChart>
         </ChartCard>
       </div>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <DistributionTable title="Grade Buckets" rows={gradeChartData} />
+        <DistributionTable title="Club Buckets" rows={clubChartData} />
+      </div>
     </div>
   );
 }
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="space-y-1">
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="text-2xl font-semibold">{value}</p>
+    <div className="border-b border-slate-200 px-4 py-3 last:border-b-0 sm:[&:nth-child(odd)]:border-r lg:border-b-0 lg:border-r lg:last:border-r-0">
+      <p className="text-xs font-medium uppercase text-slate-500">{label}</p>
+      <p className="mt-1 text-lg font-semibold text-slate-900">{value}</p>
+    </div>
+  );
+}
+
+function DistributionTable({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: Array<{ label: string; value: number }>;
+}) {
+  return (
+    <div className="rounded-md border border-slate-200 bg-white">
+      <div className="border-b border-slate-200 px-4 py-3">
+        <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
+      </div>
+      <Table>
+        <TableHeader>
+          <TableRow className="bg-slate-50 hover:bg-slate-50">
+            <TableHead>Range</TableHead>
+            <TableHead className="text-right">Associations</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.label}>
+              <TableCell className="text-sm font-medium text-slate-900">
+                {row.label}
+              </TableCell>
+              <TableCell className="text-right">
+                {row.value.toLocaleString()}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
     </div>
   );
 }

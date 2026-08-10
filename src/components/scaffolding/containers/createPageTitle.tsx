@@ -1,6 +1,6 @@
 import { ByLine } from "@/components/type/titles";
 import { Title } from "@/components/type/titles";
-import Image from "next/image";
+import SafeImage from "@/components/ui-library/media/SafeImage";
 
 const CreatePageTitle = ({
   title,
@@ -17,15 +17,25 @@ const CreatePageTitle = ({
 }) => {
   return (
     <div className="border-b border-slate-200 pb-2 mb-2 flex flex-row items-center justify-between gap-4">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex flex-col gap-0">
+      <div className="flex min-w-0 flex-1 items-center gap-4">
+        {image && (
+          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md border bg-white p-2">
+            <SafeImage
+              src={image}
+              alt={title || "Logo"}
+              width={80}
+              height={80}
+              className="h-full w-full rounded object-contain"
+            />
+          </div>
+        )}
+        <div className="flex min-w-0 flex-col gap-0">
           {byLine && <ByLine>{byLine}</ByLine>}
           {title && <Title>{title}</Title>}
           {byLineBottom && <ByLine>{byLineBottom}</ByLine>}
         </div>
       </div>
-      {image && <Image src={image} alt={title || ""} width={80} height={80} />}
-      {children && <div className="flex-shrink-0">{children}</div>}
+      {children && <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">{children}</div>}
     </div>
   );
 };

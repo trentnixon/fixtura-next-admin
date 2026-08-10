@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, ChevronDown } from "lucide-react";
+import { Building2, ChevronDown, ExternalLink, ImageIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import FixtureMetadata from "./FixtureMetadata";
-import { SingleFixtureDetailResponse } from "@/types/fixtureDetail";
+import TriggerResultSingleScrapeButton from "./TriggerResultSingleScrapeButton";
 
 interface ClubInfo {
   id: number;
@@ -17,95 +17,89 @@ interface ClubInfo {
 }
 
 interface FixtureActionsBarProps {
+  fixtureId: number;
   scorecardUrl: string | null;
   clubs: ClubInfo[];
   renderIds: number[];
-  data: SingleFixtureDetailResponse;
 }
 
 export default function FixtureActionsBar({
+  fixtureId,
   scorecardUrl,
   clubs,
   renderIds,
-  data,
 }: FixtureActionsBarProps) {
-  return (
-    <>
-      <div className="flex items-center justify-between">
-        <div className="text-sm font-medium text-slate-700 dark:text-slate-300">
-          {/* View External Scorecard */}
-          {scorecardUrl && (
-            <Button variant="primary" size="sm" asChild>
-              <a
-                href={`https://www.playhq.com${scorecardUrl}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2"
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span>View External Scorecard</span>
-              </a>
-            </Button>
-          )}
-        </div>
-        <div className="flex items-center gap-2">
-          {/* Render Actions Dropdown */}
-          {renderIds.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="accent"
-                  size="sm"
-                  className="cursor-pointer hover:opacity-90 transition-opacity"
-                >
-                  Renders <ChevronDown className="ml-1 w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                {renderIds.map((renderId) => (
-                  <DropdownMenuItem key={renderId} asChild>
-                    <a
-                      href={`/dashboard/renders/${renderId}`}
-                      className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                    >
-                      <span>Render #{renderId}</span>
-                    </a>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
+  const hasOpenItems =
+    Boolean(scorecardUrl) || clubs.length > 0 || renderIds.length > 0;
 
-          {/* Clubs Actions Dropdown */}
-          {clubs.length > 0 && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="accent"
-                  size="sm"
-                  className="cursor-pointer hover:opacity-90 transition-opacity"
-                >
-                  Clubs <ChevronDown className="ml-1 w-4 h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                {clubs.map((club) => (
-                  <DropdownMenuItem key={club.id} asChild>
-                    <a
-                      href={`/dashboard/club/${club.id}`}
-                      className="flex items-center gap-2 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                    >
-                      <span>{club.name}</span>
-                    </a>
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
+  return (
+    <div className="flex flex-col gap-2 sm:items-end">
+      <div className="flex flex-wrap items-center gap-2">
+        {hasOpenItems && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="primary" size="sm">
+                Open <ChevronDown className="ml-1 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              {scorecardUrl && (
+                <DropdownMenuItem asChild>
+                  <a
+                    href={`https://www.playhq.com${scorecardUrl}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex cursor-pointer items-center gap-2"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    <span>PlayHQ scorecard</span>
+                  </a>
+                </DropdownMenuItem>
+              )}
+
+              {clubs.map((club) => (
+                <DropdownMenuItem key={club.id} asChild>
+                  <a
+                    href={`/dashboard/club/${club.id}`}
+                    className="flex cursor-pointer items-center gap-2"
+                  >
+                    <Building2 className="h-4 w-4" />
+                    <span>{club.name}</span>
+                  </a>
+                </DropdownMenuItem>
+              ))}
+
+              {renderIds.map((renderId) => (
+                <DropdownMenuItem key={renderId} asChild>
+                  <a
+                    href={`/dashboard/renders/${renderId}`}
+                    className="flex cursor-pointer items-center gap-2"
+                  >
+                    <ImageIcon className="h-4 w-4" />
+                    <span>Render #{renderId}</span>
+                  </a>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="accent" size="sm">
+              Data actions <ChevronDown className="ml-1 h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 p-1">
+            <TriggerResultSingleScrapeButton
+              fixtureId={fixtureId}
+              scorecardUrl={scorecardUrl}
+              className="w-full justify-start"
+            />
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
-      {/* Game Metadata */}
-      <FixtureMetadata data={data} />
-    </>
+      <FixtureMetadata fixtureId={fixtureId} />
+    </div>
   );
 }

@@ -12,130 +12,236 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 
-import { DatabaseIcon, ExternalLinkIcon, EyeIcon, XIcon } from "lucide-react";
+import {
+  ArrowRight,
+  ChevronDown,
+  DatabaseIcon,
+  ExternalLinkIcon,
+  SearchIcon,
+  XIcon,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useGradeByID } from "@/hooks/grades/useGradeByID";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { EmptyState } from "@/components/ui-library";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const GradeTeamsTable = () => {
   const { gradeID } = useParams();
   const { strapiLocation } = useGlobalContext();
   const { data, isLoading, isError } = useGradeByID(
-    gradeID ? parseInt(gradeID as string) : 0
+    gradeID ? parseInt(gradeID as string) : 0,
   );
 
-  const teams = data?.teamData || [];
   const [searchQuery, setSearchQuery] = useState("");
+  const teams = useMemo(() => data?.teamData ?? [], [data?.teamData]);
 
-  if (isLoading) return <p>Loading Teams...</p>;
-  if (isError) return <p>Error loading Teams</p>;
+  const filteredTeams = useMemo(() => {
+    return teams.filter((team) =>
+      team.teamName.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+  }, [teams, searchQuery]);
 
-  // Filter teams based on search query (case-insensitive)
-  const filteredTeams = teams.filter(team =>
-    team.teamName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  if (isLoading || isError) return null; // Handled by parent page
 
   return (
-    <div className="mt-8">
-      <div className="bg-slate-200 rounded-lg px-4 py-2">
-        {teams.length > 0 && (
-          <div>
-            <div className="flex justify-between items-center  py-2">
-              <h2 className="text-xl font-semibold mb-2">
-                Teams in Grade ({teams.length})
-              </h2>
+    <SectionContainer
+      title="Teams in Grade"
+      description={`Review and manage the ${teams.length} teams associated with this grade.`}
+      icon={<Users className="h-5 w-5 text-slate-500" />}
+      action={
+        <div className="flex items-center gap-2 max-w-sm">
+          <div className="relative">
+            <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
+            <Input
+              type="text"
+              placeholder="Search teams..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9 pr-8 h-9 w-[200px] lg:w-[300px]"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-0 top-0 h-9 w-9 text-slate-500"
+              >
+                <XIcon className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+        </div>
+      }
+    >
+      <div className="rounded-md border overflow-hidden">
+        <ScrollArea className="w-full">
+          <Table className="min-w-[760px]">
+            <TableHeader>
+              <TableRow className="bg-slate-50 hover:bg-slate-50">
+                <TableHead className="min-w-[280px]">Team</TableHead>
+                <TableHead>Metadata</TableHead>
+                <TableHead className="text-right">Games</TableHead>
+                <TableHead className="text-right">Wins</TableHead>
+                <TableHead className="text-right">Losses</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredTeams.length > 0 ? (
+                filteredTeams.map((team) => {
+                  const playHqUrl = team.href
+                    ? `https://www.playhq.com${team.href}`
+                    : team.url;
+                  const cmsUrl = strapiLocation?.team
+                    ? `${strapiLocation.team}${team.id}`
+                    : null;
 
-              {/* Search Input */}
-              <div className="flex items-center w-1/2">
-                <Input
-                  type="text"
-                  placeholder="Search by Team Name..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className="bg-white w-full px-4 py-2 border rounded-md focus:outline-none focus:ring focus:ring-blue-300"
-                />
-                <Button
-                  variant="ghost"
-                  onClick={() => setSearchQuery("")}
-                  className="ml-2 px-4 py-2 rounded-md focus:outline-none">
-                  <XIcon className="h-5 w-5" />
-                </Button>
-              </div>
-            </div>
-            <div className="bg-slate-50 rounded-lg px-4 py-2 shadow-sm border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-left">Team Name</TableHead>
-                    <TableHead className="text-center">Games Played</TableHead>
-                    <TableHead className="text-center">Wins</TableHead>
-                    <TableHead className="text-center">Losses</TableHead>
-                    <TableHead className="text-center">Strapi</TableHead>
-                    <TableHead className="text-center">PlayHQ</TableHead>
-                    <TableHead className="text-center">View</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTeams.length > 0 ? (
-                    filteredTeams.map(team => (
-                      <TableRow key={team.id}>
-                        <TableCell className="text-left">
-                          {team.teamName}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {team.gamesPlayed}
-                        </TableCell>
-
-                        <TableCell className="text-center">
-                          {team.wins}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {team.losses}
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Link
-                            href={`${strapiLocation.team}${team.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer">
-                            <Button variant="outline">
-                              <DatabaseIcon size="16" />
-                            </Button>
-                          </Link>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Link
-                            href={`https://www.playhq.com${team.href}`}
-                            target="_blank">
-                            <Button variant="outline">
-                              <ExternalLinkIcon size="16" />
-                            </Button>
-                          </Link>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Link href={`/dashboard/teams/${team.id}`}>
-                            <Button variant="outline">
-                              <EyeIcon size="16" />
-                            </Button>
-                          </Link>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  ) : (
-                    <TableRow>
-                      <TableCell
-                        colSpan={7}
-                        className="text-center text-gray-500">
-                        No grades found matching &quot;{searchQuery}&quot;
+                  return (
+                    <TableRow key={team.id}>
+                      <TableCell>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-slate-900">
+                            {team.teamName}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Team #{team.id}
+                            {team.teamID ? ` - PlayHQ ${team.teamID}` : ""}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-wrap items-center gap-2">
+                          {team.gender && (
+                            <Badge
+                              variant="outline"
+                              className="bg-slate-50 text-slate-600"
+                            >
+                              {team.gender}
+                            </Badge>
+                          )}
+                          {team.age && (
+                            <Badge
+                              variant="outline"
+                              className="bg-slate-50 text-slate-600"
+                            >
+                              {team.age}
+                            </Badge>
+                          )}
+                          {team.form && (
+                            <Badge variant="secondary">{team.form}</Badge>
+                          )}
+                          {!team.gender && !team.age && !team.form && (
+                            <span className="text-sm text-muted-foreground">
+                              -
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {team.gamesPlayed}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {team.wins}
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {team.losses}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button asChild variant="primary" size="sm">
+                            <Link href={`/dashboard/teams/${team.id}`}>
+                              View
+                              <ArrowRight className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="primary" size="sm">
+                                Open
+                                <ChevronDown className="h-3.5 w-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-44">
+                              <DropdownMenuLabel>
+                                Destinations
+                              </DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              {cmsUrl ? (
+                                <DropdownMenuItem asChild>
+                                  <Link
+                                    href={cmsUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <DatabaseIcon className="h-4 w-4" />
+                                    Open in CMS
+                                  </Link>
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem disabled>
+                                  <DatabaseIcon className="h-4 w-4" />
+                                  Open in CMS
+                                </DropdownMenuItem>
+                              )}
+                              {playHqUrl ? (
+                                <DropdownMenuItem asChild>
+                                  <Link
+                                    href={playHqUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <ExternalLinkIcon className="h-4 w-4" />
+                                    View on PlayHQ
+                                  </Link>
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem disabled>
+                                  <ExternalLinkIcon className="h-4 w-4" />
+                                  View on PlayHQ
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       </TableCell>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        )}
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={6} className="h-auto p-0">
+                    <EmptyState
+                      variant="minimal"
+                      title={
+                        searchQuery ? "No matching teams" : "No teams found"
+                      }
+                      description={
+                        searchQuery
+                          ? `We couldn't find any teams matching "${searchQuery}"`
+                          : "There are no teams currently associated with this grade."
+                      }
+                      className="py-12"
+                    />
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </ScrollArea>
       </div>
-    </div>
+    </SectionContainer>
   );
 };

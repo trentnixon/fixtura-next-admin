@@ -1,8 +1,4 @@
-// TODO: Add Account Title
-
-import CheckBooleanStatus from "../overview/CheckBooleanStatus";
 import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccountDetails";
-import SyncCTABar from "./SyncCTABar";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 
 type AccountTitleProps = {
@@ -24,10 +20,9 @@ export default function AccountTitle({ titleProps }: AccountTitleProps) {
         byLine={`${Sport || "Unknown"} - ${
           titleProps.account_type === 1 ? "Club" : "Association"
         }`}
+        byLineBottom={`Account ID: ${titleProps.id}`}
         image={ParentLogo}
       />
-      <SyncCTABar titleProps={titleProps} />
-      <CheckBooleanStatus titleProps={titleProps} />
     </>
   );
 }

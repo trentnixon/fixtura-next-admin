@@ -1,11 +1,10 @@
 "use client";
 
 import { useAccountQuery } from "@/hooks/accounts/useAccountQuery";
-import AccountBasics from "../../../components/overview/AccountBasics";
-
+import AccountOverviewPanel from "../../../components/overview/AccountOverviewPanel";
 import AccountTitle from "../../../components/ui/AccountTitle";
+import AccountsBreadcrumbHeader from "../../../components/AccountsBreadcrumbHeader";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { P } from "@/components/type/type";
 import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccountDetails";
 
 import RendersTab from "../../../components/overview/tabs/renders";
@@ -16,35 +15,14 @@ import AccountAnalyticsCards from "../../../components/overview/tabs/components/
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
-import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
-
-// Loading component
-const LoadingState = () => <P>Loading account details...</P>;
-
-// Error component
-const ErrorState = ({
-  error,
-  onRetry,
-}: {
-  error: Error | null;
-  onRetry: () => void;
-}) => (
-  <div>
-    <p>Error loading account: {error?.message}</p>
-    <button
-      onClick={onRetry}
-      className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-    >
-      Retry
-    </button>
-  </div>
-);
+import LoadingState from "@/components/ui-library/states/LoadingState";
+import ErrorState from "@/components/ui-library/states/ErrorState";
 
 // Tab labels configuration
 const TAB_LABELS = [
-  { id: "account", label: "Account" },
+  { id: "financial", label: "Financial" },
   { id: "renders", label: "Renders" },
-  { id: "data", label: "Data" },
+  { id: "data", label: "Data refresh" },
   { id: "competitions", label: "Competitions" },
   { id: "grades", label: "Grades" },
   { id: "fixtures", label: "Fixtures" },
@@ -54,23 +32,31 @@ const TAB_LABELS = [
 const renderTabContent = (
   tabId: string,
   accountData: fixturaContentHubAccountDetails,
-  accountID: string
+  accountID: string,
 ) => {
   const accountId = Number(accountID);
 
   switch (tabId) {
-    case "account":
+    case "financial":
       return <AccountAnalyticsCards accountId={accountId} />;
     case "renders":
       return <RendersTab accountData={accountData} accountId={accountId} />;
     case "competitions":
       return <CompetitionsTab />;
     case "grades":
-      return <div>Coming soon: Grades</div>;
+      return (
+        <SectionContainer title="Grades" variant="compact">
+          <p className="text-sm text-muted-foreground">Coming soon: Grades</p>
+        </SectionContainer>
+      );
     case "fixtures":
-      return <div>Coming soon: Fixtures</div>;
+      return (
+        <SectionContainer title="Fixtures" variant="compact">
+          <p className="text-sm text-muted-foreground">Coming soon: Fixtures</p>
+        </SectionContainer>
+      );
     case "data":
-      return <DataTab accountData={accountData} accountId={accountId} />;
+      return <DataTab accountId={accountId} />;
     default:
       return null;
   }
@@ -79,56 +65,76 @@ const renderTabContent = (
 export default function DisplayClub() {
   const { accountID } = useParams();
   const { data, isLoading, isError, error, refetch } = useAccountQuery(
-    accountID as string
+    accountID as string,
   );
 
-  if (isLoading) return <LoadingState />;
+  if (isLoading) {
+    return (
+      <LoadingState variant="default" message="Loading account details…" />
+    );
+  }
 
   if (isError) {
-    return <ErrorState error={error} onRetry={refetch} />;
+    return (
+      <ErrorState
+        error={
+          error instanceof Error ? error : new Error("Failed to load club account")
+        }
+        title="Could not load account"
+        onRetry={refetch}
+        variant="default"
+      />
+    );
   }
 
   const accountData = data?.data;
 
+  if (!accountData) {
+    return null;
+  }
+
+  const accountName =
+    accountData.accountOrganisationDetails?.Name ?? "Club account";
+
   return (
     <>
-      {accountData?.accountOrganisationDetails && (
+      {accountData.accountOrganisationDetails && (
         <AccountTitle titleProps={accountData} />
       )}
       <PageContainer padding="xs" spacing="lg">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <div className="lg:col-span-9">
-            <SectionContainer title="Account Details" variant="compact">
-              <ElementContainer padding="none" margin="none">
-                <Tabs defaultValue="account" className="w-full">
-                  <TabsList variant="primary" className="">
-                    {TAB_LABELS.map((tab) => (
-                      <TabsTrigger key={tab.id} value={tab.id}>
-                        {tab.label}
-                      </TabsTrigger>
-                    ))}
-                  </TabsList>
-                  {TAB_LABELS.map((tab) => (
-                    <TabsContent key={tab.id} value={tab.id} className="mt-4">
-                      {renderTabContent(
-                        tab.id,
-                        accountData as fixturaContentHubAccountDetails,
-                        accountID as string
-                      )}
-                    </TabsContent>
-                  ))}
-                </Tabs>
-              </ElementContainer>
-            </SectionContainer>
-          </div>
-          <div className="lg:col-span-3">
-            <ElementContainer padding="none" margin="none">
-              <AccountBasics
-                account={accountData as fixturaContentHubAccountDetails}
-              />
-            </ElementContainer>
-          </div>
-        </div>
+        <AccountsBreadcrumbHeader
+          currentPage={accountName}
+          parent={{
+            label: "Club accounts",
+            href: "/dashboard/accounts/club",
+          }}
+        />
+        <AccountOverviewPanel
+          accountData={accountData}
+          accountType="club"
+          syncAccountType="CLUB"
+        />
+        <Tabs defaultValue="financial" className="w-full">
+          <TabsList
+            variant="primary"
+            className="mb-4 h-auto flex-wrap justify-start gap-1 rounded-md"
+          >
+            {TAB_LABELS.map((tab) => (
+              <TabsTrigger key={tab.id} value={tab.id}>
+                {tab.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+          {TAB_LABELS.map((tab) => (
+            <TabsContent key={tab.id} value={tab.id} className="mt-0">
+              {renderTabContent(
+                tab.id,
+                accountData as fixturaContentHubAccountDetails,
+                accountID as string,
+              )}
+            </TabsContent>
+          ))}
+        </Tabs>
       </PageContainer>
     </>
   );

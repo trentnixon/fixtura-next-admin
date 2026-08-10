@@ -1,7 +1,13 @@
 "use client";
 
 import { Fragment, useMemo } from "react";
+import Link from "next/link";
+import { ArrowRight, CheckCircle2, XCircle } from "lucide-react";
+
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -10,21 +16,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { CheckCircle2, XCircle, ArrowUpRight } from "lucide-react";
-
+import { cn } from "@/lib/utils";
 import { CompetitionAdminDetailResponse } from "@/types/competitionAdminDetail";
 
-function AccountStatusIcon({ linked }: { linked: boolean }) {
+function AccountStatus({ linked }: { linked: boolean }) {
   const Icon = linked ? CheckCircle2 : XCircle;
+
   return (
-    <Icon
-      className={linked ? "h-4 w-4 text-emerald-500" : "h-4 w-4 text-rose-500"}
-      aria-label={linked ? "Linked" : "Missing"}
-    />
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-md border px-2 py-1 text-xs font-medium",
+        linked
+          ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+          : "border-rose-200 bg-rose-50 text-rose-700",
+      )}
+    >
+      <Icon className="h-3.5 w-3.5" />
+      {linked ? "Account linked" : "No account"}
+    </span>
   );
 }
 
@@ -61,6 +70,7 @@ export function TeamsSection({ teams, clubs }: TeamsSectionProps) {
     >();
 
     teams.forEach((team) => {
+      const teamAccountNames = team.clubAccountNames ?? [];
       const clubName = team.clubName ?? "Independent / Unassigned";
       const groupKey =
         team.clubId !== null
@@ -69,9 +79,9 @@ export function TeamsSection({ teams, clubs }: TeamsSectionProps) {
       const existing = map.get(groupKey);
       const clubRecord =
         team.clubId !== null ? clubLookup.get(team.clubId) : undefined;
-      const recordAccountNames = clubRecord?.accounts
-        ?.map((account) => account.name)
-        .filter(Boolean) as string[];
+      const recordAccountNames = (clubRecord?.accounts ?? [])
+        .map((account) => account.name)
+        .filter((name): name is string => Boolean(name));
       const recordHasAccount =
         clubRecord?.hasFixturaAccount ?? team.clubHasFixturaAccount;
       const primaryAccountId = clubRecord?.accounts?.[0]?.id ?? null;
@@ -83,13 +93,13 @@ export function TeamsSection({ teams, clubs }: TeamsSectionProps) {
         if (existing.clubId === null && team.clubId !== null) {
           existing.clubId = team.clubId;
         }
-        if (recordAccountNames.length > 0 || team.clubAccountNames.length > 0) {
+        if (recordAccountNames.length > 0 || teamAccountNames.length > 0) {
           existing.clubAccountNames = Array.from(
             new Set([
               ...existing.clubAccountNames,
-              ...team.clubAccountNames,
-              ...(recordAccountNames ?? []),
-            ])
+              ...teamAccountNames,
+              ...recordAccountNames,
+            ]),
           );
         }
         if (existing.clubAccountId === null && primaryAccountId !== null) {
@@ -103,10 +113,7 @@ export function TeamsSection({ teams, clubs }: TeamsSectionProps) {
           clubId: team.clubId,
           clubHasAccount: clubLinked,
           clubAccountNames: Array.from(
-            new Set([
-              ...(team.clubAccountNames ?? []),
-              ...(recordAccountNames ?? []),
-            ])
+            new Set([...teamAccountNames, ...recordAccountNames]),
           ),
           clubAccountId: primaryAccountId,
           teams: [team],
@@ -118,11 +125,13 @@ export function TeamsSection({ teams, clubs }: TeamsSectionProps) {
       .map((group) => ({
         ...group,
         teams: [...group.teams].sort((a, b) =>
-          a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+          a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
         ),
       }))
       .sort((a, b) =>
-        a.clubName.localeCompare(b.clubName, undefined, { sensitivity: "base" })
+        a.clubName.localeCompare(b.clubName, undefined, {
+          sensitivity: "base",
+        }),
       );
   }, [teams, clubLookup]);
 
@@ -132,40 +141,41 @@ export function TeamsSection({ teams, clubs }: TeamsSectionProps) {
       description="Teams participating in this competition with club linkage details."
     >
       <ScrollArea className="w-full">
-        <Table>
+        <Table className="min-w-[760px]">
           <TableHeader>
-            <TableRow>
-              <TableHead>Team</TableHead>
-              <TableHead>Gender</TableHead>
-              <TableHead>Age Group</TableHead>
-              <TableHead>Grades</TableHead>
+            <TableRow className="bg-slate-50 hover:bg-slate-50">
+              <TableHead className="min-w-[280px]">Team</TableHead>
+              <TableHead className="min-w-[260px]">Grades</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {groupedTeams.map((group) => (
               <Fragment key={group.key}>
-                <TableRow className="bg-muted/40">
-                  <TableCell colSpan={5} className="py-3">
+                <TableRow className="border-y border-slate-200 bg-slate-50 hover:bg-slate-50">
+                  <TableCell colSpan={3} className="px-4 py-3">
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <AccountStatusIcon linked={group.clubHasAccount} />
-                        <div>
-                          <p className="font-semibold text-slate-900">
+                      <div className="flex min-w-0 flex-wrap items-center gap-3">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-slate-900">
                             {group.clubName}
                           </p>
-                          {group.clubAccountNames.length > 0 && (
-                            <p className="text-xs text-muted-foreground">
-                              Contacts: {group.clubAccountNames.join(", ")}
-                            </p>
-                          )}
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {group.teams.length}{" "}
+                            {group.teams.length === 1 ? "team" : "teams"}
+                            {group.clubAccountNames.length > 0
+                              ? ` - Contacts: ${group.clubAccountNames.join(", ")}`
+                              : ""}
+                          </p>
                         </div>
+                        <AccountStatus linked={group.clubHasAccount} />
                       </div>
                       <div className="flex items-center gap-2">
                         {group.clubId !== null ? (
                           <Button asChild size="sm" variant="accent">
                             <Link href={`/dashboard/clubs/${group.clubId}`}>
                               View Club
+                              <ArrowRight className="h-4 w-4" />
                             </Link>
                           </Button>
                         ) : null}
@@ -176,6 +186,7 @@ export function TeamsSection({ teams, clubs }: TeamsSectionProps) {
                               href={`/dashboard/accounts/club/${group.clubAccountId}`}
                             >
                               View Account
+                              <ArrowRight className="h-4 w-4" />
                             </Link>
                           </Button>
                         ) : null}
@@ -183,42 +194,58 @@ export function TeamsSection({ teams, clubs }: TeamsSectionProps) {
                     </div>
                   </TableCell>
                 </TableRow>
-                {group.teams.map((team) => (
-                  <TableRow key={team.id}>
-                    <TableCell className="font-medium pl-12">
-                      {team.name}
-                    </TableCell>
-                    <TableCell>{team.gender ?? "—"}</TableCell>
-                    <TableCell>{team.ageGroup ?? "—"}</TableCell>
-                    <TableCell>
-                      {team.grades.length > 0 ? (
-                        <div className="flex flex-wrap items-center gap-2">
-                          {team.grades
-                            .slice(0, MAX_VISIBLE_GRADES)
-                            .map((grade) => (
-                              <Badge key={grade.id} variant="outline">
-                                {grade.name ?? `Grade #${grade.id}`}
-                              </Badge>
-                            ))}
-                          {team.grades.length > MAX_VISIBLE_GRADES && (
-                            <Badge variant="secondary">
-                              +{team.grades.length - MAX_VISIBLE_GRADES} more
-                            </Badge>
-                          )}
+                {group.teams.map((team) => {
+                  const teamGrades = team.grades ?? [];
+
+                  return (
+                    <TableRow key={team.id}>
+                      <TableCell>
+                        <div className="min-w-0 border-l-2 border-slate-200 pl-4">
+                          <p className="truncate text-sm font-medium text-slate-900">
+                            {team.name}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Team #{team.id}
+                          </p>
                         </div>
-                      ) : (
-                        "—"
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button asChild size="sm" variant="ghost">
-                        <Link href={`/dashboard/teams/${team.id}`}>
-                          <ArrowUpRight className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                      </TableCell>
+                      <TableCell>
+                        {teamGrades.length > 0 ? (
+                          <div className="flex flex-wrap items-center gap-2">
+                            {teamGrades
+                              .slice(0, MAX_VISIBLE_GRADES)
+                              .map((grade) => (
+                                <Badge
+                                  key={grade.id}
+                                  variant="outline"
+                                  className="bg-slate-50 text-slate-600"
+                                >
+                                  {grade.name ?? `Grade #${grade.id}`}
+                                </Badge>
+                              ))}
+                            {teamGrades.length > MAX_VISIBLE_GRADES && (
+                              <Badge variant="secondary">
+                                +{teamGrades.length - MAX_VISIBLE_GRADES} more
+                              </Badge>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-sm text-muted-foreground">
+                            -
+                          </span>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button asChild size="sm" variant="primary">
+                          <Link href={`/dashboard/teams/${team.id}`}>
+                            View
+                            <ArrowRight className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </Fragment>
             ))}
           </TableBody>

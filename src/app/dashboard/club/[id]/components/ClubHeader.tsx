@@ -1,21 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { ReactNode, useState } from "react";
 import Image from "next/image";
 import {
-  Mail,
-  Phone,
-  MapPin,
+  ChevronDown,
   ExternalLink,
   Globe,
   Loader2,
+  Mail,
+  MapPin,
+  Phone,
   RefreshCw,
 } from "lucide-react";
-import { ClubCore } from "@/types/clubAdminDetail";
+import { ClubCore, ClubStatistics } from "@/types/clubAdminDetail";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/ui-library/badges/StatusBadge";
 import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
-import { useProcessClubDirect } from "@/hooks/club/useProcessClubDirect";
+import { useTriggerClubSingleScrape } from "@/hooks/club/useTriggerClubSingleScrape";
 import {
   Dialog,
   DialogContent,
@@ -24,12 +25,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ClientOnly } from "@/components/util/ClientOnly";
 
 interface ClubHeaderProps {
   club: ClubCore;
+  statistics: ClubStatistics;
 }
 
-export default function ClubHeader({ club }: ClubHeaderProps) {
+export default function ClubHeader({ club, statistics }: ClubHeaderProps) {
   const {
     name,
     sport,
@@ -39,7 +50,6 @@ export default function ClubHeader({ club }: ClubHeaderProps) {
     location,
     website,
     href,
-    parentLogo,
   } = club;
 
   const locationParts: string[] = [];
@@ -53,233 +63,168 @@ export default function ClubHeader({ club }: ClubHeaderProps) {
   const googleMapsUrl = location?.coordinates
     ? `https://www.google.com/maps/search/?api=1&query=${location.coordinates.lat},${location.coordinates.lng}`
     : locationString
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        locationString
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+        locationString,
       )}`
-    : null;
+      : null;
 
   const hasContactDetails =
     contactDetails?.phone || contactDetails?.email || contactDetails?.address;
   const hasLocation = location && (locationString || location.coordinates);
-  const hasLinks = website?.website || href;
 
   return (
-    <div className="space-y-8">
-      {/* Identity Section */}
-      <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-        {/* Logo */}
-        <div className="flex items-center gap-4">
-          <div className="relative w-24 h-24 md:w-32 md:h-32 rounded-xl border bg-white p-4 shadow-sm flex-shrink-0 overflow-hidden">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-5 rounded-md border bg-white p-4 md:flex-row md:items-start">
+        <div className="flex items-center gap-3">
+          <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-md border bg-white p-2">
             <Image
               src={logoUrl}
               alt={`${name} logo`}
               fill
-              className="object-contain p-2"
+              className="object-contain p-1"
               unoptimized
             />
           </div>
-          {parentLogo && (
-            <div className="relative w-12 h-12 rounded-lg border bg-white p-2 shadow-sm flex-shrink-0 overflow-hidden hidden md:block">
-              <Image
-                src={parentLogo}
-                alt="Parent logo"
-                fill
-                className="object-contain p-1"
-                unoptimized
-              />
-            </div>
-          )}
+
         </div>
 
-        {/* Info */}
-        <div className="flex-1 space-y-3 text-center md:text-left pt-2">
-          <div>
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-              {name}
-            </h2>
-            <p className="text-xl text-gray-500 dark:text-gray-400 font-medium">
-              {sport}
-            </p>
+        <div className="min-w-0 flex-1 space-y-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="min-w-0">
+              <h2 className="truncate text-xl font-semibold text-slate-900">
+                {name}
+              </h2>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span className="text-sm text-muted-foreground">{sport}</span>
+                <StatusBadge
+                  status={isActive}
+                  trueLabel="Active Club"
+                  falseLabel="Inactive Club"
+                  variant={isActive ? "default" : "neutral"}
+                />
+              </div>
+            </div>
+            <ClientOnly
+              fallback={
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="h-9 w-28 animate-pulse rounded-md bg-slate-100" />
+                  <div className="h-9 w-36 animate-pulse rounded-md bg-slate-100" />
+                </div>
+              }
+            >
+              <ClubHeaderActions
+                clubId={club.id}
+                websiteUrl={website?.website ?? null}
+                playHqUrl={href ?? null}
+              />
+            </ClientOnly>
           </div>
-          <div className="flex items-center justify-center md:justify-start gap-3 flex-wrap">
-            <StatusBadge
-              status={isActive}
-              trueLabel="Active Club"
-              falseLabel="Inactive Club"
-              variant={isActive ? "default" : "neutral"}
+
+          <div className="grid overflow-hidden rounded-md border sm:grid-cols-2 lg:grid-cols-4">
+            <MetricCell
+              label="Teams"
+              value={statistics.teams.total}
+              helper={`${statistics.teams.acrossCompetitions} competitions`}
             />
-            <ProcessDirectButton clubId={club.id} />
+            <MetricCell
+              label="Competitions"
+              value={statistics.competitions.total}
+              helper={`${statistics.competitions.active} active`}
+            />
+            <MetricCell
+              label="Associations"
+              value={statistics.associations.total}
+              helper={`${statistics.associations.active} active`}
+            />
+            <MetricCell
+              label="Accounts"
+              value={statistics.accounts.total}
+              helper={`${statistics.accounts.active} active`}
+            />
           </div>
         </div>
       </div>
 
-      {/* Details Grid */}
-      {(hasContactDetails || hasLocation || hasLinks) && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Contact Details */}
+      {(hasContactDetails || hasLocation) && (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {hasContactDetails && (
             <ElementContainer
               title="Contact Details"
               border
-              padding="md"
+              padding="none"
               className="h-full"
             >
-              <div className="space-y-4">
-                {contactDetails?.phone && (
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg shrink-0">
-                      <Phone className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="space-y-1 overflow-hidden">
-                      <p className="text-xs font-medium text-gray-500 uppercase">
-                        Phone
-                      </p>
-                      <a
-                        href={`tel:${contactDetails.phone}`}
-                        className="block text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 hover:underline truncate"
-                      >
-                        {contactDetails.phone}
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                {contactDetails?.email && (
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg shrink-0">
-                      <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="space-y-1 overflow-hidden w-full">
-                      <p className="text-xs font-medium text-gray-500 uppercase">
-                        Email
-                      </p>
-                      <a
-                        href={`mailto:${contactDetails.email}`}
-                        className="block text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-blue-600 hover:underline truncate"
-                        title={contactDetails.email}
-                      >
-                        {contactDetails.email}
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                {contactDetails?.address && (
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg shrink-0">
-                      <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-xs font-medium text-gray-500 uppercase">
-                        Address
-                      </p>
-                      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        {contactDetails.address}
-                      </p>
-                    </div>
-                  </div>
-                )}
+              <div className="divide-y divide-slate-200">
+                <DetailRow icon={<Phone className="h-4 w-4" />} label="Phone">
+                  {contactDetails?.phone ? (
+                    <a
+                      href={`tel:${contactDetails.phone}`}
+                      className="truncate text-sm font-medium text-slate-900 hover:text-brandPrimary-700"
+                    >
+                      {contactDetails.phone}
+                    </a>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      Not provided
+                    </span>
+                  )}
+                </DetailRow>
+                <DetailRow icon={<Mail className="h-4 w-4" />} label="Email">
+                  {contactDetails?.email ? (
+                    <a
+                      href={`mailto:${contactDetails.email}`}
+                      className="truncate text-sm font-medium text-slate-900 hover:text-brandPrimary-700"
+                      title={contactDetails.email}
+                    >
+                      {contactDetails.email}
+                    </a>
+                  ) : (
+                    <span className="text-sm text-muted-foreground">
+                      Not provided
+                    </span>
+                  )}
+                </DetailRow>
+                <DetailRow
+                  icon={<MapPin className="h-4 w-4" />}
+                  label="Address"
+                >
+                  <span className="text-sm font-medium text-slate-900">
+                    {contactDetails?.address ?? "Not provided"}
+                  </span>
+                </DetailRow>
               </div>
             </ElementContainer>
           )}
 
-          {/* Location */}
           {hasLocation && (
             <ElementContainer
               title="Location"
               border
-              padding="md"
+              padding="none"
               className="h-full"
             >
-              <div className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 bg-green-50 dark:bg-green-900/20 rounded-lg shrink-0">
-                    <MapPin className="h-4 w-4 text-green-600 dark:text-green-400" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-gray-500 uppercase">
-                      Address
-                    </p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {locationString ?? "Not provided"}
-                    </p>
-                  </div>
-                </div>
-
+              <div className="divide-y divide-slate-200">
+                <DetailRow
+                  icon={<MapPin className="h-4 w-4" />}
+                  label="Address"
+                >
+                  <span className="text-sm font-medium text-slate-900">
+                    {locationString ?? "Not provided"}
+                  </span>
+                </DetailRow>
                 {googleMapsUrl && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-start"
-                    asChild
-                  >
-                    <a
-                      href={googleMapsUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      View on Google Maps
-                    </a>
-                  </Button>
-                )}
-              </div>
-            </ElementContainer>
-          )}
-
-          {/* Links */}
-          {hasLinks && (
-            <ElementContainer
-              title="Quick Links"
-              border
-              padding="md"
-              className="h-full"
-            >
-              <div className="space-y-3">
-                {website?.website && (
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start h-auto py-3"
-                    asChild
-                  >
-                    <a
-                      href={website.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <div className="p-1 bg-purple-50 dark:bg-purple-900/20 rounded mr-3">
-                        <Globe className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                      </div>
-                      <div className="flex flex-col items-start overflow-hidden">
-                        <span className="text-sm font-medium">Website</span>
-                        <span className="text-xs text-muted-foreground font-normal truncate max-w-[180px]">
-                          {website.website}
-                        </span>
-                      </div>
-                      <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground shrink-0" />
-                    </a>
-                  </Button>
-                )}
-
-                {href && (
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start h-auto py-3"
-                    asChild
-                  >
-                    <a href={href} target="_blank" rel="noopener noreferrer">
-                      <div className="p-1 bg-orange-50 dark:bg-orange-900/20 rounded mr-3">
-                        <ExternalLink className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                      </div>
-                      <div className="flex flex-col items-start">
-                        <span className="text-sm font-medium">Club Link</span>
-                        <span className="text-xs text-muted-foreground font-normal">
-                          View external club page
-                        </span>
-                      </div>
-                      <ExternalLink className="h-3 w-3 ml-auto text-muted-foreground shrink-0" />
-                    </a>
-                  </Button>
+                  <div className="flex justify-end px-4 py-3">
+                    <Button variant="primary" size="sm" asChild>
+                      <a
+                        href={googleMapsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Google Maps
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    </Button>
+                  </div>
                 )}
               </div>
             </ElementContainer>
@@ -290,51 +235,139 @@ export default function ClubHeader({ club }: ClubHeaderProps) {
   );
 }
 
-/**
- * ProcessDirectButton Component
- *
- * Button to trigger direct club processing via the API with confirmation dialog
- */
-function ProcessDirectButton({ clubId }: { clubId: number }) {
+function MetricCell({
+  label,
+  value,
+  helper,
+}: {
+  label: string;
+  value: number | string;
+  helper: string;
+}) {
+  return (
+    <div className="border-b border-r border-slate-200 px-4 py-3 last:border-r-0 sm:[&:nth-child(2n)]:border-r-0 lg:border-b-0 lg:[&:nth-child(2n)]:border-r lg:last:border-r-0">
+      <p className="text-xs font-medium uppercase text-slate-500">{label}</p>
+      <div className="mt-1 flex items-baseline justify-between gap-3">
+        <p className="text-xl font-semibold text-slate-900">{value}</p>
+        <p className="truncate text-xs text-muted-foreground">{helper}</p>
+      </div>
+    </div>
+  );
+}
+
+function DetailRow({
+  icon,
+  label,
+  children,
+}: {
+  icon: ReactNode;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-4 px-4 py-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-md bg-slate-50 text-slate-500">
+          {icon}
+        </div>
+        <p className="text-xs font-medium uppercase text-slate-500">{label}</p>
+      </div>
+      <div className="min-w-0 text-right">{children}</div>
+    </div>
+  );
+}
+
+interface ClubHeaderActionsProps {
+  clubId: number;
+  websiteUrl: string | null;
+  playHqUrl: string | null;
+}
+
+function ClubHeaderActions({
+  clubId,
+  websiteUrl,
+  playHqUrl,
+}: ClubHeaderActionsProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const processClubDirect = useProcessClubDirect();
+  const triggerScrape = useTriggerClubSingleScrape();
+  const hasLinks = websiteUrl || playHqUrl;
 
   const handleProcessDirect = async () => {
     try {
-      await processClubDirect.mutateAsync({ clubId });
-      setIsDialogOpen(false); // Close dialog on success
+      await triggerScrape.mutateAsync({ clubId });
+      setIsDialogOpen(false);
     } catch (error) {
-      // Error handling is done in the hook
-      console.error("Error processing club:", error);
-      // Keep dialog open on error so user can retry or cancel
+      console.error("Error triggering club scrape:", error);
     }
   };
 
   return (
-    <>
-      <Button
-        onClick={() => setIsDialogOpen(true)}
-        disabled={processClubDirect.isPending}
-        variant="accent"
-        size="sm"
-      >
-        <RefreshCw className="h-4 w-4 mr-2" />
-        Process Direct
-      </Button>
+    <div className="flex flex-wrap items-center gap-2">
+      {hasLinks && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="primary" size="sm">
+              <ExternalLink className="h-4 w-4" />
+              Open
+              <ChevronDown className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Quick links</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {websiteUrl && (
+              <DropdownMenuItem asChild>
+                <a href={websiteUrl} target="_blank" rel="noopener noreferrer">
+                  <Globe className="h-4 w-4" />
+                  Website
+                </a>
+              </DropdownMenuItem>
+            )}
+            {playHqUrl && (
+              <DropdownMenuItem asChild>
+                <a href={playHqUrl} target="_blank" rel="noopener noreferrer">
+                  <ExternalLink className="h-4 w-4" />
+                  View on PlayHQ
+                </a>
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
 
-      {/* Confirmation Dialog */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="accent" size="sm">
+            <RefreshCw className="h-4 w-4" />
+            Data actions
+            <ChevronDown className="h-3.5 w-3.5" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-64">
+          <DropdownMenuLabel>Queue background jobs</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            disabled={triggerScrape.isPending}
+            onSelect={() => setIsDialogOpen(true)}
+          >
+            <RefreshCw className="h-4 w-4" />
+            Process Direct
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <RefreshCw className="h-5 w-5 text-brandAccent-600" />
-              Confirm Club Processing
+              Confirm Club Scrape
             </DialogTitle>
             <DialogDescription>
-              Are you sure you want to trigger direct processing for this club?
-              This will queue a background job to process club data, including
-              competitions, teams, and games. The job will be processed
-              asynchronously.
+              This will queue a background job to scrape this club&apos;s PlayHQ
+              page and ingest competitions. The CMS looks up the club, resolves
+              the PlayHQ URL from club.href, and enqueues to the Redis queue
+              scrape:club-single. The job runs asynchronously.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
@@ -348,30 +381,30 @@ function ProcessDirectButton({ clubId }: { clubId: number }) {
             <Button
               variant="secondary"
               onClick={() => setIsDialogOpen(false)}
-              disabled={processClubDirect.isPending}
+              disabled={triggerScrape.isPending}
             >
               Cancel
             </Button>
             <Button
               variant="accent"
               onClick={handleProcessDirect}
-              disabled={processClubDirect.isPending}
+              disabled={triggerScrape.isPending}
             >
-              {processClubDirect.isPending ? (
+              {triggerScrape.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Processing...
+                  Queuing...
                 </>
               ) : (
                 <>
                   <RefreshCw className="h-4 w-4 mr-2" />
-                  Confirm Process
+                  Confirm Scrape
                 </>
               )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

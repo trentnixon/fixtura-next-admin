@@ -1,6 +1,7 @@
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import CompetitionAdminStats from "./components/CompetitionAdminStats";
+import { LookupGradeTeamsButton } from "./components/LookupGradeTeamsButton";
 
 export default function Competitions() {
   return (
@@ -9,7 +10,9 @@ export default function Competitions() {
         title="Competitions"
         byLine="CMS-powered competition dashboard"
         byLineBottom="Monitor competition activity, timing, and size across associations and seasons"
-      />
+      >
+        <LookupGradeTeamsButton />
+      </CreatePageTitle>
       <PageContainer padding="xs" spacing="lg">
         <CompetitionAdminStats />
       </PageContainer>
