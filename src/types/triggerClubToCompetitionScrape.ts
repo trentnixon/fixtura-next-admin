@@ -2,9 +2,12 @@
  * Types for the trigger-club-to-competition-scrape endpoint
  * POST /api/club/trigger-club-to-competition-scrape
  *
+ * @deprecated Bulk club scrape — use GlobalDataWorkflowTriggerResponse via
+ * triggerClubCompetitionRefresh and types in @/types/globalDataWorkflowTrigger.
+ *
  * @see src/app/dashboard/data/.comms/admin-frontend-trigger-club-to-competition-integration.md
  *
- * Note: Single-club trigger uses `clubId`. Sport-scoped full-list runs use `options.sport`.
+ * Note: Single-club trigger uses trigger-club-single-scrape. Bulk runs use global workflow.
  */
 
 import type { ClubScrapeTriggerOptions } from "@/types/clubScrapeTriggerOptions";

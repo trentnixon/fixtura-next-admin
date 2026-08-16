@@ -33,12 +33,14 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CLUB_SCRAPE_SPORTS } from "@/constants/clubScrapeSportSlugs";
 import type { ClubScrapeSportSlug } from "@/constants/clubScrapeSportSlugs";
-import { triggerAssociationToCompetitionScrape } from "@/lib/services/data-collection/triggerAssociationToCompetitionScrape";
+import { triggerAssociationCompetitionRefresh } from "@/lib/services/data-collection/triggerAssociationCompetitionRefresh";
 import { triggerClientsListScrape } from "@/lib/services/data-collection/triggerClientsListScrape";
 import { triggerClubActiveCheckScrape } from "@/lib/services/data-collection/triggerClubActiveCheckScrape";
-import { triggerClubToCompetitionScrape } from "@/lib/services/data-collection/triggerClubToCompetitionScrape";
+import { triggerClubCompetitionRefresh } from "@/lib/services/data-collection/triggerClubCompetitionRefresh";
 import { triggerGradesCompsScrape } from "@/lib/services/data-collection/triggerGradesCompsScrape";
 import { triggerGradesLookupTeamsScrape } from "@/lib/services/data-collection/triggerGradesLookupTeamsScrape";
+import { formatGlobalDataWorkflowToast } from "@/lib/utils/formatGlobalDataWorkflowToast";
+import { OrgLinkSyncActions } from "./OrgLinkSyncActions";
 import { ScraperLogsSection } from "./ScraperLogsSection";
 
 const ALL_SCOPES_VALUE = "all" as const;
@@ -93,21 +95,22 @@ const SCOPE_CONFIG = {
   },
   association_to_competition: {
     hasTrigger: true as const,
-    title: "Association to competition scraper",
-    description: "Association competition mapping jobs and logs",
-    dialogTitle: "Confirm Association to Competition Scrape",
+    title: "Association competition refresh",
+    description:
+      "Full-catalogue association competition scrape — does not fix which clubs belong to an association",
+    dialogTitle: "Confirm association competition refresh",
     dialogDescription:
-      "This will enqueue a job to scrape association-to-competition mappings from PlayHQ, including single-association scrapes. The job runs asynchronously. Continue?",
-    buttonLabel: "Trigger Association Overview Scrape",
+      "Queues a full-catalogue refresh of association competitions from PlayHQ. This refreshes competition data only — it does not repair club membership links. The job runs asynchronously. Continue?",
+    buttonLabel: "Refresh all association competitions",
   },
   club_to_competition: {
     hasTrigger: true as const,
-    title: "Club to competition scraper",
-    description: "Club competition mapping jobs and logs",
-    dialogTitle: "Confirm Club to Competition Scrape",
+    title: "Club competition refresh",
+    description: "Full-catalogue club competition scrape (~7,600 clubs, batched)",
+    dialogTitle: "Confirm full catalogue club competition refresh",
     dialogDescription:
-      "This will enqueue a job to scrape club competitions from PlayHQ. The job runs asynchronously. Continue?",
-    buttonLabel: "Trigger Club to Competition Scrape",
+      "Queues a full-catalogue scrape of all active clubs from PlayHQ (~7,600 clubs in batches of 25). This run takes many hours. Monitor progress via scraper logs using the returned run key. Continue?",
+    buttonLabel: "Refresh all club competitions",
   },
   grades_comps: {
     hasTrigger: true as const,
@@ -149,10 +152,27 @@ type ScraperScope =
 
 type TriggerableScope = Exclude<ScraperScope, typeof ALL_SCOPES_VALUE>;
 
-function isClubScrapeSportScope(
+type LegacyScrapeResult = {
+  jobId: number;
+  queueName: string;
+  message: string;
+};
+
+function isClubActiveCheckSportScope(
   scope: TriggerableScope | null,
-): scope is "club_to_competition" | "club_active_check" {
-  return scope === "club_to_competition" || scope === "club_active_check";
+): scope is "club_active_check" {
+  return scope === "club_active_check";
+}
+
+function showGlobalWorkflowToast(
+  result: Awaited<ReturnType<typeof triggerClubCompetitionRefresh>>,
+) {
+  const { title, description, variant } = formatGlobalDataWorkflowToast(result);
+  if (variant === "warning") {
+    toast.warning(title, { description });
+  } else {
+    toast.success(title, { description });
+  }
 }
 
 export function ScraperLogsSectionWithScopeSelector() {
@@ -172,51 +192,46 @@ export function ScraperLogsSectionWithScopeSelector() {
     setLoadingFor(dialogOpenFor);
 
     try {
-      let result: { jobId: number; queueName: string; message: string };
+      if (dialogOpenFor === "club_to_competition") {
+        const result = await triggerClubCompetitionRefresh({});
+        showGlobalWorkflowToast(result);
+      } else if (dialogOpenFor === "association_to_competition") {
+        const result = await triggerAssociationCompetitionRefresh({});
+        showGlobalWorkflowToast(result);
+      } else {
+        let result: LegacyScrapeResult;
 
-      switch (dialogOpenFor) {
-        case "club_to_competition":
-          result = await triggerClubToCompetitionScrape(
-            sportSlugForDialog === null
-              ? {}
-              : {
-                  targets: [],
-                  options: {
-                    sport: sportSlugForDialog as ClubScrapeSportSlug,
+        switch (dialogOpenFor) {
+          case "grades_comps":
+            result = await triggerGradesCompsScrape({});
+            break;
+          case "grades_lookup_teams":
+            result = await triggerGradesLookupTeamsScrape({});
+            break;
+          case "clients_list":
+            result = await triggerClientsListScrape({});
+            break;
+          case "club_active_check":
+            result = await triggerClubActiveCheckScrape(
+              sportSlugForDialog === null
+                ? {}
+                : {
+                    targets: [],
+                    options: {
+                      sport: sportSlugForDialog as ClubScrapeSportSlug,
+                    },
                   },
-                },
-          );
-          break;
-        case "grades_comps":
-          result = await triggerGradesCompsScrape({});
-          break;
-        case "grades_lookup_teams":
-          result = await triggerGradesLookupTeamsScrape({});
-          break;
-        case "clients_list":
-          result = await triggerClientsListScrape({});
-          break;
-        case "club_active_check":
-          result = await triggerClubActiveCheckScrape(
-            sportSlugForDialog === null
-              ? {}
-              : {
-                  targets: [],
-                  options: {
-                    sport: sportSlugForDialog as ClubScrapeSportSlug,
-                  },
-                },
-          );
-          break;
-        case "association_to_competition":
-          result = await triggerAssociationToCompetitionScrape({});
-          break;
+            );
+            break;
+        }
+
+        toast.success(`Job ${result.jobId} queued to ${result.queueName}`, {
+          description: result.message,
+        });
       }
 
-      toast.success(`Job ${result.jobId} queued to ${result.queueName}`, {
-        description: result.message,
-      });
       setDialogOpenFor(null);
+      setSportSlugForDialog(null);
       queryClient.invalidateQueries({ queryKey: ["scraperLogs"] });
       queryClient.invalidateQueries({ queryKey: ["scraperLog"] });
     } catch (error) {
@@ -280,6 +295,9 @@ export function ScraperLogsSectionWithScopeSelector() {
                   ) : null
                 }
               >
+                {item.value === "club_to_competition" ? (
+                  <OrgLinkSyncActions />
+                ) : null}
                 <ScraperLogsSection
                   scope={
                     item.value === ALL_SCOPES_VALUE
@@ -315,7 +333,7 @@ export function ScraperLogsSectionWithScopeSelector() {
             </DialogDescription>
           </DialogHeader>
 
-          {dialogOpenFor && isClubScrapeSportScope(dialogOpenFor) && (
+          {dialogOpenFor && isClubActiveCheckSportScope(dialogOpenFor) && (
             <div className="space-y-2">
               <Label htmlFor="club-scrape-sport">Sport (optional)</Label>
               <Select

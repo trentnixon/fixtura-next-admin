@@ -8,6 +8,8 @@ import type {
 } from "@/types/triggerAssociationToCompetitionScrape";
 
 /**
+ * @deprecated Use triggerAssociationCompetitionRefresh for bulk full-catalogue runs.
+ *
  * Triggers an association-to-competition scrape by calling POST /api/association-overview-queues/trigger-association-to-competition-scrape.
  * Enqueues a job to the Redis queue scrape:association-to-competition. Auth not required by endpoint.
  *

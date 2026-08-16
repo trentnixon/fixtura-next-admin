@@ -351,7 +351,7 @@ function ClubHeaderActions({
             onSelect={() => setIsDialogOpen(true)}
           >
             <RefreshCw className="h-4 w-4" />
-            Process Direct
+            Scrape this club&apos;s competitions
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -361,13 +361,15 @@ function ClubHeaderActions({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <RefreshCw className="h-5 w-5 text-brandAccent-600" />
-              Confirm Club Scrape
+              Scrape this club&apos;s competitions
             </DialogTitle>
             <DialogDescription>
               This will queue a background job to scrape this club&apos;s PlayHQ
               page and ingest competitions. The CMS looks up the club, resolves
               the PlayHQ URL from club.href, and enqueues to the Redis queue
-              scrape:club-single. The job runs asynchronously.
+              scrape:club-single. The job runs asynchronously. After about 1–3
+              minutes, run org-link sync from the Data dashboard if you need
+              association links updated for this club.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">

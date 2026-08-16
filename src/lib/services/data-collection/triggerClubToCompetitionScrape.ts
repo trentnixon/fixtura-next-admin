@@ -8,6 +8,8 @@ import type {
 } from "@/types/triggerClubToCompetitionScrape";
 
 /**
+ * @deprecated Use triggerClubCompetitionRefresh for bulk full-catalogue runs.
+ *
  * Triggers a club-to-competition scrape by calling POST /api/club/trigger-club-to-competition-scrape.
  * Enqueues a job to the Redis queue scrape:club-to-competition. Auth not required by endpoint.
  *
