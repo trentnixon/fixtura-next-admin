@@ -27,14 +27,17 @@ export interface FetchNotificationIssuesFilters {
   issueScope?: string;
   retryable?: boolean;
   selectorDrift?: boolean;
+  /** Preferred case-insensitive search across issue and notification context. */
+  search?: string;
+  /** Legacy case-insensitive search limited to issue.message. */
   message?: string;
   page?: number;
   pageSize?: number;
   includeArtifacts?: boolean;
 }
 
-export type FetchNotificationIssuesParams = FetchNotificationIssuesWindowParams &
-  FetchNotificationIssuesFilters;
+export type FetchNotificationIssuesParams =
+  FetchNotificationIssuesWindowParams & FetchNotificationIssuesFilters;
 
 export interface NotificationIssueContext {
   id: number;

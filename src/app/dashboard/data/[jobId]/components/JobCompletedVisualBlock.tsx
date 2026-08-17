@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import type { LogEntry, LogMetrics, ScrapeIssue } from "@/types/scraperLogs";
 import ChartCard from "@/components/modules/charts/ChartCard";
 import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -16,9 +16,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   AlertTriangle,
   CheckCircle2,
+  Copy,
   ExternalLink,
   Layers,
   Package,
@@ -52,18 +54,16 @@ function StatTile({
   icon,
   label,
   children,
-  hint,
   className,
 }: {
   icon: ReactNode;
   label: string;
   children: ReactNode;
-  hint?: string;
   className?: string;
 }) {
   return (
     <div
-      className={`flex min-h-20 gap-3 rounded-lg border bg-white p-3 ${className ?? ""}`}
+      className={`flex min-h-[76px] gap-2.5 rounded-lg border bg-white p-3 ${className ?? ""}`}
     >
       <div className="text-muted-foreground shrink-0 mt-0.5">{icon}</div>
       <div className="min-w-0 flex-1">
@@ -73,9 +73,6 @@ function StatTile({
         <div className="mt-1 text-sm font-semibold leading-snug">
           {children}
         </div>
-        {hint != null && hint !== "" && (
-          <p className="mt-1 text-[10px] text-muted-foreground">{hint}</p>
-        )}
       </div>
     </div>
   );
@@ -127,8 +124,7 @@ function CompletionAtAGlance({
 
   return (
     <div className="space-y-3">
-      <p className="text-sm font-medium text-foreground">At a glance</p>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 xl:grid-cols-8">
         <StatTile
           icon={
             fatal === true ? (
@@ -142,10 +138,10 @@ function CompletionAtAGlance({
           label="Outcome"
           className={
             fatal === true
-              ? "border-red-200 bg-red-50/50 lg:col-span-2"
+              ? "border-red-200 bg-red-50/50"
               : fatal === false
-                ? "border-emerald-200/80 bg-emerald-50/40 lg:col-span-2"
-                : "lg:col-span-2"
+                ? "border-emerald-200/80 bg-emerald-50/40"
+                : ""
           }
         >
           <span className="flex flex-wrap items-center gap-2">
@@ -165,24 +161,10 @@ function CompletionAtAGlance({
                 Not specified
               </span>
             )}
-            {fatal === false && (
-              <span className="text-xs font-normal text-muted-foreground">
-                Job completed without fatal flag
-              </span>
-            )}
-            {fatal === true && (
-              <span className="text-xs font-normal text-muted-foreground">
-                Check issues below
-              </span>
-            )}
           </span>
         </StatTile>
 
-        <StatTile
-          icon={<Timer className="h-4 w-4" />}
-          label="Scrape duration"
-          hint="Total run time from job completion payload"
-        >
+        <StatTile icon={<Timer className="h-4 w-4" />} label="Scrape duration">
           {durationMs > 0 ? (
             <span className="tabular-nums text-base tracking-tight">
               {formatDurationReadable(durationMs)}
@@ -192,163 +174,154 @@ function CompletionAtAGlance({
           )}
         </StatTile>
 
-        <StatTile
-          icon={<Package className="h-4 w-4" />}
-          label="Artifacts"
-          hint="Capture files the scraper saved (e.g. screenshots). Total from completion metadata; paths are listed below when issues reference them."
-        >
+        <StatTile icon={<Package className="h-4 w-4" />} label="Artifacts">
           {artifacts ?? "—"}
         </StatTile>
 
-        <StatTile
-          icon={<AlertTriangle className="h-4 w-4" />}
-          label="Issues"
-          hint="Warnings & errors from job.completed (one row per item). Charts and the full table are in Issue analysis below."
-        >
+        <StatTile icon={<AlertTriangle className="h-4 w-4" />} label="Issues">
           <span className="tabular-nums text-base">{issueCount}</span>
         </StatTile>
-      </div>
-
-      {(artifactPaths.length > 0 ||
-        (reportedArtifactTotal != null && reportedArtifactTotal > 0)) && (
-        <div className="space-y-2 rounded-lg border border-dashed bg-slate-50/70 px-3 py-2">
-          <p className="text-xs font-medium text-foreground">
-            Capture file paths
-          </p>
-          <p className="text-[11px] text-muted-foreground leading-relaxed">
-            These are storage paths from the scraper (often PNGs for failed
-            steps). They are not hosted by this admin app unless{" "}
-            <code className="rounded bg-muted px-1 text-[10px]">
-              NEXT_PUBLIC_SCRAPER_ARTIFACT_BASE_URL
-            </code>{" "}
-            is configured to point at the server or bucket that serves them.
-          </p>
-          {artifactPaths.length > 0 ? (
-            <details className="group">
-              <summary className="cursor-pointer text-xs font-medium text-foreground hover:underline">
-                {artifactPaths.length} path
-                {artifactPaths.length === 1 ? "" : "s"} from issues
-                {reportedArtifactTotal != null &&
-                reportedArtifactTotal !== artifactPaths.length
-                  ? ` · metadata total ${reportedArtifactTotal}`
-                  : ""}
-              </summary>
-              <ul className="mt-2 space-y-2 pl-0 list-none border-t border-border/60 pt-2">
-                {artifactPaths.map((p) => {
-                  const href = artifactFileHref(p);
-                  return (
-                    <li key={p} className="text-xs font-mono break-all">
-                      {href ? (
-                        <a
-                          href={href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-start gap-1.5 text-sky-700 hover:underline"
-                        >
-                          <ExternalLink
-                            className="h-3.5 w-3.5 shrink-0 mt-0.5"
-                            aria-hidden
-                          />
-                          {p}
-                        </a>
-                      ) : (
-                        <span className="text-foreground">{p}</span>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </details>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              Metadata reports{" "}
-              <span className="font-semibold tabular-nums text-foreground">
-                {reportedArtifactTotal}
-              </span>{" "}
-              file(s), but no{" "}
-              <code className="rounded bg-muted px-1 text-[10px]">
-                artifactRefs
-              </code>{" "}
-              on issues in this payload — paths may only exist in worker storage
-              or a future API field.
+        {(artifactPaths.length > 0 ||
+          (reportedArtifactTotal != null && reportedArtifactTotal > 0)) && (
+          <div className="order-last col-span-full space-y-2 rounded-lg border border-dashed bg-slate-50/70 px-3 py-2">
+            <p className="text-xs font-medium text-foreground">
+              Capture file paths
             </p>
-          )}
-        </div>
-      )}
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              These are storage paths from the scraper (often PNGs for failed
+              steps). They are not hosted by this admin app unless{" "}
+              <code className="rounded bg-muted px-1 text-[10px]">
+                NEXT_PUBLIC_SCRAPER_ARTIFACT_BASE_URL
+              </code>{" "}
+              is configured to point at the server or bucket that serves them.
+            </p>
+            {artifactPaths.length > 0 ? (
+              <details className="group">
+                <summary className="cursor-pointer text-xs font-medium text-foreground hover:underline">
+                  {artifactPaths.length} path
+                  {artifactPaths.length === 1 ? "" : "s"} from issues
+                  {reportedArtifactTotal != null &&
+                  reportedArtifactTotal !== artifactPaths.length
+                    ? ` · metadata total ${reportedArtifactTotal}`
+                    : ""}
+                </summary>
+                <ul className="mt-2 space-y-2 pl-0 list-none border-t border-border/60 pt-2">
+                  {artifactPaths.map((p) => {
+                    const href = artifactFileHref(p);
+                    return (
+                      <li key={p} className="text-xs font-mono break-all">
+                        {href ? (
+                          <a
+                            href={href}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-start gap-1.5 text-sky-700 hover:underline"
+                          >
+                            <ExternalLink
+                              className="h-3.5 w-3.5 shrink-0 mt-0.5"
+                              aria-hidden
+                            />
+                            {p}
+                          </a>
+                        ) : (
+                          <span className="text-foreground">{p}</span>
+                        )}
+                      </li>
+                    );
+                  })}
+                </ul>
+              </details>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Metadata reports{" "}
+                <span className="font-semibold tabular-nums text-foreground">
+                  {reportedArtifactTotal}
+                </span>{" "}
+                file(s), but no{" "}
+                <code className="rounded bg-muted px-1 text-[10px]">
+                  artifactRefs
+                </code>{" "}
+                on issues in this payload — paths may only exist in worker
+                storage or a future API field.
+              </p>
+            )}
+          </div>
+        )}
 
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        <StatTile
-          icon={<Layers className="h-4 w-4" />}
-          label="Fixtures"
-          hint="fixturesSucceeded / fixturesFailed / fixturesTotal"
-        >
-          {fixturesTotal > 0 || succeeded > 0 || failedFx > 0 ? (
-            <div className="space-y-1 font-normal">
-              <p className="tabular-nums">
-                <span className="text-emerald-700 font-semibold">
-                  {succeeded.toLocaleString()}
-                </span>
-                <span className="text-muted-foreground font-medium"> ok</span>
-                <span className="text-muted-foreground"> · </span>
-                <span className="text-red-700 font-semibold">
-                  {failedFx.toLocaleString()}
-                </span>
-                <span className="text-muted-foreground font-medium">
-                  {" "}
-                  failed
-                </span>
-              </p>
-              <p className="text-xs text-muted-foreground tabular-nums">
-                {fixturesTotal > 0
-                  ? `${fixturesTotal.toLocaleString()} total in scope`
-                  : null}
-              </p>
-            </div>
-          ) : (
-            "—"
-          )}
-        </StatTile>
-
-        <StatTile
-          icon={<Upload className="h-4 w-4" />}
-          label="Ingest"
-          hint="ingest_success / ingest_failed / ingest_total · ingest_retried"
-        >
-          {ingestOk > 0 ||
-          ingestFail > 0 ||
-          ingestTotal > 0 ||
-          ingestRetry > 0 ? (
-            <div className="space-y-1 font-normal">
-              <p className="tabular-nums text-sm">
-                <span className="font-semibold text-sky-800">
-                  {ingestOk.toLocaleString()}
-                </span>
-                <span className="text-muted-foreground"> success</span>
-                <span className="text-muted-foreground"> · </span>
-                <span className="font-semibold text-amber-800">
-                  {ingestFail.toLocaleString()}
-                </span>
-                <span className="text-muted-foreground"> failed</span>
-                {ingestRetry > 0 ? (
-                  <>
-                    <span className="text-muted-foreground"> · </span>
-                    <span className="font-semibold">
-                      {ingestRetry.toLocaleString()}
-                    </span>
-                    <span className="text-muted-foreground"> retried</span>
-                  </>
-                ) : null}
-              </p>
-              {ingestTotal > 0 ? (
-                <p className="text-xs text-muted-foreground tabular-nums">
-                  {ingestTotal.toLocaleString()} ingest_total
+        <div className="contents">
+          <StatTile
+            icon={<Layers className="h-4 w-4" />}
+            label="Fixtures"
+            className="col-span-2 xl:col-span-2"
+          >
+            {fixturesTotal > 0 || succeeded > 0 || failedFx > 0 ? (
+              <div className="space-y-1 font-normal">
+                <p className="tabular-nums">
+                  <span className="text-emerald-700 font-semibold">
+                    {succeeded.toLocaleString()}
+                  </span>
+                  <span className="text-muted-foreground font-medium"> ok</span>
+                  <span className="text-muted-foreground"> · </span>
+                  <span className="text-red-700 font-semibold">
+                    {failedFx.toLocaleString()}
+                  </span>
+                  <span className="text-muted-foreground font-medium">
+                    {" "}
+                    failed
+                  </span>
                 </p>
-              ) : null}
-            </div>
-          ) : (
-            "—"
-          )}
-        </StatTile>
+                <p className="text-xs text-muted-foreground tabular-nums">
+                  {fixturesTotal > 0
+                    ? `${fixturesTotal.toLocaleString()} total in scope`
+                    : null}
+                </p>
+              </div>
+            ) : (
+              "—"
+            )}
+          </StatTile>
+
+          <StatTile
+            icon={<Upload className="h-4 w-4" />}
+            label="Ingest"
+            className="col-span-2 xl:col-span-2"
+          >
+            {ingestOk > 0 ||
+            ingestFail > 0 ||
+            ingestTotal > 0 ||
+            ingestRetry > 0 ? (
+              <div className="space-y-1 font-normal">
+                <p className="tabular-nums text-sm">
+                  <span className="font-semibold text-sky-800">
+                    {ingestOk.toLocaleString()}
+                  </span>
+                  <span className="text-muted-foreground"> success</span>
+                  <span className="text-muted-foreground"> · </span>
+                  <span className="font-semibold text-amber-800">
+                    {ingestFail.toLocaleString()}
+                  </span>
+                  <span className="text-muted-foreground"> failed</span>
+                  {ingestRetry > 0 ? (
+                    <>
+                      <span className="text-muted-foreground"> · </span>
+                      <span className="font-semibold">
+                        {ingestRetry.toLocaleString()}
+                      </span>
+                      <span className="text-muted-foreground"> retried</span>
+                    </>
+                  ) : null}
+                </p>
+                {ingestTotal > 0 ? (
+                  <p className="text-xs text-muted-foreground tabular-nums">
+                    {ingestTotal.toLocaleString()} total
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              "—"
+            )}
+          </StatTile>
+        </div>
       </div>
     </div>
   );
@@ -472,183 +445,110 @@ function IngestOutcomeChart({ metrics }: { metrics: LogMetrics }) {
   );
 }
 
-const STEP_CHART_COLORS = [
-  "hsl(221, 83%, 48%)",
-  "hsl(142, 76%, 36%)",
-  "hsl(25, 95%, 45%)",
-  "hsl(280, 65%, 48%)",
-  "hsl(199, 89%, 42%)",
-  "hsl(48, 96%, 38%)",
-];
-
-function IssuesByStepChart({ issues }: { issues: ScrapeIssue[] }) {
-  const rows = aggregateIssuesByStep(issues);
-  const data = rows.map((r, i) => ({
-    ...r,
-    fill: STEP_CHART_COLORS[i % STEP_CHART_COLORS.length],
-  }));
-
-  const chartConfig = {
-    count: { label: "Issues", color: "hsl(221, 83%, 53%)" },
-  } satisfies ChartConfig;
-
-  if (data.length === 0) {
-    return null;
-  }
-
-  return (
-    <ChartCard
-      title="Issues by step"
-      description="Pipeline step where each issue was recorded"
-      chartConfig={chartConfig}
-      chartClassName="h-[min(320px,28vh)] min-h-[200px]"
-    >
-      <BarChart
-        layout="vertical"
-        data={data}
-        margin={{ top: 8, right: 20, left: 4, bottom: 0 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-        <XAxis type="number" tickLine={false} axisLine={false} fontSize={11} />
-        <YAxis
-          type="category"
-          dataKey="step"
-          width={120}
-          tickLine={false}
-          axisLine={false}
-          fontSize={10}
-          tickFormatter={(v) =>
-            String(v).length > 18 ? `${String(v).slice(0, 16)}…` : String(v)
-          }
-        />
-        <ChartTooltip
-          content={<ChartTooltipContent />}
-          formatter={(value: number) => [value, "Issues"]}
-          labelFormatter={(_, payload) => {
-            const p = payload?.[0]?.payload as { step?: string } | undefined;
-            return p?.step ?? "";
-          }}
-        />
-        <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={26}>
-          {data.map((d) => (
-            <Cell key={d.step} fill={d.fill} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ChartCard>
-  );
-}
-
-function IssuesByMessageChart({ issues }: { issues: ScrapeIssue[] }) {
-  const rows = aggregateIssuesByMessage(issues, 16);
-  const data = rows.map((r, i) => ({
-    ...r,
-    fill: STEP_CHART_COLORS[i % STEP_CHART_COLORS.length],
-  }));
-
-  const chartConfig = {
-    count: { label: "Count", color: "hsl(221, 83%, 53%)" },
-  } satisfies ChartConfig;
-
-  if (data.length === 0) {
-    return null;
-  }
-
-  return (
-    <ChartCard
-      title="Top issue messages"
-      description="Grouped identical messages (hover for full text)"
-      chartConfig={chartConfig}
-      chartClassName="h-[min(400px,40vh)] min-h-[220px]"
-    >
-      <BarChart
-        layout="vertical"
-        data={data}
-        margin={{ top: 8, right: 16, left: 4, bottom: 0 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-        <XAxis type="number" tickLine={false} axisLine={false} fontSize={11} />
-        <YAxis
-          type="category"
-          dataKey="shortLabel"
-          width={200}
-          tickLine={false}
-          axisLine={false}
-          fontSize={9}
-        />
-        <ChartTooltip
-          content={<ChartTooltipContent />}
-          formatter={(value: number) => [value, "Count"]}
-          labelFormatter={(_, payload) => {
-            const p = payload?.[0]?.payload as { message?: string } | undefined;
-            return p?.message ?? "";
-          }}
-        />
-        <Bar dataKey="count" radius={[0, 4, 4, 0]} maxBarSize={22}>
-          {data.map((d) => (
-            <Cell key={d.message} fill={d.fill} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ChartCard>
-  );
-}
-
-function IssueSeverityChart({ issues }: { issues: ScrapeIssue[] }) {
+function issueSeverityRows(issues: ScrapeIssue[]) {
   const counts = new Map<string, number>();
-  for (const i of issues) {
-    const s = (i.severity ?? "unknown").toUpperCase();
+  for (const issue of issues) {
+    const s = (issue.severity ?? "unknown").toUpperCase();
     counts.set(s, (counts.get(s) ?? 0) + 1);
   }
-  const data = Array.from(counts.entries()).map(([name, value]) => ({
-    name,
-    value,
-    fill:
-      name === "FATAL"
-        ? "hsl(0, 72%, 45%)"
-        : name === "ERROR" || name === "ERR"
-          ? "hsl(25, 95%, 48%)"
-          : "hsl(221, 83%, 53%)",
-  }));
+  return Array.from(counts.entries())
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count);
+}
 
-  const chartConfig = {
-    value: { label: "Issues", color: "hsl(221, 83%, 53%)" },
-  } satisfies ChartConfig;
-
-  if (data.length === 0) {
-    return null;
-  }
+function BreakdownPanel({
+  title,
+  rows,
+  mono = false,
+  tone,
+}: {
+  title: string;
+  rows: { label: string; count: number; href?: string }[];
+  mono?: boolean;
+  tone: "rose" | "amber" | "blue";
+}) {
+  const max = Math.max(...rows.map((row) => row.count), 1);
+  const tones = {
+    rose: "bg-error-500",
+    amber: "bg-warning-500",
+    blue: "bg-info-500",
+  };
 
   return (
-    <ChartCard
-      title="Issues by severity"
-      description={`${issues.length} issue(s) logged`}
-      chartConfig={chartConfig}
-      chartClassName="h-[180px]"
+    <section className="rounded-lg border border-slate-200 bg-white p-3.5">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </p>
+      <div className="mt-3 space-y-3">
+        {rows.map((row) => (
+          <div key={row.label} className="min-w-0">
+            <div className="flex items-center justify-between gap-3 text-xs">
+              {row.href ? (
+                <a
+                  href={row.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`inline-flex min-w-0 items-center gap-1 truncate text-info-700 hover:underline ${mono ? "font-mono" : ""}`}
+                  title={row.label}
+                >
+                  <span className="truncate">{row.label}</span>
+                  <ExternalLink className="h-3 w-3 shrink-0" />
+                </a>
+              ) : (
+                <span
+                  className={`truncate text-slate-800 ${mono ? "font-mono" : ""}`}
+                  title={row.label}
+                >
+                  {row.label}
+                </span>
+              )}
+              <span className="shrink-0 font-semibold tabular-nums text-slate-900">
+                {row.count.toLocaleString()}
+              </span>
+            </div>
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-slate-100">
+              <div
+                className={`h-full rounded-full ${tones[tone]}`}
+                style={{ width: `${Math.max((row.count / max) * 100, 6)}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function IssueDiagnosticBreakdown({ issues }: { issues: ScrapeIssue[] }) {
+  const severities = issueSeverityRows(issues);
+  const steps = aggregateIssuesByStep(issues).map((row) => ({
+    label: row.step,
+    count: row.count,
+  }));
+  const messages = aggregateIssuesByMessage(issues, 6).map((row) => ({
+    label: row.message,
+    count: row.count,
+  }));
+  const targetCounts = new Map<string, number>();
+  for (const issue of issues) {
+    const url = issueTargetUrl(issue);
+    if (url) targetCounts.set(url, (targetCounts.get(url) ?? 0) + 1);
+  }
+  const targets = Array.from(targetCounts.entries())
+    .map(([url, count]) => ({ label: url, href: url, count }))
+    .sort((a, b) => b.count - a.count);
+
+  return (
+    <div
+      className={`grid gap-3 lg:grid-cols-2 ${targets.length > 0 ? "xl:grid-cols-4" : "xl:grid-cols-3"}`}
     >
-      <BarChart
-        layout="vertical"
-        data={data}
-        margin={{ top: 8, right: 24, left: 8, bottom: 0 }}
-      >
-        <CartesianGrid strokeDasharray="3 3" horizontal={false} />
-        <XAxis type="number" tickLine={false} axisLine={false} fontSize={12} />
-        <YAxis
-          type="category"
-          dataKey="name"
-          width={72}
-          tickLine={false}
-          axisLine={false}
-          fontSize={11}
-        />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <Bar dataKey="value" radius={[0, 4, 4, 0]} maxBarSize={28}>
-          {data.map((d) => (
-            <Cell key={d.name} fill={d.fill} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ChartCard>
+      <BreakdownPanel title="Severity" rows={severities} tone="rose" mono />
+      <BreakdownPanel title="Pipeline step" rows={steps} tone="amber" mono />
+      <BreakdownPanel title="Messages" rows={messages} tone="blue" />
+      {targets.length > 0 ? (
+        <BreakdownPanel title="Affected URLs" rows={targets} tone="blue" mono />
+      ) : null}
+    </div>
   );
 }
 
@@ -657,73 +557,9 @@ function issueTargetUrl(issue: ScrapeIssue): string | null {
   return u && u.length > 0 ? u : null;
 }
 
-const SEVERITY_TITLE_ORDER = [
-  "FATAL",
-  "ERROR",
-  "WARN",
-  "INFO",
-  "DEBUG",
-] as const;
-
 function normalizeSeverityKey(severity: string | undefined): string {
   const t = (severity ?? "").trim().toUpperCase();
   return t || "OTHER";
-}
-
-function severitySectionSortKey(key: string): number {
-  const i = SEVERITY_TITLE_ORDER.indexOf(
-    key as (typeof SEVERITY_TITLE_ORDER)[number],
-  );
-  if (i >= 0) return i;
-  if (key === "OTHER") return 90;
-  return 50 + (key.charCodeAt(0) % 40);
-}
-
-function groupIssuesBySeverityThenMessage(issues: ScrapeIssue[]): {
-  severityKey: string;
-  severityLabel: string;
-  messageGroups: { message: string; rows: ScrapeIssue[] }[];
-  totalInSeverity: number;
-}[] {
-  const bySev = new Map<string, ScrapeIssue[]>();
-  for (const issue of issues) {
-    const k = normalizeSeverityKey(issue.severity);
-    if (!bySev.has(k)) bySev.set(k, []);
-    bySev.get(k)!.push(issue);
-  }
-
-  const sevKeys = [...bySev.keys()].sort((a, b) => {
-    const da = severitySectionSortKey(a);
-    const db = severitySectionSortKey(b);
-    if (da !== db) return da - db;
-    return a.localeCompare(b);
-  });
-
-  return sevKeys.map((severityKey) => {
-    const list = bySev.get(severityKey)!;
-    const byMsg = new Map<string, ScrapeIssue[]>();
-    for (const issue of list) {
-      const mk = (issue.message ?? "").trim() || "(no message)";
-      if (!byMsg.has(mk)) byMsg.set(mk, []);
-      byMsg.get(mk)!.push(issue);
-    }
-    const messageKeys = [...byMsg.keys()].sort((a, b) => {
-      const ca = byMsg.get(a)!.length;
-      const cb = byMsg.get(b)!.length;
-      if (cb !== ca) return cb - ca;
-      return a.localeCompare(b);
-    });
-    return {
-      severityKey,
-      severityLabel:
-        severityKey === "OTHER" ? "Other / unset severity" : severityKey,
-      messageGroups: messageKeys.map((message) => ({
-        message,
-        rows: byMsg.get(message)!,
-      })),
-      totalInSeverity: list.length,
-    };
-  });
 }
 
 function severitySectionBadgeClass(key: string): string {
@@ -743,147 +579,120 @@ function severitySectionBadgeClass(key: string): string {
   }
 }
 
-function IssueRowCells({ issue }: { issue: ScrapeIssue }) {
-  const targetUrl = issueTargetUrl(issue);
-  const isHttp = targetUrl != null && /^https?:\/\//i.test(targetUrl);
-  return (
-    <TableRow>
-      <TableCell className="text-xs align-top break-all max-w-[min(420px,45vw)]">
-        {targetUrl ? (
-          isHttp ? (
-            <a
-              href={targetUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sky-700 hover:underline inline-flex items-start gap-1"
-            >
-              <ExternalLink className="h-3 w-3 shrink-0 mt-0.5" aria-hidden />
-              {targetUrl}
-            </a>
-          ) : (
-            <span className="font-mono text-muted-foreground">{targetUrl}</span>
-          )
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        )}
-      </TableCell>
-      <TableCell className="text-xs hidden sm:table-cell font-mono whitespace-nowrap align-top">
-        {issue.step ?? "—"}
-      </TableCell>
-      <TableCell className="text-xs hidden md:table-cell font-mono align-top">
-        {issue.fixtureKey ?? "—"}
-      </TableCell>
-      <TableCell className="text-xs hidden lg:table-cell font-mono whitespace-nowrap align-top">
-        {issue.failureClass ?? "—"}
-      </TableCell>
-      <TableCell className="text-xs hidden xl:table-cell text-center align-top">
-        {issue.retryable === true
-          ? "yes"
-          : issue.retryable === false
-            ? "no"
-            : "—"}
-      </TableCell>
-      <TableCell className="text-xs hidden xl:table-cell text-center align-top">
-        {issue.selectorDriftSignal === true
-          ? "yes"
-          : issue.selectorDriftSignal === false
-            ? "no"
-            : "—"}
-      </TableCell>
-    </TableRow>
-  );
+function issueTime(
+  issue: ScrapeIssue,
+  reportedAt: string | null,
+): { label: "Occurred" | "Reported"; value: string } {
+  const raw = issue as ScrapeIssue & {
+    timestamp?: string;
+    occurredAt?: string;
+    createdAt?: string;
+  };
+  const occurredAt = raw.occurredAt ?? raw.timestamp ?? raw.createdAt;
+  const value = occurredAt ?? reportedAt;
+
+  if (!value) return { label: "Reported", value: "Time unavailable" };
+
+  const date = new Date(value);
+  return {
+    label: occurredAt ? "Occurred" : "Reported",
+    value: Number.isNaN(date.getTime()) ? value : date.toLocaleString(),
+  };
 }
 
-function IssuesGroupedTableHeader() {
-  return (
-    <TableHeader>
-      <TableRow className="bg-slate-50 hover:bg-slate-50">
-        <TableHead className="sticky top-0 z-10 min-w-[180px] max-w-[min(420px,45vw)] bg-slate-50 text-xs">
-          URL
-        </TableHead>
-        <TableHead className="sticky top-0 z-10 hidden bg-slate-50 text-xs sm:table-cell">
-          Step
-        </TableHead>
-        <TableHead className="sticky top-0 z-10 hidden bg-slate-50 text-xs md:table-cell">
-          Fixture
-        </TableHead>
-        <TableHead className="sticky top-0 z-10 hidden bg-slate-50 text-xs lg:table-cell">
-          Class
-        </TableHead>
-        <TableHead className="sticky top-0 z-10 hidden bg-slate-50 text-center text-xs xl:table-cell">
-          Retry
-        </TableHead>
-        <TableHead className="sticky top-0 z-10 hidden bg-slate-50 text-center text-xs xl:table-cell">
-          Drift
-        </TableHead>
-      </TableRow>
-    </TableHeader>
-  );
-}
-
-function IssuesDetailTable({ issues }: { issues: ScrapeIssue[] }) {
+function IssuesDetailTable({
+  issues,
+  reportedAt,
+}: {
+  issues: ScrapeIssue[];
+  reportedAt: string | null;
+}) {
   if (issues.length === 0) {
     return <p className="text-sm text-muted-foreground">No issues recorded.</p>;
   }
 
-  const sections = groupIssuesBySeverityThenMessage(issues);
-
   return (
-    <div className="space-y-10">
-      {sections.map((section) => (
-        <section
-          key={section.severityKey}
-          className="space-y-5"
-          aria-labelledby={`issue-sev-${section.severityKey}`}
-        >
-          <div className="flex flex-wrap items-center gap-3 border-b border-border pb-2">
-            <h3
-              id={`issue-sev-${section.severityKey}`}
-              className="text-lg font-semibold font-mono tracking-tight text-foreground"
-            >
-              {section.severityLabel}
-            </h3>
-            <Badge
-              variant="outline"
-              className={`text-xs tabular-nums ${severitySectionBadgeClass(section.severityKey)}`}
-            >
-              {section.totalInSeverity}{" "}
-              {section.totalInSeverity === 1 ? "issue" : "issues"}
-            </Badge>
-          </div>
+    <div className="divide-y divide-slate-200 overflow-hidden rounded-lg border border-slate-200 bg-white">
+      {issues.map((issue, index) => {
+        const severity = normalizeSeverityKey(issue.severity);
+        const targetUrl = issueTargetUrl(issue);
+        const isHttp = targetUrl != null && /^https?:\/\//i.test(targetUrl);
+        const time = issueTime(issue, reportedAt);
 
-          <div className="space-y-6 pl-0 sm:pl-1">
-            {section.messageGroups.map(({ message, rows }, mi) => (
-              <div
-                key={`${section.severityKey}-msg-${mi}`}
-                className="space-y-2"
-              >
-                <div>
-                  <p className="text-sm font-medium text-foreground leading-snug break-words">
-                    {message}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">
-                    {rows.length} row{rows.length === 1 ? "" : "s"}
-                  </p>
-                </div>
-                <div className="rounded-md border overflow-x-auto max-h-[min(400px,50vh)] overflow-y-auto">
-                  <Table>
-                    <IssuesGroupedTableHeader />
-                    <TableBody>
-                      {rows.map((issue, ri) => (
-                        <IssueRowCells
-                          key={`${section.severityKey}-${message}-${ri}-${issue.fixtureKey ?? ""}-${issue.step ?? ""}`}
-                          issue={issue}
-                        />
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+        return (
+          <article
+            key={`${severity}-${issue.message ?? "issue"}-${index}`}
+            className="grid gap-4 p-4 xl:grid-cols-[minmax(0,1.35fr)_190px_minmax(280px,1fr)]"
+          >
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] ${severitySectionBadgeClass(severity)}`}
+                >
+                  {severity}
+                </Badge>
+                {issue.step ? (
+                  <Badge variant="secondary" className="font-mono text-[10px]">
+                    {issue.step}
+                  </Badge>
+                ) : null}
               </div>
-            ))}
-          </div>
-        </section>
-      ))}
+              <p className="mt-2 break-words text-sm font-medium leading-snug text-slate-900">
+                {issue.message?.trim() || "No issue message supplied"}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                {issue.fixtureKey ? (
+                  <span className="font-mono">Fixture {issue.fixtureKey}</span>
+                ) : null}
+                {issue.failureClass ? (
+                  <span className="font-mono">{issue.failureClass}</span>
+                ) : null}
+                {issue.retryable != null ? (
+                  <span>{issue.retryable ? "Retryable" : "Not retryable"}</span>
+                ) : null}
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                {time.label}
+              </p>
+              <p className="mt-1 text-xs text-slate-800">{time.value}</p>
+            </div>
+
+            <div className="min-w-0">
+              <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                Affected URL
+              </p>
+              <div className="mt-1 break-all text-xs">
+                {targetUrl ? (
+                  isHttp ? (
+                    <a
+                      href={targetUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-start gap-1 text-info-700 hover:underline"
+                    >
+                      <ExternalLink
+                        className="mt-0.5 h-3 w-3 shrink-0"
+                        aria-hidden
+                      />
+                      {targetUrl}
+                    </a>
+                  ) : (
+                    <span className="font-mono text-muted-foreground">
+                      {targetUrl}
+                    </span>
+                  )
+                ) : (
+                  <span className="text-muted-foreground">No URL supplied</span>
+                )}
+              </div>
+            </div>
+          </article>
+        );
+      })}
     </div>
   );
 }
@@ -915,11 +724,14 @@ function MetadataMetricsSnapshot({
   if (rows.length === 0) return null;
 
   return (
-    <details className="rounded-lg border bg-card">
-      <summary className="cursor-pointer text-sm font-medium px-3 py-2 hover:bg-muted/40">
-        metadata.metrics snapshot (same numbers as charts when mirrored)
-      </summary>
-      <div className="px-3 pb-3">
+    <div className="overflow-hidden rounded-lg border bg-card">
+      <div className="border-b bg-slate-50 px-3 py-2">
+        <p className="text-sm font-medium text-foreground">Reported metrics</p>
+        <p className="text-[11px] text-muted-foreground">
+          Raw values used by the outcome charts
+        </p>
+      </div>
+      <div className="px-3 py-2">
         <Table>
           <TableBody>
             {rows.map(([k, v]) => (
@@ -939,11 +751,11 @@ function MetadataMetricsSnapshot({
           </TableBody>
         </Table>
       </div>
-    </details>
+    </div>
   );
 }
 
-/** Verification: snapshot table, extra keys only (stats live in At a glance). */
+/** Additional completion metadata not already represented by metrics. */
 function CompletedMetadataBreakdown({
   metadata,
 }: {
@@ -960,47 +772,84 @@ function CompletedMetadataBreakdown({
       ),
   );
 
+  if (extraEntries.length === 0) return null;
+
   return (
     <div className="space-y-4">
-      <p className="text-sm font-medium text-foreground">
-        Metadata verification
-      </p>
-      <p className="text-xs text-muted-foreground">
-        Cross-check{" "}
-        <code className="rounded bg-muted px-1">metadata.metrics</code> against
-        the charts above. Any keys below are additional fields on the completion
-        blob (not shown in At a glance).
-      </p>
+      <p className="text-sm font-medium text-foreground">Additional metadata</p>
 
-      <MetadataMetricsSnapshot metricsUnknown={metadata.metrics} />
-
-      {extraEntries.length > 0 && (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-slate-50 hover:bg-slate-50">
-                <TableHead className="h-9 text-xs">Key</TableHead>
-                <TableHead className="h-9 text-xs">Value</TableHead>
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-slate-50 hover:bg-slate-50">
+              <TableHead className="h-9 text-xs">Key</TableHead>
+              <TableHead className="h-9 text-xs">Value</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {extraEntries.map(([k, v]) => (
+              <TableRow key={k}>
+                <TableCell className="font-mono text-xs align-top py-2">
+                  {k}
+                </TableCell>
+                <TableCell className="text-xs break-all py-2">
+                  {typeof v === "object"
+                    ? JSON.stringify(v, null, 2)
+                    : String(v)}
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {extraEntries.map(([k, v]) => (
-                <TableRow key={k}>
-                  <TableCell className="font-mono text-xs align-top py-2">
-                    {k}
-                  </TableCell>
-                  <TableCell className="text-xs break-all py-2">
-                    {typeof v === "object"
-                      ? JSON.stringify(v, null, 2)
-                      : String(v)}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </div>
+  );
+}
+
+function RawMetadataJson({ metadata }: { metadata: Record<string, unknown> }) {
+  const [copyState, setCopyState] = useState<"idle" | "copied" | "error">(
+    "idle",
+  );
+  const json = JSON.stringify(metadata, null, 2);
+
+  const copyJson = async () => {
+    try {
+      await navigator.clipboard.writeText(json);
+      setCopyState("copied");
+    } catch {
+      setCopyState("error");
+    }
+
+    window.setTimeout(() => setCopyState("idle"), 2000);
+  };
+
+  return (
+    <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-3 py-2">
+        <p className="text-sm font-medium text-slate-900">Raw metadata JSON</p>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5"
+          onClick={copyJson}
+        >
+          {copyState === "copied" ? (
+            <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+          ) : (
+            <Copy className="h-3.5 w-3.5" />
+          )}
+          {copyState === "copied"
+            ? "Copied"
+            : copyState === "error"
+              ? "Copy failed"
+              : "Copy JSON"}
+        </Button>
+      </div>
+      <pre className="max-h-[min(70vh,560px)] overflow-auto bg-slate-950 p-4 text-[11px] leading-relaxed text-slate-100">
+        {json}
+      </pre>
+    </section>
   );
 }
 
@@ -1035,10 +884,13 @@ export function JobCompletedVisualBlock({
 
       {metrics && (
         <div className="space-y-3">
-          <p className="text-sm font-medium text-foreground">Outcome charts</p>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <p className="text-sm font-medium text-foreground">Outcomes</p>
+          <div
+            className={`grid grid-cols-1 gap-4 ${metadata?.metrics ? "lg:grid-cols-3" : "lg:grid-cols-2"}`}
+          >
             <FixturesOutcomeChart metrics={metrics} />
             <IngestOutcomeChart metrics={metrics} />
+            <MetadataMetricsSnapshot metricsUnknown={metadata?.metrics} />
           </div>
         </div>
       )}
@@ -1048,33 +900,22 @@ export function JobCompletedVisualBlock({
           id="job-completion-issue-analysis"
           className="space-y-4 scroll-mt-24"
         >
-          <div>
+          <div className="flex items-center justify-between gap-3">
             <p className="text-sm font-medium text-foreground">
               Issue analysis
             </p>
-            <p className="text-xs text-muted-foreground mt-1 max-w-3xl">
-              Same {issues.length} record{issues.length === 1 ? "" : "s"} as the
-              Issues count above: each row is a problem the scraper logged
-              (timeout, 404, ingest failure, detached frame, etc.). The{" "}
-              <strong className="text-foreground">URL</strong> column is the
-              page that was being scraped when the scraper includes{" "}
-              <code className="rounded bg-muted px-1 text-[10px]">url</code> on
-              the issue; if it shows —, the payload did not include a target URL
-              for that row.
-            </p>
+            <Badge variant="outline">
+              {issues.length.toLocaleString()} issue
+              {issues.length === 1 ? "" : "s"}
+            </Badge>
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
-            <IssueSeverityChart issues={issues} />
-            <IssuesByStepChart issues={issues} />
-            <IssuesByMessageChart issues={issues} />
-          </div>
+          <IssueDiagnosticBreakdown issues={issues} />
           <div className="space-y-2">
             <p className="text-sm font-medium">All issues</p>
-            <p className="text-xs text-muted-foreground">
-              Grouped by severity, then by message. Each message has its own
-              table (URL, step, fixture, …).
-            </p>
-            <IssuesDetailTable issues={issues} />
+            <IssuesDetailTable
+              issues={issues}
+              reportedAt={entry.timestamp ?? entry.createdAt}
+            />
           </div>
         </div>
       )}
@@ -1088,16 +929,7 @@ export function JobCompletedVisualBlock({
 
       <CompletedMetadataBreakdown metadata={metadata} />
 
-      {metadata && (
-        <details className="text-xs group">
-          <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
-            Raw metadata JSON (full blob)
-          </summary>
-          <pre className="mt-2 p-3 rounded-md bg-muted/60 overflow-x-auto text-[11px] max-h-[min(70vh,560px)] overflow-y-auto">
-            {JSON.stringify(metadata, null, 2)}
-          </pre>
-        </details>
-      )}
+      {metadata && <RawMetadataJson metadata={metadata} />}
     </div>
   );
 }

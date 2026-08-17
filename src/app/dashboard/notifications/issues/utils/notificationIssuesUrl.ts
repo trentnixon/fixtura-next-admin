@@ -15,15 +15,13 @@ export type NotificationIssuesSearchParamsInput = Record<
   string | string[] | undefined
 >;
 
-function firstParam(
-  value: string | string[] | undefined
-): string | undefined {
+function firstParam(value: string | string[] | undefined): string | undefined {
   if (value == null) return undefined;
   return Array.isArray(value) ? value[0] : value;
 }
 
 function parsePresetDays(
-  raw: string | undefined
+  raw: string | undefined,
 ): NotificationHealthPresetDays {
   const n = Number(raw);
   if (PRESET_DAYS.includes(n as (typeof PRESET_DAYS)[number])) {
@@ -35,7 +33,7 @@ function parsePresetDays(
 function parsePositiveInt(
   raw: string | undefined,
   fallback: number,
-  max?: number
+  max?: number,
 ): number {
   const n = Number(raw);
   if (!Number.isFinite(n) || n < 1) return fallback;
@@ -63,7 +61,7 @@ export interface ParsedNotificationIssuesSearch {
  * Derives fetch params from Next.js searchParams (URL source of truth).
  */
 export function parseNotificationIssuesSearchParams(
-  searchParams: NotificationIssuesSearchParamsInput
+  searchParams: NotificationIssuesSearchParamsInput,
 ): ParsedNotificationIssuesSearch {
   const createdAt_gte = firstParam(searchParams.createdAt_gte);
   const createdAt_lte = firstParam(searchParams.createdAt_lte);
@@ -92,8 +90,12 @@ export function parseNotificationIssuesSearchParams(
   const params: FetchNotificationIssuesParams = {
     ...windowParams,
     scope: firstParam(searchParams.scope),
+    service: firstParam(searchParams.service),
+    queueName: firstParam(searchParams.queueName),
+    kind: firstParam(searchParams.kind),
     step: firstParam(searchParams.step),
     issueScope: firstParam(searchParams.issueScope),
+    search: firstParam(searchParams.search)?.trim() || undefined,
     message: firstParam(searchParams.message),
     jobId: firstParam(searchParams.jobId),
     runId: firstParam(searchParams.runId),
@@ -101,7 +103,7 @@ export function parseNotificationIssuesSearchParams(
     pageSize: parsePositiveInt(
       firstParam(searchParams.pageSize),
       NOTIFICATION_ISSUES_DEFAULT_PAGE_SIZE,
-      200
+      200,
     ),
     ...(retryable !== undefined ? { retryable } : {}),
     ...(selectorDrift !== undefined ? { selectorDrift } : {}),
@@ -113,7 +115,7 @@ export function parseNotificationIssuesSearchParams(
 
 export function buildNotificationIssuesQuery(
   linkQuery: NotificationIssuesLinkQuery,
-  extra?: Record<string, string | number | boolean | undefined>
+  extra?: Record<string, string | number | boolean | undefined>,
 ): URLSearchParams {
   const sp = new URLSearchParams();
 
@@ -136,10 +138,10 @@ export function buildNotificationIssuesQuery(
 
 export function buildNotificationIssuesHref(
   linkQuery: NotificationIssuesLinkQuery,
-  extra?: Record<string, string | number | boolean | undefined>
+  extra?: Record<string, string | number | boolean | undefined>,
 ): string {
   const qs = buildNotificationIssuesQuery(linkQuery, extra).toString();
-  return `/dashboard/data/notifications/issues${qs ? `?${qs}` : ""}`;
+  return `/dashboard/notifications/issues${qs ? `?${qs}` : ""}`;
 }
 
 export { PAGE_SIZE_OPTIONS as NOTIFICATION_ISSUES_PAGE_SIZE_OPTIONS };

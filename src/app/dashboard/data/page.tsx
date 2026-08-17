@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
-import { DataDashboardOverview } from "./components/DataDashboardOverview";
+import { ScraperOperationsStrip } from "./components/ScraperOperationsStrip";
 import { ScraperLogsSectionWithScopeSelector } from "./components/ScraperLogsSectionWithScopeSelector";
 
 export default async function DataPage() {
@@ -17,10 +17,10 @@ export default async function DataPage() {
       <CreatePageTitle
         title="Data / Scraping"
         byLine="Data collection operations"
-        byLineBottom="Scrape triggers, job logs, and notification health"
+        byLineBottom="Scrape triggers, pipeline status, and job logs"
       />
       <PageContainer padding="xs" spacing="md">
-        <DataDashboardOverview />
+        <ScraperOperationsStrip />
         <ScraperLogsSectionWithScopeSelector />
       </PageContainer>
     </>

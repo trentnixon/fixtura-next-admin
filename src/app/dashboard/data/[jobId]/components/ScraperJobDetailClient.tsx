@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
+import Link from "next/link";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
+import { Button } from "@/components/ui/button";
 import { useScraperLogByJobId } from "@/hooks/data-collection/useScraperLogByJobId";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
@@ -70,12 +73,12 @@ export function ScraperJobDetailClient({
 
   const pageByLineBottom =
     data?.job != null
-      ? `Scraper job · ${humanizeJobStatus(data.job.status)} · Completion metrics, issues, and metadata`
+      ? `${humanizeJobStatus(data.job.status)} · ${data.job.entryCount.toLocaleString()} events · ${data.job.durationFormatted ?? "Duration unavailable"}`
       : isLoading
-        ? "Loading job details…"
+        ? "Loading…"
         : error != null
-          ? "Could not load this job — check the job ID or scraper logs API."
-          : "Completion metrics, issues, and metadata";
+          ? "Could not load this job"
+          : "Run details";
 
   useEffect(() => {
     const suffix = "Fixtura Admin";
@@ -87,12 +90,36 @@ export function ScraperJobDetailClient({
   }, [data?.job, jobId]);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
+      <Link
+        href="/dashboard/data"
+        className="inline-flex w-fit items-center gap-1 text-sm text-slate-600 hover:text-slate-900"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to data
+      </Link>
+
       <CreatePageTitle
         title={pageTitle}
-        byLine={jobId}
+        byLine="Scraper job"
         byLineBottom={pageByLineBottom}
-      />
+      >
+        {data != null ? (
+          <Button
+            variant="outline"
+            size="sm"
+            type="button"
+            onClick={() => refetch()}
+            disabled={isFetching}
+            className="gap-2"
+          >
+            <RefreshCw
+              className={isFetching ? "h-4 w-4 animate-spin" : "h-4 w-4"}
+            />
+            Refresh
+          </Button>
+        ) : null}
+      </CreatePageTitle>
 
       {isLoading && (
         <LoadingState variant="skeleton" message="Loading job details..." />
@@ -110,25 +137,23 @@ export function ScraperJobDetailClient({
 
       {data != null && !isLoading && (
         <>
-          <Tabs defaultValue="snapshot" className="w-full">
+          <Tabs
+            defaultValue={runIdFromSearch?.trim() ? "notification" : "overview"}
+            className="w-full"
+          >
             <TabsList variant="primary" className="mb-4">
-              <TabsTrigger value="snapshot">Job Snapshot</TabsTrigger>
-              <TabsTrigger value="heartbeats">Heartbeats</TabsTrigger>
+              <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="completion">Completion</TabsTrigger>
               <TabsTrigger value="notification">Notification</TabsTrigger>
-              <TabsTrigger value="screenshots">Screenshots</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="snapshot" className="space-y-6">
-              <JobDetailHeader
-                job={data.job}
-                onRefresh={() => refetch()}
-                isRefreshing={isFetching}
-              />
-            </TabsContent>
-
-            <TabsContent value="heartbeats">
+            <TabsContent value="overview" className="space-y-6">
+              <JobDetailHeader job={data.job} />
               <JobRunOverview entries={data.entries} view="heartbeats" />
+              <ScraperArtifactDebugSection
+                jobId={jobId}
+                highlightRunId={notificationRun.runId ?? data.job.runId}
+              />
             </TabsContent>
 
             <TabsContent value="completion">
@@ -140,13 +165,6 @@ export function ScraperJobDetailClient({
                 jobId={jobId}
                 runId={notificationRun.runId}
                 runIdSource={notificationRun.source}
-              />
-            </TabsContent>
-
-            <TabsContent value="screenshots">
-              <ScraperArtifactDebugSection
-                jobId={jobId}
-                highlightRunId={notificationRun.runId ?? data.job.runId}
               />
             </TabsContent>
           </Tabs>

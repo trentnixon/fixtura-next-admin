@@ -1,37 +1,23 @@
-import { auth } from "@clerk/nextjs/server";
-import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
-import PageContainer from "@/components/scaffolding/containers/PageContainer";
-import { NotificationIssuesClient } from "./components/NotificationIssuesClient";
-import type { NotificationIssuesSearchParamsInput } from "./utils/notificationIssuesUrl";
+import { redirect } from "next/navigation";
 
-interface PageProps {
-  searchParams?: Promise<NotificationIssuesSearchParamsInput>;
+interface LegacyNotificationIssuesPageProps {
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
-export default async function NotificationIssuesPage({
+export default async function LegacyNotificationIssuesPage({
   searchParams,
-}: PageProps) {
-  const { userId, redirectToSignIn } = await auth();
+}: LegacyNotificationIssuesPageProps) {
+  const params = searchParams != null ? await searchParams : {};
+  const query = new URLSearchParams();
 
-  if (!userId) {
-    redirectToSignIn({
-      returnBackUrl: "/dashboard/data/notifications/issues",
-    });
-    return null;
+  for (const [key, value] of Object.entries(params)) {
+    if (Array.isArray(value)) {
+      for (const item of value) query.append(key, item);
+    } else if (value != null) {
+      query.set(key, value);
+    }
   }
 
-  const sp = searchParams != null ? await searchParams : {};
-
-  return (
-    <>
-      <CreatePageTitle
-        title="Data / Notification issues"
-        byLine="Scraper failure drill-down"
-        byLineBottom="Individual issue rows from notification health — URL, message, job context"
-      />
-      <PageContainer padding="xs" spacing="md">
-        <NotificationIssuesClient searchParams={sp} />
-      </PageContainer>
-    </>
-  );
+  const suffix = query.toString();
+  redirect(`/dashboard/notifications/issues${suffix ? `?${suffix}` : ""}`);
 }

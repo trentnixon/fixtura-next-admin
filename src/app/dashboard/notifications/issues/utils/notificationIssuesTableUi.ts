@@ -1,6 +1,6 @@
 import type { BadgeProps } from "@/components/ui/badge";
 import type { NotificationIssueArtifact } from "@/types/notificationIssues";
-import { truncateMiddle } from "../../../utils/formatScraperJobDisplay";
+import { truncateMiddle } from "@/app/dashboard/data/utils/formatScraperJobDisplay";
 
 export function formatIssueWhen(iso: string | null): {
   label: string;
@@ -42,7 +42,7 @@ export function formatIssueUrl(url: string): { label: string; title: string } {
 }
 
 export function stepBadgeVariant(
-  step: string | null | undefined
+  step: string | null | undefined,
 ): NonNullable<BadgeProps["variant"]> {
   switch (step) {
     case "request_timeout":
@@ -65,7 +65,7 @@ export function formatStepLabel(step: string | null | undefined): string {
 
 /** Prefer screenshot-type artifact; CMS may attach traces/HAR on the same row. */
 export function pickIssueScreenshotArtifact(
-  artifacts: NotificationIssueArtifact[] | undefined
+  artifacts: NotificationIssueArtifact[] | undefined,
 ): NotificationIssueArtifact | null {
   if (!artifacts?.length) return null;
   return (
@@ -73,7 +73,7 @@ export function pickIssueScreenshotArtifact(
       (a) =>
         a.fileUrl &&
         (a.artifactType === "screenshot" ||
-          (a.contentType ?? "").startsWith("image/"))
+          (a.contentType ?? "").startsWith("image/")),
     ) ??
     artifacts.find((a) => a.fileUrl) ??
     null

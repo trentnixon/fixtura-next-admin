@@ -2,7 +2,7 @@
 
 import type { LogEntry } from "@/types/scraperLogs";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
-import { Activity, HeartPulse, Info } from "lucide-react";
+import { HeartPulse, Info } from "lucide-react";
 import { findLatestCompletedEntry } from "../utils/jobLogPayloadUtils";
 import { JobCompletedVisualBlock } from "./JobCompletedVisualBlock";
 import { JobHeartbeatChart } from "./JobHeartbeatChart";
@@ -55,26 +55,16 @@ export function JobRunOverview({ entries, view = "all" }: JobRunOverviewProps) {
       )}
 
       {showCompletion && completedEntry ? (
-        <SectionContainer
-          title="Completion summary"
-          description="Latest job.completed payload: outcomes, issues, and metadata."
-          icon={<Activity className="h-5 w-5 text-muted-foreground" />}
-          variant="compact"
-        >
-          <JobCompletedVisualBlock entry={completedEntry} />
-        </SectionContainer>
+        <JobCompletedVisualBlock entry={completedEntry} />
       ) : showCompletion ? (
-        <SectionContainer
-          title="Completion summary"
-          description="No job.completed event was found in the returned log rows."
-          icon={<Activity className="h-5 w-5 text-muted-foreground" />}
-          variant="compact"
-        >
-          <p className="text-sm text-muted-foreground">
-            This job may still be running, failed before completion, or the
-            completion row was outside the fetched window.
+        <div className="rounded-lg border border-dashed border-slate-200 py-12 text-center">
+          <p className="text-sm font-medium text-slate-900">
+            No completion event found
           </p>
-        </SectionContainer>
+          <p className="mt-1 text-sm text-muted-foreground">
+            This job may still be running or stopped before completion.
+          </p>
+        </div>
       ) : null}
     </div>
   );

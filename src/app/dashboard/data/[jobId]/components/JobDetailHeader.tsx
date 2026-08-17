@@ -1,11 +1,8 @@
 "use client";
 
 import type { ComponentType, ReactNode } from "react";
-import Link from "next/link";
-import { ArrowLeft, Clock, Cpu, RefreshCw, Route } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Activity, Clock, Cpu, Fingerprint, Route } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import type { JobSummary } from "@/types/scraperLogs";
 import {
   getStatusBadgeClassName,
@@ -118,127 +115,117 @@ function SectionTitle({
   );
 }
 
-function MetricCell({
+function MetricCard({
+  icon: Icon,
   label,
   children,
+  className,
+  iconClassName,
 }: {
+  icon: ComponentType<{ className?: string }>;
   label: string;
   children: ReactNode;
+  className: string;
+  iconClassName: string;
 }) {
   return (
-    <div className="min-w-0 border-b border-r border-slate-200 px-3 py-2 last:border-r-0 sm:border-b-0">
-      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </p>
-      <div className="mt-1 truncate text-sm font-semibold text-slate-900">
+    <div className={`min-h-[96px] rounded-lg border p-3.5 ${className}`}>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          {label}
+        </p>
+        <Icon className={`h-4 w-4 ${iconClassName}`} aria-hidden />
+      </div>
+      <div className="mt-3 text-base font-semibold text-slate-900">
         {children}
       </div>
     </div>
   );
 }
 
-interface JobDetailHeaderProps {
-  job: JobSummary;
-  onRefresh?: () => void;
-  isRefreshing?: boolean;
+function Identifier({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
+      <p className="mt-1 break-all font-mono text-xs text-slate-800">{value}</p>
+    </div>
+  );
 }
 
-export function JobDetailHeader({
-  job,
-  onRefresh,
-  isRefreshing = false,
-}: JobDetailHeaderProps) {
+interface JobDetailHeaderProps {
+  job: JobSummary;
+}
+
+export function JobDetailHeader({ job }: JobDetailHeaderProps) {
   const mixChips = buildEventMixChips(job);
   const kindDisplay = displayText(job.kind);
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <Button variant="secondary" size="sm" asChild className="w-fit">
-          <Link href="/dashboard/data">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Data
-          </Link>
-        </Button>
-        {onRefresh != null && (
-          <Button
-            variant="accent"
-            size="sm"
-            type="button"
-            onClick={onRefresh}
-            disabled={isRefreshing}
-          >
-            <RefreshCw className={isRefreshing ? "animate-spin" : ""} />
-            {isRefreshing ? "Refreshing…" : "Refresh"}
-          </Button>
-        )}
-      </div>
-
-      <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-        <div className="grid sm:grid-cols-4">
-          <MetricCell label="Status">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          icon={Activity}
+          label="Status"
+          className="border-slate-200 bg-slate-50/70"
+          iconClassName="text-slate-500"
+        >
+          <div className="flex items-center">
             <Badge
               variant={getStatusBadgeVariant(job.status)}
               className={`${getStatusBadgeClassName(job.status)} px-2 py-0.5 text-xs capitalize`}
             >
               {job.status.replace(/_/g, " ")}
             </Badge>
-          </MetricCell>
-          <MetricCell label="Events">
-            <span className="tabular-nums">
-              {job.entryCount.toLocaleString()}
-            </span>{" "}
-            <span className="font-normal text-muted-foreground">
-              {plural(job.entryCount, "event", "events")} in this job
-            </span>
-          </MetricCell>
-          <MetricCell label="Duration">
-            <span className="tabular-nums">{job.durationFormatted ?? "-"}</span>
-          </MetricCell>
-          <MetricCell label="Latest event">
-            <span className="text-xs font-medium">
-              {formatDateTime(job.latestAt)}
-            </span>
-          </MetricCell>
-        </div>
-
-        {mixChips.length > 0 && (
-          <div className="border-t border-slate-200 bg-slate-50/70 px-3 py-2">
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="mr-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Event mix
-              </span>
-              {mixChips.map(({ key, text }) => (
-                <Badge
-                  key={key}
-                  variant="secondary"
-                  className="px-2 py-0.5 font-mono text-xs font-normal tabular-nums"
-                >
-                  {text}
-                </Badge>
-              ))}
-            </div>
           </div>
-        )}
+        </MetricCard>
 
-        <Separator />
+        <MetricCard
+          icon={Route}
+          label="Events"
+          className="border-info-200 bg-info-50/70"
+          iconClassName="text-info-700"
+        >
+          <span className="tabular-nums">
+            {job.entryCount.toLocaleString()}
+          </span>{" "}
+          <span className="text-xs font-normal text-muted-foreground">
+            {plural(job.entryCount, "event", "events")}
+          </span>
+        </MetricCard>
 
-        <div className="grid gap-5 p-4 lg:grid-cols-3 lg:gap-8">
-          <div className="space-y-4 min-w-0">
-            <SectionTitle icon={Route} title="Routing" />
+        <MetricCard
+          icon={Clock}
+          label="Duration"
+          className="border-amber-200 bg-amber-50/70"
+          iconClassName="text-amber-700"
+        >
+          <span className="tabular-nums">{job.durationFormatted ?? "—"}</span>
+        </MetricCard>
+
+        <MetricCard
+          icon={Clock}
+          label="Latest event"
+          className="border-emerald-200 bg-emerald-50/60"
+          iconClassName="text-emerald-700"
+        >
+          <span className="text-sm font-medium">
+            {formatDateTime(job.latestAt)}
+          </span>
+        </MetricCard>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <section className="rounded-lg border border-slate-200 bg-white p-4">
+          <SectionTitle icon={Route} title="Run context" />
+          <div className="mt-3 grid gap-x-6 sm:grid-cols-2">
             <div>
               <Field label="Scope">{formatScopeLabel(job.scope)}</Field>
               <Field label="Queue" mono>
                 {displayText(job.queueName)}
               </Field>
-              <Field label="Run ID" mono>
-                {displayText(job.runId)}
-              </Field>
             </div>
-          </div>
-
-          <div className="space-y-4 min-w-0 lg:border-l lg:border-border/80 lg:pl-8">
-            <SectionTitle icon={Cpu} title="Worker" />
             <div>
               <Field label="Service">{displayText(job.service)}</Field>
               <Field label="Kind">
@@ -250,31 +237,56 @@ export function JobDetailHeader({
                   kindDisplay
                 )}
               </Field>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-slate-200 bg-white p-4">
+          <SectionTitle icon={Cpu} title="Execution" />
+          <div className="mt-3 grid gap-x-6 sm:grid-cols-2">
+            <div>
+              <Field label="Started">{formatDateTime(job.startedAt)}</Field>
+              <Field label="Attempt">
+                {job.attempt != null ? String(job.attempt) : "—"}
+              </Field>
+            </div>
+            <div>
               <Field label="Bull job" mono>
                 {job.bullJobId != null && String(job.bullJobId).trim() !== ""
                   ? String(job.bullJobId)
                   : "—"}
               </Field>
-              <Field label="Attempt">
-                {job.attempt != null ? String(job.attempt) : "—"}
-              </Field>
             </div>
           </div>
 
-          <div className="space-y-4 min-w-0 lg:border-l lg:border-border/80 lg:pl-8">
-            <SectionTitle icon={Clock} title="Timeline" />
-            <div>
-              <Field label="Duration">
-                <span className="tabular-nums font-medium">
-                  {job.durationFormatted ?? "—"}
+          {mixChips.length > 0 ? (
+            <div className="mt-3 border-t border-slate-100 pt-3">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="mr-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  Event mix
                 </span>
-              </Field>
-              <Field label="Started">{formatDateTime(job.startedAt)}</Field>
-              <Field label="Latest event">{formatDateTime(job.latestAt)}</Field>
+                {mixChips.map(({ key, text }) => (
+                  <Badge
+                    key={key}
+                    variant="secondary"
+                    className="px-2 py-0.5 font-mono text-xs font-normal tabular-nums"
+                  >
+                    {text}
+                  </Badge>
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
+          ) : null}
+        </section>
       </div>
+
+      <section className="rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+        <SectionTitle icon={Fingerprint} title="Identifiers" />
+        <div className="mt-3 grid gap-4 lg:grid-cols-2 lg:gap-8">
+          <Identifier label="Job ID" value={displayText(job.jobId)} />
+          <Identifier label="Run ID" value={displayText(job.runId)} />
+        </div>
+      </section>
     </div>
   );
 }

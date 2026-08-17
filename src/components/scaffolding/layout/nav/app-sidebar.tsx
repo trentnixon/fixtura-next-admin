@@ -21,6 +21,7 @@ import {
   Mail,
   CalendarDays,
   RefreshCw,
+  BellRing,
 } from "lucide-react";
 import { NavMain } from "@/components/scaffolding/layout/nav/nav-main";
 /* import { NavProjects } from "@/components/nav-projects"; */
@@ -46,7 +47,7 @@ const UserButton = dynamic(
   () => import("@clerk/nextjs").then((mod) => mod.UserButton),
   {
     ssr: false,
-  }
+  },
 );
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -111,6 +112,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/dashboard/data",
         icon: Database,
         isActive: true,
+      },
+      {
+        title: "Notification Health",
+        url: "/dashboard/notifications",
+        icon: BellRing,
+        isActive: true,
+        items: [
+          { title: "Overview", url: "/dashboard/notifications" },
+          { title: "Issues", url: "/dashboard/notifications/issues" },
+        ],
       },
       {
         title: "Associations",
@@ -191,7 +202,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: Mail,
         isActive: true,
       },
-
     ],
     labsNav: [
       {

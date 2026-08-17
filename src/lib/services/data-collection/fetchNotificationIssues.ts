@@ -46,7 +46,7 @@ function extractErrorMessage(error: unknown): string {
  * @see src/app/dashboard/data/.comms/admin-frontend-notification-issues-handoff.md
  */
 export async function fetchNotificationIssues(
-  params: FetchNotificationIssuesParams
+  params: FetchNotificationIssuesParams,
 ): Promise<NotificationIssuesResponse> {
   if (params.mode === "preset") {
     if (!PRESET_DAYS.includes(params.days)) {
@@ -82,6 +82,8 @@ export async function fetchNotificationIssues(
     if (params.runId) queryParams.runId = params.runId;
     if (params.step) queryParams.step = params.step;
     if (params.issueScope) queryParams.issueScope = params.issueScope;
+    const search = params.search?.trim();
+    if (search) queryParams.search = search;
     if (params.message) queryParams.message = params.message;
     if (params.retryable !== undefined) {
       queryParams.retryable = String(params.retryable);
@@ -97,7 +99,7 @@ export async function fetchNotificationIssues(
 
     const response = await axiosInstance.get<NotificationIssuesResponse>(
       "fixtura-scraper/notifications/issues",
-      { params: queryParams }
+      { params: queryParams },
     );
 
     return response.data;
