@@ -16,7 +16,7 @@ const CreatePageTitle = ({
   children?: React.ReactNode;
 }) => {
   return (
-    <div className="border-b border-slate-200 pb-2 mb-2 flex flex-row items-center justify-between gap-4">
+    <div className="border-b border-slate-200 pb-2 mb-2 flex flex-col items-stretch justify-between gap-4 lg:flex-row lg:items-center">
       <div className="flex min-w-0 flex-1 items-center gap-4">
         {image && (
           <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md border bg-white p-2">
@@ -35,7 +35,11 @@ const CreatePageTitle = ({
           {byLineBottom && <ByLine>{byLineBottom}</ByLine>}
         </div>
       </div>
-      {children && <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">{children}</div>}
+      {children && (
+        <div className="flex w-full shrink-0 flex-col items-stretch justify-end gap-2 lg:w-auto lg:items-end">
+          {children}
+        </div>
+      )}
     </div>
   );
 };

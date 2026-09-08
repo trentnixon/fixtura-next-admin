@@ -11,11 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
-import {
-  formatHealthStepDuration,
-  formatHealthTimestamp,
-} from "@/lib/account-health/formatHealthTimestamp";
+import { formatHealthStepDuration } from "@/lib/account-health/formatHealthTimestamp";
+import { HealthTimestampStack } from "@/app/dashboard/accounts/components/account-health/HealthTimestampStack";
 import { getAccountHealthScopeLabel } from "@/lib/account-health/scopeLabels";
 import { cn } from "@/lib/utils";
 import type { AccountHealthItem } from "@/types/accountHealth";
@@ -40,13 +37,8 @@ export function AccountHealthRunStepsTable({
   itemStrapiBase,
 }: AccountHealthRunStepsTableProps) {
   return (
-    <SectionContainer
-      title="Steps"
-      description="Workflow sequence for this data refresh run"
-      variant="compact"
-    >
-      <div className="overflow-x-auto">
-        <Table>
+    <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+      <Table>
           <TableHeader>
             <TableRow className={healthRunTableHeaderClass}>
               <TableHead className="font-semibold text-brandPrimary-900">Step</TableHead>
@@ -112,12 +104,12 @@ export function AccountHealthRunStepsTable({
                     </div>
                   </TableCell>
 
-                  <TableCell className="whitespace-nowrap py-3 align-top text-sm tabular-nums text-brandPrimary-900">
-                    {formatHealthTimestamp(item.startedAt)}
+                  <TableCell className="whitespace-nowrap py-3 align-top">
+                    <HealthTimestampStack iso={item.startedAt} />
                   </TableCell>
 
-                  <TableCell className="whitespace-nowrap py-3 align-top text-sm tabular-nums text-brandPrimary-900">
-                    {formatHealthTimestamp(item.completedAt)}
+                  <TableCell className="whitespace-nowrap py-3 align-top">
+                    <HealthTimestampStack iso={item.completedAt} />
                   </TableCell>
 
                   <TableCell className="whitespace-nowrap py-3 align-top text-sm font-medium tabular-nums text-brandPrimary-900">
@@ -183,8 +175,7 @@ export function AccountHealthRunStepsTable({
             })
           )}
           </TableBody>
-        </Table>
-      </div>
-    </SectionContainer>
+      </Table>
+    </div>
   );
 }

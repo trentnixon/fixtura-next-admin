@@ -94,6 +94,7 @@ export default function AccountHealthPanel({ accountId }: AccountHealthPanelProp
             <AbortAccountHealthRunButton
               runId={latestRun.id}
               accountId={account.id}
+              grouped
             />
           )}
           <TriggerAccountHealthRunButton

@@ -101,9 +101,11 @@ export default function DataRefreshLatestRunSection({
           )}
 
           <AccountHealthRunTimeline
+            status={latestRun.status}
             startedAt={latestRun.startedAt}
             queuedAt={latestRun.queuedAt}
             completedAt={latestRun.completedAt}
+            failedAt={latestRun.failedAt}
             finalizedAt={latestRun.finalizedAt}
           />
 

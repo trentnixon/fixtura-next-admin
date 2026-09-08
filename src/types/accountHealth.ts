@@ -277,3 +277,28 @@ export type AccountHealthReconcileErrorResponse = {
     details: Record<string, unknown>;
   };
 };
+
+/** POST /api/account/health/runs/:runId/resume */
+
+export type AccountHealthResumeErrorReason =
+  | "invalid_run_id"
+  | "not_found"
+  | "resume_failed";
+
+export type AccountHealthResumeResponse = {
+  data: {
+    status: "resumed";
+    runId: number;
+    itemId: number;
+  };
+};
+
+export type AccountHealthResumeErrorResponse = {
+  data: null;
+  error: {
+    status: number;
+    name: string;
+    message: AccountHealthResumeErrorReason | string;
+    details: Record<string, unknown>;
+  };
+};

@@ -6,6 +6,11 @@ import type {
   AccountHealthAbortResponse,
 } from "@/types/accountHealth";
 import { getAccountHealthAbortErrorLabel } from "@/lib/account-health/abortErrorLabels";
+import {
+  accountHealthMutationFailure,
+  accountHealthMutationSuccess,
+  type AccountHealthMutationResult,
+} from "./accountHealthMutationResult";
 import { extractAccountHealthErrorMessage } from "./extractAccountHealthError";
 
 /**
@@ -16,9 +21,11 @@ import { extractAccountHealthErrorMessage } from "./extractAccountHealthError";
 export async function abortAccountHealthRun(
   runId: number,
   options: AccountHealthAbortRequest = {}
-): Promise<AccountHealthAbortResponse> {
+): Promise<AccountHealthMutationResult<AccountHealthAbortResponse>> {
   if (!Number.isFinite(runId) || runId <= 0) {
-    throw new Error(getAccountHealthAbortErrorLabel("invalid_run_id"));
+    return accountHealthMutationFailure(
+      getAccountHealthAbortErrorLabel("invalid_run_id")
+    );
   }
 
   const body: AccountHealthAbortRequest = {
@@ -33,12 +40,14 @@ export async function abortAccountHealthRun(
     );
 
     if (!response.data?.data?.id) {
-      throw new Error(getAccountHealthAbortErrorLabel("abort_failed"));
+      return accountHealthMutationFailure(
+        getAccountHealthAbortErrorLabel("abort_failed")
+      );
     }
 
-    return response.data;
+    return accountHealthMutationSuccess(response.data);
   } catch (error: unknown) {
     const raw = extractAccountHealthErrorMessage(error);
-    throw new Error(getAccountHealthAbortErrorLabel(raw));
+    return accountHealthMutationFailure(getAccountHealthAbortErrorLabel(raw));
   }
 }

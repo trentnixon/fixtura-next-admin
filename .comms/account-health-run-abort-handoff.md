@@ -6,7 +6,7 @@
 |------------|----------|-------------|
 | Abort active run | Shipped | Shipped |
 | Reconcile completed-limbo run | Shipped (run detail) | Shipped |
-| Resume (correlation miss) | Not wired | Shipped |
+| Resume (correlation miss) | Shipped (run detail) | Shipped |
 
 ## Summary
 

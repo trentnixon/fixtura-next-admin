@@ -1,24 +1,18 @@
 "use client";
 
 import { useEffect, useMemo } from "react";
-import Link from "next/link";
-import { ExternalLink } from "lucide-react";
 import { useAccountHealthRunStatus } from "@/hooks/account-health/useAccountHealthRunStatus";
 import { useAccountQuery } from "@/hooks/accounts/useAccountQuery";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useGlobalContext } from "@/components/providers/GlobalContext";
 import { getAccountPagePath } from "@/lib/account-health/accountRoutes";
 import {
   EMPTY_RUN_RESULT_LABEL,
   getSummaryEmptyReason,
-  healthRunStatusLabel,
   isHealthRunActive,
-  isHealthRunCompletedLimbo,
 } from "@/lib/account-health/displayRules";
 import {
   healthRunActionButtonClass,
@@ -26,14 +20,13 @@ import {
   healthRunInfoNoticeClass,
   healthRunLiveBannerClass,
   healthRunNoticeClass,
-  healthRunPageStatusBadgeClass,
 } from "@/app/dashboard/accounts/components/account-health/run-detail/healthRunPageStyles";
 import { cn } from "@/lib/utils";
 import { AccountHealthRunTimeline } from "@/app/dashboard/accounts/components/account-health/run-detail/AccountHealthRunTimeline";
 import { AccountHealthRunBlockingCard } from "@/app/dashboard/accounts/components/account-health/run-detail/AccountHealthRunBlockingCard";
 import { AccountHealthRunStepsTable } from "@/app/dashboard/accounts/components/account-health/run-detail/AccountHealthRunStepsTable";
-import AbortAccountHealthRunButton from "@/app/dashboard/accounts/components/account-health/AbortAccountHealthRunButton";
-import ReconcileAccountHealthRunButton from "@/app/dashboard/accounts/components/account-health/ReconcileAccountHealthRunButton";
+import { AccountHealthRunPageToolbar } from "@/app/dashboard/accounts/components/account-health/run-detail/AccountHealthRunPageToolbar";
+import { useGlobalContext } from "@/components/providers/GlobalContext";
 
 interface AccountHealthRunDetailClientProps {
   runId: number;
@@ -153,7 +146,6 @@ export function AccountHealthRunDetailClient({
   const accountTypeLabel =
     run.accountType === "club" ? "Club" : "Association";
   const liveRun = isHealthRunActive(run.status);
-  const completedLimbo = isHealthRunCompletedLimbo(run);
 
   return (
     <>
@@ -163,61 +155,26 @@ export function AccountHealthRunDetailClient({
         byLineBottom="Season data refresh workflow · steps and fixture discovery progress"
         image={orgLogo}
       >
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <Badge
-            variant="outline"
-            className={healthRunPageStatusBadgeClass(run.status)}
-          >
-            {healthRunStatusLabel(run.status)}
-          </Badge>
-          <Button
-            variant="outline"
-            size="sm"
-            className={healthRunActionButtonClass}
-            asChild
-          >
-            <Link href={accountHref}>Back to account</Link>
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className={healthRunActionButtonClass}
-            asChild
-          >
-            <a
-              href={`${strapiLocation.accountHealthRun}${run.id}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1"
-            >
-              Open in Strapi
-              <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
-            </a>
-          </Button>
-          {completedLimbo && (
-            <ReconcileAccountHealthRunButton
-              runId={run.id}
-              accountId={run.accountId}
-            />
-          )}
-          {liveRun && (
-            <AbortAccountHealthRunButton
-              runId={run.id}
-              accountId={run.accountId}
-            />
-          )}
-        </div>
+        <AccountHealthRunPageToolbar
+          runId={run.id}
+          accountId={run.accountId}
+          runStatus={run.status}
+          finalizedAt={run.finalizedAt}
+          accountHref={accountHref}
+          strapiRunHref={`${strapiLocation.accountHealthRun}${run.id}`}
+        />
       </CreatePageTitle>
       <PageContainer padding="xs" spacing="lg">
+        <div className="space-y-6">
         {accountQueryMismatch && (
-          <p className={cn("mb-4", healthRunNoticeClass)}>
+          <p className={cn(healthRunNoticeClass)}>
             Query <code className="font-mono">accountId</code> does not match
             this run’s account.
           </p>
         )}
 
         {liveRun && (
-          <p className={cn("mb-4", healthRunLiveBannerClass)}>
+          <p className={cn(healthRunLiveBannerClass)}>
             <span className="font-medium text-brandInfo-800">Live run</span>
             {" — "}
             Status refreshes automatically every 12 seconds.
@@ -225,21 +182,23 @@ export function AccountHealthRunDetailClient({
         )}
 
         <AccountHealthRunTimeline
+          status={run.status}
           startedAt={run.startedAt}
           queuedAt={run.queuedAt}
           completedAt={run.completedAt}
+          failedAt={run.failedAt}
           finalizedAt={run.finalizedAt}
         />
 
         {run.failureReason && (
-          <div className={cn("mb-6", healthRunErrorBannerClass)}>
+          <div className={cn(healthRunErrorBannerClass)}>
             <strong className="text-brandError-950">Run failure:</strong>{" "}
             {run.failureReason}
           </div>
         )}
 
         {summaryMeta.isEmptyResult && (
-          <div className={cn("mb-6", healthRunInfoNoticeClass)}>
+          <div className={cn(healthRunInfoNoticeClass)}>
             <span className="font-medium text-brandInfo-800">
               {EMPTY_RUN_RESULT_LABEL}
             </span>
@@ -262,6 +221,7 @@ export function AccountHealthRunDetailClient({
           runFailed={run.status === "failed"}
           itemStrapiBase={strapiLocation.accountHealthItem}
         />
+        </div>
       </PageContainer>
     </>
   );

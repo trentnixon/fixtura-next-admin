@@ -23,9 +23,6 @@ export const healthRunInfoNoticeClass =
 export const healthRunErrorBannerClass =
   "rounded-md border border-brandError-200 bg-brandError-50 px-4 py-3 text-sm text-brandError-900";
 
-export const healthRunTimelineGridClass =
-  "grid overflow-hidden rounded-md border border-brandSecondary-200 bg-white shadow-sm sm:grid-cols-2 lg:grid-cols-4";
-
 export const healthRunTableHeaderClass =
   "bg-brandSecondary-50 hover:bg-brandSecondary-50";
 
@@ -33,53 +30,6 @@ export const healthRunTableRowHoverClass = "hover:bg-brandSecondary-50/50";
 
 export const healthRunFixturePanelClass =
   "rounded-md border border-brandInfo-200 bg-brandInfo-50/80 p-4";
-
-export type HealthRunTimelineAccent =
-  | "secondary"
-  | "info"
-  | "success"
-  | "accent";
-
-const timelineAccentClasses: Record<
-  HealthRunTimelineAccent,
-  { icon: string; label: string; value: string }
-> = {
-  secondary: {
-    icon: "border-brandSecondary-200 bg-brandSecondary-100 text-brandSecondary-700",
-    label: "text-brandSecondary-600",
-    value: "text-brandPrimary-900",
-  },
-  info: {
-    icon: "border-brandInfo-200 bg-brandInfo-100 text-brandInfo-700",
-    label: "text-brandInfo-600",
-    value: "text-brandPrimary-900",
-  },
-  success: {
-    icon: "border-brandSuccess-200 bg-brandSuccess-100 text-brandSuccess-700",
-    label: "text-brandSuccess-600",
-    value: "text-brandPrimary-900",
-  },
-  accent: {
-    icon: "border-brandAccent-200 bg-brandAccent-100 text-brandAccent-700",
-    label: "text-brandAccent-600",
-    value: "text-brandPrimary-900",
-  },
-};
-
-export function healthRunTimelineMetricClasses(accent: HealthRunTimelineAccent): {
-  icon: string;
-  label: string;
-  value: string;
-  valueEmpty: string;
-} {
-  const t = timelineAccentClasses[accent];
-  return {
-    icon: t.icon,
-    label: t.label,
-    value: t.value,
-    valueEmpty: "text-muted-foreground",
-  };
-}
 
 export function healthRunPageStatusBadgeClass(
   status: AccountHealthRunStatus | string

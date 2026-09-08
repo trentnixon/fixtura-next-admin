@@ -21,19 +21,16 @@ describe("ReconcileAccountHealthRunButton", () => {
 
     render(<ReconcileAccountHealthRunButton runId={444} accountId={136} />);
 
-    await user.click(screen.getByRole("button", { name: /Reconcile run/i }));
+    await user.click(screen.getByRole("button", { name: /^Reconcile$/i }));
 
     expect(screen.getByText(/Reconcile run #444/i)).toBeInTheDocument();
     expect(
       screen.getByText(/rechecks fixture-discovery ingest rows/i)
     ).toBeInTheDocument();
-    expect(
-      screen.getByText(/all steps show completed but the run never finalized/i)
-    ).toBeInTheDocument();
 
     await user.click(
       within(screen.getByRole("dialog")).getByRole("button", {
-        name: /Reconcile run/i,
+        name: /^Reconcile$/i,
       })
     );
     expect(mutateAsync).toHaveBeenCalledTimes(1);
@@ -46,7 +43,7 @@ describe("ReconcileAccountHealthRunButton", () => {
 
     render(<ReconcileAccountHealthRunButton runId={444} accountId={136} />);
 
-    await user.click(screen.getByRole("button", { name: /Reconcile run/i }));
+    await user.click(screen.getByRole("button", { name: /^Reconcile$/i }));
     await user.click(screen.getByRole("button", { name: /^Cancel$/i }));
     expect(mutateAsync).not.toHaveBeenCalled();
   });

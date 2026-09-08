@@ -4,6 +4,7 @@ import {
   type UseMutationResult,
 } from "@tanstack/react-query";
 import { reconcileAccountHealthRun } from "@/lib/services/account-health/reconcileAccountHealthRun";
+import { unwrapAccountHealthMutation } from "@/lib/services/account-health/accountHealthMutationResult";
 import type { AccountHealthReconcileResponse } from "@/types/accountHealth";
 import { formatAccountHealthReconcileSuccessToast } from "@/lib/account-health/reconcileErrorLabels";
 import { toast } from "sonner";
@@ -31,7 +32,8 @@ export function useReconcileAccountHealthRun(): UseMutationResult<
     ReconcileAccountHealthRunVars
   >({
     mutationFn: async ({ runId }) => {
-      return await reconcileAccountHealthRun(runId);
+      const result = await reconcileAccountHealthRun(runId);
+      return unwrapAccountHealthMutation(result);
     },
     onSuccess: (data, { runId, accountId }) => {
       const { reconciled, requeued } = data.data;

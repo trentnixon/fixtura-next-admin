@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, PlayCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,40 +11,38 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useReconcileAccountHealthRun } from "@/hooks/account-health/useReconcileAccountHealthRun";
+import { useResumeAccountHealthRun } from "@/hooks/account-health/useResumeAccountHealthRun";
 import { healthRunActionButtonClass } from "@/app/dashboard/accounts/components/account-health/run-detail/healthRunPageStyles";
 import { cn } from "@/lib/utils";
 
-interface ReconcileAccountHealthRunButtonProps {
+interface ResumeAccountHealthRunButtonProps {
   runId: number;
   accountId: number;
-  /** Labs segmented group — square corners, no shadow */
   grouped?: boolean;
-  /** Compact styling for header toolbars */
   size?: "sm" | "default";
   className?: string;
 }
 
-export default function ReconcileAccountHealthRunButton({
+export default function ResumeAccountHealthRunButton({
   runId,
   accountId,
   grouped = false,
   size = "sm",
   className,
-}: ReconcileAccountHealthRunButtonProps) {
+}: ResumeAccountHealthRunButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const reconcile = useReconcileAccountHealthRun();
+  const resume = useResumeAccountHealthRun();
 
   const handleConfirm = async () => {
     try {
-      await reconcile.mutateAsync({ runId, accountId });
+      await resume.mutateAsync({ runId, accountId });
       setIsDialogOpen(false);
     } catch {
       // Toasts handled in hook
     }
   };
 
-  const isPending = reconcile.isPending;
+  const isPending = resume.isPending;
   const disabled =
     isPending || !Number.isFinite(runId) || runId <= 0 || accountId <= 0;
 
@@ -52,44 +50,44 @@ export default function ReconcileAccountHealthRunButton({
     <>
       <Button
         type="button"
-        variant={grouped ? "accent" : "outline"}
+        variant={grouped ? "secondary" : "outline"}
         size={size}
         className={cn(
           !grouped &&
             cn(
               healthRunActionButtonClass,
-              "border-brandWarning-300 text-brandWarning-900 hover:border-brandWarning-700 hover:bg-brandWarning-700 hover:text-white"
+              "border-brandInfo-300 text-brandInfo-900 hover:border-brandInfo-700 hover:bg-brandInfo-700 hover:text-white"
             ),
           className
         )}
         onClick={() => setIsDialogOpen(true)}
         disabled={disabled}
       >
-        <RefreshCw className="h-4 w-4" aria-hidden />
-        Reconcile
+        <PlayCircle className="h-4 w-4" aria-hidden />
+        Resume
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <RefreshCw className="h-5 w-5 text-brandWarning-700" aria-hidden />
-              Reconcile run #{runId}?
+              <PlayCircle className="h-5 w-5 text-brandInfo-700" aria-hidden />
+              Resume run #{runId}?
             </DialogTitle>
             <DialogDescription asChild>
               <div className="space-y-2 text-sm text-muted-foreground">
                 <p>
-                  This rechecks fixture-discovery ingest rows for this run, may
-                  requeue stale processing rows, and can finalize the run when
-                  all expected rows are terminal.
+                  This resumes the workflow from the first health item and
+                  continues the sequence. It can requeue scraper work for stuck
+                  early steps.
                 </p>
                 <p>
                   Records are kept for audit. Safe to retry if the run does not
-                  finalize on the first attempt.
+                  progress on the first attempt.
                 </p>
-                <p className="font-medium text-brandWarning-900">
-                  Use this when all steps show completed but the run never
-                  finalized.
+                <p className="font-medium text-brandInfo-900">
+                  Use this when an early step is stuck or missed while later
+                  steps appear complete.
                 </p>
               </div>
             </DialogDescription>
@@ -114,12 +112,12 @@ export default function ReconcileAccountHealthRunButton({
               {isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" aria-hidden />
-                  Reconciling…
+                  Resuming…
                 </>
               ) : (
                 <>
-                  <RefreshCw className="h-4 w-4 mr-2" aria-hidden />
-                  Reconcile
+                  <PlayCircle className="h-4 w-4 mr-2" aria-hidden />
+                  Resume
                 </>
               )}
             </Button>

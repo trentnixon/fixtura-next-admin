@@ -4,6 +4,7 @@ import {
   type UseMutationResult,
 } from "@tanstack/react-query";
 import { abortAccountHealthRun } from "@/lib/services/account-health/abortAccountHealthRun";
+import { unwrapAccountHealthMutation } from "@/lib/services/account-health/accountHealthMutationResult";
 import type {
   AccountHealthAbortRequest,
   AccountHealthAbortResponse,
@@ -34,7 +35,8 @@ export function useAbortAccountHealthRun(): UseMutationResult<
     AbortAccountHealthRunVars
   >({
     mutationFn: async ({ runId, options }) => {
-      return await abortAccountHealthRun(runId, options);
+      const result = await abortAccountHealthRun(runId, options);
+      return unwrapAccountHealthMutation(result);
     },
     onSuccess: (_data, { runId, accountId }) => {
       toast.success(`Run #${runId} aborted — you can queue a new update`);

@@ -25,6 +25,21 @@ export function isHealthRunCompletedLimbo(run: {
   return run.status === "completed" && run.finalizedAt == null;
 }
 
+export function canReconcileAccountHealthRun(run: {
+  status: AccountHealthRunStatus;
+  finalizedAt: string | null;
+}): boolean {
+  return isHealthRunCompletedLimbo(run);
+}
+
+/** Active runs (correlation miss) or completed limbo (alternative to reconcile). */
+export function canResumeAccountHealthRun(run: {
+  status: AccountHealthRunStatus;
+  finalizedAt: string | null;
+}): boolean {
+  return isHealthRunActive(run.status) || isHealthRunCompletedLimbo(run);
+}
+
 export function getSummaryEmptyReason(summary: AccountHealthRunSummary | null): {
   isEmptyResult: boolean;
   reasonDisplay: string | null;

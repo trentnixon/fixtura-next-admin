@@ -11,14 +11,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useAbortAccountHealthRun } from "@/hooks/account-health/useAbortAccountHealthRun";
+import { ABORT_INACTIVE_RUN_TOOLTIP } from "@/lib/account-health/abortAvailability";
 import { healthRunActionButtonClass } from "@/app/dashboard/accounts/components/account-health/run-detail/healthRunPageStyles";
 import { cn } from "@/lib/utils";
 
 interface AbortAccountHealthRunButtonProps {
   runId: number;
   accountId: number;
-  /** Compact styling for header toolbars */
+  canAbort?: boolean;
+  grouped?: boolean;
   size?: "sm" | "default";
   className?: string;
 }
@@ -26,6 +34,8 @@ interface AbortAccountHealthRunButtonProps {
 export default function AbortAccountHealthRunButton({
   runId,
   accountId,
+  canAbort = true,
+  grouped = false,
   size = "sm",
   className,
 }: AbortAccountHealthRunButtonProps) {
@@ -43,25 +53,52 @@ export default function AbortAccountHealthRunButton({
 
   const isPending = abort.isPending;
   const disabled =
-    isPending || !Number.isFinite(runId) || runId <= 0 || accountId <= 0;
+    !canAbort ||
+    isPending ||
+    !Number.isFinite(runId) ||
+    runId <= 0 ||
+    accountId <= 0;
+
+  const button = (
+    <Button
+      type="button"
+      variant={grouped ? "destructive" : "outline"}
+      size={size}
+      className={cn(
+        !grouped &&
+          cn(
+            healthRunActionButtonClass,
+            "border-brandError-300 text-brandError-800 hover:border-brandError-700 hover:bg-brandError-700 hover:text-white"
+          ),
+        !canAbort && "opacity-60",
+        className
+      )}
+      onClick={() => {
+        if (canAbort) setIsDialogOpen(true);
+      }}
+      disabled={disabled}
+    >
+      <OctagonX className="h-4 w-4" aria-hidden />
+      Abort
+    </Button>
+  );
 
   return (
     <>
-      <Button
-        type="button"
-        variant="outline"
-        size={size}
-        className={cn(
-          healthRunActionButtonClass,
-          "border-brandError-300 text-brandError-800 hover:border-brandError-700 hover:bg-brandError-700 hover:text-white",
-          className
-        )}
-        onClick={() => setIsDialogOpen(true)}
-        disabled={disabled}
-      >
-        <OctagonX className="h-4 w-4 mr-2" aria-hidden />
-        Abort run
-      </Button>
+      {!canAbort ? (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="inline-flex">{button}</span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs">
+              {ABORT_INACTIVE_RUN_TOOLTIP}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      ) : (
+        button
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent>
@@ -112,7 +149,7 @@ export default function AbortAccountHealthRunButton({
               ) : (
                 <>
                   <OctagonX className="h-4 w-4 mr-2" aria-hidden />
-                  Abort run
+                  Abort
                 </>
               )}
             </Button>

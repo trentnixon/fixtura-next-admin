@@ -3,6 +3,11 @@
 import axiosInstance from "@/lib/axios";
 import type { AccountHealthReconcileResponse } from "@/types/accountHealth";
 import { getAccountHealthReconcileErrorLabel } from "@/lib/account-health/reconcileErrorLabels";
+import {
+  accountHealthMutationFailure,
+  accountHealthMutationSuccess,
+  type AccountHealthMutationResult,
+} from "./accountHealthMutationResult";
 import { extractAccountHealthErrorMessage } from "./extractAccountHealthError";
 
 /**
@@ -12,9 +17,11 @@ import { extractAccountHealthErrorMessage } from "./extractAccountHealthError";
  */
 export async function reconcileAccountHealthRun(
   runId: number
-): Promise<AccountHealthReconcileResponse> {
+): Promise<AccountHealthMutationResult<AccountHealthReconcileResponse>> {
   if (!Number.isFinite(runId) || runId <= 0) {
-    throw new Error(getAccountHealthReconcileErrorLabel("invalid_run_id"));
+    return accountHealthMutationFailure(
+      getAccountHealthReconcileErrorLabel("invalid_run_id")
+    );
   }
 
   try {
@@ -23,12 +30,16 @@ export async function reconcileAccountHealthRun(
     );
 
     if (response.data?.data?.status !== "reconciled") {
-      throw new Error(getAccountHealthReconcileErrorLabel("reconcile_failed"));
+      return accountHealthMutationFailure(
+        getAccountHealthReconcileErrorLabel("reconcile_failed")
+      );
     }
 
-    return response.data;
+    return accountHealthMutationSuccess(response.data);
   } catch (error: unknown) {
     const raw = extractAccountHealthErrorMessage(error);
-    throw new Error(getAccountHealthReconcileErrorLabel(raw));
+    return accountHealthMutationFailure(
+      getAccountHealthReconcileErrorLabel(raw)
+    );
   }
 }

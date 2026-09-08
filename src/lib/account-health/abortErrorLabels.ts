@@ -6,7 +6,8 @@ export const ACCOUNT_HEALTH_ABORT_ERROR_LABELS: Record<
 > = {
   invalid_run_id: "Invalid run ID.",
   not_found: "Run not found.",
-  run_not_active: "Run is not active — only pending, queued, or running runs can be aborted.",
+  run_not_active:
+    "Run is not active — abort only works on pending, queued, or running runs. Try Reconcile or Resume for completed runs.",
   abort_failed: "Could not abort the run. Try again or use Strapi.",
 };
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle, ExternalLink } from "lucide-react";
+import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { blockingItemHeadline } from "@/lib/account-health/displayRules";
@@ -13,7 +14,6 @@ import {
   healthRunBlockingFailedStyles,
   healthRunBlockingInProgressStyles,
   healthRunItemStatusBadgeClass,
-  healthRunSectionTitleClass,
 } from "./healthRunPageStyles";
 
 function blockingCardStyles(item: AccountHealthItem) {
@@ -52,20 +52,38 @@ export function AccountHealthRunBlockingCard({
     item.fixtureDiscovery.expectedTerminalCount > 0;
 
   return (
-    <div className="mb-6 space-y-3">
-      <div className="flex items-center gap-2">
-        <span
-          className="h-4 w-1 shrink-0 rounded-full bg-brandWarning-500"
-          aria-hidden
-        />
-        <div>
-          <h2 className={healthRunSectionTitleClass}>Current blocker</h2>
-          <p className="text-xs text-muted-foreground">
-            Workflow step holding up completion of this run
-          </p>
-        </div>
-      </div>
-
+    <OverviewRecordPanel
+      title="Current blocker"
+      description="Workflow step holding up completion of this run"
+      badge={
+        <Badge
+          variant="outline"
+          className={cn("capitalize", healthRunItemStatusBadgeClass(item.status))}
+        >
+          {item.status}
+        </Badge>
+      }
+      action={
+        itemStrapiBase ? (
+          <Button
+            variant="secondary"
+            size="sm"
+            className={healthRunActionButtonClass}
+            asChild
+          >
+            <a
+              href={`${itemStrapiBase}${item.id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Strapi
+              <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
+            </a>
+          </Button>
+        ) : null
+      }
+      className="mb-6"
+    >
       <div
         className={cn(
           "overflow-hidden rounded-md border bg-white",
@@ -74,7 +92,7 @@ export function AccountHealthRunBlockingCard({
       >
         <div
           className={cn(
-            "flex flex-col gap-4 border-b px-4 py-4 sm:flex-row sm:items-start sm:justify-between",
+            "flex flex-col gap-4 px-4 py-4 sm:flex-row sm:items-start sm:justify-between",
             styles.header,
           )}
         >
@@ -106,37 +124,10 @@ export function AccountHealthRunBlockingCard({
               </p>
             </div>
           </div>
-
-          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:justify-end">
-            <Badge
-              variant="outline"
-              className={cn("capitalize", healthRunItemStatusBadgeClass(item.status))}
-            >
-              {item.status}
-            </Badge>
-            {itemStrapiBase ? (
-              <Button
-                variant="outline"
-                size="sm"
-                className={healthRunActionButtonClass}
-                asChild
-              >
-                <a
-                  href={`${itemStrapiBase}${item.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1"
-                >
-                  Item in Strapi
-                  <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
-                </a>
-              </Button>
-            ) : null}
-          </div>
         </div>
 
         {hasFixtureProgress && (
-          <div className="p-4">
+          <div className="border-t p-4">
             <FixtureDiscoveryDetails
               item={item}
               runFailed={runFailed}
@@ -151,6 +142,6 @@ export function AccountHealthRunBlockingCard({
           </div>
         )}
       </div>
-    </div>
+    </OverviewRecordPanel>
   );
 }

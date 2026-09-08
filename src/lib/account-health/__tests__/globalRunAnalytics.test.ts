@@ -4,6 +4,7 @@ import {
   ATTENTION_WARNING_MS,
   getDataRefreshAttentionRuns,
   resolveDataRefreshAttentionSeverity,
+  resolveRunDurationMs,
   STUCK_RUN_THRESHOLD_MS,
 } from "@/lib/account-health/globalRunAnalytics";
 import type { AccountHealthGlobalLatestRunRow } from "@/types/accountHealth";
@@ -247,5 +248,47 @@ describe("getDataRefreshAttentionRuns", () => {
     expect(runs[0]?.attentionKind).toBe("active");
     expect(runs[0]?.severity).toBe("error");
     expect(runs[0]?.attentionLabel).toBe("Running · overdue");
+  });
+});
+
+describe("resolveRunDurationMs", () => {
+  const start = "2026-09-06T04:00:00.000Z";
+  const finalized = "2026-09-08T09:42:00.000Z";
+
+  it("uses finalizedAt as end for completed runs", () => {
+    const ms = resolveRunDurationMs({
+      status: "finalized",
+      startedAt: start,
+      finalizedAt: finalized,
+      failedAt: null,
+      completedAt: "2026-09-08T09:51:00.000Z",
+    });
+    expect(ms).toBe(Date.parse(finalized) - Date.parse(start));
+  });
+
+  it("falls back to completedAt when finalized is missing", () => {
+    const completed = "2026-09-08T09:51:00.000Z";
+    const ms = resolveRunDurationMs({
+      status: "completed",
+      startedAt: start,
+      finalizedAt: null,
+      failedAt: null,
+      completedAt: completed,
+    });
+    expect(ms).toBe(Date.parse(completed) - Date.parse(start));
+  });
+
+  it("returns live elapsed for active runs", () => {
+    const nowMs = Date.parse(start) + 90_000;
+    const ms = resolveRunDurationMs(
+      {
+        status: "running",
+        startedAt: start,
+        finalizedAt: null,
+        failedAt: null,
+      },
+      nowMs,
+    );
+    expect(ms).toBe(90_000);
   });
 });

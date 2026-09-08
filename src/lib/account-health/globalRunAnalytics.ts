@@ -78,6 +78,44 @@ export function runDurationMs(run: RunWithTimestamps): number | null {
   return end - start;
 }
 
+export type RunDurationInput = {
+  status: AccountHealthRunStatus;
+  startedAt: string | null;
+  queuedAt?: string | null;
+  completedAt?: string | null;
+  failedAt?: string | null;
+  finalizedAt: string | null;
+};
+
+function resolveRunStartMs(run: RunDurationInput): number | null {
+  return parseMs(run.startedAt) ?? parseMs(run.queuedAt);
+}
+
+function resolveRunEndMs(run: RunDurationInput): number | null {
+  return (
+    parseMs(run.finalizedAt) ??
+    parseMs(run.failedAt) ??
+    parseMs(run.completedAt)
+  );
+}
+
+/** Wall-clock duration for run detail — live elapsed while active. */
+export function resolveRunDurationMs(
+  run: RunDurationInput,
+  nowMs: number = Date.now(),
+): number | null {
+  const start = resolveRunStartMs(run);
+  if (start == null) return null;
+
+  if (isHealthRunActive(run.status)) {
+    return Math.max(0, nowMs - start);
+  }
+
+  const end = resolveRunEndMs(run);
+  if (end == null || end < start) return null;
+  return end - start;
+}
+
 export function formatDurationMs(ms: number | null): string {
   if (ms == null || ms < 0) return "—";
   const sec = Math.floor(ms / 1000);

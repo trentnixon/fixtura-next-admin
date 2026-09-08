@@ -18,7 +18,7 @@ export type LiveSnapshotMetricItem = {
 
 interface LiveSnapshotMetricStripProps {
   items: LiveSnapshotMetricItem[];
-  columns?: 2 | 3 | 4;
+  columns?: 2 | 3 | 4 | 5;
 }
 
 function MetricCardSkeleton() {
@@ -36,10 +36,11 @@ function MetricCardSkeleton() {
   );
 }
 
-const COLUMN_CLASS: Record<2 | 3 | 4, string> = {
+const COLUMN_CLASS: Record<2 | 3 | 4 | 5, string> = {
   2: "grid-cols-1 md:grid-cols-2",
   3: "grid-cols-1 md:grid-cols-2 xl:grid-cols-3",
   4: "grid-cols-1 md:grid-cols-2 xl:grid-cols-4",
+  5: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5",
 };
 
 /**
@@ -75,7 +76,9 @@ export function LiveSnapshotMetricStrip({
                 <div className="truncate text-lg font-bold leading-tight">
                   {metric.value}
                 </div>
-                <div className="truncate text-xs opacity-75">{metric.meta}</div>
+                {metric.meta ? (
+                  <div className="truncate text-xs opacity-75">{metric.meta}</div>
+                ) : null}
               </div>
             </CardContent>
           </Card>
