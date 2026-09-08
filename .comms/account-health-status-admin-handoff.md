@@ -75,6 +75,20 @@ POST /api/account/health/runs/:runId/resume
 
 Support tool for first-step ingest correlation misses. It resumes from the first health item and continues the sequence.
 
+### Run Abort
+
+```http
+POST /api/account/health/runs/:runId/abort
+Content-Type: application/json
+
+{
+  "reason": "operator_aborted",
+  "cleanupItems": true
+}
+```
+
+Support tool. Marks an active run as failed, fails non-terminal step items, clears the account active-health lock, and unblocks new on-demand runs. See `.comms/account-health-run-abort-handoff.md`.
+
 ## Auth
 
 Routes use authenticated Account permissions:
@@ -86,6 +100,7 @@ api::account.account.getAccountHealthRunStatus
 api::account.account.postAccountHealthRun
 api::account.account.postAccountHealthRunReconcile
 api::account.account.postAccountHealthRunResume
+api::account.account.postAccountHealthRunAbort
 ```
 
 ## Types
@@ -660,6 +675,7 @@ api::account.account.getAccountHealthRunStatus
 api::account.account.postAccountHealthRun
 api::account.account.postAccountHealthRunReconcile
 api::account.account.postAccountHealthRunResume
+api::account.account.postAccountHealthRunAbort
 ```
 
 If the admin frontend can only call backend custom routes with `APP_API_KEY`, backend auth middleware will need a small follow-up change before staging/production rollout.

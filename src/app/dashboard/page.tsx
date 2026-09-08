@@ -1,4 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
+import { Suspense } from "react";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import DashboardTabs from "./components/DashboardTabs";
 
@@ -17,7 +18,9 @@ export default async function DashboardPage() {
         byLine="Operations"
         byLineBottom="Schedulers, renders, and data collection health"
       />
-      <DashboardTabs />
+      <Suspense fallback={null}>
+        <DashboardTabs />
+      </Suspense>
     </>
   );
 }

@@ -19,6 +19,8 @@ import { BarChart3 } from "lucide-react";
 
 interface DataRefreshOutcomesByDayChartProps {
   data: RunsByDayRow[];
+  /** When true, omit outer card chrome — parent panel provides the heading. */
+  embedded?: boolean;
 }
 
 const chartConfig = {
@@ -42,6 +44,7 @@ const chartConfig = {
 
 export default function DataRefreshOutcomesByDayChart({
   data,
+  embedded = false,
 }: DataRefreshOutcomesByDayChartProps) {
   if (data.length < 1) {
     return null;
@@ -55,6 +58,26 @@ export default function DataRefreshOutcomesByDayChart({
     active: row.active,
   }));
 
+  const chart = (
+    <ChartContainer config={chartConfig} className="h-[200px] w-full">
+      <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200" />
+        <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Legend wrapperStyle={{ fontSize: 11 }} />
+        <Bar dataKey="finalized" stackId="a" fill="var(--color-finalized)" />
+        <Bar dataKey="failed" stackId="a" fill="var(--color-failed)" />
+        <Bar dataKey="empty" stackId="a" fill="var(--color-empty)" />
+        <Bar dataKey="active" stackId="a" fill="var(--color-active)" />
+      </BarChart>
+    </ChartContainer>
+  );
+
+  if (embedded) {
+    return chart;
+  }
+
   return (
     <Card className="shadow-none border rounded-md bg-slate-50/50">
       <CardHeader className="pb-2">
@@ -66,21 +89,7 @@ export default function DataRefreshOutcomesByDayChart({
           From the latest refresh runs in this window (not full history)
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <ChartContainer config={chartConfig} className="h-[200px] w-full">
-          <BarChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" className="stroke-slate-200" />
-            <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-            <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={28} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Legend wrapperStyle={{ fontSize: 11 }} />
-            <Bar dataKey="finalized" stackId="a" fill="var(--color-finalized)" />
-            <Bar dataKey="failed" stackId="a" fill="var(--color-failed)" />
-            <Bar dataKey="empty" stackId="a" fill="var(--color-empty)" />
-            <Bar dataKey="active" stackId="a" fill="var(--color-active)" />
-          </BarChart>
-        </ChartContainer>
-      </CardContent>
+      <CardContent>{chart}</CardContent>
     </Card>
   );
 }

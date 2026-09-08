@@ -8,6 +8,7 @@ import { AlertCircle, Clock, History, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getStuckRenderingAttention } from "@/lib/scheduler/renderAttention";
 
 export function QuickInterventionSidebar() {
   const {
@@ -45,23 +46,24 @@ export function QuickInterventionSidebar() {
       }
     });
 
-    // 2. Today's Stalled Renders (> 30 mins)
-    todayData?.forEach((item) => {
-      if (item.render?.processing) {
-        const start = new Date(item.render.startedAt);
-        const diffMins = Math.floor(
-          (new Date().getTime() - start.getTime()) / (1000 * 60),
-        );
-        if (diffMins > 30) {
-          list.push({
-            id: item.schedulerId,
-            name: item.accountName || item.schedulerName,
-            reason: `Stalled (${diffMins}m)`,
-            type: "stalled",
-            time: item.scheduledTime,
-          });
-        }
-      }
+    // 2. Today's stalled renders (> 30 mins)
+    const stuckToday = getStuckRenderingAttention(todayData ?? []);
+    stuckToday.forEach((item) => {
+      const elapsedMins =
+        item.elapsedMs != null
+          ? Math.floor(item.elapsedMs / (1000 * 60))
+          : null;
+
+      list.push({
+        id: item.schedulerId,
+        name: item.accountName,
+        reason:
+          elapsedMins != null
+            ? `Stalled (${elapsedMins}m)`
+            : item.label,
+        type: "stalled",
+        time: item.startedAt ?? undefined,
+      });
     });
 
     return list;

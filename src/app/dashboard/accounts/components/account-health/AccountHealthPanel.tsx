@@ -17,6 +17,7 @@ import {
 } from "@/lib/account-health/displayRules";
 import { getAccountHealthRunDetailHref } from "@/lib/account-health/accountRoutes";
 import TriggerAccountHealthRunButton from "./TriggerAccountHealthRunButton";
+import AbortAccountHealthRunButton from "./AbortAccountHealthRunButton";
 
 interface AccountHealthPanelProps {
   accountId: number;
@@ -88,11 +89,19 @@ export default function AccountHealthPanel({ accountId }: AccountHealthPanelProp
       description="Season data refresh status and recent runs"
       variant="compact"
       action={
-        <TriggerAccountHealthRunButton
-          accountId={account.id}
-          liveRun={Boolean(liveRun)}
-          activeRunId={latestRun?.id}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          {liveRun && latestRun && (
+            <AbortAccountHealthRunButton
+              runId={latestRun.id}
+              accountId={account.id}
+            />
+          )}
+          <TriggerAccountHealthRunButton
+            accountId={account.id}
+            liveRun={Boolean(liveRun)}
+            activeRunId={latestRun?.id}
+          />
+        </div>
       }
     >
       <div className="mb-4 flex flex-wrap items-center gap-2">

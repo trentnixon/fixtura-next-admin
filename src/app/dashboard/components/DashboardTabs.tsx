@@ -1,15 +1,26 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import LiveOverview from "./LiveOverview";
-import { SchedulerRollupData } from "./SchedulerRollupData";
-import GlobalDataRefreshDashboard from "./account-health/GlobalDataRefreshDashboard";
-import { RenderActivitySection } from "./account-asset-run/RenderActivitySection";
+import DashboardFinancials from "./DashboardFinancials";
+import DashboardAssetCreation from "./DashboardAssetCreation";
+import DashboardDataCollection from "./DashboardDataCollection";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Clapperboard, Database, LayoutDashboard } from "lucide-react";
+import { Clapperboard, Database, DollarSign, LayoutDashboard } from "lucide-react";
 
 const tabs = [
+  {
+    value: "overview",
+    label: "Overview",
+    icon: LayoutDashboard,
+  },
+  {
+    value: "financials",
+    label: "Financials",
+    icon: DollarSign,
+  },
   {
     value: "renders",
     label: "Asset Creation",
@@ -22,60 +33,68 @@ const tabs = [
   },
 ] as const;
 
+type DashboardTab = (typeof tabs)[number]["value"];
+
+function resolveInitialTab(tabParam: string | null): DashboardTab {
+  if (
+    tabParam === "collection" ||
+    tabParam === "renders" ||
+    tabParam === "financials"
+  ) {
+    return tabParam;
+  }
+  return "overview";
+}
+
 /**
- * Dashboard section tabs — navigation.pattern.section-tabs
+ * Dashboard — all operations content organised in one tab bar.
  */
 export default function DashboardTabs() {
-  return (
-    <>
-      <PageContainer padding="xs" spacing="md">
-        <SectionContainer
-          title="Operations overview"
-          description="Today's render queue, account fleet, revenue, and recent scrape activity"
-          variant="compact"
-          icon={<LayoutDashboard className="h-5 w-5 text-brandPrimary-500" />}
-        >
-          <LiveOverview />
-        </SectionContainer>
-      </PageContainer>
+  const searchParams = useSearchParams();
+  const initialTab = resolveInitialTab(searchParams.get("tab"));
 
-      <Tabs defaultValue="renders" className="w-full">
-        <div className="px-2 pb-1 pt-2">
+  return (
+    <PageContainer padding="xs" spacing="md">
+      <SectionContainer
+        title="Operations overview"
+        description="Fleet health, alerts, financials, asset creation, and data collection"
+        variant="compact"
+        icon={<LayoutDashboard className="h-5 w-5 text-brandPrimary-500" />}
+      >
+        <Tabs defaultValue={initialTab} className="w-full">
           <TabsList
             variant="primary"
-            className="flex h-auto flex-wrap justify-start gap-1"
+            className="mb-6 flex h-auto flex-wrap justify-start gap-1"
           >
             {tabs.map(({ value, label, icon: Icon }) => (
-              <TabsTrigger key={value} value={value}>
-                <Icon className="h-3.5 w-3.5" />
+              <TabsTrigger
+                key={value}
+                value={value}
+                className="gap-1.5"
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0" />
                 {label}
               </TabsTrigger>
             ))}
           </TabsList>
-        </div>
 
-        <PageContainer padding="xs" spacing="md">
-          <TabsContent value="collection" className="p-4 pt-4">
-            <GlobalDataRefreshDashboard />
+          <TabsContent value="overview" className="mt-0">
+            <LiveOverview />
           </TabsContent>
 
-          <TabsContent value="renders" className="space-y-4 p-4 pt-4">
-            <SchedulerRollupData
-              title="Asset Creation"
-              description="Expected renders and queue state across the fleet"
-            />
-            <RenderActivitySection
-              defaultPageSize={25}
-              title="Render activity"
-              description="Asset runs in the last 48 hours (UTC rolling window)"
-              footerLink={{
-                href: "/dashboard/renders",
-                label: "Open full render workspace",
-              }}
-            />
+          <TabsContent value="financials" className="mt-0">
+            <DashboardFinancials />
           </TabsContent>
-        </PageContainer>
-      </Tabs>
-    </>
+
+          <TabsContent value="renders" className="mt-0">
+            <DashboardAssetCreation />
+          </TabsContent>
+
+          <TabsContent value="collection" className="mt-0">
+            <DashboardDataCollection />
+          </TabsContent>
+        </Tabs>
+      </SectionContainer>
+    </PageContainer>
   );
 }

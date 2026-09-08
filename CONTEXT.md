@@ -71,3 +71,33 @@ _Avoid_: Game, game metadata
 **GameMetaData**:
 Legacy CMS/API identifier for a fixture when talking to Strapi. Not product language.
 _Avoid_: Fixture (in API/code comments aimed at humans)
+
+### Season data refresh (account health)
+
+**Season data refresh**:
+Product label for the account health workflow in admin UI (Data refresh tab, run detail). Refers to the multi-step scrape/sync pipeline for a client's org data.
+_Avoid_: Health job, health refresh (prefer account health run in ops docs)
+
+**Account health run**:
+A scheduled or on-demand multi-step refresh of a client's scraped org/competition data, tracked as a run row with linked step items.
+_Avoid_: Health job, health refresh
+
+**Account health item**:
+One step within an account health run (e.g. association overview scrape, fixture discovery batch), with its own status and optional Bull job reference.
+_Avoid_: Health task, health step
+
+**Active account health run**:
+A run whose status is pending, queued, or running — the lock that blocks a new on-demand run for the same account.
+_Avoid_: Live run (acceptable in UI copy; prefer active account health run in domain docs)
+
+**Completed limbo**:
+Run status is `completed` but `finalizedAt` is null — all workflow steps finished but promotion/finalization did not complete. First recovery action: reconcile.
+_Avoid_: Stuck run (too vague)
+
+**Finalize (account health)**:
+Promotion of a completed run's data into account last-known-good and transition of the run to finalized — distinct from merely marking all steps completed.
+_Avoid_: Complete (`completed` is an intermediate run status; `finalized` is the successful terminal state)
+
+**Operator abort (account health)**:
+Support-initiated soft failure of an active run: run and non-terminal items become failed, audit records remain, account active-health lock clears.
+_Avoid_: Cancel, reset, delete run

@@ -10,18 +10,23 @@ import type {
 } from "@/types/adminInvoice";
 
 export function useAdminInvoices(
-  params: FetchAdminInvoicesParams = {}
+  params: FetchAdminInvoicesParams = {},
+  options?: { refetchInterval?: number | false }
 ): UseQueryResult<AdminInvoiceListResponse, CmsApiError> {
   return useQuery({
     queryKey: [...ADMIN_INVOICES_QUERY_PREFIX, params],
     queryFn: () => fetchAdminInvoices(params),
     staleTime: 60_000,
+    refetchInterval: options?.refetchInterval,
     refetchOnWindowFocus: false,
   });
 }
 
-export function useAdminInvoicesData(params: FetchAdminInvoicesParams = {}) {
-  const query = useAdminInvoices(params);
+export function useAdminInvoicesData(
+  params: FetchAdminInvoicesParams = {},
+  options?: { refetchInterval?: number | false }
+) {
+  const query = useAdminInvoices(params, options);
   return {
     ...query,
     items: query.data?.items ?? [],

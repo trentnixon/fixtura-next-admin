@@ -211,3 +211,69 @@ export type AccountHealthTriggerErrorResponse = {
     details: Record<string, unknown>;
   };
 };
+
+/** POST /api/account/health/runs/:runId/abort */
+
+export type AccountHealthAbortErrorReason =
+  | "invalid_run_id"
+  | "not_found"
+  | "run_not_active"
+  | "abort_failed";
+
+export type AccountHealthAbortRequest = {
+  reason?: string;
+  cleanupItems?: boolean;
+};
+
+export type AccountHealthAbortResponse = AccountHealthRunStatusResponse;
+
+export type AccountHealthAbortErrorResponse = {
+  data: null;
+  error: {
+    status: number;
+    name: string;
+    message: AccountHealthAbortErrorReason | string;
+    details: Record<string, unknown>;
+  };
+};
+
+/** POST /api/account/health/runs/:runId/reconcile */
+
+export type AccountHealthReconcileItemSummary = {
+  itemId: number;
+  itemRunId: string | null;
+  itemStatus: AccountHealthItemStatus;
+  expectedTerminalCount: number;
+  terminalCount: number;
+  nonTerminalCount: number;
+  nonTerminalRows: Array<{
+    id: number;
+    processingStatus: "pending" | "processing";
+    gradeId: number | null;
+  }>;
+};
+
+export type AccountHealthReconcileErrorReason =
+  | "invalid_run_id"
+  | "not_found"
+  | "reconcile_failed";
+
+export type AccountHealthReconcileResponse = {
+  data: {
+    status: "reconciled";
+    runId: number;
+    reconciled: number;
+    requeued: number;
+    itemSummaries: AccountHealthReconcileItemSummary[];
+  };
+};
+
+export type AccountHealthReconcileErrorResponse = {
+  data: null;
+  error: {
+    status: number;
+    name: string;
+    message: AccountHealthReconcileErrorReason | string;
+    details: Record<string, unknown>;
+  };
+};

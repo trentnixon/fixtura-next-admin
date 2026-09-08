@@ -17,6 +17,14 @@ export function isHealthRunActive(status: AccountHealthRunStatus): boolean {
   return status === "pending" || status === "queued" || status === "running";
 }
 
+/** Run finished all steps (`completed`) but never promoted to `finalized`. */
+export function isHealthRunCompletedLimbo(run: {
+  status: AccountHealthRunStatus;
+  finalizedAt: string | null;
+}): boolean {
+  return run.status === "completed" && run.finalizedAt == null;
+}
+
 export function getSummaryEmptyReason(summary: AccountHealthRunSummary | null): {
   isEmptyResult: boolean;
   reasonDisplay: string | null;

@@ -6,11 +6,18 @@ import type {
 } from "@/types/accountHealth";
 import {
   getSummaryEmptyReason,
+  healthRunStatusLabel,
   isHealthRunActive,
+  isHealthRunCompletedLimbo,
 } from "@/lib/account-health/displayRules";
 
-/** Default: active run with startedAt older than this is "stuck" */
+/** Default: active run with startedAt older than this is "stuck" (fleet outlier chips) */
 export const STUCK_RUN_THRESHOLD_MS = 2 * 60 * 60 * 1000;
+
+/** Dashboard attention panel elapsed thresholds */
+export const ATTENTION_WARNING_MS = 20 * 60 * 1000;
+export const ATTENTION_ISSUE_MS = 30 * 60 * 1000;
+export const ATTENTION_ERROR_MS = 60 * 60 * 1000;
 
 export type RunWithTimestamps = {
   id: number;
@@ -83,12 +90,211 @@ export function formatDurationMs(ms: number | null): string {
 
 export function isStuckActiveRun(
   run: RunWithTimestamps,
-  thresholdMs: number = STUCK_RUN_THRESHOLD_MS
+  thresholdMs: number = STUCK_RUN_THRESHOLD_MS,
+  nowMs: number = Date.now()
 ): boolean {
   if (!isHealthRunActive(run.status)) return false;
   const started = parseMs(run.startedAt);
   if (started == null) return false;
-  return Date.now() - started > thresholdMs;
+  return nowMs - started > thresholdMs;
+}
+
+export function activeRunElapsedMs(
+  run: RunWithTimestamps,
+  nowMs: number = Date.now()
+): number | null {
+  const start = parseMs(run.startedAt);
+  if (start == null) return null;
+  return Math.max(0, nowMs - start);
+}
+
+export type DataRefreshAttentionKind = "stuck" | "active" | "completed_limbo";
+
+export type DataRefreshAttentionSeverity =
+  | "normal"
+  | "warning"
+  | "issue"
+  | "error";
+
+export type DataRefreshAttentionRun = AccountHealthGlobalLatestRunRow & {
+  attentionKind: DataRefreshAttentionKind;
+  attentionLabel: string;
+  severity: DataRefreshAttentionSeverity;
+  severityLabel: string | null;
+};
+
+const ATTENTION_KIND_PRIORITY: Record<DataRefreshAttentionKind, number> = {
+  stuck: 0,
+  completed_limbo: 1,
+  active: 2,
+};
+
+const ATTENTION_SEVERITY_PRIORITY: Record<
+  DataRefreshAttentionSeverity,
+  number
+> = {
+  error: 0,
+  issue: 1,
+  warning: 2,
+  normal: 3,
+};
+
+export function resolveDataRefreshAttentionSeverity(
+  input: {
+    status: AccountHealthRunStatus;
+    startedAt: string | null;
+    finalizedAt: string | null;
+    attentionKind?: DataRefreshAttentionKind;
+  },
+  nowMs: number = Date.now()
+): DataRefreshAttentionSeverity {
+  if (isHealthRunCompletedLimbo(input)) {
+    return "error";
+  }
+
+  if (input.attentionKind === "stuck") {
+    return "error";
+  }
+
+  if (!isHealthRunActive(input.status)) {
+    return "normal";
+  }
+
+  const elapsed = activeRunElapsedMs(
+    {
+      id: 0,
+      status: input.status,
+      startedAt: input.startedAt,
+      finalizedAt: input.finalizedAt,
+    },
+    nowMs
+  );
+
+  if (elapsed == null) {
+    return "error";
+  }
+
+  if (elapsed >= ATTENTION_ERROR_MS) {
+    return "error";
+  }
+
+  if (elapsed >= ATTENTION_ISSUE_MS) {
+    return "issue";
+  }
+
+  if (elapsed >= ATTENTION_WARNING_MS) {
+    return "warning";
+  }
+
+  return "normal";
+}
+
+function severityLabelFor(
+  severity: DataRefreshAttentionSeverity
+): string | null {
+  switch (severity) {
+    case "warning":
+      return "Warning";
+    case "issue":
+      return "Issue";
+    case "error":
+      return "Error";
+    default:
+      return null;
+  }
+}
+
+function buildAttentionLabel(
+  kind: DataRefreshAttentionKind,
+  status: AccountHealthRunStatus,
+  severity: DataRefreshAttentionSeverity
+): string {
+  if (kind === "stuck") return "Stuck";
+  if (kind === "completed_limbo") return "Needs reconcile";
+
+  const statusLabel = healthRunStatusLabel(status);
+
+  switch (severity) {
+    case "error":
+      return `${statusLabel} · overdue`;
+    case "issue":
+      return `${statusLabel} · delayed`;
+    case "warning":
+      return `${statusLabel} · slow`;
+    default:
+      return statusLabel;
+  }
+}
+
+/** Runs that need operator attention: stuck, in-flight, or completed limbo. */
+export function getDataRefreshAttentionRuns(
+  latestRuns: AccountHealthGlobalLatestRunRow[],
+  nowMs: number = Date.now()
+): DataRefreshAttentionRun[] {
+  const attention: DataRefreshAttentionRun[] = [];
+
+  for (const run of latestRuns) {
+    const row = toRunWithTimestamps(run);
+    let kind: DataRefreshAttentionKind | null = null;
+
+    if (isStuckActiveRun(row, STUCK_RUN_THRESHOLD_MS, nowMs)) {
+      kind = "stuck";
+    } else if (isHealthRunCompletedLimbo(run)) {
+      kind = "completed_limbo";
+    } else if (isHealthRunActive(run.status)) {
+      kind = "active";
+    }
+
+    if (!kind) continue;
+
+    const severity = resolveDataRefreshAttentionSeverity(
+      { ...run, attentionKind: kind },
+      nowMs
+    );
+
+    attention.push({
+      ...run,
+      attentionKind: kind,
+      severity,
+      severityLabel: severityLabelFor(severity),
+      attentionLabel: buildAttentionLabel(kind, run.status, severity),
+    });
+  }
+
+  return attention.sort((a, b) => {
+    const sa = ATTENTION_SEVERITY_PRIORITY[a.severity];
+    const sb = ATTENTION_SEVERITY_PRIORITY[b.severity];
+    if (sa !== sb) return sa - sb;
+
+    const pa = ATTENTION_KIND_PRIORITY[a.attentionKind];
+    const pb = ATTENTION_KIND_PRIORITY[b.attentionKind];
+    if (pa !== pb) return pa - pb;
+
+    const ea =
+      activeRunElapsedMs(toRunWithTimestamps(a), nowMs) ??
+      Number.MAX_SAFE_INTEGER;
+    const eb =
+      activeRunElapsedMs(toRunWithTimestamps(b), nowMs) ??
+      Number.MAX_SAFE_INTEGER;
+    return eb - ea;
+  });
+}
+
+export function maxDataRefreshAttentionSeverity(
+  runs: DataRefreshAttentionRun[]
+): DataRefreshAttentionSeverity | null {
+  if (runs.length === 0) return null;
+
+  let worst: DataRefreshAttentionSeverity = "normal";
+  for (const run of runs) {
+    if (
+      ATTENTION_SEVERITY_PRIORITY[run.severity] <
+      ATTENTION_SEVERITY_PRIORITY[worst]
+    ) {
+      worst = run.severity;
+    }
+  }
+  return worst;
 }
 
 export function isFailedRun(run: RunWithTimestamps): boolean {

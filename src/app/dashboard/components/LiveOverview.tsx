@@ -1,47 +1,28 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  CheckCircle2,
-  Clock,
-  CreditCard,
-  DollarSign,
-  PlayCircle,
-  Users,
-} from "lucide-react";
+import { PlayCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import { useGetTodaysRenders } from "@/hooks/scheduler/useGetTodaysRenders";
-import { useAccountSummaryQuery } from "@/hooks/accounts/useAccountSummaryQuery";
-import { useGlobalAnalytics } from "@/hooks/analytics/useGlobalAnalytics";
-import { useAdminOrderOverview } from "@/hooks/orders/useAdminOrderOverview";
 import { useScraperLogs } from "@/hooks/data-collection/useScraperLogs";
-import { findCurrencyFromOrders } from "@/app/dashboard/orders/utils/orderHelpers";
 import { TodaysRenders } from "@/types/scheduler";
-import { formatCurrency } from "@/utils/chart-formatters";
-import {
-  LiveSnapshotMetricStrip,
-  type LiveSnapshotMetricItem,
-} from "./live-snapshot/LiveSnapshotMetricStrip";
+import { OverviewDataWorkspace } from "./live-snapshot/OverviewDataWorkspace";
+import { OverviewRecordPanel } from "./live-snapshot/OverviewRecordPanel";
 import { RecentScrapeJobsTable } from "./live-snapshot/RecentScrapeJobsTable";
 import { LIVE_OVERVIEW_REFETCH_MS } from "./live-snapshot/liveOverviewConfig";
+import { useAccountHealthGlobalStatus } from "@/hooks/account-health/useAccountHealthGlobalStatus";
+import { getDataRefreshAttentionRuns } from "@/lib/account-health/globalRunAnalytics";
+import { DataRefreshAttentionPanel } from "./account-health/DataRefreshAttentionPanel";
 import { useLiveOverviewRefreshToast } from "./live-snapshot/useLiveOverviewRefreshToast";
-import {
-  formatPaymentMixMeta,
-  summarizePaymentMixByRevenue,
-} from "./live-snapshot/liveSnapshotPaymentMix";
-import {
-  getCurrentMonthDateRange,
-  getCurrentMonthKey,
-  getCurrentMonthLabel,
-  getCurrentQuarterKey,
-  getYearToDateLabel,
-  getYearToDateRevenue,
-  lookupRevenueCents,
-} from "./live-snapshot/liveSnapshotRevenue";
+import { DashboardLinkButton } from "./live-snapshot/DashboardLinkButton";
+import { StuckRenderingAttentionList } from "./live-snapshot/StuckRenderingAttentionList";
+import { getStuckRenderingAttention } from "@/lib/scheduler/renderAttention";
+import type { WorkspaceMetricTile } from "./live-snapshot/OverviewDataWorkspace";
+import { cn } from "@/lib/utils";
 
 const UNAVAILABLE = "—";
 const UNAVAILABLE_META = "Unavailable";
-const DEFAULT_CURRENCY = "AUD";
 
 function getRenderingCount(data: TodaysRenders[]) {
   return data?.filter((item) => item.isRendering).length || 0;
@@ -60,40 +41,17 @@ function getScheduledTodayCount(data: TodaysRenders[]) {
 }
 
 /**
- * Dashboard live snapshot — renders, fleet, revenue, and recent scrape jobs.
+ * Dashboard overview — alerts, today's ops, and recent scrapes.
  */
 export default function LiveOverview() {
-  const orderOverviewParams = useMemo(() => getCurrentMonthDateRange(), []);
-
   const {
     data: todaysRenders,
     isLoading: rendersLoading,
     isError: rendersError,
     isFetching: rendersFetching,
+    error: rendersQueryError,
+    refetch: refetchRenders,
   } = useGetTodaysRenders({ refetchInterval: LIVE_OVERVIEW_REFETCH_MS });
-
-  const {
-    data: accountSummary,
-    isLoading: accountsLoading,
-    isError: accountsError,
-    isFetching: accountsFetching,
-  } = useAccountSummaryQuery({ refetchInterval: LIVE_OVERVIEW_REFETCH_MS });
-
-  const {
-    data: globalAnalytics,
-    isLoading: analyticsLoading,
-    isError: analyticsError,
-    isFetching: analyticsFetching,
-  } = useGlobalAnalytics({ refetchInterval: LIVE_OVERVIEW_REFETCH_MS });
-
-  const {
-    data: orderOverview,
-    isLoading: ordersOverviewLoading,
-    isError: ordersOverviewError,
-    isFetching: ordersOverviewFetching,
-  } = useAdminOrderOverview(orderOverviewParams, {
-    refetchInterval: LIVE_OVERVIEW_REFETCH_MS,
-  });
 
   const {
     data: scrapeJobs,
@@ -107,93 +65,58 @@ export default function LiveOverview() {
     refetchInterval: LIVE_OVERVIEW_REFETCH_MS,
   });
 
+  const {
+    data: healthGlobal,
+    isLoading: healthLoading,
+    isError: healthError,
+    error: healthQueryError,
+    refetch: refetchHealth,
+    isFetching: healthFetching,
+  } = useAccountHealthGlobalStatus();
+
+  const attentionRuns = useMemo(
+    () => getDataRefreshAttentionRuns(healthGlobal?.data?.latestRuns ?? []),
+    [healthGlobal?.data?.latestRuns]
+  );
+
+  const stuckRenderingItems = useMemo(
+    () => getStuckRenderingAttention(todaysRenders ?? []),
+    [todaysRenders]
+  );
+
+  const stuckRenderingCount = stuckRenderingItems.length;
+
+  const activeSyncCount = healthGlobal?.data?.activeCount ?? 0;
+  const errorSyncCount = attentionRuns.filter(
+    (run) => run.severity === "error"
+  ).length;
+  const issueSyncCount = attentionRuns.filter(
+    (run) => run.severity === "issue"
+  ).length;
+
   const isRefreshing =
     (rendersFetching && !rendersLoading) ||
-    (accountsFetching && !accountsLoading) ||
-    (analyticsFetching && !analyticsLoading) ||
-    (ordersOverviewFetching && !ordersOverviewLoading) ||
-    (scrapeFetching && !scrapeLoading);
+    (scrapeFetching && !scrapeLoading) ||
+    (healthFetching && !healthLoading);
 
   useLiveOverviewRefreshToast(isRefreshing);
 
-  const metricItems = useMemo((): LiveSnapshotMetricItem[] => {
-    const summary = accountSummary?.data?.Totals;
-    const associations = summary?.accountTypesCount?.Association ?? 0;
-    const clubs = summary?.accountTypesCount?.Club ?? 0;
-    const totalAccounts =
-      summary?.count ?? (associations + clubs > 0 ? associations + clubs : 0);
-
-    const analytics = globalAnalytics;
-    const inactiveAccounts = analytics?.inactiveAccounts ?? 0;
-    const monthKey = getCurrentMonthKey();
-    const quarterKey = getCurrentQuarterKey();
-    const mtdCents = lookupRevenueCents(
-      analytics?.revenueTrends?.monthlyRevenue,
-      monthKey,
-    );
-    const qtdCents = lookupRevenueCents(
-      analytics?.revenueTrends?.quarterlyRevenue,
-      quarterKey,
-    );
-    const ytdCents = getYearToDateRevenue(
-      analytics?.revenueTrends?.monthlyRevenue,
-    );
-
-    const formatRevenue = (cents: number | null) =>
-      cents == null
-        ? UNAVAILABLE
-        : formatCurrency(cents / 100);
-
+  const operationsMetrics = useMemo((): WorkspaceMetricTile[] => {
     const scheduledToday = getScheduledTodayCount(todaysRenders ?? []);
     const completedToday = getCompletedTodayCount(todaysRenders ?? []);
 
-    const paymentMix = summarizePaymentMixByRevenue(orderOverview?.orders ?? []);
-    const paymentCurrency =
-      findCurrencyFromOrders(orderOverview?.orders ?? []) ?? DEFAULT_CURRENCY;
-    const paymentMixValue =
-      ordersOverviewError || paymentMix.totalCents <= 0
-        ? ordersOverviewError
-          ? UNAVAILABLE
-          : "0%"
-        : `${paymentMix.stripeSharePercent}%`;
-    const paymentMixMeta = ordersOverviewError
-      ? UNAVAILABLE_META
-      : formatPaymentMixMeta(paymentMix, paymentCurrency);
-
     return [
-      {
-        id: "rev-mtd",
-        label: "Rev MTD",
-        value: analyticsError ? UNAVAILABLE : formatRevenue(mtdCents),
-        meta: analyticsError ? UNAVAILABLE_META : getCurrentMonthLabel(),
-        icon: DollarSign,
-        isLoading: analyticsLoading,
-      },
-      {
-        id: "rev-qtd",
-        label: "Rev QTD",
-        value: analyticsError ? UNAVAILABLE : formatRevenue(qtdCents),
-        meta: analyticsError ? UNAVAILABLE_META : quarterKey,
-        icon: DollarSign,
-        isLoading: analyticsLoading,
-      },
-      {
-        id: "rev-ytd",
-        label: "Rev YTD",
-        value: analyticsError ? UNAVAILABLE : formatRevenue(ytdCents),
-        meta: analyticsError ? UNAVAILABLE_META : getYearToDateLabel(),
-        icon: DollarSign,
-        isLoading: analyticsLoading,
-      },
       {
         id: "rendering",
         label: "Rendering",
         value: rendersError
           ? UNAVAILABLE
           : String(getRenderingCount(todaysRenders ?? [])),
-        meta: rendersError ? UNAVAILABLE_META : "Accounts active today",
-        icon: PlayCircle,
-        iconClassName: "bg-blue-50 text-blue-700",
+        meta: rendersError
+          ? UNAVAILABLE_META
+          : stuckRenderingCount > 0
+            ? `${stuckRenderingCount} stuck · active today`
+            : "Active today",
         isLoading: rendersLoading,
       },
       {
@@ -202,9 +125,7 @@ export default function LiveOverview() {
         value: rendersError
           ? UNAVAILABLE
           : String(getQueuedCount(todaysRenders ?? [])),
-        meta: rendersError ? UNAVAILABLE_META : "Accounts waiting today",
-        icon: Clock,
-        iconClassName: "bg-amber-50 text-amber-700",
+        meta: rendersError ? UNAVAILABLE_META : "Waiting today",
         isLoading: rendersLoading,
       },
       {
@@ -214,88 +135,217 @@ export default function LiveOverview() {
         meta: rendersError
           ? UNAVAILABLE_META
           : `${scheduledToday} scheduled today`,
-        icon: CheckCircle2,
-        iconClassName: "bg-emerald-50 text-emerald-700",
         isLoading: rendersLoading,
       },
       {
-        id: "total-accounts",
-        label: "Total accounts",
-        value: accountsError
-          ? UNAVAILABLE
-          : totalAccounts.toLocaleString(),
-        meta: accountsError
+        id: "data-sync",
+        label: "Data sync",
+        value: healthError ? UNAVAILABLE : String(activeSyncCount),
+        meta: healthError
           ? UNAVAILABLE_META
-          : `${associations.toLocaleString()} assoc · ${clubs.toLocaleString()} clubs`,
-        icon: Users,
-        isLoading: accountsLoading,
-      },
-      {
-        id: "active-subs",
-        label: "Active subs",
-        value: analyticsError
-          ? UNAVAILABLE
-          : (analytics?.activeAccounts ?? 0).toLocaleString(),
-        meta: analyticsError
-          ? UNAVAILABLE_META
-          : `${inactiveAccounts.toLocaleString()} inactive`,
-        icon: Users,
-        isLoading: analyticsLoading,
-      },
-      {
-        id: "payment-mix",
-        label: "Stripe share",
-        value: paymentMixValue,
-        meta: paymentMixMeta,
-        icon: CreditCard,
-        isLoading: ordersOverviewLoading,
+          : errorSyncCount > 0
+            ? `${errorSyncCount} error · ${issueSyncCount} issue`
+            : issueSyncCount > 0
+              ? `${issueSyncCount} issue`
+              : attentionRuns.length > 0
+                ? `${attentionRuns.length} in attention list`
+                : "All clear",
+        isLoading: healthLoading,
       },
     ];
   }, [
-    accountSummary,
-    accountsError,
-    accountsLoading,
-    analyticsError,
-    analyticsLoading,
-    globalAnalytics,
-    orderOverview?.orders,
-    ordersOverviewError,
-    ordersOverviewLoading,
+    activeSyncCount,
+    attentionRuns.length,
+    errorSyncCount,
+    healthError,
+    healthLoading,
+    issueSyncCount,
     rendersError,
     rendersLoading,
+    stuckRenderingCount,
     todaysRenders,
   ]);
 
-  const initialLoad =
-    rendersLoading &&
-    accountsLoading &&
-    analyticsLoading &&
-    ordersOverviewLoading &&
-    scrapeLoading;
+  const initialLoad = rendersLoading && scrapeLoading;
 
   if (initialLoad) {
     return (
       <LoadingState
         variant="minimal"
-        message="Loading live snapshot…"
+        message="Loading overview…"
         className="py-6"
       />
     );
   }
 
+  const showStuckRenderingSection =
+    rendersLoading || rendersError || stuckRenderingItems.length > 0;
+
+  const showAttentionSection =
+    healthLoading || healthError || attentionRuns.length > 0;
+
+  const attentionSummaryParts = [
+    errorSyncCount > 0 ? `${errorSyncCount} error` : null,
+    issueSyncCount > 0 ? `${issueSyncCount} issue` : null,
+  ].filter(Boolean);
+
+  const overviewPanelCount =
+    1 +
+    (showStuckRenderingSection ? 1 : 0) +
+    (showAttentionSection ? 1 : 0);
+
   return (
-    <div className="grid grid-cols-1 items-start gap-4 xl:grid-cols-2">
-        <div className="min-w-0">
-          <LiveSnapshotMetricStrip items={metricItems} />
-        </div>
-        <div className="min-w-0">
+    <div className="space-y-6">
+      <OverviewDataWorkspace
+        title="Today's operations"
+        description="Render queue and data sync across the fleet"
+        icon={PlayCircle}
+        badge={<Badge variant="secondary">Live</Badge>}
+        metrics={operationsMetrics}
+        columns={4}
+        action={
+          <DashboardLinkButton
+            href="/dashboard?tab=renders"
+            trailingIcon="external"
+          >
+            Asset Creation
+          </DashboardLinkButton>
+        }
+        footer={
+          <>
+            <span className="text-muted-foreground">
+              Refreshes every 2 minutes
+            </span>
+            <DashboardLinkButton
+              href="/dashboard/renders"
+              intent="highlight"
+              trailingIcon="arrow"
+            >
+              Open render workspace
+            </DashboardLinkButton>
+          </>
+        }
+      />
+
+      <div
+        className={cn(
+          "grid grid-cols-1 gap-6",
+          overviewPanelCount >= 3 && "xl:grid-cols-3",
+          overviewPanelCount === 2 && "xl:grid-cols-2",
+          overviewPanelCount === 1 && "max-w-xl"
+        )}
+      >
+        {showStuckRenderingSection ? (
+          <OverviewRecordPanel
+            title="Stuck rendering"
+            description="Accounts processing or rendering longer than 30 minutes today"
+            badge={
+              stuckRenderingItems.length > 0 ? (
+                <Badge variant="outline" className="border-amber-300 bg-amber-50">
+                  {stuckRenderingItems.length} account
+                  {stuckRenderingItems.length === 1 ? "" : "s"}
+                </Badge>
+              ) : null
+            }
+            action={
+              <DashboardLinkButton
+                href="/dashboard?tab=renders"
+                trailingIcon="external"
+              >
+                Asset Creation
+              </DashboardLinkButton>
+            }
+          >
+            <StuckRenderingAttentionList
+              items={stuckRenderingItems}
+              isLoading={rendersLoading}
+              error={
+                rendersError
+                  ? rendersQueryError instanceof Error
+                    ? rendersQueryError
+                    : new Error(String(rendersQueryError))
+                  : null
+              }
+              onRetry={() => refetchRenders()}
+            />
+          </OverviewRecordPanel>
+        ) : null}
+
+        {showAttentionSection ? (
+          <OverviewRecordPanel
+            title="Needs attention"
+            description="Account sync runs that are active, stuck, or waiting to finalize"
+            badge={
+              attentionRuns.length > 0 ? (
+                <Badge variant="outline">
+                  {attentionRuns.length} run
+                  {attentionRuns.length === 1 ? "" : "s"}
+                  {attentionSummaryParts.length > 0
+                    ? ` · ${attentionSummaryParts.join(" · ")}`
+                    : ""}
+                </Badge>
+              ) : null
+            }
+            action={
+              <DashboardLinkButton
+                href="/dashboard?tab=collection"
+                trailingIcon="external"
+              >
+                Data Collection
+              </DashboardLinkButton>
+            }
+          >
+            <DataRefreshAttentionPanel
+              runs={attentionRuns}
+              activeCount={activeSyncCount}
+              isLoading={healthLoading}
+              error={
+                healthError
+                  ? healthQueryError instanceof Error
+                    ? healthQueryError
+                    : new Error(String(healthQueryError))
+                  : null
+              }
+              onRetry={() => refetchHealth()}
+              embedded
+              layout="rows"
+            />
+          </OverviewRecordPanel>
+        ) : null}
+
+        <OverviewRecordPanel
+          title="Recent scrapes"
+          description="Latest data collection jobs"
+          action={
+            <DashboardLinkButton href="/dashboard/data">View all</DashboardLinkButton>
+          }
+          footer={
+            scrapeJobs && scrapeJobs.length > 0 ? (
+              <>
+                <span className="text-sm text-muted-foreground">
+                  {scrapeJobs.length} job{scrapeJobs.length === 1 ? "" : "s"}{" "}
+                  shown
+                </span>
+                <DashboardLinkButton
+                  href="/dashboard/data"
+                  intent="highlight"
+                  trailingIcon="arrow"
+                >
+                  Open data route
+                </DashboardLinkButton>
+              </>
+            ) : undefined
+          }
+        >
           <RecentScrapeJobsTable
             jobs={scrapeJobs}
             isLoading={scrapeLoading}
             error={scrapeError}
             onRetry={() => refetchScrape()}
+            embedded
           />
-        </div>
+        </OverviewRecordPanel>
+      </div>
     </div>
   );
 }

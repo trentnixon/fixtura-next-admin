@@ -18,6 +18,7 @@ import {
   getSummaryEmptyReason,
   healthRunStatusLabel,
   isHealthRunActive,
+  isHealthRunCompletedLimbo,
 } from "@/lib/account-health/displayRules";
 import {
   healthRunActionButtonClass,
@@ -31,6 +32,8 @@ import { cn } from "@/lib/utils";
 import { AccountHealthRunTimeline } from "@/app/dashboard/accounts/components/account-health/run-detail/AccountHealthRunTimeline";
 import { AccountHealthRunBlockingCard } from "@/app/dashboard/accounts/components/account-health/run-detail/AccountHealthRunBlockingCard";
 import { AccountHealthRunStepsTable } from "@/app/dashboard/accounts/components/account-health/run-detail/AccountHealthRunStepsTable";
+import AbortAccountHealthRunButton from "@/app/dashboard/accounts/components/account-health/AbortAccountHealthRunButton";
+import ReconcileAccountHealthRunButton from "@/app/dashboard/accounts/components/account-health/ReconcileAccountHealthRunButton";
 
 interface AccountHealthRunDetailClientProps {
   runId: number;
@@ -150,6 +153,7 @@ export function AccountHealthRunDetailClient({
   const accountTypeLabel =
     run.accountType === "club" ? "Club" : "Association";
   const liveRun = isHealthRunActive(run.status);
+  const completedLimbo = isHealthRunCompletedLimbo(run);
 
   return (
     <>
@@ -190,6 +194,18 @@ export function AccountHealthRunDetailClient({
               <ExternalLink className="h-3.5 w-3.5 shrink-0" aria-hidden />
             </a>
           </Button>
+          {completedLimbo && (
+            <ReconcileAccountHealthRunButton
+              runId={run.id}
+              accountId={run.accountId}
+            />
+          )}
+          {liveRun && (
+            <AbortAccountHealthRunButton
+              runId={run.id}
+              accountId={run.accountId}
+            />
+          )}
         </div>
       </CreatePageTitle>
       <PageContainer padding="xs" spacing="lg">
