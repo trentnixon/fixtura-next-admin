@@ -5,11 +5,13 @@ import { PlayCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import { useGetTodaysRenders } from "@/hooks/scheduler/useGetTodaysRenders";
-import { useScraperLogs } from "@/hooks/data-collection/useScraperLogs";
+import { useRerenderRequestsData } from "@/hooks/rerender-request/useRerenderRequests";
+import { useContactFormSubmissionsData } from "@/hooks/contact-form/useContactFormSubmissions";
+import { useNotificationHealth } from "@/hooks/data-collection/useNotificationHealth";
+import { useRenderTelemetry } from "@/hooks/renders/useRenderTelemetry";
 import { TodaysRenders } from "@/types/scheduler";
 import { OverviewDataWorkspace } from "./live-snapshot/OverviewDataWorkspace";
 import { OverviewRecordPanel } from "./live-snapshot/OverviewRecordPanel";
-import { RecentScrapeJobsTable } from "./live-snapshot/RecentScrapeJobsTable";
 import { LIVE_OVERVIEW_REFETCH_MS } from "./live-snapshot/liveOverviewConfig";
 import { useAccountHealthGlobalStatus } from "@/hooks/account-health/useAccountHealthGlobalStatus";
 import { getDataRefreshAttentionRuns } from "@/lib/account-health/globalRunAnalytics";
@@ -17,9 +19,22 @@ import { DataRefreshAttentionPanel } from "./account-health/DataRefreshAttention
 import { useLiveOverviewRefreshToast } from "./live-snapshot/useLiveOverviewRefreshToast";
 import { DashboardLinkButton } from "./live-snapshot/DashboardLinkButton";
 import { StuckRenderingAttentionList } from "./live-snapshot/StuckRenderingAttentionList";
+import { RerenderRequestAttentionList } from "./live-snapshot/RerenderRequestAttentionList";
+import { ContactFormAttentionList } from "./live-snapshot/ContactFormAttentionList";
+import { NotificationHealthAttentionSummary } from "./live-snapshot/NotificationHealthAttentionSummary";
 import { getStuckRenderingAttention } from "@/lib/scheduler/renderAttention";
+import {
+  countContactFormActionQueue,
+  countUnhandledRerenderRequests,
+  countUnseenContactSubmissions,
+  countVisibleOverviewPanels,
+  formatRenderSystemStatus,
+  getContactFormActionQueue,
+  getUnhandledRerenderRequests,
+  overviewAttentionGridClass,
+  summarizeNotificationHealthAttention,
+} from "@/lib/overview/overviewActionQueues";
 import type { WorkspaceMetricTile } from "./live-snapshot/OverviewDataWorkspace";
-import { cn } from "@/lib/utils";
 
 const UNAVAILABLE = "—";
 const UNAVAILABLE_META = "Unavailable";
@@ -41,7 +56,7 @@ function getScheduledTodayCount(data: TodaysRenders[]) {
 }
 
 /**
- * Dashboard overview — alerts, today's ops, and recent scrapes.
+ * Dashboard overview — live ops pulse and action queues.
  */
 export default function LiveOverview() {
   const {
@@ -54,18 +69,6 @@ export default function LiveOverview() {
   } = useGetTodaysRenders({ refetchInterval: LIVE_OVERVIEW_REFETCH_MS });
 
   const {
-    data: scrapeJobs,
-    isLoading: scrapeLoading,
-    error: scrapeError,
-    refetch: refetchScrape,
-    isFetching: scrapeFetching,
-  } = useScraperLogs({
-    page: 1,
-    pageSize: 5,
-    refetchInterval: LIVE_OVERVIEW_REFETCH_MS,
-  });
-
-  const {
     data: healthGlobal,
     isLoading: healthLoading,
     isError: healthError,
@@ -73,6 +76,42 @@ export default function LiveOverview() {
     refetch: refetchHealth,
     isFetching: healthFetching,
   } = useAccountHealthGlobalStatus();
+
+  const {
+    data: rerenderRequests,
+    isLoading: rerenderLoading,
+    isError: rerenderError,
+    error: rerenderQueryError,
+    refetch: refetchRerender,
+    isFetching: rerenderFetching,
+  } = useRerenderRequestsData();
+
+  const {
+    data: contactSubmissions,
+    isLoading: contactLoading,
+    isError: contactError,
+    error: contactQueryError,
+    refetch: refetchContact,
+    isFetching: contactFetching,
+  } = useContactFormSubmissionsData();
+
+  const {
+    data: notificationHealth,
+    isLoading: notificationLoading,
+    isError: notificationError,
+    error: notificationQueryError,
+    refetch: refetchNotification,
+    isFetching: notificationFetching,
+  } = useNotificationHealth({
+    params: { mode: "preset", days: 7 },
+  });
+
+  const {
+    data: renderTelemetry,
+    isLoading: telemetryLoading,
+    isError: telemetryError,
+    isFetching: telemetryFetching,
+  } = useRenderTelemetry();
 
   const attentionRuns = useMemo(
     () => getDataRefreshAttentionRuns(healthGlobal?.data?.latestRuns ?? []),
@@ -84,7 +123,25 @@ export default function LiveOverview() {
     [todaysRenders]
   );
 
+  const unhandledRerenderItems = useMemo(
+    () => getUnhandledRerenderRequests(rerenderRequests),
+    [rerenderRequests]
+  );
+
+  const contactActionItems = useMemo(
+    () => getContactFormActionQueue(contactSubmissions),
+    [contactSubmissions]
+  );
+
+  const notificationAttention = useMemo(
+    () => summarizeNotificationHealthAttention(notificationHealth),
+    [notificationHealth]
+  );
+
   const stuckRenderingCount = stuckRenderingItems.length;
+  const unhandledRerenderCount = countUnhandledRerenderRequests(rerenderRequests);
+  const contactActionCount = countContactFormActionQueue(contactSubmissions);
+  const unseenContactCount = countUnseenContactSubmissions(contactSubmissions);
 
   const activeSyncCount = healthGlobal?.data?.activeCount ?? 0;
   const errorSyncCount = attentionRuns.filter(
@@ -96,14 +153,18 @@ export default function LiveOverview() {
 
   const isRefreshing =
     (rendersFetching && !rendersLoading) ||
-    (scrapeFetching && !scrapeLoading) ||
-    (healthFetching && !healthLoading);
+    (healthFetching && !healthLoading) ||
+    (rerenderFetching && !rerenderLoading) ||
+    (contactFetching && !contactLoading) ||
+    (notificationFetching && !notificationLoading) ||
+    (telemetryFetching && !telemetryLoading);
 
   useLiveOverviewRefreshToast(isRefreshing);
 
   const operationsMetrics = useMemo((): WorkspaceMetricTile[] => {
     const scheduledToday = getScheduledTodayCount(todaysRenders ?? []);
     const completedToday = getCompletedTodayCount(todaysRenders ?? []);
+    const telemetry = renderTelemetry;
 
     return [
       {
@@ -152,6 +213,36 @@ export default function LiveOverview() {
                 : "All clear",
         isLoading: healthLoading,
       },
+      {
+        id: "render-health",
+        label: "Render health",
+        value: telemetryError
+          ? UNAVAILABLE
+          : telemetry
+            ? formatRenderSystemStatus(telemetry.systemStatus)
+            : UNAVAILABLE,
+        meta: telemetryError
+          ? UNAVAILABLE_META
+          : telemetry
+            ? `${telemetry.successRate24h.toFixed(1)}% success · 24h`
+            : "Telemetry unavailable",
+        isLoading: telemetryLoading,
+      },
+      {
+        id: "failed-today",
+        label: "Failed today",
+        value: telemetryError
+          ? UNAVAILABLE
+          : telemetry
+            ? String(telemetry.failedToday)
+            : UNAVAILABLE,
+        meta: telemetryError
+          ? UNAVAILABLE_META
+          : telemetry
+            ? `${telemetry.activeCount} active now`
+            : "Telemetry unavailable",
+        isLoading: telemetryLoading,
+      },
     ];
   }, [
     activeSyncCount,
@@ -160,13 +251,16 @@ export default function LiveOverview() {
     healthError,
     healthLoading,
     issueSyncCount,
+    renderTelemetry,
     rendersError,
     rendersLoading,
     stuckRenderingCount,
+    telemetryError,
+    telemetryLoading,
     todaysRenders,
   ]);
 
-  const initialLoad = rendersLoading && scrapeLoading;
+  const initialLoad = rendersLoading;
 
   if (initialLoad) {
     return (
@@ -184,25 +278,41 @@ export default function LiveOverview() {
   const showAttentionSection =
     healthLoading || healthError || attentionRuns.length > 0;
 
+  const showRerenderSection =
+    rerenderLoading ||
+    rerenderError ||
+    unhandledRerenderItems.length > 0;
+
+  const showContactSection =
+    contactLoading || contactError || contactActionItems.length > 0;
+
+  const showNotificationSection =
+    notificationLoading ||
+    notificationError ||
+    notificationAttention.hasAttention;
+
   const attentionSummaryParts = [
     errorSyncCount > 0 ? `${errorSyncCount} error` : null,
     issueSyncCount > 0 ? `${issueSyncCount} issue` : null,
   ].filter(Boolean);
 
-  const overviewPanelCount =
-    1 +
-    (showStuckRenderingSection ? 1 : 0) +
-    (showAttentionSection ? 1 : 0);
+  const overviewPanelCount = countVisibleOverviewPanels([
+    showStuckRenderingSection,
+    showAttentionSection,
+    showRerenderSection,
+    showContactSection,
+    showNotificationSection,
+  ]);
 
   return (
     <div className="space-y-6">
       <OverviewDataWorkspace
         title="Today's operations"
-        description="Render queue and data sync across the fleet"
+        description="Render queue, fleet health, and data sync across the fleet"
         icon={PlayCircle}
         badge={<Badge variant="secondary">Live</Badge>}
         metrics={operationsMetrics}
-        columns={4}
+        columns={3}
         action={
           <DashboardLinkButton
             href="/dashboard?tab=renders"
@@ -227,125 +337,195 @@ export default function LiveOverview() {
         }
       />
 
-      <div
-        className={cn(
-          "grid grid-cols-1 gap-6",
-          overviewPanelCount >= 3 && "xl:grid-cols-3",
-          overviewPanelCount === 2 && "xl:grid-cols-2",
-          overviewPanelCount === 1 && "max-w-xl"
-        )}
-      >
-        {showStuckRenderingSection ? (
-          <OverviewRecordPanel
-            title="Stuck rendering"
-            description="Accounts processing or rendering longer than 30 minutes today"
-            badge={
-              stuckRenderingItems.length > 0 ? (
-                <Badge variant="outline" className="border-amber-300 bg-amber-50">
-                  {stuckRenderingItems.length} account
-                  {stuckRenderingItems.length === 1 ? "" : "s"}
-                </Badge>
-              ) : null
-            }
-            action={
-              <DashboardLinkButton
-                href="/dashboard?tab=renders"
-                trailingIcon="external"
-              >
-                Asset Creation
-              </DashboardLinkButton>
-            }
-          >
-            <StuckRenderingAttentionList
-              items={stuckRenderingItems}
-              isLoading={rendersLoading}
-              error={
-                rendersError
-                  ? rendersQueryError instanceof Error
-                    ? rendersQueryError
-                    : new Error(String(rendersQueryError))
-                  : null
+      {overviewPanelCount > 0 ? (
+        <div className={overviewAttentionGridClass(overviewPanelCount)}>
+          {showStuckRenderingSection ? (
+            <OverviewRecordPanel
+              title="Stuck rendering"
+              description="Accounts processing or rendering longer than 30 minutes today"
+              badge={
+                stuckRenderingItems.length > 0 ? (
+                  <Badge
+                    variant="outline"
+                    className="border-amber-300 bg-amber-50"
+                  >
+                    {stuckRenderingItems.length} account
+                    {stuckRenderingItems.length === 1 ? "" : "s"}
+                  </Badge>
+                ) : null
               }
-              onRetry={() => refetchRenders()}
-            />
-          </OverviewRecordPanel>
-        ) : null}
-
-        {showAttentionSection ? (
-          <OverviewRecordPanel
-            title="Needs attention"
-            description="Account sync runs that are active, stuck, or waiting to finalize"
-            badge={
-              attentionRuns.length > 0 ? (
-                <Badge variant="outline">
-                  {attentionRuns.length} run
-                  {attentionRuns.length === 1 ? "" : "s"}
-                  {attentionSummaryParts.length > 0
-                    ? ` · ${attentionSummaryParts.join(" · ")}`
-                    : ""}
-                </Badge>
-              ) : null
-            }
-            action={
-              <DashboardLinkButton
-                href="/dashboard?tab=collection"
-                trailingIcon="external"
-              >
-                Data Collection
-              </DashboardLinkButton>
-            }
-          >
-            <DataRefreshAttentionPanel
-              runs={attentionRuns}
-              activeCount={activeSyncCount}
-              isLoading={healthLoading}
-              error={
-                healthError
-                  ? healthQueryError instanceof Error
-                    ? healthQueryError
-                    : new Error(String(healthQueryError))
-                  : null
-              }
-              onRetry={() => refetchHealth()}
-              embedded
-              layout="rows"
-            />
-          </OverviewRecordPanel>
-        ) : null}
-
-        <OverviewRecordPanel
-          title="Recent scrapes"
-          description="Latest data collection jobs"
-          action={
-            <DashboardLinkButton href="/dashboard/data">View all</DashboardLinkButton>
-          }
-          footer={
-            scrapeJobs && scrapeJobs.length > 0 ? (
-              <>
-                <span className="text-sm text-muted-foreground">
-                  {scrapeJobs.length} job{scrapeJobs.length === 1 ? "" : "s"}{" "}
-                  shown
-                </span>
+              action={
                 <DashboardLinkButton
-                  href="/dashboard/data"
-                  intent="highlight"
-                  trailingIcon="arrow"
+                  href="/dashboard?tab=renders"
+                  trailingIcon="external"
                 >
-                  Open data route
+                  Asset Creation
                 </DashboardLinkButton>
-              </>
-            ) : undefined
-          }
-        >
-          <RecentScrapeJobsTable
-            jobs={scrapeJobs}
-            isLoading={scrapeLoading}
-            error={scrapeError}
-            onRetry={() => refetchScrape()}
-            embedded
-          />
-        </OverviewRecordPanel>
-      </div>
+              }
+            >
+              <StuckRenderingAttentionList
+                items={stuckRenderingItems}
+                isLoading={rendersLoading}
+                error={
+                  rendersError
+                    ? rendersQueryError instanceof Error
+                      ? rendersQueryError
+                      : new Error(String(rendersQueryError))
+                    : null
+                }
+                onRetry={() => refetchRenders()}
+              />
+            </OverviewRecordPanel>
+          ) : null}
+
+          {showAttentionSection ? (
+            <OverviewRecordPanel
+              title="Needs attention"
+              description="Account sync runs that are active, stuck, or waiting to finalize"
+              badge={
+                attentionRuns.length > 0 ? (
+                  <Badge variant="outline">
+                    {attentionRuns.length} run
+                    {attentionRuns.length === 1 ? "" : "s"}
+                    {attentionSummaryParts.length > 0
+                      ? ` · ${attentionSummaryParts.join(" · ")}`
+                      : ""}
+                  </Badge>
+                ) : null
+              }
+              action={
+                <DashboardLinkButton
+                  href="/dashboard?tab=collection"
+                  trailingIcon="external"
+                >
+                  Data Collection
+                </DashboardLinkButton>
+              }
+            >
+              <DataRefreshAttentionPanel
+                runs={attentionRuns}
+                activeCount={activeSyncCount}
+                isLoading={healthLoading}
+                error={
+                  healthError
+                    ? healthQueryError instanceof Error
+                      ? healthQueryError
+                      : new Error(String(healthQueryError))
+                    : null
+                }
+                onRetry={() => refetchHealth()}
+                embedded
+                layout="rows"
+              />
+            </OverviewRecordPanel>
+          ) : null}
+
+          {showRerenderSection ? (
+            <OverviewRecordPanel
+              title="Re-render requests"
+              description="CMS requests waiting for admin handling"
+              badge={
+                unhandledRerenderCount > 0 ? (
+                  <Badge variant="outline" className="border-amber-300 bg-amber-50">
+                    {unhandledRerenderCount} unhandled
+                  </Badge>
+                ) : null
+              }
+              action={
+                <DashboardLinkButton href="/dashboard/rerender-requests">
+                  View all
+                </DashboardLinkButton>
+              }
+            >
+              <RerenderRequestAttentionList
+                items={unhandledRerenderItems}
+                isLoading={rerenderLoading}
+                error={
+                  rerenderError
+                    ? rerenderQueryError instanceof Error
+                      ? rerenderQueryError
+                      : new Error(String(rerenderQueryError))
+                    : null
+                }
+                onRetry={() => refetchRerender()}
+              />
+            </OverviewRecordPanel>
+          ) : null}
+
+          {showContactSection ? (
+            <OverviewRecordPanel
+              title="Contact submissions"
+              description="Unseen or unacknowledged messages from the public form"
+              badge={
+                contactActionCount > 0 ? (
+                  <Badge variant="outline">
+                    {unseenContactCount} unseen
+                    {contactActionCount !== unseenContactCount
+                      ? ` · ${contactActionCount} in queue`
+                      : ""}
+                  </Badge>
+                ) : null
+              }
+              action={
+                <DashboardLinkButton href="/dashboard/contact">
+                  Inbox
+                </DashboardLinkButton>
+              }
+            >
+              <ContactFormAttentionList
+                items={contactActionItems}
+                isLoading={contactLoading}
+                error={
+                  contactError
+                    ? contactQueryError instanceof Error
+                      ? contactQueryError
+                      : new Error(String(contactQueryError))
+                    : null
+                }
+                onRetry={() => refetchContact()}
+              />
+            </OverviewRecordPanel>
+          ) : null}
+
+          {showNotificationSection ? (
+            <OverviewRecordPanel
+              title="Notification failures"
+              description="Scraper notification health over the last 7 days"
+              badge={
+                notificationAttention.hasAttention ? (
+                  <Badge
+                    variant="outline"
+                    className="border-amber-300 bg-amber-50"
+                  >
+                    {notificationAttention.summaryParts.join(" · ")}
+                  </Badge>
+                ) : null
+              }
+              action={
+                <DashboardLinkButton
+                  href="/dashboard/notifications"
+                  trailingIcon="external"
+                >
+                  Notification health
+                </DashboardLinkButton>
+              }
+            >
+              <NotificationHealthAttentionSummary
+                summary={notificationAttention}
+                isLoading={notificationLoading}
+                error={
+                  notificationError
+                    ? notificationQueryError instanceof Error
+                      ? notificationQueryError
+                      : new Error(String(notificationQueryError))
+                    : null
+                }
+                onRetry={() => refetchNotification()}
+              />
+            </OverviewRecordPanel>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   );
 }

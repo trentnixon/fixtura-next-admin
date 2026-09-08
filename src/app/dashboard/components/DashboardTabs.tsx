@@ -6,7 +6,6 @@ import DashboardFinancials from "./DashboardFinancials";
 import DashboardAssetCreation from "./DashboardAssetCreation";
 import DashboardDataCollection from "./DashboardDataCollection";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
-import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clapperboard, Database, DollarSign, LayoutDashboard } from "lucide-react";
 
@@ -55,46 +54,39 @@ export default function DashboardTabs() {
 
   return (
     <PageContainer padding="xs" spacing="md">
-      <SectionContainer
-        title="Operations overview"
-        description="Fleet health, alerts, financials, asset creation, and data collection"
-        variant="compact"
-        icon={<LayoutDashboard className="h-5 w-5 text-brandPrimary-500" />}
-      >
-        <Tabs defaultValue={initialTab} className="w-full">
-          <TabsList
-            variant="primary"
-            className="mb-6 flex h-auto flex-wrap justify-start gap-1"
-          >
-            {tabs.map(({ value, label, icon: Icon }) => (
-              <TabsTrigger
-                key={value}
-                value={value}
-                className="gap-1.5"
-              >
-                <Icon className="h-3.5 w-3.5 shrink-0" />
-                {label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+      <Tabs defaultValue={initialTab} className="w-full">
+        <TabsList
+          variant="primary"
+          className="mb-6 flex h-auto flex-wrap justify-start gap-1"
+        >
+          {tabs.map(({ value, label, icon: Icon }) => (
+            <TabsTrigger
+              key={value}
+              value={value}
+              className="gap-1.5"
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0" />
+              {label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
 
-          <TabsContent value="overview" className="mt-0">
-            <LiveOverview />
-          </TabsContent>
+        <TabsContent value="overview" className="mt-0">
+          <LiveOverview />
+        </TabsContent>
 
-          <TabsContent value="financials" className="mt-0">
-            <DashboardFinancials />
-          </TabsContent>
+        <TabsContent value="financials" className="mt-0">
+          <DashboardFinancials />
+        </TabsContent>
 
-          <TabsContent value="renders" className="mt-0">
-            <DashboardAssetCreation />
-          </TabsContent>
+        <TabsContent value="renders" className="mt-0">
+          <DashboardAssetCreation />
+        </TabsContent>
 
-          <TabsContent value="collection" className="mt-0">
-            <DashboardDataCollection />
-          </TabsContent>
-        </Tabs>
-      </SectionContainer>
+        <TabsContent value="collection" className="mt-0">
+          <DashboardDataCollection />
+        </TabsContent>
+      </Tabs>
     </PageContainer>
   );
 }

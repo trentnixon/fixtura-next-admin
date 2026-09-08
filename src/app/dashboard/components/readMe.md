@@ -1,39 +1,34 @@
 # Folder Overview
 
-This folder contains shared dashboard components that provide live data overview and scheduler rollup functionality for the Fixtura Admin application. These components are used across multiple dashboard pages to display real-time information and aggregated data.
+Shared dashboard tab components and live overview widgets for the Fixtura Admin application.
 
 ## Files
 
-- `LiveOverview.tsx`: Orchestrates the dashboard live snapshot (renders, fleet, revenue, recent scrape jobs)
-- `live-snapshot/`: Subcomponents for the expanded live snapshot section
-  - `LiveSnapshotMetricStrip.tsx`: Dense KPI strip
-  - `RecentScrapeJobsTable.tsx`: Last five scraper jobs table
-  - `liveSnapshotRevenue.ts`: Revenue period helpers (MTD/QTD/YTD)
-- `SchedulerRollupData.tsx`: Scheduler data aggregation component for displaying scheduler statistics and metrics
+- `DashboardTabs.tsx`: Overview, Financials, Asset Creation, and Data Collection tab shell
+- `DashboardFinancials.tsx`: Financial snapshot tab
+- `DashboardAssetCreation.tsx`: Render pipeline tab
+- `DashboardDataCollection.tsx`: Data refresh and scraper tab
+- `LiveOverview.tsx`: Overview tab — live ops metrics and conditional action queues
+- `live-snapshot/`: Overview subcomponents
+  - `OverviewDataWorkspace.tsx`: Metric workspace container
+  - `OverviewRecordPanel.tsx`: Attention panel shell
+  - `StuckRenderingAttentionList.tsx`: Stuck render queue rows
+  - `RerenderRequestAttentionList.tsx`: Unhandled re-render request rows
+  - `ContactFormAttentionList.tsx`: Unseen/unacknowledged contact rows
+  - `NotificationHealthAttentionSummary.tsx`: 7-day notification failure summary
+  - `DashboardLinkButton.tsx`: Overview navigation buttons
+- `SchedulerRollupData.tsx`: Scheduler rollup metrics (legacy/shared)
+
+## Child Modules
+
+- `./live-snapshot/readMe.md` (if present)
+- `./financials/`
+- `./account-health/`
+- `./data-collection/`
+- `./asset-creation/`
 
 ## Relations
 
 - Parent folder: [../readMe.md](../readMe.md)
-- Consumed by: Main dashboard page and other dashboard components
-- Key dependencies: `../../components/` for UI components, `../../../../hooks/` for data fetching
-
-## Dependencies
-
-- Internal:
-  - `../../components/`: UI components and scaffolding
-  - `../accounts/components/overview/tabs/components/metricCard.tsx`: Metric card component
-  - `../data/utils/formatScrapeScope.ts`: Scraper scope labels
-  - `../../../../hooks/`: Custom React hooks for data fetching
-  - `../../../../types/`: TypeScript interfaces and type definitions
-- External:
-  - `next/link`: Next.js navigation
-  - `lucide-react`: Icon library
-
-## Patterns
-
-- **Live Data**: Real-time data fetching and display with automatic updates
-- **Metric Display**: Consistent metric card patterns for key performance indicators
-- **Data Aggregation**: Rollup and summary data processing
-- **Navigation Integration**: Seamless navigation to related dashboard sections
-- **Type Safety**: Strong TypeScript integration with proper prop interfaces
-- **Responsive Design**: Components adapt to different screen sizes
+- Consumed by: `/dashboard` page
+- Key dependencies: `@/hooks/*`, `@/lib/overview/overviewActionQueues`, `@/components/scaffolding/containers`
