@@ -75,7 +75,10 @@ export default function DashboardDataCollection() {
     refetchInterval: LIVE_OVERVIEW_REFETCH_MS,
   });
 
-  const latestRuns = healthGlobal?.data?.latestRuns ?? [];
+  const latestRuns = useMemo(
+    () => healthGlobal?.data?.latestRuns ?? [],
+    [healthGlobal?.data?.latestRuns]
+  );
 
   const partitioned = useMemo(
     () => partitionOutliers(latestRuns),

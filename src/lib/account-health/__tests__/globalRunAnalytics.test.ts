@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   ATTENTION_ERROR_MS,
-  ATTENTION_ISSUE_MS,
   ATTENTION_WARNING_MS,
   getDataRefreshAttentionRuns,
   resolveDataRefreshAttentionSeverity,

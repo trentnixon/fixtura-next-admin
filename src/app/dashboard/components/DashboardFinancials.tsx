@@ -237,6 +237,7 @@ export default function DashboardFinancials() {
     globalAnalytics,
     newInvoiceTotal,
     newInvoicesLoading,
+    orderOverview?.orders,
     orderOverview?.stats,
     ordersOverviewError,
     ordersOverviewLoading,
