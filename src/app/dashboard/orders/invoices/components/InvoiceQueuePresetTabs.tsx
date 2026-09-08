@@ -1,6 +1,7 @@
 "use client";
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { sectionTabListClass, sectionTabTriggerClass } from "@/lib/actions/siteNavigationButtonStyles";
 import {
   CheckCircle2,
   ClipboardList,
@@ -42,12 +43,17 @@ export default function InvoiceQueuePresetTabs({
       <div className="px-2 pb-1 pt-2">
         <TabsList
           variant="primary"
-          className="flex h-auto flex-wrap justify-start gap-1"
+          className={sectionTabListClass}
           aria-label="Queue presets"
         >
           {PRESET_TABS.map(({ value: preset, label, icon: Icon }) => (
-            <TabsTrigger key={preset} value={preset} className="gap-1.5">
-              <Icon className="h-3.5 w-3.5" />
+            <TabsTrigger
+              key={preset}
+              value={preset}
+              variant="section"
+              className={sectionTabTriggerClass}
+            >
+              <Icon className="h-3.5 w-3.5 shrink-0 text-current" aria-hidden />
               {label}
             </TabsTrigger>
           ))}

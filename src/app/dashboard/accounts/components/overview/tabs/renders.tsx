@@ -16,6 +16,11 @@ import SchedulerDetailsGrid from "../components/SchedulerDetails";
 import AccountAssetRunPanel from "../../account-asset-run/AccountAssetRunPanel";
 import { RenderActivitySection } from "@/app/dashboard/components/account-asset-run/RenderActivitySection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  sectionTabListInverseClass,
+  sectionTabTriggerInverseClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
 import { Activity, BarChart3, CircleDollarSign, History } from "lucide-react";
 
 const RENDER_CHILD_TABS = [
@@ -58,15 +63,20 @@ export default function RendersTab({
   return (
     <Tabs defaultValue="runs" className="col-span-12 w-full">
       <TabsList
-        variant="secondary"
-        className="mb-4 h-auto flex-wrap justify-start gap-1 rounded-md"
+        variant="sectionInverse"
+        className={cn(sectionTabListInverseClass, "mb-4")}
       >
         {RENDER_CHILD_TABS.map((tab) => {
           const Icon = tab.icon;
 
           return (
-            <TabsTrigger key={tab.id} value={tab.id} className="gap-2">
-              <Icon className="h-4 w-4" aria-hidden="true" />
+            <TabsTrigger
+              key={tab.id}
+              value={tab.id}
+              variant="sectionInverse"
+              className={sectionTabTriggerInverseClass}
+            >
+              <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden />
               {tab.label}
             </TabsTrigger>
           );

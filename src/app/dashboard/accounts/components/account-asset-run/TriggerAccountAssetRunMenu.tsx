@@ -26,12 +26,17 @@ import {
   getAccountAssetRunDetailHref,
   type AccountAssetRunAccountOrgType,
 } from "@/lib/account-asset-run/accountRoutes";
+import { siteNavigationCtaClass } from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
 
 interface TriggerAccountAssetRunMenuProps {
   accountId: number;
   accountType: AccountAssetRunAccountOrgType;
   liveRun: boolean;
   activeRunId?: number;
+  /** Site nav horizontal group item styling */
+  grouped?: boolean;
+  triggerClassName?: string;
 }
 
 export default function TriggerAccountAssetRunMenu({
@@ -39,6 +44,8 @@ export default function TriggerAccountAssetRunMenu({
   accountType,
   liveRun,
   activeRunId,
+  grouped = false,
+  triggerClassName,
 }: TriggerAccountAssetRunMenuProps) {
   const router = useRouter();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -54,7 +61,15 @@ export default function TriggerAccountAssetRunMenu({
 
   if (showViewRun && activeRunId != null) {
     return (
-      <Button variant="primary" size="sm" asChild>
+      <Button
+        variant={grouped ? "ghost" : "primary"}
+        size="sm"
+        className={cn(
+          grouped ? triggerClassName : siteNavigationCtaClass,
+          !grouped && "shrink-0"
+        )}
+        asChild
+      >
         <Link
           href={getAccountAssetRunDetailHref(
             activeRunId,
@@ -102,9 +117,14 @@ export default function TriggerAccountAssetRunMenu({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="primary" size="sm" disabled={disabled}>
+          <Button
+            variant={grouped ? "ghost" : "primary"}
+            size="sm"
+            disabled={disabled}
+            className={triggerClassName}
+          >
             Asset run
-            <ChevronDown className="ml-1 h-4 w-4 shrink-0" aria-hidden />
+            <ChevronDown className="h-4 w-4 shrink-0" aria-hidden />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-[min(100vw-2rem,20rem)]">

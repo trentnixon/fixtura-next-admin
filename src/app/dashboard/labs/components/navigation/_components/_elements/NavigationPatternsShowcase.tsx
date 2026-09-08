@@ -11,10 +11,8 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SubsectionTitle } from "@/components/type/titles";
 import {
-  BarChart3,
   CalendarDays,
   CheckCircle2,
   ChevronRight,
@@ -110,67 +108,6 @@ export default function NavigationPatternsShowcase() {
             </div>
           </div>
           <ComponentRef token={NAVIGATION_TOKENS.pattern.breadcrumbHeader} />
-        </div>
-
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <SubsectionTitle>Section Tabber</SubsectionTitle>
-            <span className="text-xs text-muted-foreground">
-              tab state / counts / context
-            </span>
-          </div>
-          <div className="rounded-lg border border-slate-200 bg-white shadow-sm">
-            <div className="border-b border-slate-200 px-4 py-3">
-              <div className="mb-3 flex items-center justify-between gap-3">
-                <div>
-                  <h3 className="text-base font-semibold text-slate-950">
-                    Account detail
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Tabs move between peer sections inside one route.
-                  </p>
-                </div>
-                <Badge variant="outline">Updated today</Badge>
-              </div>
-              <Tabs defaultValue="overview">
-                <TabsList className="h-auto flex-wrap justify-start rounded-md bg-slate-100 p-1">
-                  <TabsTrigger value="overview">
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Overview
-                  </TabsTrigger>
-                  <TabsTrigger value="data">
-                    <Database className="mr-2 h-4 w-4" />
-                    Data
-                  </TabsTrigger>
-                  <TabsTrigger value="analytics">
-                    <BarChart3 className="mr-2 h-4 w-4" />
-                    Analytics
-                  </TabsTrigger>
-                  <TabsTrigger value="settings">
-                    <Settings2 className="mr-2 h-4 w-4" />
-                    Settings
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            </div>
-            <div className="grid grid-cols-1 gap-3 p-4 md:grid-cols-3">
-              <div className="rounded-md border border-slate-200 p-3">
-                <div className="text-xs text-muted-foreground">Selected</div>
-                <div className="mt-1 font-semibold text-slate-900">
-                  Overview
-                </div>
-              </div>
-              <div className="rounded-md border border-slate-200 p-3">
-                <div className="text-xs text-muted-foreground">Open tasks</div>
-                <div className="mt-1 font-semibold text-slate-900">12</div>
-              </div>
-              <div className="rounded-md border border-slate-200 p-3">
-                <div className="text-xs text-muted-foreground">Last sync</div>
-                <div className="mt-1 font-semibold text-slate-900">32s ago</div>
-              </div>
-            </div>
-          </div>
-          <ComponentRef token={NAVIGATION_TOKENS.pattern.sectionTabs} />
         </div>
 
         <div>

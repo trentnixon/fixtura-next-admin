@@ -5,6 +5,7 @@ import ButtonSizesShowcase from "./_elements/ButtonSizesShowcase";
 import ButtonIconsShowcase from "./_elements/ButtonIconsShowcase";
 import ButtonStatesShowcase from "./_elements/ButtonStatesShowcase";
 import ButtonGroupsShowcase from "./_elements/ButtonGroupsShowcase";
+import ButtonSiteNavigationShowcase from "./_elements/ButtonSiteNavigationShowcase";
 import ButtonFullWidthShowcase from "./_elements/ButtonFullWidthShowcase";
 import ButtonUsageGuidelinesShowcase from "./_elements/ButtonUsageGuidelinesShowcase";
 
@@ -20,6 +21,7 @@ export default function ButtonShowcase() {
       <ButtonSizesShowcase />
       <ButtonIconsShowcase />
       <ButtonStatesShowcase />
+      <ButtonSiteNavigationShowcase />
       <ButtonGroupsShowcase />
       <ButtonFullWidthShowcase />
       <ButtonUsageGuidelinesShowcase />

@@ -4,6 +4,8 @@ import { useMemo } from "react";
 import { PlayCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import LoadingState from "@/components/ui-library/states/LoadingState";
+import { useAccountSummaryQuery } from "@/hooks/accounts/useAccountSummaryQuery";
+import { useAccountsQuery } from "@/hooks/accounts/useAccountsQuery";
 import { useGetTodaysRenders } from "@/hooks/scheduler/useGetTodaysRenders";
 import { useRerenderRequestsData } from "@/hooks/rerender-request/useRerenderRequests";
 import { useContactFormSubmissionsData } from "@/hooks/contact-form/useContactFormSubmissions";
@@ -22,7 +24,9 @@ import { StuckRenderingAttentionList } from "./live-snapshot/StuckRenderingAtten
 import { RerenderRequestAttentionList } from "./live-snapshot/RerenderRequestAttentionList";
 import { ContactFormAttentionList } from "./live-snapshot/ContactFormAttentionList";
 import { NotificationHealthAttentionSummary } from "./live-snapshot/NotificationHealthAttentionSummary";
+import { AccountFleetOverviewCards } from "./live-snapshot/AccountFleetOverviewCards";
 import { getStuckRenderingAttention } from "@/lib/scheduler/renderAttention";
+import { buildAccountFleetOverview, buildAccountLookupMap } from "@/lib/overview/accountFleetSummary";
 import {
   countContactFormActionQueue,
   countUnhandledRerenderRequests,
@@ -67,6 +71,20 @@ export default function LiveOverview() {
     error: rendersQueryError,
     refetch: refetchRenders,
   } = useGetTodaysRenders({ refetchInterval: LIVE_OVERVIEW_REFETCH_MS });
+
+  const {
+    data: accountSummary,
+    isLoading: accountsLoading,
+    isError: accountsError,
+    error: accountsQueryError,
+    refetch: refetchAccounts,
+    isFetching: accountsFetching,
+  } = useAccountSummaryQuery({ refetchInterval: LIVE_OVERVIEW_REFETCH_MS });
+
+  const {
+    data: accountsLookup,
+    isFetching: accountsLookupFetching,
+  } = useAccountsQuery();
 
   const {
     data: healthGlobal,
@@ -138,6 +156,29 @@ export default function LiveOverview() {
     [notificationHealth]
   );
 
+  const accountLookupById = useMemo(() => {
+    if (!accountsLookup) {
+      return new Map();
+    }
+
+    return buildAccountLookupMap([
+      ...accountsLookup.clubs.active,
+      ...accountsLookup.clubs.inactive,
+      ...accountsLookup.associations.active,
+      ...accountsLookup.associations.inactive,
+      ...accountsLookup.undefined.active,
+      ...accountsLookup.undefined.inactive,
+    ]);
+  }, [accountsLookup]);
+
+  const accountFleetOverview = useMemo(
+    () =>
+      buildAccountFleetOverview(accountSummary?.data?.Totals, {
+        lookupById: accountLookupById,
+      }),
+    [accountSummary?.data?.Totals, accountLookupById]
+  );
+
   const stuckRenderingCount = stuckRenderingItems.length;
   const unhandledRerenderCount = countUnhandledRerenderRequests(rerenderRequests);
   const contactActionCount = countContactFormActionQueue(contactSubmissions);
@@ -153,6 +194,8 @@ export default function LiveOverview() {
 
   const isRefreshing =
     (rendersFetching && !rendersLoading) ||
+    (accountsFetching && !accountsLoading) ||
+    (accountsLookupFetching && !accountsLoading) ||
     (healthFetching && !healthLoading) ||
     (rerenderFetching && !rerenderLoading) ||
     (contactFetching && !contactLoading) ||
@@ -335,6 +378,19 @@ export default function LiveOverview() {
             </DashboardLinkButton>
           </>
         }
+      />
+
+      <AccountFleetOverviewCards
+        model={accountFleetOverview}
+        isLoading={accountsLoading}
+        error={
+          accountsError
+            ? accountsQueryError instanceof Error
+              ? accountsQueryError
+              : new Error(String(accountsQueryError))
+            : null
+        }
+        onRetry={() => refetchAccounts()}
       />
 
       {overviewPanelCount > 0 ? (

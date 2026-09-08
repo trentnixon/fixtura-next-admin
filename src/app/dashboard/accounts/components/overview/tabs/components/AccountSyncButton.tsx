@@ -20,6 +20,7 @@ import {
   showErrorNotification,
   showSuccessNotification,
 } from "../utils/errorHandlers";
+import { cn } from "@/lib/utils";
 
 interface AccountSyncButtonProps {
   accountId: number;
@@ -35,6 +36,7 @@ interface AccountSyncButtonProps {
     | "accent";
   /** Match compact header actions e.g. next to Open */
   size?: ButtonProps["size"];
+  className?: string;
 }
 
 /**
@@ -48,6 +50,7 @@ export default function AccountSyncButton({
   accountType,
   variant = "outline",
   size = "default",
+  className,
 }: AccountSyncButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [errorState, setErrorState] = useState<{
@@ -106,16 +109,19 @@ export default function AccountSyncButton({
         size={size}
         onClick={handleButtonClick}
         disabled={isPending}
-        className={isPending ? "opacity-50 cursor-not-allowed" : ""}
+        className={cn(
+          isPending && "cursor-not-allowed opacity-50",
+          className
+        )}
       >
         {isPending ? (
           <>
-            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+            <RefreshCw className="h-4 w-4 animate-spin" aria-hidden />
             Syncing...
           </>
         ) : (
           <>
-            <RefreshCw className="mr-2 h-4 w-4" />
+            <RefreshCw className="h-4 w-4" aria-hidden />
             Sync Account
           </>
         )}

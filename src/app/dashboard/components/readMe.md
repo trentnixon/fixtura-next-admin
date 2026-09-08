@@ -4,7 +4,7 @@ Shared dashboard tab components and live overview widgets for the Fixtura Admin 
 
 ## Files
 
-- `DashboardTabs.tsx`: Overview, Financials, Asset Creation, and Data Collection tab shell
+- `DashboardTabs.tsx`: Operations tab shell (`navigation.tabs.section-default`) — Overview, Financials, Asset Creation, Data Collection
 - `DashboardFinancials.tsx`: Financial snapshot tab
 - `DashboardAssetCreation.tsx`: Render pipeline tab
 - `DashboardDataCollection.tsx`: Data refresh and scraper tab
@@ -16,8 +16,21 @@ Shared dashboard tab components and live overview widgets for the Fixtura Admin 
   - `RerenderRequestAttentionList.tsx`: Unhandled re-render request rows
   - `ContactFormAttentionList.tsx`: Unseen/unacknowledged contact rows
   - `NotificationHealthAttentionSummary.tsx`: 7-day notification failure summary
-  - `DashboardLinkButton.tsx`: Overview navigation buttons
+  - `AccountFleetOverviewCards.tsx`: Fleet account mix (`card.base.comparison`)
+  - `DashboardLinkButton.tsx`: Cross-page nav CTAs (`action.button.site-navigation`)
 - `SchedulerRollupData.tsx`: Scheduler rollup metrics (legacy/shared)
+
+## Tabber pattern
+
+`/dashboard` uses the default section tabber from the navigation lab:
+
+- Token: `navigation.tabs.section-default` (pattern: `navigation.pattern.section-tabs`)
+- Styles: `@/lib/actions/siteNavigationButtonStyles` — `sectionTabListClass`, `sectionTabTriggerClass`
+- Components: `TabsList variant="primary"`, `TabsTrigger variant="section"`
+- Icons: `h-4 w-4 shrink-0 text-current` (inherit active/hover colour)
+- Spacing: `pb-8` wrapper below the tab list before tab content
+
+Nested account sections use `navigation.tabs.section-inverse` — see account detail workspace.
 
 ## Child Modules
 

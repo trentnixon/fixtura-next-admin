@@ -1,66 +1,14 @@
 "use client";
 
 import { useAccountQuery } from "@/hooks/accounts/useAccountQuery";
-import AccountOverviewPanel from "../../../components/overview/AccountOverviewPanel";
+import AccountDetailWorkspace from "../../../components/overview/AccountDetailWorkspace";
+import AccountSnapshotActions from "../../../components/overview/AccountSnapshotActions";
 import AccountTitle from "../../../components/ui/AccountTitle";
 import AccountsBreadcrumbHeader from "../../../components/AccountsBreadcrumbHeader";
-import { Tabs, TabsContent } from "@/components/ui/tabs";
-import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccountDetails";
-
-import RendersTab from "../../../components/overview/tabs/renders";
-import CompetitionsTab from "../../../components/overview/tabs/competitions";
-import DataTab from "../../../components/overview/tabs/Data";
 import { useParams } from "next/navigation";
-import AccountAnalyticsCards from "../../../components/overview/tabs/components/AccountAnalyticsCards";
-import { TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
-import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
-
-// Tab labels configuration
-const TAB_LABELS = [
-  { id: "financial", label: "Financial" },
-  { id: "renders", label: "Renders" },
-  { id: "data", label: "Data refresh" },
-  { id: "competitions", label: "Competitions" },
-  { id: "grades", label: "Grades" },
-  { id: "fixtures", label: "Fixtures" },
-] as const;
-
-// Render tab content based on id
-const renderTabContent = (
-  tabId: string,
-  accountData: fixturaContentHubAccountDetails,
-  accountID: string,
-) => {
-  const accountId = Number(accountID);
-
-  switch (tabId) {
-    case "financial":
-      return <AccountAnalyticsCards accountId={accountId} />;
-    case "renders":
-      return <RendersTab accountData={accountData} accountId={accountId} />;
-    case "competitions":
-      return <CompetitionsTab />;
-    case "grades":
-      return (
-        <SectionContainer title="Grades" variant="compact">
-          <p className="text-sm text-muted-foreground">Coming soon: Grades</p>
-        </SectionContainer>
-      );
-    case "fixtures":
-      return (
-        <SectionContainer title="Fixtures" variant="compact">
-          <p className="text-sm text-muted-foreground">Coming soon: Fixtures</p>
-        </SectionContainer>
-      );
-    case "data":
-      return <DataTab accountId={accountId} />;
-    default:
-      return null;
-  }
-};
 
 export default function DisplayClub() {
   const { accountID } = useParams();
@@ -102,39 +50,25 @@ export default function DisplayClub() {
         <AccountTitle titleProps={accountData} />
       )}
       <PageContainer padding="xs" spacing="lg">
-        <AccountsBreadcrumbHeader
-          currentPage={accountName}
-          parent={{
-            label: "Club accounts",
-            href: "/dashboard/accounts/club",
-          }}
-        />
-        <AccountOverviewPanel
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <AccountsBreadcrumbHeader
+            currentPage={accountName}
+            parent={{
+              label: "Club accounts",
+              href: "/dashboard/accounts/club",
+            }}
+          />
+          <AccountSnapshotActions
+            accountData={accountData}
+            accountType="club"
+            syncAccountType="CLUB"
+            className="shrink-0 self-end sm:self-auto"
+          />
+        </div>
+        <AccountDetailWorkspace
           accountData={accountData}
-          accountType="club"
-          syncAccountType="CLUB"
+          accountID={accountID as string}
         />
-        <Tabs defaultValue="financial" className="w-full">
-          <TabsList
-            variant="primary"
-            className="mb-4 h-auto flex-wrap justify-start gap-1 rounded-md"
-          >
-            {TAB_LABELS.map((tab) => (
-              <TabsTrigger key={tab.id} value={tab.id}>
-                {tab.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-          {TAB_LABELS.map((tab) => (
-            <TabsContent key={tab.id} value={tab.id} className="mt-0">
-              {renderTabContent(
-                tab.id,
-                accountData as fixturaContentHubAccountDetails,
-                accountID as string,
-              )}
-            </TabsContent>
-          ))}
-        </Tabs>
       </PageContainer>
     </>
   );

@@ -1,52 +1,43 @@
 "use client";
 
 import { ReactNode } from "react";
-import AccountBasics from "./AccountBasics";
 import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccountDetails";
-import { Button } from "@/components/ui/button";
 import {
   CalendarDays,
   CheckCircle2,
-  ChevronDown,
   Clock,
-  CreditCard,
-  ExternalLink,
-  FileText,
   Film,
-  PlayCircle,
-  Timer,
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useGlobalContext } from "@/components/providers/GlobalContext";
-import AccountSyncButton from "./tabs/components/AccountSyncButton";
-import TriggerAccountAssetRunMenu from "../account-asset-run/TriggerAccountAssetRunMenu";
-import { useAccountAssetRunLatest } from "@/hooks/account-asset-run/useAccountAssetRunLatest";
 import { useAccountAnalytics } from "@/hooks/analytics/useAccountAnalytics";
-import { isAssetRunActive } from "@/lib/account-asset-run/displayRules";
-import type { AccountAssetRunAccountOrgType } from "@/lib/account-asset-run/accountRoutes";
 import { cn, formatDate } from "@/lib/utils";
 
 type AccountOverviewPanelProps = {
   accountData: fixturaContentHubAccountDetails;
-  accountType: AccountAssetRunAccountOrgType;
-  syncAccountType: "CLUB" | "ASSOCIATION";
+};
+
+type MetricTone = "success" | "error" | "warning" | "info" | "accent" | "neutral";
+
+type OverviewMetricItem = {
+  label: string;
+  value: string;
+  detail?: string;
+  icon: ReactNode;
+  tone?: MetricTone;
+  valueClassName?: string;
+};
+
+const metricIconToneClass: Record<MetricTone, string> = {
+  success: "bg-brandSuccess-100 text-brandSuccess-700",
+  error: "bg-brandError-100 text-brandError-700",
+  warning: "bg-brandWarning-100 text-brandWarning-800",
+  info: "bg-brandInfo-100 text-brandInfo-700",
+  accent: "bg-brandAccent-100 text-brandAccent-700",
+  neutral: "bg-slate-100 text-slate-600",
 };
 
 export default function AccountOverviewPanel({
   accountData,
-  accountType,
-  syncAccountType,
 }: AccountOverviewPanelProps) {
-  const holderName = [accountData.FirstName, accountData.LastName]
-    .filter(Boolean)
-    .join(" ");
   const renderCount = accountData.rollup?.totalRenders ?? 0;
   const completedRenders = accountData.rollup?.totalCompleteRenders ?? 0;
   const schedulerStatus = accountData.scheduler?.Queued
@@ -57,69 +48,6 @@ export default function AccountOverviewPanel({
   const schedulerIsBusy =
     schedulerStatus === "Queued" || schedulerStatus === "Rendering";
 
-  return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-      <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h2 className="text-sm font-semibold text-slate-900">
-            Account overview
-          </h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Actions, metrics, and contact details
-          </p>
-        </div>
-        <AccountSnapshotActions
-          accountData={accountData}
-          accountType={accountType}
-          syncAccountType={syncAccountType}
-        />
-      </div>
-
-      <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,340px)] lg:items-stretch">
-        <div className="min-w-0 divide-y divide-slate-200">
-          <AccountStatusSection accountData={accountData} embedded inColumn />
-
-          <div className="grid sm:grid-cols-2">
-            <OverviewMetric
-              icon={<Film className="h-4 w-4" />}
-              label="Renders"
-              value={`${completedRenders}/${renderCount}`}
-              helper="complete / total"
-            />
-            <OverviewMetric
-              icon={<Clock className="h-4 w-4" />}
-              label="Scheduler"
-              value={schedulerStatus}
-              valueClassName={cn(
-                schedulerIsBusy && "text-brandInfo-700",
-                schedulerStatus === "Idle" && "text-slate-700",
-              )}
-            />
-          </div>
-        </div>
-
-        <div className="flex min-h-full flex-col border-t border-slate-200 lg:border-l lg:border-t-0">
-          <AccountBasics
-            account={accountData}
-            holderName={holderName}
-            embedded
-            fullHeight
-          />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AccountStatusSection({
-  accountData,
-  embedded = false,
-  inColumn = false,
-}: {
-  accountData: fixturaContentHubAccountDetails;
-  embedded?: boolean;
-  inColumn?: boolean;
-}) {
   const { data: analytics, isLoading: isSubscriptionLoading } =
     useAccountAnalytics(String(accountData.id));
   const subscription = analytics?.currentSubscription ?? null;
@@ -127,147 +55,161 @@ function AccountStatusSection({
   const subscriptionEndDate = formatSubscriptionEndDate(subscription?.endDate);
   const daysLeft = getSubscriptionDaysLeft(subscription?.endDate);
   const daysLeftLabel =
-    daysLeft != null
-      ? `${daysLeft} ${daysLeft === 1 ? "day" : "days"}`
-      : "—";
+    daysLeft != null ? `${daysLeft} ${daysLeft === 1 ? "day" : "days"}` : "—";
 
-  const daysLeftValueClassName =
-    daysLeft != null && daysLeft <= 30 ? "text-brandWarning-700" : undefined;
+  const accountMetrics: OverviewMetricItem[] = [
+    {
+      label: "Account status",
+      icon: <CheckCircle2 className="h-4 w-4" />,
+      tone: accountData.isActive ? "success" : "error",
+      value: accountData.isActive ? "Active" : "Inactive",
+      valueClassName: !accountData.isActive ? "text-brandError-700" : undefined,
+    },
+    {
+      label: "Renders",
+      icon: <Film className="h-4 w-4" />,
+      tone: "neutral",
+      value: `${completedRenders}/${renderCount}`,
+      detail: "complete / total",
+    },
+    {
+      label: "Scheduler",
+      icon: <Clock className="h-4 w-4" />,
+      tone: schedulerIsBusy ? "info" : "neutral",
+      value: schedulerStatus,
+      valueClassName: cn(
+        schedulerIsBusy && "text-brandInfo-700",
+        schedulerStatus === "Idle" && "text-slate-700",
+      ),
+    },
+  ];
+
+  const subscriptionMetric = buildSubscriptionMetric({
+    isLoading: isSubscriptionLoading,
+    hasActiveSubscription,
+    subscriptionEndDate,
+    daysLeft,
+    daysLeftLabel,
+  });
 
   return (
+    <div className="flex flex-col gap-3">
+      <MetricGroup title="Account" metrics={accountMetrics} />
+      <MetricGroup title="Subscription" metrics={[subscriptionMetric]} />
+    </div>
+  );
+}
+
+function buildSubscriptionMetric({
+  isLoading,
+  hasActiveSubscription,
+  subscriptionEndDate,
+  daysLeft,
+  daysLeftLabel,
+}: {
+  isLoading: boolean;
+  hasActiveSubscription: boolean;
+  subscriptionEndDate: string;
+  daysLeft: number | null;
+  daysLeftLabel: string;
+}): OverviewMetricItem {
+  if (isLoading) {
+    return {
+      label: "Subscription",
+      icon: <CalendarDays className="h-4 w-4" />,
+      tone: "neutral",
+      value: "…",
+    };
+  }
+
+  if (!hasActiveSubscription) {
+    return {
+      label: "Subscription",
+      icon: <CalendarDays className="h-4 w-4" />,
+      tone: "error",
+      value: "No active subscription",
+      valueClassName: "text-brandError-700",
+    };
+  }
+
+  const tone: MetricTone =
+    daysLeft == null ? "info" : daysLeft <= 30 ? "warning" : "accent";
+
+  if (daysLeft != null) {
+    return {
+      label: "Subscription",
+      icon: <CalendarDays className="h-4 w-4" />,
+      tone,
+      value: `${daysLeftLabel} remaining`,
+      detail:
+        subscriptionEndDate !== "—" ? `Ends ${subscriptionEndDate}` : undefined,
+      valueClassName:
+        daysLeft <= 30 ? "text-brandWarning-700" : undefined,
+    };
+  }
+
+  return {
+    label: "Subscription",
+    icon: <CalendarDays className="h-4 w-4" />,
+    tone: "info",
+    value: subscriptionEndDate,
+  };
+}
+
+function MetricGroup({
+  title,
+  metrics,
+}: {
+  title: string;
+  metrics: OverviewMetricItem[];
+}) {
+  return (
     <div>
-      <div
-        className={cn(
-          "overflow-hidden bg-slate-200",
-          embedded && "border-t border-slate-200",
-          !embedded && "rounded-lg border border-slate-200",
-        )}
-      >
-        <div
-          className={cn(
-            "grid gap-px",
-            inColumn ? "grid-cols-4" : "sm:grid-cols-2 lg:grid-cols-4",
-          )}
-        >
-          <AccountStatusCell
-            label="Active"
-            icon={<CheckCircle2 className="h-4 w-4" />}
-            iconTone={accountData.isActive ? "success" : "error"}
-            value={accountData.isActive ? "Active" : "Inactive"}
-            valueClassName={
-              !accountData.isActive ? "text-brandError-700" : undefined
-            }
-            compact={inColumn}
-          />
-          <AccountStatusCell
-            label="Has active subscription"
-            icon={<CreditCard className="h-4 w-4" />}
-            iconTone={
-              isSubscriptionLoading
-                ? "neutral"
-                : hasActiveSubscription
-                  ? "success"
-                  : "error"
-            }
-            value={
-              isSubscriptionLoading
-                ? "…"
-                : hasActiveSubscription
-                  ? "Yes"
-                  : "No"
-            }
-            valueClassName={
-              !isSubscriptionLoading && !hasActiveSubscription
-                ? "text-brandError-700"
-                : undefined
-            }
-            compact={inColumn}
-          />
-          <AccountStatusCell
-            label="Subscription finished"
-            icon={<CalendarDays className="h-4 w-4" />}
-            iconTone="info"
-            value={isSubscriptionLoading ? "…" : subscriptionEndDate}
-            compact={inColumn}
-          />
-          <AccountStatusCell
-            label="Days left in sub"
-            icon={<Timer className="h-4 w-4" />}
-            iconTone={
-              daysLeft == null
-                ? "neutral"
-                : daysLeft <= 30
-                  ? "warning"
-                  : "accent"
-            }
-            value={isSubscriptionLoading ? "…" : daysLeftLabel}
-            valueClassName={daysLeftValueClassName}
-            compact={inColumn}
-          />
-        </div>
+      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {title}
+      </p>
+      <div className="divide-y divide-slate-200 overflow-hidden rounded-md border border-slate-200 bg-white">
+        {metrics.map((metric) => (
+          <OverviewMetric key={metric.label} {...metric} />
+        ))}
       </div>
     </div>
   );
 }
 
-type StatusIconTone = "success" | "error" | "warning" | "info" | "accent" | "neutral";
-
-const statusIconToneClass: Record<StatusIconTone, string> = {
-  success:
-    "bg-brandSuccess-100 text-brandSuccess-700 ring-1 ring-brandSuccess-200/70",
-  error: "bg-brandError-100 text-brandError-700 ring-1 ring-brandError-200/70",
-  warning:
-    "bg-brandWarning-100 text-brandWarning-800 ring-1 ring-brandWarning-200/70",
-  info: "bg-brandInfo-100 text-brandInfo-700 ring-1 ring-brandInfo-200/70",
-  accent:
-    "bg-brandAccent-100 text-brandAccent-700 ring-1 ring-brandAccent-200/70",
-  neutral: "bg-slate-100 text-slate-600 ring-1 ring-slate-200/80",
-};
-
-function AccountStatusCell({
-  label,
+function OverviewMetric({
   icon,
-  iconTone = "neutral",
+  label,
   value,
+  detail,
+  tone = "neutral",
   valueClassName,
-  compact = false,
-}: {
-  label: string;
-  icon: ReactNode;
-  iconTone?: StatusIconTone;
-  value: string;
-  valueClassName?: string;
-  compact?: boolean;
-}) {
+}: OverviewMetricItem) {
   return (
-    <div
-      className={cn(
-        "flex min-w-0 items-start gap-2 bg-white",
-        compact ? "px-3 py-3" : "gap-3 px-4 py-4",
-      )}
-    >
+    <div className="flex items-start gap-3 px-4 py-3">
       <div
         className={cn(
-          "flex shrink-0 items-center justify-center rounded-md",
-          statusIconToneClass[iconTone],
-          compact ? "h-8 w-8" : "h-9 w-9",
+          "flex h-8 w-8 shrink-0 items-center justify-center rounded-md",
+          metricIconToneClass[tone],
         )}
       >
         {icon}
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground leading-tight">
+      <div className="min-w-0">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
           {label}
         </p>
         <p
           className={cn(
-            "mt-1 font-semibold leading-none tabular-nums text-slate-900",
-            compact ? "text-base" : "text-xl",
+            "mt-0.5 text-lg font-semibold leading-none text-slate-950 tabular-nums",
             valueClassName,
           )}
         >
           {value}
         </p>
+        {detail && (
+          <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
+        )}
       </div>
     </div>
   );
@@ -309,111 +251,4 @@ function getSubscriptionDaysLeft(
   }
 
   return Math.ceil((end.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-}
-
-function OverviewMetric({
-  icon,
-  label,
-  value,
-  helper,
-  valueClassName,
-}: {
-  icon: ReactNode;
-  label: string;
-  value: string | number;
-  helper?: string;
-  valueClassName?: string;
-}) {
-  return (
-    <div className="flex items-start gap-3 border-b border-slate-200 px-4 py-4 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0 sm:[&:nth-child(2n)]:border-r-0">
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600">
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
-        <p
-          className={cn(
-            "mt-1 text-xl font-semibold leading-none text-slate-900",
-            valueClassName,
-          )}
-        >
-          {value}
-        </p>
-        {helper && (
-          <p className="mt-1 text-xs text-muted-foreground">{helper}</p>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function AccountSnapshotActions({
-  accountData,
-  accountType,
-  syncAccountType,
-}: {
-  accountData: fixturaContentHubAccountDetails;
-  accountType: AccountAssetRunAccountOrgType;
-  syncAccountType: "CLUB" | "ASSOCIATION";
-}) {
-  const { strapiLocation } = useGlobalContext();
-  const playHqUrl = accountData.accountOrganisationDetails?.href;
-  const strapiUrl = strapiLocation?.account
-    ? `${strapiLocation.account}${accountData.id}`
-    : null;
-
-  const { data: assetLatest } = useAccountAssetRunLatest(accountData.id);
-  const latestAssetRun = assetLatest?.data ?? null;
-  const liveAssetRun =
-    latestAssetRun !== null && isAssetRunActive(latestAssetRun.status);
-
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <TriggerAccountAssetRunMenu
-        accountId={accountData.id}
-        accountType={accountType}
-        liveRun={Boolean(liveAssetRun)}
-        activeRunId={latestAssetRun?.id}
-      />
-      <AccountSyncButton
-        accountId={accountData.id}
-        accountType={syncAccountType}
-        variant="primary"
-        size="sm"
-      />
-      {(playHqUrl || strapiUrl) && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="primary" size="sm">
-              <ExternalLink className="h-4 w-4" />
-              Open
-              <ChevronDown className="h-3.5 w-3.5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>Destinations</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            {playHqUrl && (
-              <DropdownMenuItem asChild>
-                <a href={playHqUrl} target="_blank" rel="noopener noreferrer">
-                  <PlayCircle className="h-4 w-4" />
-                  PlayHQ
-                </a>
-              </DropdownMenuItem>
-            )}
-            {strapiUrl && (
-              <DropdownMenuItem asChild>
-                <a href={strapiUrl} target="_blank" rel="noopener noreferrer">
-                  <FileText className="h-4 w-4" />
-                  CMS account
-                </a>
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-    </div>
-  );
 }

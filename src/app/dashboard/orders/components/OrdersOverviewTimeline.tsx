@@ -25,21 +25,20 @@ import {
   formatDateShort,
   formatNumber,
 } from "@/utils/chart-formatters";
+import { formatMonthKeyLabel } from "@/app/dashboard/components/financials/financialDateRanges";
+import {
+  aggregateTimelineByMonth,
+  mergeDailyTimeline,
+} from "@/app/dashboard/components/financials/financialTimeline";
 
 interface OrdersOverviewTimelineProps {
   timeline: OrderOverviewTimeline;
   currency?: string | null;
+  /** When set, bucket daily API points into these calendar months (zero-filled). */
+  monthKeys?: string[];
 }
 
 const DEFAULT_CURRENCY = "AUD";
-
-type TimelineDatum = {
-  date: string;
-  ordersCreated?: number;
-  ordersPaid?: number;
-  ordersEnded?: number;
-  revenueCollected?: number;
-};
 
 const chartConfig: ChartConfig = {
   ordersCreated: {
@@ -63,28 +62,18 @@ const chartConfig: ChartConfig = {
 export function OrdersOverviewTimeline({
   timeline,
   currency,
+  monthKeys,
 }: OrdersOverviewTimelineProps) {
   const currencyCode = currency ?? DEFAULT_CURRENCY;
   const centsToUnits = (value: number) => value / 100;
+  const isMonthly = monthKeys != null && monthKeys.length > 0;
 
-  const timelineMap = new Map<string, TimelineDatum>();
+  const data = isMonthly
+    ? aggregateTimelineByMonth(timeline, monthKeys)
+    : mergeDailyTimeline(timeline);
 
-  timeline.series.forEach((series) => {
-    series.data.forEach((point) => {
-      const existing = timelineMap.get(point.date) ?? { date: point.date };
-      timelineMap.set(point.date, {
-        ...existing,
-        [series.name]:
-          series.name === "revenueCollected"
-            ? centsToUnits(point.value)
-            : point.value,
-      });
-    });
-  });
-
-  const data = Array.from(timelineMap.values()).sort(
-    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime(),
-  );
+  const formatAxisLabel = (value: string) =>
+    isMonthly ? formatMonthKeyLabel(value) : formatDateShort(value);
 
   const summaryStats: ChartSummaryStat[] = [
     {
@@ -115,7 +104,11 @@ export function OrdersOverviewTimeline({
   return (
     <ChartCard
       title="Orders timeline"
-      description="Creation, payment, and revenue trends"
+      description={
+        isMonthly
+          ? "Monthly creation, payment, and revenue trends"
+          : "Creation, payment, and revenue trends"
+      }
       chartConfig={chartConfig}
       summaryStats={summaryStats}
       variant="elevated"
@@ -124,12 +117,12 @@ export function OrdersOverviewTimeline({
         <CartesianGrid strokeDasharray="3 3" vertical={false} />
         <XAxis
           dataKey="date"
-          tickFormatter={formatDateShort}
+          tickFormatter={formatAxisLabel}
           tickLine={false}
           axisLine={false}
-          angle={-45}
-          textAnchor="end"
-          height={80}
+          angle={isMonthly ? 0 : -45}
+          textAnchor={isMonthly ? "middle" : "end"}
+          height={isMonthly ? 40 : 80}
           fontSize={12}
         />
         <YAxis
@@ -163,7 +156,7 @@ export function OrdersOverviewTimeline({
               chartConfig[name as keyof typeof chartConfig]?.label ?? name;
             return [formatNumber(value), label];
           }}
-          labelFormatter={(label) => formatDateShort(label)}
+          labelFormatter={(label) => formatAxisLabel(String(label))}
         />
         <Legend />
         <Area

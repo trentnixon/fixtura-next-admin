@@ -167,6 +167,8 @@ export const LAB_CATEGORIES: LabCategory[] = [
     keyTokens: [
       "navigation.pattern.breadcrumb-header",
       "navigation.pattern.section-tabs",
+      "navigation.tabs.section-default",
+      "navigation.tabs.section-inverse",
       "navigation.pattern.side-nav",
     ],
     showcaseCount: 5,

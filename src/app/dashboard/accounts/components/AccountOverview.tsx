@@ -1,27 +1,12 @@
 "use client";
 
 import { Building2, Clock, Trophy, Users } from "lucide-react";
-import Link from "next/link";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import EmptyState from "@/components/ui-library/states/EmptyState";
 import { useAccountSummaryQuery } from "@/hooks/accounts/useAccountSummaryQuery";
-
-type OverviewCard = {
-  title: string;
-  value: string;
-  detail: string;
-  badge?: string;
-  icon: typeof Building2;
-  iconTone: string;
-  barTone: string;
-  progress: string;
-  href: string;
-  actionLabel: string;
-};
+import { AccountFleetOverviewCards } from "@/app/dashboard/components/live-snapshot/AccountFleetOverviewCards";
+import { buildAccountFleetOverview } from "@/lib/overview/accountFleetSummary";
 
 type CompactMetric = {
   label: string;
@@ -79,41 +64,8 @@ export default function AccountOverview() {
   const setupComplete = summary.isSetupCount?.true ?? 0;
   const setupRate =
     totalAccounts > 0 ? Math.round((setupComplete / totalAccounts) * 100) : 0;
-  const associationShare =
-    totalAccounts > 0 ? Math.round((associations / totalAccounts) * 100) : 0;
-  const clubShare =
-    totalAccounts > 0 ? Math.round((clubs / totalAccounts) * 100) : 0;
 
-  const associationsBySport =
-    summary.sportsPerAccountTypeCount?.Association ?? {};
-  const clubsBySport = summary.sportsPerAccountTypeCount?.Club ?? {};
-
-  const overviewCards: OverviewCard[] = [
-    {
-      title: "Associations",
-      value: associations.toLocaleString(),
-      detail: `${associationsBySport.Cricket ?? 0} Cricket · ${associationsBySport.AFL ?? 0} AFL · ${associationsBySport.Netball ?? 0} Netball`,
-      badge: `${associationShare}% of fleet`,
-      icon: Building2,
-      iconTone: "bg-violet-50 text-violet-700",
-      barTone: "bg-violet-500",
-      progress: `${associationShare}%`,
-      href: "/dashboard/accounts/association",
-      actionLabel: "View associations",
-    },
-    {
-      title: "Clubs",
-      value: clubs.toLocaleString(),
-      detail: `${clubsBySport.Cricket ?? 0} Cricket · ${clubsBySport.AFL ?? 0} AFL · ${clubsBySport.Netball ?? 0} Netball`,
-      badge: `${clubShare}% of fleet`,
-      icon: Users,
-      iconTone: "bg-blue-50 text-blue-700",
-      barTone: "bg-blue-500",
-      progress: `${clubShare}%`,
-      href: "/dashboard/accounts/club",
-      actionLabel: "View clubs",
-    },
-  ];
+  const accountFleetOverview = buildAccountFleetOverview(summary);
 
   const compactMetrics: CompactMetric[] = [
     {
@@ -144,54 +96,11 @@ export default function AccountOverview() {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        {overviewCards.map((card) => {
-          const Icon = card.icon;
-
-          return (
-            <Card
-              className="overflow-hidden border-slate-200 shadow-sm"
-              key={card.title}
-            >
-              <CardContent className="p-4">
-                <div className="mb-4 flex items-start justify-between gap-3">
-                  <div className={`rounded-md p-2 ${card.iconTone}`}>
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  {card.badge ? (
-                    <Badge
-                      className="border-transparent bg-slate-100 px-2 py-0.5 text-slate-700"
-                      variant="outline"
-                    >
-                      {card.badge}
-                    </Badge>
-                  ) : null}
-                </div>
-                <div className="text-2xl font-bold leading-none text-slate-950">
-                  {card.value}
-                </div>
-                <div className="mt-1 text-sm font-semibold text-slate-700">
-                  {card.title}
-                </div>
-                <div className="mt-1 text-xs text-muted-foreground">
-                  {card.detail}
-                </div>
-                <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                  <div
-                    className={`h-full rounded-full ${card.barTone}`}
-                    style={{ width: card.progress }}
-                  />
-                </div>
-                <div className="mt-4 flex justify-end">
-                  <Button size="sm" variant="outline" asChild>
-                    <Link href={card.href}>{card.actionLabel}</Link>
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      <AccountFleetOverviewCards
+        model={accountFleetOverview}
+        isLoading={false}
+        error={null}
+      />
 
       <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
         {compactMetrics.map((metric) => {

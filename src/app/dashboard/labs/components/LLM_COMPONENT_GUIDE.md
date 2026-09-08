@@ -86,9 +86,11 @@ Good starting tokens:
 
 - `navigation.pattern.breadcrumb-header`
 - `navigation.pattern.section-tabs`
+- `navigation.tabs.section-default` (route-level icon + label tabber — e.g. `/dashboard`)
+- `navigation.tabs.section-inverse` (compact nested sections — e.g. account detail sub-tabs)
 - `navigation.pattern.side-nav`
 - `navigation.pattern.workflow-steps`
-- `navigation.tabs.basic`
+- `navigation.tabs.basic` (legacy brand variants only)
 - `navigation.pagination.with-info`
 
 Watch out for:
@@ -331,19 +333,18 @@ Watch out for:
 
 Use:
 
+- `navigation.tabs.section-default` (operations tab bar on `/dashboard`)
 - `container.pattern.data-workspace`
-- `navigation.pattern.breadcrumb-header`
+- `action.button.site-navigation` (cross-page panel CTAs)
 - `card.stat.modern-overview`
-- `chart.card.with-summary-stats` or another relevant chart token
-- table/list for recent records
+- `card.base.comparison` (fleet account mix)
+- chart or table/list for recent records
 
 Shape:
 
-1. Page title.
-2. Breadcrumb header if route context matters.
-3. Stat cards or operations strip.
-4. Main chart/table container.
-5. Footer with last updated or pagination.
+1. Section tab bar for peer operations views (Overview, Financials, Asset Creation, Data Collection).
+2. Tab content: stat workspace, attention panels, fleet cards.
+3. Panel header/footer CTAs link to dedicated routes via site navigation buttons.
 
 ### Detail Page
 
@@ -442,7 +443,7 @@ Required states:
 Start here for recent high-value patterns:
 
 - Containers: `container.pattern.data-workspace`, `container.pattern.form-workspace`, `container.pattern.record-panel`
-- Navigation: `navigation.pattern.breadcrumb-header`, `navigation.pattern.section-tabs`, `navigation.pattern.side-nav`, `navigation.pattern.workflow-steps`
+- Navigation: `navigation.pattern.breadcrumb-header`, `navigation.tabs.section-default`, `navigation.tabs.section-inverse`, `navigation.pattern.section-tabs`, `navigation.pattern.side-nav`, `navigation.pattern.workflow-steps`
 - Cards: `card.stat.modern-overview`, `card.stat.operations`, `card.base.compact-kpi`, `card.base.operational-status`, `card.base.comparison`, `card.base.activity`
 
 For the full source of available tokens, inspect each category's `_components/_elements/*Tokens.ts` file.

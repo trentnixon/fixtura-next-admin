@@ -3,20 +3,54 @@
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { SubsectionTitle } from "@/components/type/titles";
-import { Home, Files, Settings } from "lucide-react";
+import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import { Home, Files, Settings, LayoutDashboard } from "lucide-react";
 import ComponentRef from "./ComponentRef";
 import { NAVIGATION_TOKENS } from "./navigationTokens";
 
 /**
- * Tabs showcase — brand variants, basic, icons, and style patterns
+ * Tabs showcase — default section tabber plus legacy brand/basic patterns
  */
 export default function TabsShowcase() {
   return (
     <SectionContainer
-      title="Tabs"
-      description="Tab navigation component for organizing content"
+      title="Tabs (legacy variants)"
+      description="Brand and basic tab variants — use Section Tabs above for new route tabbers"
     >
       <div className="space-y-8">
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <SubsectionTitle>Section trigger reference</SubsectionTitle>
+            <span className="text-xs text-muted-foreground">
+              TabsTrigger variant=&quot;section&quot;
+            </span>
+          </div>
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList variant="primary" className={sectionTabListClass}>
+              <TabsTrigger
+                value="overview"
+                variant="section"
+                className={sectionTabTriggerClass}
+              >
+                <LayoutDashboard className="h-4 w-4 shrink-0 text-current" aria-hidden />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger
+                value="settings"
+                variant="section"
+                className={sectionTabTriggerClass}
+              >
+                <Settings className="h-4 w-4 shrink-0 text-current" aria-hidden />
+                Settings
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <ComponentRef token={NAVIGATION_TOKENS.tabs.sectionTrigger} />
+        </div>
+
         <div>
           <div className="flex items-center justify-between mb-2">
             <SubsectionTitle>Brand Variants</SubsectionTitle>

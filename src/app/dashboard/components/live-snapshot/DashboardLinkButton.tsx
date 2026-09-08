@@ -4,23 +4,21 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowRight, ExternalLink, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  siteNavigationCtaAltClass,
+  siteNavigationCtaClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
 import { cn } from "@/lib/utils";
 
 /**
- * Dashboard link button intents — aligned with labs actions (`action.button.use-cases`).
- * - supporting: secondary brand, cross-links and panel headers
- * - highlight: accent brand, footer navigation CTAs
- * - primary: main action when needed
+ * Dashboard cross-page link CTAs — `action.button.site-navigation` (+ alt for footer emphasis).
  */
 export type DashboardLinkIntent = "supporting" | "highlight" | "primary";
 
-const INTENT_VARIANT: Record<
-  DashboardLinkIntent,
-  "secondary" | "accent" | "primary"
-> = {
-  supporting: "secondary",
-  highlight: "accent",
-  primary: "primary",
+const INTENT_CLASS: Record<DashboardLinkIntent, string> = {
+  supporting: siteNavigationCtaClass,
+  highlight: siteNavigationCtaAltClass,
+  primary: siteNavigationCtaClass,
 };
 
 interface DashboardLinkButtonProps {
@@ -44,17 +42,19 @@ export function DashboardLinkButton({
 }: DashboardLinkButtonProps) {
   return (
     <Button
-      variant={INTENT_VARIANT[intent]}
+      variant="ghost"
       size="sm"
-      className={cn("shrink-0", className)}
+      className={cn(INTENT_CLASS[intent], "shrink-0", className)}
       asChild
     >
       <Link href={href}>
-        {Icon ? <Icon className="h-4 w-4" /> : null}
+        {Icon ? <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden /> : null}
         {children}
-        {trailingIcon === "arrow" ? <ArrowRight className="h-4 w-4" /> : null}
+        {trailingIcon === "arrow" ? (
+          <ArrowRight className="h-4 w-4 shrink-0 text-current" aria-hidden />
+        ) : null}
         {trailingIcon === "external" ? (
-          <ExternalLink className="h-4 w-4" />
+          <ExternalLink className="h-4 w-4 shrink-0 text-current" aria-hidden />
         ) : null}
       </Link>
     </Button>

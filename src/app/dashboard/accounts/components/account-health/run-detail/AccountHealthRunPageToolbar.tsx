@@ -1,15 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
 import AccountHealthRunActions from "@/app/dashboard/accounts/components/account-health/AccountHealthRunActions";
 import {
-  accountHealthActionGroupDividerClass,
-  accountHealthActionGroupItemClass,
-  accountHealthActionGroupShellClass,
-  accountHealthToolbarLabelClass,
+  accountHealthNavGroupDividerClass,
+  accountHealthNavGroupItemClass,
+  accountHealthNavGroupShellClass,
 } from "@/app/dashboard/accounts/components/account-health/run-detail/accountHealthActionGroupStyles";
 import { healthRunStatusLabel } from "@/lib/account-health/displayRules";
 import {
@@ -28,7 +27,7 @@ interface AccountHealthRunPageToolbarProps {
 }
 
 /**
- * Run detail header actions — navigation group + recovery group (labs button groups).
+ * Run detail header actions — horizontal button groups (`action.button.group-horizontal`).
  */
 export function AccountHealthRunPageToolbar({
   runId,
@@ -51,36 +50,36 @@ export function AccountHealthRunPageToolbar({
       </Badge>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-end sm:gap-4">
-        <div className="flex flex-col gap-1 sm:items-end">
-          <span className={accountHealthToolbarLabelClass}>Navigation</span>
-          <div className={accountHealthActionGroupShellClass}>
-            <DashboardLinkButton
-              href={accountHref}
-              intent="supporting"
-              icon={ArrowLeft}
-              className={cn(
-                accountHealthActionGroupItemClass,
-                accountHealthActionGroupDividerClass
-              )}
-            >
+        <div className={accountHealthNavGroupShellClass}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn(
+              accountHealthNavGroupItemClass,
+              accountHealthNavGroupDividerClass
+            )}
+            asChild
+          >
+            <Link href={accountHref}>
+              <ArrowLeft className="h-4 w-4" aria-hidden />
               Back
-            </DashboardLinkButton>
-            <Button
-              variant="secondary"
-              size="sm"
-              className={accountHealthActionGroupItemClass}
-              asChild
+            </Link>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={accountHealthNavGroupItemClass}
+            asChild
+          >
+            <a
+              href={strapiRunHref}
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              <a
-                href={strapiRunHref}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Strapi
-                <ExternalLink className="h-4 w-4" aria-hidden />
-              </a>
-            </Button>
-          </div>
+              Strapi
+              <ExternalLink className="h-4 w-4" aria-hidden />
+            </a>
+          </Button>
         </div>
 
         <AccountHealthRunActions

@@ -7,6 +7,7 @@ import DashboardAssetCreation from "./DashboardAssetCreation";
 import DashboardDataCollection from "./DashboardDataCollection";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { sectionTabListClass, sectionTabTriggerClass } from "@/lib/actions/siteNavigationButtonStyles";
 import { Clapperboard, Database, DollarSign, LayoutDashboard } from "lucide-react";
 
 const tabs = [
@@ -46,7 +47,8 @@ function resolveInitialTab(tabParam: string | null): DashboardTab {
 }
 
 /**
- * Dashboard — all operations content organised in one tab bar.
+ * Dashboard operations tab shell — `navigation.tabs.section-default`.
+ * TabsList primary + sectionTabListClass · TabsTrigger section + sectionTabTriggerClass.
  */
 export default function DashboardTabs() {
   const searchParams = useSearchParams();
@@ -55,21 +57,21 @@ export default function DashboardTabs() {
   return (
     <PageContainer padding="xs" spacing="md">
       <Tabs defaultValue={initialTab} className="w-full">
-        <TabsList
-          variant="primary"
-          className="mb-6 flex h-auto flex-wrap justify-start gap-1"
-        >
-          {tabs.map(({ value, label, icon: Icon }) => (
-            <TabsTrigger
-              key={value}
-              value={value}
-              className="gap-1.5"
-            >
-              <Icon className="h-3.5 w-3.5 shrink-0" />
-              {label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        <div className="pb-8">
+          <TabsList variant="primary" className={sectionTabListClass}>
+            {tabs.map(({ value, label, icon: Icon }) => (
+              <TabsTrigger
+                key={value}
+                value={value}
+                variant="section"
+                className={sectionTabTriggerClass}
+              >
+                <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden />
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
         <TabsContent value="overview" className="mt-0">
           <LiveOverview />

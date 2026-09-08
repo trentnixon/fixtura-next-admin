@@ -11,6 +11,10 @@ export const NAVIGATION_TOKENS = {
   },
   tabs: {
     variants: "navigation.tabs.variants",
+    sectionDefault: "navigation.tabs.section-default",
+    sectionInverse: "navigation.tabs.section-inverse",
+    sectionTrigger: "navigation.tabs.section-trigger",
+    sectionList: "navigation.tabs.section-list",
     basic: "navigation.tabs.basic",
     icons: "navigation.tabs.icons",
     styles: "navigation.tabs.styles",

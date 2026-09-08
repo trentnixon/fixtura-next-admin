@@ -3,9 +3,7 @@
 import { AccountAnalytics } from "@/types/analytics";
 import { LoadingState } from "@/components/ui-library";
 import { Skeleton } from "@/components/ui/skeleton";
-import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { Badge } from "@/components/ui/badge";
-import { TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -24,13 +22,14 @@ export default function FinancialOverview({
   if (!analytics) {
     return (
       <LoadingState variant="skeleton" message="Loading financial overview...">
-        <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-3">
+          <Skeleton className="h-3 w-32" />
+          <Skeleton className="mt-1.5 h-3 w-56" />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <div
-              key={i}
-              className="border-b border-r border-slate-200 px-4 py-3 last:border-r-0 sm:[&:nth-child(2n)]:border-r-0 lg:border-b-0 lg:[&:nth-child(2n)]:border-r lg:last:border-r-0"
-            >
-              <Skeleton className="mb-3 h-3 w-28" />
+            <div key={i}>
+              <Skeleton className="mb-2 h-3 w-28" />
               <Skeleton className="h-6 w-24" />
               <Skeleton className="mt-2 h-3 w-36" />
             </div>
@@ -97,14 +96,16 @@ export default function FinancialOverview({
       : "Never";
 
   return (
-    <SectionContainer
-      title="Financial Overview"
-      description="Season pass revenue and subscription timing"
-      variant="compact"
-      icon={<TrendingUp className="h-4 w-4 text-slate-500" />}
-      contentClassName="p-0"
-    >
-      <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
+    <div>
+      <div className="mb-3">
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+          Financial Overview
+        </p>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Season pass revenue and subscription timing
+        </p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <FinancialMetric
           label="Total Season Revenue"
           value={totalSeasonRevenue}
@@ -133,7 +134,7 @@ export default function FinancialOverview({
           } total`}
         />
       </div>
-    </SectionContainer>
+    </div>
   );
 }
 
@@ -149,8 +150,10 @@ function FinancialMetric({
   status?: "active" | "muted";
 }) {
   return (
-    <div className="border-b border-r border-slate-200 px-4 py-3 last:border-r-0 sm:[&:nth-child(2n)]:border-r-0 lg:border-b-0 lg:[&:nth-child(2n)]:border-r lg:last:border-r-0">
-      <p className="text-xs font-medium uppercase text-slate-500">{label}</p>
+    <div>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
       <div className="mt-1 flex min-h-6 items-center gap-2">
         {status ? (
           <Badge

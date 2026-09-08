@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { AlertTriangle, DollarSign, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import { useAccountSummaryQuery } from "@/hooks/accounts/useAccountSummaryQuery";
 import { useGlobalAnalytics } from "@/hooks/analytics/useGlobalAnalytics";
@@ -28,12 +28,11 @@ import { FinancialRecentOrdersList } from "./financials/FinancialRecentOrdersLis
 import { FinancialInvoiceQueueList } from "./financials/FinancialInvoiceQueueList";
 import {
   getFinancialPeriodDateRange,
+  getFinancialPeriodMonthKeys,
   getRecentMonthlyRevenue,
   sumRecentMonthlyRevenue,
   type FinancialPeriodMonths,
 } from "./financials/financialDateRanges";
-import { cn } from "@/lib/utils";
-
 const UNAVAILABLE = "—";
 const UNAVAILABLE_META = "Unavailable";
 const DEFAULT_CURRENCY = "AUD";
@@ -52,6 +51,11 @@ export default function DashboardFinancials() {
 
   const periodRange = useMemo(
     () => getFinancialPeriodDateRange(periodMonths),
+    [periodMonths]
+  );
+
+  const periodMonthKeys = useMemo(
+    () => getFinancialPeriodMonthKeys(periodMonths),
     [periodMonths]
   );
 
@@ -266,25 +270,26 @@ export default function DashboardFinancials() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-3">
         <span className="text-sm font-medium text-slate-700">Period</span>
-        <div className="inline-flex rounded-md border border-slate-200 bg-white p-0.5">
-          {PERIOD_OPTIONS.map((option) => (
-            <Button
-              key={option.value}
-              type="button"
-              size="sm"
-              variant={periodMonths === option.value ? "default" : "ghost"}
-              className={cn(
-                "h-8 px-3",
-                periodMonths !== option.value && "text-muted-foreground"
-              )}
-              onClick={() => setPeriodMonths(option.value)}
-            >
-              {option.label}
-            </Button>
-          ))}
-        </div>
+        <Tabs
+          value={String(periodMonths)}
+          onValueChange={(value) =>
+            setPeriodMonths(Number(value) as FinancialPeriodMonths)
+          }
+        >
+          <TabsList className="h-auto border border-slate-200 bg-white p-1">
+            {PERIOD_OPTIONS.map((option) => (
+              <TabsTrigger
+                key={option.value}
+                value={String(option.value)}
+                className="px-3 py-1.5"
+              >
+                {option.label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </div>
 
       <OverviewDataWorkspace
@@ -332,6 +337,7 @@ export default function DashboardFinancials() {
         <OrdersOverviewTimeline
           timeline={orderOverview.timeline}
           currency={currency}
+          monthKeys={periodMonthKeys}
         />
       ) : null}
 
