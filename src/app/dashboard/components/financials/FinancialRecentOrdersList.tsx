@@ -54,7 +54,7 @@ export function FinancialRecentOrdersList({
       {recent.map((order) => {
         const accountName = order.account.name?.trim() || "Unknown account";
         const amount = formatCurrency(order.totals.amount / 100, currencyCode);
-        const channel = order.paymentChannel ?? "notset";
+        const channel = order.paymentChannel;
 
         return (
           <div
@@ -99,7 +99,7 @@ export function FinancialRecentOrdersList({
                   getPaymentChannelBadgeClassName(channel)
                 )}
               >
-                {toTitleCase(channel)}
+                {toTitleCase(channel ?? "not set")}
               </Badge>
             </div>
           </div>

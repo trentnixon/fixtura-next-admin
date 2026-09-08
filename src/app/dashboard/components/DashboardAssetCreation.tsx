@@ -22,6 +22,7 @@ import {
   type RenderActivityWindowPreset,
 } from "@/lib/account-asset-run/renderActivityParams";
 import type { AccountAssetRunRenderActivityParams } from "@/types/accountAssetRun";
+import type { TodaysRenders } from "@/types/scheduler";
 import { OverviewDataWorkspace } from "./live-snapshot/OverviewDataWorkspace";
 import { OverviewRecordPanel } from "./live-snapshot/OverviewRecordPanel";
 import type { WorkspaceMetricTile } from "./live-snapshot/OverviewDataWorkspace";
@@ -51,19 +52,15 @@ const STATUS_OPTIONS: Array<{ value: RenderActivityStatusFilter; label: string }
     { value: "failed", label: "Failed" },
   ];
 
-function getRenderingCount(
-  data: Array<{ isRendering: boolean }> | undefined
-): number {
+function getRenderingCount(data: TodaysRenders[] | undefined): number {
   return data?.filter((item) => item.isRendering).length ?? 0;
 }
 
-function getQueuedCount(data: Array<{ queued: boolean }> | undefined): number {
+function getQueuedCount(data: TodaysRenders[] | undefined): number {
   return data?.filter((item) => item.queued).length ?? 0;
 }
 
-function getCompletedCount(
-  data: Array<{ render?: { complete?: boolean } }> | undefined
-): number {
+function getCompletedCount(data: TodaysRenders[] | undefined): number {
   return data?.filter((item) => item.render?.complete).length ?? 0;
 }
 

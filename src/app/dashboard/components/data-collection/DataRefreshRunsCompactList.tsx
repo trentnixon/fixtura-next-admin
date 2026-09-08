@@ -56,9 +56,7 @@ export function DataRefreshRunsCompactList({
   runs,
   limit = 10,
 }: DataRefreshRunsCompactListProps) {
-  const hasActive = runs.some(
-    (run) => run.status === "active" || run.status === "running"
-  );
+  const hasActive = runs.some((run) => isHealthRunActive(run.status));
   const nowMs = useLiveRunClock(hasActive);
   const visible = runs.slice(0, limit);
 
