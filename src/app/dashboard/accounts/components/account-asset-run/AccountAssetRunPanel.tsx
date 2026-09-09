@@ -24,7 +24,6 @@ import { assetRunPageStatusBadgeClass } from "@/app/dashboard/accounts/component
 import { cn } from "@/lib/utils";
 import { AccountAssetRunTimeline } from "@/app/dashboard/accounts/components/account-asset-run/run-detail/AccountAssetRunTimeline";
 import { AccountAssetRunStepsTable } from "@/app/dashboard/accounts/components/account-asset-run/run-detail/AccountAssetRunStepsTable";
-import TriggerAccountAssetRunMenu from "./TriggerAccountAssetRunMenu";
 import { ArrowRightIcon, ExternalLinkIcon } from "lucide-react";
 
 interface AccountAssetRunPanelProps {
@@ -79,106 +78,111 @@ export default function AccountAssetRunPanel({
   }
 
   return (
-    <SectionContainer
-      title="Asset runs"
-      description="Tracked asset workflows and on-demand renders for this account"
-      variant="compact"
-      action={
-        <TriggerAccountAssetRunMenu
+    <div className="space-y-3">
+      {latest != null && (
+        <LatestRunHeader
+          run={latest}
           accountId={accountId}
           accountType={accountType}
-          liveRun={Boolean(liveRun)}
-          activeRunId={latest?.id}
+          liveRun={liveRun}
         />
-      }
-    >
-      {latest == null ? (
-        <p className="text-sm text-muted-foreground">
-          No asset run recorded yet. Use the asset run menu to queue one.
-        </p>
-      ) : (
-        <>
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-            <div className="flex min-w-0 flex-wrap items-center gap-2">
-              <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Latest run
-              </span>
-              <Badge
-                variant="outline"
-                className={assetRunPageStatusBadgeClass(latest.status)}
-              >
-                {assetRunStatusLabel(latest.status)}
-              </Badge>
-              {liveRun && (
-                <span
-                  className={cn(
-                    "rounded-full border border-brandInfo-200 bg-brandInfo-50 px-2 py-0.5 text-xs text-brandInfo-800",
-                  )}
-                >
-                  Live · 12s poll
-                </span>
-              )}
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <ButtonLinkToRun
-                runId={latest.id}
-                accountId={accountId}
-                accountType={accountType}
-              />
-              {latest.renderId != null && Number.isFinite(latest.renderId) && (
-                <ButtonLinkToRender renderId={latest.renderId} />
-              )}
-            </div>
-          </div>
-
-          <PanelBlockingLine run={latest} />
-
-          <AccountAssetRunTimeline
-            className="mb-6"
-            showHeading={false}
-            startedAt={latest.startedAt}
-            scheduledFor={latest.scheduledFor}
-            completedAt={latest.completedAt}
-            failedAt={latest.failedAt}
-            isLive={liveRun}
-            nowMs={nowMs}
-          />
-
-          {latest.failureReason && (
-            <div className="mb-6 rounded-md border border-brandError-200 bg-brandError-50 px-4 py-3 text-sm text-brandError-900">
-              <strong>Failure:</strong> {latest.failureReason}
-            </div>
-          )}
-
-          {(latest.items?.length ?? 0) > 0 && (
-            <div className="space-y-2">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 className="text-sm font-semibold text-slate-900">Steps</h3>
-                <Link
-                  href={getAccountAssetRunDetailHref(
-                    latest.id,
-                    accountId,
-                    accountType,
-                  )}
-                  className="text-xs text-primary underline underline-offset-2"
-                >
-                  View full run
-                </Link>
-              </div>
-              <div className="rounded-md border overflow-x-auto">
-                <AccountAssetRunStepsTable
-                  items={sortAssetRunItems(latest.items ?? [])}
-                  variant="compact"
-                  run={latest}
-                  isLive={liveRun}
-                  nowMs={nowMs}
-                />
-              </div>
-            </div>
-          )}
-        </>
       )}
-    </SectionContainer>
+
+      <SectionContainer
+        title="Asset runs"
+        description="Tracked asset workflows and on-demand renders for this account"
+        variant="compact"
+      >
+        {latest == null ? (
+          <p className="text-sm text-muted-foreground">
+            No asset run recorded yet.
+          </p>
+        ) : (
+          <>
+            <PanelBlockingLine run={latest} />
+
+            <AccountAssetRunTimeline
+              className="mb-6"
+              showHeading={false}
+              startedAt={latest.startedAt}
+              scheduledFor={latest.scheduledFor}
+              completedAt={latest.completedAt}
+              failedAt={latest.failedAt}
+              isLive={liveRun}
+              nowMs={nowMs}
+            />
+
+            {latest.failureReason && (
+              <div className="mb-6 rounded-md border border-brandError-200 bg-brandError-50 px-4 py-3 text-sm text-brandError-900">
+                <strong>Failure:</strong> {latest.failureReason}
+              </div>
+            )}
+
+            {(latest.items?.length ?? 0) > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-semibold text-slate-900">Steps</h3>
+                <div className="rounded-md border overflow-x-auto">
+                  <AccountAssetRunStepsTable
+                    items={sortAssetRunItems(latest.items ?? [])}
+                    variant="compact"
+                    run={latest}
+                    isLive={liveRun}
+                    nowMs={nowMs}
+                  />
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </SectionContainer>
+    </div>
+  );
+}
+
+function LatestRunHeader({
+  run,
+  accountId,
+  accountType,
+  liveRun,
+}: {
+  run: AccountAssetRunDetail;
+  accountId: number;
+  accountType: AccountAssetRunAccountOrgType;
+  liveRun: boolean;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
+        <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          Latest run
+        </span>
+        <Badge
+          variant="outline"
+          className={assetRunPageStatusBadgeClass(run.status)}
+        >
+          {assetRunStatusLabel(run.status)}
+        </Badge>
+        {liveRun && (
+          <span
+            className={cn(
+              "rounded-full border border-brandInfo-200 bg-brandInfo-50 px-2 py-0.5 text-xs text-brandInfo-800",
+            )}
+          >
+            Live · 12s poll
+          </span>
+        )}
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <ButtonLinkToRun
+          runId={run.id}
+          accountId={accountId}
+          accountType={accountType}
+        />
+        {run.renderId != null && Number.isFinite(run.renderId) && (
+          <ButtonLinkToRender renderId={run.renderId} />
+        )}
+      </div>
+    </div>
   );
 }
 

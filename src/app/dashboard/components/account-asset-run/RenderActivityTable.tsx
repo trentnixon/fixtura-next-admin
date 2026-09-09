@@ -19,7 +19,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { formatHealthTimestamp } from "@/lib/account-health/formatHealthTimestamp";
+import { splitHealthTimestamp } from "@/lib/account-health/formatHealthTimestamp";
 import { formatDurationMs } from "@/lib/account-health/globalRunAnalytics";
 import { getAccountAssetRunDetailHref } from "@/lib/account-asset-run/accountRoutes";
 import {
@@ -80,6 +80,25 @@ function renderCountsTooltip(
     `Upcoming games: ${counts.upcomingGames}`,
     `Grades: ${counts.grades}`,
   ].join("\n");
+}
+
+function TimestampCell({ iso }: { iso: string | null }) {
+  const parts = splitHealthTimestamp(iso);
+
+  if (!parts) {
+    return <span className="text-sm text-muted-foreground">—</span>;
+  }
+
+  return (
+    <div className="whitespace-nowrap">
+      <div className="text-sm font-bold tabular-nums leading-tight text-slate-950">
+        {parts.time}
+      </div>
+      <div className="text-xs font-normal text-muted-foreground">
+        {parts.date.replace(/,$/, "")}
+      </div>
+    </div>
+  );
 }
 
 interface RenderActivityTableProps {
@@ -158,11 +177,11 @@ export function RenderActivityTable({
                         )}
                       </TableCell>
                     )}
-                    <TableCell className="whitespace-nowrap text-sm">
-                      {formatHealthTimestamp(row.run.startedAt)}
+                    <TableCell>
+                      <TimestampCell iso={row.run.startedAt} />
                     </TableCell>
-                    <TableCell className="whitespace-nowrap text-sm">
-                      {formatHealthTimestamp(row.run.finishedAt)}
+                    <TableCell>
+                      <TimestampCell iso={row.run.finishedAt} />
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-sm tabular-nums">
                       {durationLabel}

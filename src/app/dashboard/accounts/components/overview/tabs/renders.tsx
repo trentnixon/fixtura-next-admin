@@ -2,7 +2,6 @@ import {
   fixturaContentHubAccountDetails,
   Render,
 } from "@/types/fixturaContentHubAccountDetails";
-// import SchedulerDetailsGrid from "../components/SchedulerDetails";
 import ListRendersInTable from "../components/ListRendersInTable";
 import MetricsTable from "./components/MetricsTable";
 // import RenderCharts from "./components/RenderCharts";
@@ -12,7 +11,6 @@ import AccountCostSummary from "./components/AccountCostSummary";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import SchedulerCostTable from "@/app/dashboard/budget/components/SchedulerCostTable";
 import RenderCharts from "./components/RenderCharts";
-import SchedulerDetailsGrid from "../components/SchedulerDetails";
 import AccountAssetRunPanel from "../../account-asset-run/AccountAssetRunPanel";
 import { RenderActivitySection } from "@/app/dashboard/components/account-asset-run/RenderActivitySection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,13 +19,24 @@ import {
   sectionTabTriggerInverseClass,
 } from "@/lib/actions/siteNavigationButtonStyles";
 import { cn } from "@/lib/utils";
-import { Activity, BarChart3, CircleDollarSign, History } from "lucide-react";
+import {
+  Activity,
+  BarChart3,
+  CircleDollarSign,
+  History,
+  LineChart,
+} from "lucide-react";
 
 const RENDER_CHILD_TABS = [
   {
     id: "runs",
     label: "Runs",
     icon: Activity,
+  },
+  {
+    id: "reporting",
+    label: "Reporting",
+    icon: LineChart,
   },
   {
     id: "history",
@@ -84,24 +93,13 @@ export default function RendersTab({
       </TabsList>
 
       <TabsContent value="runs" className="mt-0 space-y-4">
-        {schedulerId ? (
-          <SchedulerDetailsGrid
-            schedulerId={schedulerId}
-            accountData={accountData as fixturaContentHubAccountDetails}
-          />
-        ) : (
-          <SectionContainer title="Scheduler" variant="compact">
-            <p className="text-sm text-muted-foreground">
-              No scheduler is linked to this account.
-            </p>
-          </SectionContainer>
-        )}
-
         <AccountAssetRunPanel
           accountId={accountId}
           accountType={accountOrgType}
         />
+      </TabsContent>
 
+      <TabsContent value="reporting" className="mt-0 space-y-4">
         <RenderActivitySection
           accountId={accountId}
           showAccountColumn={false}

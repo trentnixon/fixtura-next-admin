@@ -1,6 +1,5 @@
 "use client";
 
-import type { LucideIcon } from "lucide-react";
 import {
   CalendarCheck2,
   CalendarClock,
@@ -8,15 +7,15 @@ import {
   Timer,
   XCircle,
 } from "lucide-react";
-import { formatHealthTimestamp } from "@/lib/account-health/formatHealthTimestamp";
-import { formatAssetRunDuration } from "@/lib/account-asset-run/duration";
-import { cn } from "@/lib/utils";
 import {
-  assetRunSectionTitleClass,
-  assetRunTimelineGridClass,
-  assetRunTimelineMetricClasses,
-  type AssetRunTimelineAccent,
-} from "./assetRunPageStyles";
+  LiveSnapshotMetricStrip,
+  type LiveSnapshotMetricItem,
+} from "@/app/dashboard/components/live-snapshot/LiveSnapshotMetricStrip";
+import { assetRunDurationMs } from "@/lib/account-asset-run/duration";
+import { formatDurationMs } from "@/lib/account-health/globalRunAnalytics";
+import { splitHealthTimestamp } from "@/lib/account-health/formatHealthTimestamp";
+import { cn } from "@/lib/utils";
+import { assetRunSectionTitleClass } from "./assetRunPageStyles";
 
 interface AccountAssetRunTimelineProps {
   startedAt: string | null;
@@ -29,45 +28,25 @@ interface AccountAssetRunTimelineProps {
   className?: string;
 }
 
-function TimelineMetric({
-  label,
-  value,
-  icon: Icon,
-  accent,
-}: {
-  label: string;
-  value: string;
-  icon: LucideIcon;
-  accent: AssetRunTimelineAccent;
-}) {
-  const isEmpty = value === "—";
-  const tone = assetRunTimelineMetricClasses(accent);
+const TIMELINE_ICON_CLASS = "bg-slate-100 text-slate-600";
 
-  return (
-    <div className="flex items-center justify-between gap-4 border-b border-r border-brandSecondary-100 px-4 py-3 last:border-r-0 sm:[&:nth-child(2n)]:border-r-0 lg:border-b-0 lg:[&:nth-child(2n)]:border-r lg:last:border-r-0">
-      <div className="min-w-0">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
-        <p
-          className={cn(
-            "mt-1 text-sm font-semibold tabular-nums leading-snug",
-            isEmpty ? tone.valueEmpty : tone.value,
-          )}
-        >
-          {value}
-        </p>
-      </div>
-      <div
-        className={cn(
-          "flex h-9 w-9 shrink-0 items-center justify-center rounded-md border",
-          tone.icon,
-        )}
-      >
-        <Icon className="h-4 w-4" aria-hidden />
-      </div>
-    </div>
-  );
+function timelineMetric(
+  id: string,
+  label: string,
+  iso: string | null,
+  icon: LiveSnapshotMetricItem["icon"],
+  emptyMeta: string,
+): LiveSnapshotMetricItem {
+  const parts = splitHealthTimestamp(iso);
+
+  return {
+    id,
+    label,
+    value: parts?.time ?? "—",
+    meta: parts?.date ?? emptyMeta,
+    icon,
+    iconClassName: TIMELINE_ICON_CLASS,
+  };
 }
 
 export function AccountAssetRunTimeline({
@@ -80,10 +59,43 @@ export function AccountAssetRunTimeline({
   showHeading = true,
   className,
 }: AccountAssetRunTimelineProps) {
-  const totalDuration = formatAssetRunDuration(
+  const durationMs = assetRunDurationMs(
     { startedAt, completedAt, failedAt },
     { isLive, nowMs },
   );
+
+  const durationMeta = isLive
+    ? "Still running"
+    : durationMs != null
+      ? "Started → end"
+      : "Not enough data";
+
+  const items: LiveSnapshotMetricItem[] = [
+    timelineMetric("started", "Started", startedAt, Play, "Not recorded"),
+    timelineMetric(
+      "scheduled",
+      "Scheduled for",
+      scheduledFor,
+      CalendarClock,
+      "Not recorded",
+    ),
+    timelineMetric(
+      "completed",
+      "Completed",
+      completedAt,
+      CalendarCheck2,
+      "Not recorded",
+    ),
+    timelineMetric("failed", "Failed", failedAt, XCircle, "Not recorded"),
+    {
+      id: "duration",
+      label: "Total time",
+      value: formatDurationMs(durationMs),
+      meta: durationMeta,
+      icon: Timer,
+      iconClassName: TIMELINE_ICON_CLASS,
+    },
+  ];
 
   return (
     <div
@@ -103,38 +115,7 @@ export function AccountAssetRunTimeline({
           </div>
         </div>
       )}
-      <div className={assetRunTimelineGridClass}>
-        <TimelineMetric
-          label="Started"
-          value={formatHealthTimestamp(startedAt)}
-          icon={Play}
-          accent="secondary"
-        />
-        <TimelineMetric
-          label="Scheduled for"
-          value={formatHealthTimestamp(scheduledFor)}
-          icon={CalendarClock}
-          accent="info"
-        />
-        <TimelineMetric
-          label="Completed"
-          value={formatHealthTimestamp(completedAt)}
-          icon={CalendarCheck2}
-          accent="success"
-        />
-        <TimelineMetric
-          label="Failed"
-          value={formatHealthTimestamp(failedAt)}
-          icon={XCircle}
-          accent="error"
-        />
-        <TimelineMetric
-          label="Total time"
-          value={totalDuration}
-          icon={Timer}
-          accent="secondary"
-        />
-      </div>
+      <LiveSnapshotMetricStrip items={items} columns={5} />
     </div>
   );
 }

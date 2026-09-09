@@ -13,6 +13,7 @@ export type LiveSnapshotMetricItem = {
   icon: LucideIcon;
   /** Labs operations-strip surface tone, e.g. `border-emerald-200 bg-emerald-50 text-emerald-800`. */
   tone?: string;
+  iconClassName?: string;
   isLoading?: boolean;
 };
 
@@ -68,16 +69,28 @@ export function LiveSnapshotMetricStrip({
             )}
           >
             <CardContent className="flex items-center gap-3 p-3.5">
-              <div className="rounded-md bg-white/70 p-2">
+              <div
+                className={cn(
+                  "rounded-md p-2",
+                  metric.iconClassName ??
+                    (metric.tone
+                      ? "bg-white/70"
+                      : "bg-slate-100 text-slate-600"),
+                )}
+              >
                 <Icon className="h-4 w-4" />
               </div>
               <div className="min-w-0">
-                <div className="text-xs font-medium opacity-75">{metric.label}</div>
+                <div className="text-xs font-medium text-muted-foreground">
+                  {metric.label}
+                </div>
                 <div className="truncate text-lg font-bold leading-tight">
                   {metric.value}
                 </div>
                 {metric.meta ? (
-                  <div className="truncate text-xs opacity-75">{metric.meta}</div>
+                  <div className="truncate text-xs text-muted-foreground">
+                    {metric.meta}
+                  </div>
                 ) : null}
               </div>
             </CardContent>

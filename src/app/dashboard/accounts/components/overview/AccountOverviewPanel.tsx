@@ -5,12 +5,11 @@ import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccoun
 import {
   CalendarDays,
   CheckCircle2,
-  Clock,
   DollarSign,
-  Film,
   RefreshCw,
   Ticket,
 } from "lucide-react";
+import AccountSchedulerStatus from "./AccountSchedulerStatus";
 import { useAccountAnalytics } from "@/hooks/analytics/useAccountAnalytics";
 import { cn, formatDate } from "@/lib/utils";
 import { getFinancialOverviewMetrics } from "./financialOverviewMetrics";
@@ -42,16 +41,6 @@ const metricIconToneClass: Record<MetricTone, string> = {
 export default function AccountOverviewPanel({
   accountData,
 }: AccountOverviewPanelProps) {
-  const renderCount = accountData.rollup?.totalRenders ?? 0;
-  const completedRenders = accountData.rollup?.totalCompleteRenders ?? 0;
-  const schedulerStatus = accountData.scheduler?.Queued
-    ? "Queued"
-    : accountData.scheduler?.isRendering
-      ? "Rendering"
-      : "Idle";
-  const schedulerIsBusy =
-    schedulerStatus === "Queued" || schedulerStatus === "Rendering";
-
   const { data: analytics, isLoading: isSubscriptionLoading } =
     useAccountAnalytics(String(accountData.id));
   const subscription = analytics?.currentSubscription ?? null;
@@ -68,23 +57,6 @@ export default function AccountOverviewPanel({
       tone: accountData.isActive ? "success" : "error",
       value: accountData.isActive ? "Active" : "Inactive",
       valueClassName: !accountData.isActive ? "text-brandError-700" : undefined,
-    },
-    {
-      label: "Renders",
-      icon: <Film className="h-4 w-4" />,
-      tone: "neutral",
-      value: `${completedRenders}/${renderCount}`,
-      detail: "complete / total",
-    },
-    {
-      label: "Scheduler",
-      icon: <Clock className="h-4 w-4" />,
-      tone: schedulerIsBusy ? "info" : "neutral",
-      value: schedulerStatus,
-      valueClassName: cn(
-        schedulerIsBusy && "text-brandInfo-700",
-        schedulerStatus === "Idle" && "text-slate-700",
-      ),
     },
   ];
 
@@ -104,6 +76,7 @@ export default function AccountOverviewPanel({
   return (
     <div className="flex flex-col gap-3">
       <MetricGroup title="Account" metrics={accountMetrics} />
+      <AccountSchedulerStatus accountData={accountData} />
       <MetricGroup title="Subscription" metrics={[subscriptionMetric]} />
       <MetricGroup title="Financial" metrics={financialMetrics} />
     </div>

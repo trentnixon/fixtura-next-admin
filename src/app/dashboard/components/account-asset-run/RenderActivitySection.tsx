@@ -136,20 +136,18 @@ export function RenderActivitySection({
         ) : null}
       </div>
 
-      <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-white p-4 lg:flex-row lg:items-start lg:justify-between">
-        <RenderActivityControls
-          windowPreset={windowPreset}
-          onWindowPresetChange={handleWindowChange}
-          statusFilter={statusFilter}
-          onStatusFilterChange={handleStatusChange}
-          page={page}
-          onPageChange={setPage}
-          pageSize={pageSize}
-          onPageSizeChange={handlePageSizeChange}
-          meta={meta}
-          pageSizeOptions={pageSizeOptions}
-        />
-      </div>
+      <RenderActivityControls
+        windowPreset={windowPreset}
+        onWindowPresetChange={handleWindowChange}
+        statusFilter={statusFilter}
+        onStatusFilterChange={handleStatusChange}
+        page={page}
+        onPageChange={setPage}
+        pageSize={pageSize}
+        onPageSizeChange={handlePageSizeChange}
+        meta={meta}
+        pageSizeOptions={pageSizeOptions}
+      />
 
       <div className="rounded-md border border-slate-200 bg-white">
         <div className="border-b border-slate-200 px-4 py-3">
