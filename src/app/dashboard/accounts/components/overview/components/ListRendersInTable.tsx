@@ -24,11 +24,13 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
+import {
+  LiveSnapshotMetricStrip,
+  type LiveSnapshotMetricItem,
+} from "@/app/dashboard/components/live-snapshot/LiveSnapshotMetricStrip";
 import { useGlobalContext } from "@/components/providers/GlobalContext";
 import { Render } from "@/types/fixturaContentHubAccountDetails";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function ListRendersInTable({
   renders,
@@ -189,74 +191,71 @@ export default function ListRendersInTable({
     (render) => render.daysSince !== null && render.daysSince < 7,
   ).length;
   const latestRender = renderSummaries[0];
-  const schedulerCardTone = "border-slate-200 bg-slate-50 text-slate-800";
-  const historyStats = [
+  const historyStats: LiveSnapshotMetricItem[] = [
     {
+      id: "total",
       label: "Total Renders",
-      value: sortedRenders.length,
+      value: String(sortedRenders.length),
       meta: latestRender
         ? `Latest: ${latestRender.created} ${latestRender.time}`
         : "No render history",
       icon: ListChecksIcon,
+      iconClassName: "bg-slate-100 text-slate-600",
     },
     {
+      id: "complete",
       label: "Complete",
-      value: completeCount,
+      value: String(completeCount),
       meta: `${sortedRenders.length - completeCount} incomplete`,
       icon: CheckCircle2Icon,
+      iconClassName: "bg-slate-100 text-slate-600",
     },
     {
+      id: "active",
       label: "Active",
-      value: activeCount,
+      value: String(activeCount),
       meta: "Rendered in the last 7 days",
       icon: ActivityIcon,
+      iconClassName: "bg-slate-100 text-slate-600",
     },
     {
+      id: "processing",
       label: "Processing",
-      value: processingCount,
+      value: String(processingCount),
       meta: "Currently flagged in Strapi",
       icon: ClockIcon,
+      iconClassName: "bg-slate-100 text-slate-600",
     },
   ];
 
-  return (
-    <SectionContainer
-      title="Render History"
-      description={`${sortedRenders.length} total renders`}
-      variant="compact"
-    >
-      {sortedRenders.length ? (
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
-            {historyStats.map(({ label, value, meta, icon: Icon }) => (
-              <Card
-                className={`border shadow-sm ${schedulerCardTone}`}
-                key={label}
-              >
-                <CardContent className="flex items-center gap-3 p-3.5">
-                  <div className="rounded-md bg-white/70 p-2">
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-medium opacity-75">
-                      {label}
-                    </div>
-                    <div className="truncate text-lg font-bold leading-tight">
-                      {value}
-                    </div>
-                    <div className="truncate text-xs opacity-75">{meta}</div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+  if (!sortedRenders.length) {
+    return (
+      <SectionContainer title="Render History" variant="compact">
+        <EmptyState
+          title="No renders available"
+          description="This account has no render history yet."
+          variant="minimal"
+        />
+      </SectionContainer>
+    );
+  }
 
-          <ScrollArea className="h-[440px] min-w-full">
-            <Table>
-              <TableHeader className="sticky top-0 z-10 bg-slate-50">
+  return (
+    <div className="space-y-4">
+      <LiveSnapshotMetricStrip items={historyStats} columns={4} />
+
+      <SectionContainer
+        title="Render History"
+        description="Individual render records for this account"
+        variant="compact"
+      >
+        <div className="overflow-x-auto rounded-md border">
+          <Table>
+            <TableHeader className="bg-slate-50">
                 <TableRow>
-                  <TableHead>Render</TableHead>
+                  <TableHead>Published</TableHead>
                   <TableHead className="text-center">Freshness</TableHead>
+                  <TableHead className="text-center">Age</TableHead>
                   <TableHead className="text-center">Complete</TableHead>
                   <TableHead className="text-center">Processing</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -266,31 +265,20 @@ export default function ListRendersInTable({
                 {renderSummaries.map((render) => (
                   <TableRow key={render.id}>
                     <TableCell>
-                      <div className="min-w-0">
-                        <div className="font-medium text-slate-950">
-                          Render #{render.id}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {render.created} at {render.time || "N/A"}
-                        </div>
+                      <div className="min-w-0 font-medium text-slate-950">
+                        {render.created} at {render.time || "N/A"}
                       </div>
                     </TableCell>
                     <TableCell className="text-center">
-                      <div className="flex flex-col items-center gap-1">
-                        <Badge
-                          variant="outline"
-                          className={`${render.status.className} rounded-full`}
-                        >
-                          {render.status.label}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {render.daysSince !== null && !isNaN(render.daysSince)
-                            ? `${render.daysSince} day${
-                                render.daysSince !== 1 ? "s" : ""
-                              }`
-                            : "N/A"}
-                        </span>
-                      </div>
+                      <Badge
+                        variant="outline"
+                        className={`${render.status.className} rounded-full`}
+                      >
+                        {render.status.label}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-center text-sm text-muted-foreground">
+                      {formatRenderAge(render.daysSince)}
                     </TableCell>
                     <TableCell className="text-center">
                       <div className="flex justify-center">
@@ -349,18 +337,18 @@ export default function ListRendersInTable({
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
-          </ScrollArea>
+          </Table>
         </div>
-      ) : (
-        <EmptyState
-          title="No renders available"
-          description="This account has no render history yet."
-          variant="minimal"
-        />
-      )}
-    </SectionContainer>
+      </SectionContainer>
+    </div>
   );
+}
+
+function formatRenderAge(daysSince: number | null): string {
+  if (daysSince === null || isNaN(daysSince)) {
+    return "N/A";
+  }
+  return `${daysSince} day${daysSince !== 1 ? "s" : ""}`;
 }
 
 function BooleanStatusBadge({ value }: { value?: boolean }) {

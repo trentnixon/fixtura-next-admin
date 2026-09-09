@@ -14,17 +14,23 @@ import {
 } from "@/components/ui/dialog";
 import { useTriggerAccountHealthRunOnDemand } from "@/hooks/account-health/useTriggerAccountHealthRunOnDemand";
 import { getAccountHealthRunDetailHref } from "@/lib/account-health/accountRoutes";
+import { siteNavigationCtaClass } from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
 
 interface TriggerAccountHealthRunButtonProps {
   accountId: number;
   liveRun: boolean;
   activeRunId?: number;
+  grouped?: boolean;
+  triggerClassName?: string;
 }
 
 export default function TriggerAccountHealthRunButton({
   accountId,
   liveRun,
   activeRunId,
+  grouped = false,
+  triggerClassName,
 }: TriggerAccountHealthRunButtonProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const trigger = useTriggerAccountHealthRunOnDemand();
@@ -37,7 +43,15 @@ export default function TriggerAccountHealthRunButton({
 
   if (showViewRun && activeRunId != null) {
     return (
-      <Button variant="primary" size="sm" asChild>
+      <Button
+        variant={grouped ? "ghost" : "primary"}
+        size="sm"
+        className={cn(
+          grouped ? triggerClassName : siteNavigationCtaClass,
+          !grouped && "shrink-0",
+        )}
+        asChild
+      >
         <Link href={getAccountHealthRunDetailHref(activeRunId, accountId)}>
           View current run
         </Link>
@@ -61,12 +75,16 @@ export default function TriggerAccountHealthRunButton({
     <>
       <Button
         type="button"
-        variant="primary"
+        variant={grouped ? "ghost" : "primary"}
         size="sm"
+        className={cn(
+          grouped ? triggerClassName : siteNavigationCtaClass,
+          !grouped && "shrink-0",
+        )}
         onClick={() => setIsDialogOpen(true)}
         disabled={disabled}
       >
-        <RefreshCw className="h-4 w-4 mr-2" />
+        <RefreshCw className="h-4 w-4" />
         Run account update now
       </Button>
 

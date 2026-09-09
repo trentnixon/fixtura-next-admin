@@ -1,11 +1,11 @@
 import type { AccountAssetRunAccountOrgType } from "@/lib/account-asset-run/accountRoutes";
 
-export type RenderActivityWindowPreset = "24h" | "48h" | "7d";
+export type RenderActivityWindowPreset = "7d" | "60d" | "90d";
 
 const PRESET_MS: Record<RenderActivityWindowPreset, number> = {
-  "24h": 24 * 60 * 60 * 1000,
-  "48h": 48 * 60 * 60 * 1000,
   "7d": 7 * 24 * 60 * 60 * 1000,
+  "60d": 60 * 24 * 60 * 60 * 1000,
+  "90d": 90 * 24 * 60 * 60 * 1000,
 };
 
 /** UTC rolling window for render-activity report queries. */

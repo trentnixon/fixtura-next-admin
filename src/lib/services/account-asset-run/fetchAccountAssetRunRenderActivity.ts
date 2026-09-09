@@ -14,7 +14,7 @@ import {
 function emptyRenderActivityResponse(
   params: AccountAssetRunRenderActivityParams
 ): AccountAssetRunRenderActivityResponse {
-  const window = buildRenderActivityWindow("48h");
+  const window = buildRenderActivityWindow("7d");
   const page = params.page ?? 1;
   const pageSize = params.pageSize ?? 100;
 

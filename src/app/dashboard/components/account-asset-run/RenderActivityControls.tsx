@@ -9,9 +9,9 @@ import type { AccountAssetRunRenderActivityMeta } from "@/types/accountAssetRun"
 
 const WINDOW_PRESETS: Array<{ value: RenderActivityWindowPreset; label: string }> =
   [
-    { value: "24h", label: "24h" },
-    { value: "48h", label: "48h" },
     { value: "7d", label: "7d" },
+    { value: "60d", label: "60d" },
+    { value: "90d", label: "90d" },
   ];
 
 const STATUS_FILTERS: Array<{ value: RenderActivityStatusFilter; label: string }> =

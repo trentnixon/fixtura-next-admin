@@ -34,12 +34,12 @@ export function RenderActivitySection({
   defaultPageSize = 25,
   showAccountColumn = true,
   title = "Render activity",
-  description = "Asset runs in the last 48 hours (UTC rolling window)",
+  description = "Asset runs in the selected window (UTC rolling)",
   footerLink,
   pageSizeOptions,
 }: RenderActivitySectionProps) {
   const [windowPreset, setWindowPreset] =
-    useState<RenderActivityWindowPreset>("48h");
+    useState<RenderActivityWindowPreset>("7d");
   const [statusFilter, setStatusFilter] =
     useState<RenderActivityStatusFilter>("all");
   const [page, setPage] = useState(1);

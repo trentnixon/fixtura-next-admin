@@ -21,6 +21,8 @@ import { fixturaContentHubAccountDetails } from "@/types/fixturaContentHubAccoun
 
 type AccountSchedulerStatusProps = {
   accountData: fixturaContentHubAccountDetails;
+  /** Render rows only — parent supplies `AccountSidebarStatusGroup`. */
+  embedded?: boolean;
 };
 
 type StatusRowProps = {
@@ -31,8 +33,17 @@ type StatusRowProps = {
   action?: ReactNode;
 };
 
+function wrapSidebarStatus(
+  content: ReactNode,
+  embedded?: boolean,
+) {
+  if (embedded) return content;
+  return <AccountSidebarStatusGroup>{content}</AccountSidebarStatusGroup>;
+}
+
 export default function AccountSchedulerStatus({
   accountData,
+  embedded = false,
 }: AccountSchedulerStatusProps) {
   const schedulerId = accountData.scheduler?.id;
   const { strapiLocation } = useGlobalContext();
@@ -73,24 +84,23 @@ export default function AccountSchedulerStatus({
   };
 
   if (!schedulerId) {
-    return (
-      <StatusGroup>
-        <StatusRow
-          icon={<CalendarDays className="h-4 w-4" />}
-          label="Scheduler"
-          value={
-            <span className="text-sm font-medium text-muted-foreground">
-              Not linked
-            </span>
-          }
-        />
-      </StatusGroup>
+    return wrapSidebarStatus(
+      <AccountSidebarStatusRow
+        icon={<CalendarDays className="h-4 w-4" />}
+        label="Scheduler"
+        value={
+          <span className="text-sm font-medium text-muted-foreground">
+            Not linked
+          </span>
+        }
+      />,
+      embedded,
     );
   }
 
   if (isLoading) {
-    return (
-      <StatusGroup>
+    return wrapSidebarStatus(
+      <>
         {[0, 1, 2, 3].map((item) => (
           <div key={item} className="flex items-start gap-3 px-4 py-3">
             <Skeleton className="h-8 w-8 shrink-0 rounded-md" />
@@ -100,23 +110,23 @@ export default function AccountSchedulerStatus({
             </div>
           </div>
         ))}
-      </StatusGroup>
+      </>,
+      embedded,
     );
   }
 
   if (isError || !scheduler) {
-    return (
-      <StatusGroup>
-        <StatusRow
-          icon={<CalendarDays className="h-4 w-4" />}
-          label="Scheduler"
-          value={
-            <span className="text-sm font-medium text-brandError-700">
-              Failed to load
-            </span>
-          }
-        />
-      </StatusGroup>
+    return wrapSidebarStatus(
+      <AccountSidebarStatusRow
+        icon={<CalendarDays className="h-4 w-4" />}
+        label="Scheduler"
+        value={
+          <span className="text-sm font-medium text-brandError-700">
+            Failed to load
+          </span>
+        }
+      />,
+      embedded,
     );
   }
 
@@ -124,9 +134,9 @@ export default function AccountSchedulerStatus({
     scheduler.attributes.days_of_the_week?.data?.attributes.Name ?? "N/A";
   const lastUpdate = formatDate(scheduler.attributes.updatedAt || "");
 
-  return (
-    <StatusGroup>
-      <StatusRow
+  return wrapSidebarStatus(
+    <>
+      <AccountSidebarStatusRow
         icon={<CalendarDays className="h-4 w-4" />}
         label="Day of the week"
         value={
@@ -137,7 +147,7 @@ export default function AccountSchedulerStatus({
         detail={`Last update: ${lastUpdate}`}
       />
 
-      <StatusRow
+      <AccountSidebarStatusRow
         icon={<GitPullRequestArrow className="h-4 w-4" />}
         label="Scheduler queued"
         value={
@@ -174,7 +184,7 @@ export default function AccountSchedulerStatus({
         }
       />
 
-      <StatusRow
+      <AccountSidebarStatusRow
         icon={<Pickaxe className="h-4 w-4" />}
         label="Scheduler rendering"
         value={
@@ -200,7 +210,7 @@ export default function AccountSchedulerStatus({
         }
       />
 
-      <StatusRow
+      <AccountSidebarStatusRow
         icon={<Film className="h-4 w-4" />}
         label="Total renders"
         value={
@@ -209,11 +219,12 @@ export default function AccountSchedulerStatus({
           </span>
         }
       />
-    </StatusGroup>
+    </>,
+    embedded,
   );
 }
 
-function StatusGroup({ children }: { children: ReactNode }) {
+export function AccountSidebarStatusGroup({ children }: { children: ReactNode }) {
   return (
     <div>
       <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
@@ -226,7 +237,13 @@ function StatusGroup({ children }: { children: ReactNode }) {
   );
 }
 
-function StatusRow({ icon, label, value, detail, action }: StatusRowProps) {
+export function AccountSidebarStatusRow({
+  icon,
+  label,
+  value,
+  detail,
+  action,
+}: StatusRowProps) {
   return (
     <div className="flex items-start gap-3 px-4 py-3">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600">

@@ -9,7 +9,10 @@ import {
   RefreshCw,
   Ticket,
 } from "lucide-react";
-import AccountSchedulerStatus from "./AccountSchedulerStatus";
+import AccountSchedulerStatus, {
+  AccountSidebarStatusGroup,
+} from "./AccountSchedulerStatus";
+import AccountDataRefreshStatus from "./AccountDataRefreshStatus";
 import { useAccountAnalytics } from "@/hooks/analytics/useAccountAnalytics";
 import { cn, formatDate } from "@/lib/utils";
 import { getFinancialOverviewMetrics } from "./financialOverviewMetrics";
@@ -76,7 +79,10 @@ export default function AccountOverviewPanel({
   return (
     <div className="flex flex-col gap-3">
       <MetricGroup title="Account" metrics={accountMetrics} />
-      <AccountSchedulerStatus accountData={accountData} />
+      <AccountSidebarStatusGroup>
+        <AccountSchedulerStatus accountData={accountData} embedded />
+        <AccountDataRefreshStatus accountId={accountData.id} embedded />
+      </AccountSidebarStatusGroup>
       <MetricGroup title="Subscription" metrics={[subscriptionMetric]} />
       <MetricGroup title="Financial" metrics={financialMetrics} />
     </div>

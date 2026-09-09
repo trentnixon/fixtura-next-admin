@@ -1,17 +1,30 @@
 "use client";
 
+import {
+  Bot,
+  CircleDollarSign,
+  Cpu,
+  Film,
+} from "lucide-react";
 import { useAccountRollupsSummary } from "@/hooks/rollups/useAccountRollupsSummary";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
+import { EmptyState } from "@/components/ui-library";
 import {
   formatCurrency,
   formatNumber,
 } from "@/app/dashboard/budget/components/_utils/formatCurrency";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import {
+  LiveSnapshotMetricStrip,
+  type LiveSnapshotMetricItem,
+} from "@/app/dashboard/components/live-snapshot/LiveSnapshotMetricStrip";
 
 interface AccountCostSummaryProps {
   accountId: number;
 }
+
+const METRIC_ICON_CLASS = "bg-slate-100 text-slate-600";
 
 export default function AccountCostSummary({
   accountId,
@@ -23,147 +36,170 @@ export default function AccountCostSummary({
     error: summaryErr,
   } = useAccountRollupsSummary(accountId);
 
-  // Get Lambda and AI costs from currentMonth if available (most accurate)
-  // Otherwise, calculate from recent renders (limited to last 10)
-  const currentMonthLambda =
-    summaryData?.currentMonth?.costBreakdown?.global?.lambda;
-  const currentMonthAi = summaryData?.currentMonth?.costBreakdown?.global?.ai;
+  if (summaryLoading) {
+    return (
+      <div className="space-y-4">
+        <LiveSnapshotMetricStrip
+          columns={4}
+          items={[
+            { id: "1", label: "Total Renders", value: "", meta: "", icon: Film, isLoading: true },
+            { id: "2", label: "Total Cost", value: "", meta: "", icon: CircleDollarSign, isLoading: true },
+            { id: "3", label: "Lambda Cost", value: "", meta: "", icon: Cpu, isLoading: true },
+            { id: "4", label: "AI Cost", value: "", meta: "", icon: Bot, isLoading: true },
+          ]}
+        />
+        <SectionContainer
+          title="Account costs"
+          description="Complete account-level cost summary across all schedulers"
+          variant="compact"
+        >
+          <LoadingState message="Loading account cost summary…" />
+        </SectionContainer>
+      </div>
+    );
+  }
 
-  // Fallback: calculate from recent renders (only last 10, so not complete)
-  const recentRendersLambda =
-    summaryData?.recentRenders?.reduce(
-      (sum, render) => sum + (render.totalLambdaCost ?? 0),
-      0
-    ) ?? 0;
-
-  const recentRendersAi =
-    summaryData?.recentRenders?.reduce(
-      (sum, render) => sum + (render.totalAiCost ?? 0),
-      0
-    ) ?? 0;
-
-  // Use current month breakdown if available, otherwise show recent renders (with note)
-  const displayLambda = currentMonthLambda ?? recentRendersLambda;
-  const displayAi = currentMonthAi ?? recentRendersAi;
-  const isCurrentMonthOnly = currentMonthLambda !== undefined;
-
-  // Calculate Total Cost to match the displayed Lambda and AI costs
-  // Priority: currentMonth.totalCost > (displayLambda + displayAi) > totals.totalCost
-  // This ensures Total Cost matches the sum of displayed Lambda and AI costs
-  const calculatedCost = displayLambda + displayAi;
-  const displayTotalCost =
-    summaryData?.currentMonth?.totalCost ??
-    (isNaN(calculatedCost)
-      ? summaryData?.totals.totalCost ?? 0
-      : calculatedCost);
-
-  return (
-    <SectionContainer
-      title="Total Renders"
-      description="Complete account-level cost summary across all schedulers"
-      variant="compact"
-    >
-      {summaryLoading && (
-        <LoadingState message="Loading account cost summary..." />
-      )}
-      {summaryError && (
+  if (summaryError) {
+    return (
+      <SectionContainer
+        title="Account costs"
+        description="Complete account-level cost summary across all schedulers"
+        variant="compact"
+      >
         <ErrorState
           variant="card"
           title="Unable to load account cost summary"
           error={summaryErr as Error}
         />
-      )}
-      {summaryData && (
-        <div className="space-y-4">
-          {/* Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 bg-muted rounded-lg">
-              <div className="text-xs text-muted-foreground mb-1">
-                Total Renders
-              </div>
-              <div className="text-lg font-semibold">
-                {formatNumber(summaryData.totals.totalRenders)}
-              </div>
-            </div>
-            <div className="p-4 bg-muted rounded-lg">
-              <div className="text-xs text-muted-foreground mb-1">
-                Total Cost
-                {!isCurrentMonthOnly && displayTotalCost > 0 && (
-                  <span className="ml-1 text-xs">(recent only)</span>
-                )}
-              </div>
-              <div className="text-lg font-semibold">
-                {formatCurrency(displayTotalCost)}
-              </div>
-            </div>
-            <div className="p-4 bg-muted rounded-lg">
-              <div className="text-xs text-muted-foreground mb-1">
-                Lambda Cost
-                {!isCurrentMonthOnly && (
-                  <span className="ml-1 text-xs">(recent only)</span>
-                )}
-              </div>
-              <div className="text-lg font-semibold">
-                {formatCurrency(displayLambda)}
-              </div>
-            </div>
-            <div className="p-4 bg-muted rounded-lg">
-              <div className="text-xs text-muted-foreground mb-1">
-                AI Cost
-                {!isCurrentMonthOnly && (
-                  <span className="ml-1 text-xs">(recent only)</span>
-                )}
-              </div>
-              <div className="text-lg font-semibold">
-                {formatCurrency(displayAi)}
-              </div>
-            </div>
-          </div>
+      </SectionContainer>
+    );
+  }
 
-          {/* Additional Info */}
-          <div className="text-xs text-muted-foreground space-y-1">
-            <p>
-              <strong>Total Schedulers:</strong>{" "}
+  if (!summaryData) {
+    return (
+      <SectionContainer
+        title="Account costs"
+        description="Complete account-level cost summary across all schedulers"
+        variant="compact"
+      >
+        <EmptyState
+          title="No cost data"
+          description="No cost data is available for this account yet."
+          variant="minimal"
+        />
+      </SectionContainer>
+    );
+  }
+
+  const currentMonthLambda =
+    summaryData.currentMonth?.costBreakdown?.global?.lambda;
+  const currentMonthAi = summaryData.currentMonth?.costBreakdown?.global?.ai;
+
+  const recentRendersLambda =
+    summaryData.recentRenders?.reduce(
+      (sum, render) => sum + (render.totalLambdaCost ?? 0),
+      0,
+    ) ?? 0;
+
+  const recentRendersAi =
+    summaryData.recentRenders?.reduce(
+      (sum, render) => sum + (render.totalAiCost ?? 0),
+      0,
+    ) ?? 0;
+
+  const displayLambda = currentMonthLambda ?? recentRendersLambda;
+  const displayAi = currentMonthAi ?? recentRendersAi;
+  const isCurrentMonthOnly = currentMonthLambda !== undefined;
+
+  const calculatedCost = displayLambda + displayAi;
+  const displayTotalCost =
+    summaryData.currentMonth?.totalCost ??
+    (Number.isNaN(calculatedCost)
+      ? summaryData.totals.totalCost ?? 0
+      : calculatedCost);
+
+  const recentOnlyNote = isCurrentMonthOnly ? undefined : "Recent renders only";
+
+  const summaryMetrics: LiveSnapshotMetricItem[] = [
+    {
+      id: "renders",
+      label: "Total Renders",
+      value: formatNumber(summaryData.totals.totalRenders),
+      meta: `${formatNumber(summaryData.totals.totalSchedulers)} schedulers`,
+      icon: Film,
+      iconClassName: METRIC_ICON_CLASS,
+    },
+    {
+      id: "total",
+      label: "Total Cost",
+      value: formatCurrency(displayTotalCost),
+      meta: recentOnlyNote ?? "Account lifetime rollup",
+      icon: CircleDollarSign,
+      iconClassName: METRIC_ICON_CLASS,
+    },
+    {
+      id: "lambda",
+      label: "Lambda Cost",
+      value: formatCurrency(displayLambda),
+      meta: recentOnlyNote ?? "Current month breakdown",
+      icon: Cpu,
+      iconClassName: METRIC_ICON_CLASS,
+    },
+    {
+      id: "ai",
+      label: "AI Cost",
+      value: formatCurrency(displayAi),
+      meta: recentOnlyNote ?? "Current month breakdown",
+      icon: Bot,
+      iconClassName: METRIC_ICON_CLASS,
+    },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <LiveSnapshotMetricStrip items={summaryMetrics} columns={4} />
+
+      <SectionContainer
+        title="Account costs"
+        description="Complete account-level cost summary across all schedulers"
+        variant="compact"
+      >
+        <dl className="grid gap-4 text-sm sm:grid-cols-2">
+          <div>
+            <dt className="text-muted-foreground">Total schedulers</dt>
+            <dd className="font-medium text-slate-900">
               {formatNumber(summaryData.totals.totalSchedulers)}
-            </p>
-            <p>
-              <strong>Average Cost per Render:</strong>{" "}
-              {formatCurrency(summaryData.totals.averageCostPerRender)}
-            </p>
-            {summaryData.currentMonth && (
-              <p>
-                <strong>Current Month:</strong>{" "}
-                {formatCurrency(summaryData.currentMonth.totalCost)} (
-                {formatNumber(summaryData.currentMonth.totalRenders)} renders)
-                {summaryData.currentMonth.costBreakdown?.global?.lambda !==
-                  undefined && (
-                  <span className="ml-2">
-                    [Lambda:{" "}
-                    {formatCurrency(
-                      summaryData.currentMonth.costBreakdown.global.lambda
-                    )}
-                    , AI:{" "}
-                    {formatCurrency(
-                      summaryData.currentMonth.costBreakdown.global.ai
-                    )}
-                    ]
-                  </span>
-                )}
-              </p>
-            )}
-            <p className="mt-2 pt-2 border-t text-xs">
-              <strong>Note:</strong> This shows account-level totals across all
-              schedulers. The scheduler breakdown below may show different
-              numbers if limited to a specific scheduler or date range.
-            </p>
+            </dd>
           </div>
-        </div>
-      )}
-      {!summaryData && !summaryLoading && !summaryError && (
-        <div className="text-sm text-muted-foreground text-center py-8">
-          No cost data available for this account
-        </div>
-      )}
-    </SectionContainer>
+          <div>
+            <dt className="text-muted-foreground">Average cost per render</dt>
+            <dd className="font-medium text-slate-900">
+              {formatCurrency(summaryData.totals.averageCostPerRender)}
+            </dd>
+          </div>
+          {summaryData.currentMonth && (
+            <>
+              <div>
+                <dt className="text-muted-foreground">Current month total</dt>
+                <dd className="font-medium text-slate-900">
+                  {formatCurrency(summaryData.currentMonth.totalCost)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Current month renders</dt>
+                <dd className="font-medium text-slate-900">
+                  {formatNumber(summaryData.currentMonth.totalRenders)}
+                </dd>
+              </div>
+            </>
+          )}
+        </dl>
+
+        <p className="mt-4 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-muted-foreground">
+          Account-level totals span all schedulers. The scheduler breakdown below
+          may differ if scoped to one scheduler or a narrower date range.
+        </p>
+      </SectionContainer>
+    </div>
   );
 }

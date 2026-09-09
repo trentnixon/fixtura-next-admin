@@ -38,9 +38,9 @@ const UNAVAILABLE_META = "Unavailable";
 
 const WINDOW_OPTIONS: Array<{ value: RenderActivityWindowPreset; label: string }> =
   [
-    { value: "24h", label: "24 hours" },
-    { value: "48h", label: "48 hours" },
     { value: "7d", label: "7 days" },
+    { value: "60d", label: "60 days" },
+    { value: "90d", label: "90 days" },
   ];
 
 const STATUS_OPTIONS: Array<{ value: RenderActivityStatusFilter; label: string }> =
@@ -68,7 +68,7 @@ function getCompletedCount(data: TodaysRenders[] | undefined): number {
  */
 export default function DashboardAssetCreation() {
   const [windowPreset, setWindowPreset] =
-    useState<RenderActivityWindowPreset>("48h");
+    useState<RenderActivityWindowPreset>("7d");
   const [statusFilter, setStatusFilter] =
     useState<RenderActivityStatusFilter>("all");
 

@@ -1,26 +1,29 @@
 "use client";
 
 import { useMemo } from "react";
+import {
+  CalendarRange,
+  Clock3,
+  Gauge,
+  ListChecks,
+  Timer,
+  TriangleAlert,
+} from "lucide-react";
 import { useAccountHealthAccountStatus } from "@/hooks/account-health/useAccountHealthAccountStatus";
-import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import {
+  LiveSnapshotMetricStrip,
+  type LiveSnapshotMetricItem,
+} from "@/app/dashboard/components/live-snapshot/LiveSnapshotMetricStrip";
 import {
   computeAtAGlanceMetrics,
   type RunWithTimestamps,
 } from "@/lib/account-health/globalRunAnalytics";
-import { accountHealthStatusLabel } from "@/lib/account-health/displayRules";
 
 interface DataRefreshAtAGlanceProps {
   accountId: number;
 }
 
-function MetricCell({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
-      <div className="text-xs font-medium text-muted-foreground">{label}</div>
-      <div className="mt-1 text-lg font-semibold tabular-nums">{value}</div>
-    </div>
-  );
-}
+const METRIC_ICON_CLASS = "bg-slate-100 text-slate-600";
 
 export default function DataRefreshAtAGlance({
   accountId,
@@ -40,47 +43,71 @@ export default function DataRefreshAtAGlance({
     return computeAtAGlanceMetrics(runs, data?.data?.runCounts);
   }, [data?.data?.recentRuns, data?.data?.runCounts]);
 
-  const accountStatus = data?.data?.account?.accountHealthStatus;
-
   if (!data?.data) return null;
 
+  const items: LiveSnapshotMetricItem[] = [
+    {
+      id: "runs",
+      label: "Runs in window",
+      value: String(metrics.totalRunsInWindow),
+      meta: "Recent refresh runs",
+      icon: ListChecks,
+      iconClassName: METRIC_ICON_CLASS,
+    },
+    {
+      id: "failed",
+      label: "Failed in window",
+      value:
+        metrics.failedRatePercent != null
+          ? `${metrics.failedCount} (${metrics.failedRatePercent}%)`
+          : String(metrics.failedCount),
+      meta: "Failed refresh attempts",
+      icon: TriangleAlert,
+      iconClassName: METRIC_ICON_CLASS,
+    },
+    {
+      id: "empty",
+      label: "Empty season",
+      value: String(metrics.emptyResultCount),
+      meta: "No current season data",
+      icon: Gauge,
+      iconClassName: METRIC_ICON_CLASS,
+    },
+    {
+      id: "duration",
+      label: "Avg run duration",
+      value: metrics.avgDurationLabel,
+      meta: "Across recent runs",
+      icon: Timer,
+      iconClassName: METRIC_ICON_CLASS,
+    },
+    {
+      id: "range",
+      label: "Activity range",
+      value: metrics.dateRangeLabel,
+      meta: "Window coverage",
+      icon: CalendarRange,
+      iconClassName: METRIC_ICON_CLASS,
+    },
+    {
+      id: "window",
+      label: "Analysis window",
+      value: "Recent runs",
+      meta: "Not legacy collection analytics",
+      icon: Clock3,
+      iconClassName: METRIC_ICON_CLASS,
+    },
+  ];
+
   return (
-    <SectionContainer
-      title="At a glance"
-      description="Summary from recent refresh runs on this account (not legacy collection analytics)"
-      variant="compact"
-    >
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <MetricCell
-          label="Account health status"
-          value={
-            accountStatus
-              ? accountHealthStatusLabel(accountStatus)
-              : "—"
-          }
-        />
-        <MetricCell
-          label="Runs in window"
-          value={String(metrics.totalRunsInWindow)}
-        />
-        <MetricCell
-          label="Failed in window"
-          value={
-            metrics.failedRatePercent != null
-              ? `${metrics.failedCount} (${metrics.failedRatePercent}%)`
-              : String(metrics.failedCount)
-          }
-        />
-        <MetricCell
-          label="Empty season (window)"
-          value={String(metrics.emptyResultCount)}
-        />
-        <MetricCell
-          label="Avg run duration"
-          value={metrics.avgDurationLabel}
-        />
-        <MetricCell label="Activity range" value={metrics.dateRangeLabel} />
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <h2 className="text-base font-semibold text-slate-900">At a glance</h2>
+        <p className="text-sm text-muted-foreground">
+          Summary from recent refresh runs on this account
+        </p>
       </div>
-    </SectionContainer>
+      <LiveSnapshotMetricStrip items={items} columns={3} />
+    </div>
   );
 }

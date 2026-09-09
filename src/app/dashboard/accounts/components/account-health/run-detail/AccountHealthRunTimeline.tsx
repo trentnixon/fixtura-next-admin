@@ -23,20 +23,13 @@ interface AccountHealthRunTimelineProps {
   finalizedAt: string | null;
 }
 
-const TIMELINE_TONES = {
-  started: "border-slate-200 bg-slate-50 text-slate-900",
-  queued: "border-sky-200 bg-sky-50 text-sky-950",
-  completed: "border-emerald-200 bg-emerald-50 text-emerald-950",
-  finalized: "border-violet-200 bg-violet-50 text-violet-950",
-  duration: "border-amber-200 bg-amber-50 text-amber-950",
-} as const;
+const TIMELINE_ICON_CLASS = "bg-slate-100 text-slate-600";
 
 function timelineMetric(
   id: string,
   label: string,
   iso: string | null,
   icon: LiveSnapshotMetricItem["icon"],
-  tone: string,
   emptyMeta: string,
 ): LiveSnapshotMetricItem {
   const parts = splitHealthTimestamp(iso);
@@ -47,7 +40,7 @@ function timelineMetric(
     value: parts?.time ?? "—",
     meta: parts?.date ?? emptyMeta,
     icon,
-    tone,
+    iconClassName: TIMELINE_ICON_CLASS,
   };
 }
 
@@ -87,23 +80,31 @@ export function AccountHealthRunTimeline({
       : "Not enough data";
 
   const items: LiveSnapshotMetricItem[] = [
-    timelineMetric("started", "Started", startedAt, Play, TIMELINE_TONES.started, "Not recorded"),
-    timelineMetric("queued", "Queued", queuedAt, CalendarClock, TIMELINE_TONES.queued, "Not recorded"),
-    timelineMetric("completed", "Completed", completedAt, CalendarCheck2, TIMELINE_TONES.completed, "Not recorded"),
-    timelineMetric("finalized", "Finalized", finalizedAt, Flag, TIMELINE_TONES.finalized, "Pending"),
+    timelineMetric("started", "Started", startedAt, Play, "Not recorded"),
+    timelineMetric("queued", "Queued", queuedAt, CalendarClock, "Not recorded"),
+    timelineMetric(
+      "completed",
+      "Completed",
+      completedAt,
+      CalendarCheck2,
+      "Not recorded",
+    ),
+    timelineMetric(
+      "finalized",
+      "Finalized",
+      finalizedAt,
+      Flag,
+      "Pending",
+    ),
     {
       id: "duration",
       label: "Total time taken",
       value: formatDurationMs(durationMs),
       meta: durationMeta,
       icon: Timer,
-      tone: TIMELINE_TONES.duration,
+      iconClassName: TIMELINE_ICON_CLASS,
     },
   ];
 
-  return (
-    <div className="mb-6">
-      <LiveSnapshotMetricStrip items={items} columns={5} />
-    </div>
-  );
+  return <LiveSnapshotMetricStrip items={items} columns={5} />;
 }

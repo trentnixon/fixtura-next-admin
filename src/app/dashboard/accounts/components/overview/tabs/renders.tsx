@@ -34,14 +34,14 @@ const RENDER_CHILD_TABS = [
     icon: Activity,
   },
   {
-    id: "reporting",
-    label: "Reporting",
-    icon: LineChart,
-  },
-  {
     id: "history",
     label: "History",
     icon: History,
+  },
+  {
+    id: "reporting",
+    label: "Reporting",
+    icon: LineChart,
   },
   {
     id: "costs",
@@ -105,7 +105,7 @@ export default function RendersTab({
           showAccountColumn={false}
           defaultPageSize={25}
           title="Recent render activity"
-          description="Asset runs for this account in the last 48 hours (UTC rolling window)"
+          description="Asset runs for this account in the selected window (UTC rolling)"
         />
       </TabsContent>
 
@@ -132,12 +132,17 @@ export default function RendersTab({
       <TabsContent value="costs" className="mt-0 space-y-4">
         <AccountCostSummary accountId={accountId} />
 
-        {schedulerId && (
+        {schedulerId ? (
+          <SchedulerCostTable schedulerId={schedulerId} />
+        ) : (
           <SectionContainer
-            title="Scheduler Cost Analysis"
+            title="Scheduler cost analysis"
             description="Cost breakdown for all renders in this scheduler"
+            variant="compact"
           >
-            <SchedulerCostTable schedulerId={schedulerId} />
+            <p className="text-sm text-muted-foreground">
+              No scheduler is linked to this account.
+            </p>
           </SectionContainer>
         )}
       </TabsContent>

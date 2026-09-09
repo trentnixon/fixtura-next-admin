@@ -20,6 +20,10 @@ import {
 import { useAbortAccountHealthRun } from "@/hooks/account-health/useAbortAccountHealthRun";
 import { ABORT_INACTIVE_RUN_TOOLTIP } from "@/lib/account-health/abortAvailability";
 import { healthRunActionButtonClass } from "@/app/dashboard/accounts/components/account-health/run-detail/healthRunPageStyles";
+import {
+  siteNavigationGroupDividerClass,
+  siteNavigationGroupItemClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
 import { cn } from "@/lib/utils";
 
 interface AbortAccountHealthRunButtonProps {
@@ -62,16 +66,21 @@ export default function AbortAccountHealthRunButton({
   const button = (
     <Button
       type="button"
-      variant={grouped ? "destructive" : "outline"}
+      variant={grouped ? "ghost" : "outline"}
       size={size}
       className={cn(
-        !grouped &&
-          cn(
-            healthRunActionButtonClass,
-            "border-brandError-300 text-brandError-800 hover:border-brandError-700 hover:bg-brandError-700 hover:text-white"
-          ),
+        grouped
+          ? cn(
+              siteNavigationGroupItemClass,
+              siteNavigationGroupDividerClass,
+              "text-brandError-800 hover:bg-brandError-700 hover:text-white",
+            )
+          : cn(
+              healthRunActionButtonClass,
+              "border-brandError-300 text-brandError-800 hover:border-brandError-700 hover:bg-brandError-700 hover:text-white",
+            ),
         !canAbort && "opacity-60",
-        className
+        className,
       )}
       onClick={() => {
         if (canAbort) setIsDialogOpen(true);

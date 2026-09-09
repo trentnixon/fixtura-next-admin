@@ -6,6 +6,11 @@ import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  siteNavigationGroupDividerClass,
+  siteNavigationGroupItemClass,
+  siteNavigationGroupShellClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
 import { useAccountAssetRunLatest } from "@/hooks/account-asset-run/useAccountAssetRunLatest";
 import { useLiveRunClock } from "@/hooks/account-asset-run/useLiveRunClock";
 import {
@@ -172,11 +177,14 @@ function LatestRunHeader({
           </span>
         )}
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className={siteNavigationGroupShellClass}>
         <ButtonLinkToRun
           runId={run.id}
           accountId={accountId}
           accountType={accountType}
+          withDivider={
+            run.renderId != null && Number.isFinite(run.renderId)
+          }
         />
         {run.renderId != null && Number.isFinite(run.renderId) && (
           <ButtonLinkToRender renderId={run.renderId} />
@@ -204,13 +212,23 @@ function ButtonLinkToRun({
   runId,
   accountId,
   accountType,
+  withDivider,
 }: {
   runId: number;
   accountId: number;
   accountType: AccountAssetRunAccountOrgType;
+  withDivider?: boolean;
 }) {
   return (
-    <Button variant="primary" size="sm" asChild>
+    <Button
+      variant="ghost"
+      size="sm"
+      asChild
+      className={cn(
+        siteNavigationGroupItemClass,
+        withDivider && siteNavigationGroupDividerClass,
+      )}
+    >
       <Link href={getAccountAssetRunDetailHref(runId, accountId, accountType)}>
         Run #{runId}
         <ArrowRightIcon className="h-4 w-4" />
@@ -221,7 +239,12 @@ function ButtonLinkToRun({
 
 function ButtonLinkToRender({ renderId }: { renderId: number }) {
   return (
-    <Button variant="secondary" size="sm" asChild>
+    <Button
+      variant="ghost"
+      size="sm"
+      asChild
+      className={siteNavigationGroupItemClass}
+    >
       <Link href={`/dashboard/renders/${renderId}`}>
         <ExternalLinkIcon className="h-4 w-4" />
         Render #{renderId}

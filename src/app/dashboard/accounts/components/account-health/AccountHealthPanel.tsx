@@ -1,21 +1,30 @@
 "use client";
 
-import Link from "next/link";
+import {
+  Activity,
+  CalendarCheck2,
+  CalendarClock,
+  XCircle,
+} from "lucide-react";
 import { useAccountHealthAccountStatus } from "@/hooks/account-health/useAccountHealthAccountStatus";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
-import { Badge } from "@/components/ui/badge";
-import { formatHealthTimestamp } from "@/lib/account-health/formatHealthTimestamp";
 import {
-  EMPTY_RUN_RESULT_LABEL,
+  LiveSnapshotMetricStrip,
+  type LiveSnapshotMetricItem,
+} from "@/app/dashboard/components/live-snapshot/LiveSnapshotMetricStrip";
+import { splitHealthTimestamp } from "@/lib/account-health/formatHealthTimestamp";
+import {
   accountHealthStatusLabel,
-  blockingItemHeadline,
-  getSummaryEmptyReason,
-  healthRunStatusBadgeClass,
   isHealthRunActive,
 } from "@/lib/account-health/displayRules";
-import { getAccountHealthRunDetailHref } from "@/lib/account-health/accountRoutes";
+import {
+  siteNavigationGroupDividerClass,
+  siteNavigationGroupItemClass,
+  siteNavigationGroupShellClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
 import TriggerAccountHealthRunButton from "./TriggerAccountHealthRunButton";
 import AbortAccountHealthRunButton from "./AbortAccountHealthRunButton";
 
@@ -23,7 +32,36 @@ interface AccountHealthPanelProps {
   accountId: number;
 }
 
-export default function AccountHealthPanel({ accountId }: AccountHealthPanelProps) {
+const METRIC_ICON_CLASS = "bg-slate-100 text-slate-600";
+
+function groupedItemClass(withDivider: boolean) {
+  return cn(
+    siteNavigationGroupItemClass,
+    withDivider && siteNavigationGroupDividerClass,
+  );
+}
+
+function timestampMetric(
+  id: string,
+  label: string,
+  iso: string | null,
+  icon: LiveSnapshotMetricItem["icon"],
+): LiveSnapshotMetricItem {
+  const parts = splitHealthTimestamp(iso);
+
+  return {
+    id,
+    label,
+    value: parts?.time ?? "—",
+    meta: parts?.date ?? "Not recorded",
+    icon,
+    iconClassName: METRIC_ICON_CLASS,
+  };
+}
+
+export default function AccountHealthPanel({
+  accountId,
+}: AccountHealthPanelProps) {
   const { data, isLoading, error, isError, refetch } =
     useAccountHealthAccountStatus(accountId);
 
@@ -34,10 +72,7 @@ export default function AccountHealthPanel({ accountId }: AccountHealthPanelProp
         description="Season data refresh status and recent runs"
         variant="compact"
       >
-        <LoadingState
-          variant="default"
-          message="Loading data refresh…"
-        />
+        <LoadingState variant="default" message="Loading data refresh…" />
       </SectionContainer>
     );
   }
@@ -78,139 +113,75 @@ export default function AccountHealthPanel({ accountId }: AccountHealthPanelProp
   }
 
   const { account, latestRun } = data.data;
-  const blocking = latestRun?.blockingItem ?? null;
-  const blockingLine = blockingItemHeadline(blocking);
-  const latestEmpty = getSummaryEmptyReason(latestRun?.summary ?? null);
-  const liveRun = latestRun && isHealthRunActive(latestRun.status);
+  const liveRun = latestRun != null && isHealthRunActive(latestRun.status);
+  const showAbort = liveRun && latestRun != null;
+
+  const statusMetrics: LiveSnapshotMetricItem[] = [
+    {
+      id: "status",
+      label: "Account status",
+      value: accountHealthStatusLabel(account.accountHealthStatus),
+      meta: liveRun ? "Refresh in progress" : "Season data refresh",
+      icon: Activity,
+      iconClassName: METRIC_ICON_CLASS,
+    },
+    timestampMetric(
+      "queued",
+      "Last queued",
+      account.accountHealthLastQueuedAt,
+      CalendarClock,
+    ),
+    timestampMetric(
+      "started",
+      "Last started",
+      account.accountHealthLastStartedAt,
+      Activity,
+    ),
+    timestampMetric(
+      "completed",
+      "Last completed",
+      account.accountHealthLastCompletedAt,
+      CalendarCheck2,
+    ),
+    timestampMetric(
+      "failed",
+      "Last failed",
+      account.accountHealthLastFailedAt,
+      XCircle,
+    ),
+  ];
 
   return (
-    <SectionContainer
-      title="Data refresh"
-      description="Season data refresh status and recent runs"
-      variant="compact"
-      action={
-        <div className="flex flex-wrap items-center gap-2">
-          {liveRun && latestRun && (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-1">
+          <h2 className="text-base font-semibold text-slate-900">
+            Data refresh
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Season data refresh status and recent runs
+          </p>
+        </div>
+        <div className={siteNavigationGroupShellClass}>
+          {showAbort && latestRun && (
             <AbortAccountHealthRunButton
               runId={latestRun.id}
               accountId={account.id}
               grouped
+              className={groupedItemClass(true)}
             />
           )}
           <TriggerAccountHealthRunButton
             accountId={account.id}
             liveRun={Boolean(liveRun)}
             activeRunId={latestRun?.id}
+            grouped
+            triggerClassName={groupedItemClass(false)}
           />
         </div>
-      }
-    >
-      <div className="mb-4 flex flex-wrap items-center gap-2">
-        <span className="text-sm text-muted-foreground">Account status</span>
-        <Badge variant="outline" className="capitalize">
-          {accountHealthStatusLabel(account.accountHealthStatus)}
-        </Badge>
-        {liveRun && latestRun && (
-          <>
-            <span className="text-sm text-muted-foreground">· Current run</span>
-            <Badge
-              variant="outline"
-              className={healthRunStatusBadgeClass(latestRun.status)}
-            >
-              {latestRun.status}
-            </Badge>
-          </>
-        )}
       </div>
 
-      <dl className="mb-6 grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
-        <div>
-          <dt className="text-muted-foreground">Last queued</dt>
-          <dd>{formatHealthTimestamp(account.accountHealthLastQueuedAt)}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Last started</dt>
-          <dd>{formatHealthTimestamp(account.accountHealthLastStartedAt)}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Last completed</dt>
-          <dd>{formatHealthTimestamp(account.accountHealthLastCompletedAt)}</dd>
-        </div>
-        <div>
-          <dt className="text-muted-foreground">Last failed</dt>
-          <dd>{formatHealthTimestamp(account.accountHealthLastFailedAt)}</dd>
-        </div>
-      </dl>
-
-      {account.accountHealthFailureReason && (
-        <div className="mb-6 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">
-          <strong>Failure:</strong> {account.accountHealthFailureReason}
-        </div>
-      )}
-
-      {latestRun && (
-        <div className="rounded-md border bg-card p-4">
-          <h3 className="mb-2 text-sm font-semibold">Latest run</h3>
-          <div className="flex flex-wrap items-center gap-2 mb-2">
-            <Badge
-              variant="outline"
-              className={healthRunStatusBadgeClass(latestRun.status)}
-            >
-              {latestRun.status}
-            </Badge>
-            <span className="font-mono text-sm">
-              <Link
-                href={getAccountHealthRunDetailHref(
-                  latestRun.id,
-                  account.id
-                )}
-                className="text-primary underline underline-offset-2"
-              >
-                Run #{latestRun.id}
-              </Link>
-            </span>
-          </div>
-          <dl className="grid gap-2 text-sm sm:grid-cols-2">
-            <div>
-              <dt className="text-muted-foreground">Started</dt>
-              <dd>{formatHealthTimestamp(latestRun.startedAt)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Finalized</dt>
-              <dd>{formatHealthTimestamp(latestRun.finalizedAt)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Current step index</dt>
-              <dd>{latestRun.currentStepIndex}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Account type</dt>
-              <dd className="capitalize">{latestRun.accountType}</dd>
-            </div>
-          </dl>
-          {latestRun.failureReason && (
-            <p className="mt-2 text-sm text-red-800">
-              {latestRun.failureReason}
-            </p>
-          )}
-          {latestEmpty.isEmptyResult && (
-            <p className="mt-2 text-sm text-sky-900">
-              {EMPTY_RUN_RESULT_LABEL}
-              {latestEmpty.reasonDisplay
-                ? `: ${latestEmpty.reasonDisplay}`
-                : ""}
-            </p>
-          )}
-          {blockingLine && (
-            <p className="mt-2 rounded bg-amber-50 px-3 py-2 text-sm text-amber-950 border border-amber-200">
-              <strong>Blocking:</strong> {blockingLine}
-            </p>
-          )}
-          <p className="mt-3 text-xs text-muted-foreground">
-            Expand <strong>Latest run — workflow</strong> below for step detail.
-          </p>
-        </div>
-      )}
-    </SectionContainer>
+      <LiveSnapshotMetricStrip items={statusMetrics} columns={5} />
+    </div>
   );
 }
