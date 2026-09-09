@@ -1,23 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import type { ReactNode } from "react";
 import {
-  AlertTriangle,
   ArrowRight,
   Boxes,
   DatabaseZap,
   Layers3,
-  ListFilter,
   MessageSquareWarning,
   Network,
   Tags,
-  Target,
 } from "lucide-react";
+import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
 import type { NotificationHealthData } from "@/types/notificationHealth";
 import type { NotificationIssuesLinkQuery } from "@/types/notificationIssues";
 import { formatDurationNoMillis } from "@/utils/chart-formatters";
@@ -32,104 +32,49 @@ interface NotificationHealthDetailPanelsProps {
 interface RankedPanelProps {
   title: string;
   description: string;
-  icon: ReactNode;
   rows: { key: string; count: number }[];
   emptyMessage: string;
   getRowHref?: (key: string) => string;
-  tone: RankedPanelTone;
+  barClassName?: string;
+  countBadgeClassName?: string;
 }
 
-type RankedPanelTone =
-  "amber" | "blue" | "violet" | "emerald" | "cyan" | "indigo" | "red" | "rose";
-
-const rankedPanelTones: Record<
-  RankedPanelTone,
-  { border: string; icon: string; bar: string; count: string }
-> = {
-  amber: {
-    border: "border-t-warning-400",
-    icon: "bg-warning-50 text-warning-700",
-    bar: "bg-warning-100/80",
-    count: "border-warning-200 bg-warning-50 text-warning-800",
-  },
-  blue: {
-    border: "border-t-info-400",
-    icon: "bg-info-50 text-info-700",
-    bar: "bg-info-100/80",
-    count: "border-info-200 bg-info-50 text-info-800",
-  },
-  violet: {
-    border: "border-t-violet-400",
-    icon: "bg-violet-50 text-violet-700",
-    bar: "bg-violet-100/80",
-    count: "border-violet-200 bg-violet-50 text-violet-800",
-  },
-  emerald: {
-    border: "border-t-success-400",
-    icon: "bg-success-50 text-success-700",
-    bar: "bg-success-100/80",
-    count: "border-success-200 bg-success-50 text-success-800",
-  },
-  cyan: {
-    border: "border-t-cyan-400",
-    icon: "bg-cyan-50 text-cyan-700",
-    bar: "bg-cyan-100/80",
-    count: "border-cyan-200 bg-cyan-50 text-cyan-800",
-  },
-  indigo: {
-    border: "border-t-indigo-400",
-    icon: "bg-indigo-50 text-indigo-700",
-    bar: "bg-indigo-100/80",
-    count: "border-indigo-200 bg-indigo-50 text-indigo-800",
-  },
-  red: {
-    border: "border-t-error-400",
-    icon: "bg-error-50 text-error-700",
-    bar: "bg-error-100/80",
-    count: "border-error-200 bg-error-50 text-error-800",
-  },
-  rose: {
-    border: "border-t-rose-400",
-    icon: "bg-rose-50 text-rose-700",
-    bar: "bg-rose-100/80",
-    count: "border-rose-200 bg-rose-50 text-rose-800",
-  },
-};
+const diagnosticTabs = [
+  { value: "pipeline", label: "Pipeline", icon: Network },
+  { value: "data-area", label: "Data area", icon: Boxes },
+  { value: "classification", label: "Classification", icon: Tags },
+  { value: "messages", label: "Messages", icon: MessageSquareWarning },
+] as const;
 
 function RankedPanel({
   title,
   description,
-  icon,
   rows,
   emptyMessage,
   getRowHref,
-  tone,
+  barClassName = "bg-slate-100/80",
+  countBadgeClassName = "border-slate-200 bg-slate-50 text-slate-700",
 }: RankedPanelProps) {
   const total = rows.reduce((sum, row) => sum + row.count, 0);
   const max = rows[0]?.count ?? 0;
-  const palette = rankedPanelTones[tone];
 
   return (
-    <Card
-      className={`border-slate-200 border-t-2 shadow-none ${palette.border}`}
+    <OverviewRecordPanel
+      title={title}
+      description={description}
+      badge={
+        total > 0 ? (
+          <span
+            className={`rounded-full border px-2 py-0.5 text-xs font-medium ${countBadgeClassName}`}
+          >
+            {total.toLocaleString()} total
+          </span>
+        ) : null
+      }
     >
-      <CardHeader className="p-4 pb-3">
-        <div className="flex items-start gap-3">
-          <div className={`rounded-md p-2 ${palette.icon}`}>{icon}</div>
-          <div className="min-w-0 flex-1">
-            <CardTitle className="text-base">{title}</CardTitle>
-            <p className="mt-1 text-xs text-muted-foreground">{description}</p>
-          </div>
-          {total > 0 ? (
-            <Badge variant="outline" className={palette.count}>
-              {total.toLocaleString()} total
-            </Badge>
-          ) : null}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-1 px-4 pb-4 pt-0">
-        {rows.length > 0 ? (
-          rows.slice(0, 8).map((row) => {
+      {rows.length > 0 ? (
+        <div className="space-y-1">
+          {rows.slice(0, 8).map((row) => {
             const percent =
               total > 0 ? Math.round((row.count / total) * 100) : 0;
             const width = max > 0 ? Math.max((row.count / max) * 100, 3) : 0;
@@ -137,7 +82,7 @@ function RankedPanel({
             const content = (
               <div className="group relative overflow-hidden rounded-md border border-transparent px-3 py-2.5 transition hover:border-slate-200 hover:bg-slate-50">
                 <div
-                  className={`absolute inset-y-0 left-0 transition ${palette.bar}`}
+                  className={`absolute inset-y-0 left-0 transition ${barClassName}`}
                   style={{ width: `${width}%` }}
                 />
                 <div className="relative flex items-center gap-3">
@@ -145,7 +90,7 @@ function RankedPanel({
                     {row.key}
                   </div>
                   <div className="flex shrink-0 items-center gap-2 text-right">
-                    <Badge variant="outline" className={palette.count}>
+                    <Badge variant="outline" className={countBadgeClassName}>
                       {row.count.toLocaleString()}
                     </Badge>
                     <span className="inline-block w-[72px] text-xs tabular-nums text-muted-foreground">
@@ -166,37 +111,33 @@ function RankedPanel({
             ) : (
               <div key={row.key}>{content}</div>
             );
-          })
-        ) : (
-          <div className="rounded-md border border-dashed border-slate-200 py-8 text-center text-sm text-muted-foreground">
-            {emptyMessage}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+          })}
+        </div>
+      ) : (
+        <div className="rounded-md border border-dashed border-slate-200 py-8 text-center text-sm text-muted-foreground">
+          {emptyMessage}
+        </div>
+      )}
+    </OverviewRecordPanel>
   );
 }
 
-function ImpactCard({
+function ImpactPanel({
   title,
   description,
-  icon,
   total,
   succeeded,
   failed,
   retried,
   duration,
-  accent,
 }: {
   title: string;
   description: string;
-  icon: ReactNode;
   total: number;
   succeeded: number;
   failed: number;
   retried?: number;
   duration?: string;
-  accent: "blue" | "indigo";
 }) {
   const denominator = total > 0 ? total : succeeded + failed;
   const succeededPercent =
@@ -207,18 +148,6 @@ function ImpactCard({
       : 0;
   const unreportedPercent = Math.max(0, 100 - succeededPercent - failedPercent);
   const successRate = denominator > 0 ? succeeded / denominator : null;
-  const accentClasses =
-    accent === "blue"
-      ? {
-          border: "border-t-info-400",
-          icon: "bg-info-50 text-info-700",
-          badge: "border-info-200 bg-info-50 text-info-800",
-        }
-      : {
-          border: "border-t-indigo-400",
-          icon: "bg-indigo-50 text-indigo-700",
-          badge: "border-indigo-200 bg-indigo-50 text-indigo-800",
-        };
   const metrics = [
     { label: "Total", value: total, tone: "text-slate-900" },
     { label: "Succeeded", value: succeeded, tone: "text-success-700" },
@@ -232,22 +161,19 @@ function ImpactCard({
   ];
 
   return (
-    <Card
-      className={`border-slate-200 border-t-2 shadow-none ${accentClasses.border}`}
+    <OverviewRecordPanel
+      title={title}
+      description={description}
+      badge={
+        <Badge
+          variant="outline"
+          className="border-slate-200 bg-slate-50 text-slate-700"
+        >
+          {formatRate(successRate)} success
+        </Badge>
+      }
     >
-      <CardHeader className="p-4 pb-3">
-        <div className="flex items-start gap-3">
-          <div className={`rounded-md p-2 ${accentClasses.icon}`}>{icon}</div>
-          <div className="min-w-0 flex-1">
-            <CardTitle className="text-base">{title}</CardTitle>
-            <p className="mt-1 text-xs text-muted-foreground">{description}</p>
-          </div>
-          <Badge variant="outline" className={accentClasses.badge}>
-            {formatRate(successRate)} success
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-5 px-4 pb-4 pt-0">
+      <div className="space-y-5">
         <div>
           <div
             className="flex h-3 w-full overflow-hidden rounded-full bg-slate-100"
@@ -312,8 +238,8 @@ function ImpactCard({
             </div>
           ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </OverviewRecordPanel>
   );
 }
 
@@ -345,6 +271,7 @@ export function NotificationHealthDetailPanels({
         title="Diagnostic breakdown"
         description="Ranked failure concentrations. Select a row to open the matching issue filter."
         icon={<Layers3 className="h-6 w-6 text-slate-600" />}
+        variant="compact"
         action={
           <div className="hidden items-center gap-2 sm:flex">
             <Badge
@@ -363,121 +290,112 @@ export function NotificationHealthDetailPanels({
         }
       >
         <Tabs defaultValue="pipeline" className="w-full">
-          <TabsList className="h-auto w-full justify-start overflow-x-auto rounded-none border-b bg-transparent p-0">
-            <TabsTrigger
-              value="pipeline"
-              className="gap-2 rounded-none border-b-2 border-transparent px-4 py-2.5 data-[state=active]:border-info-600 data-[state=active]:bg-info-50 data-[state=active]:text-info-800 data-[state=active]:shadow-none"
-            >
-              <Network className="h-4 w-4" />
-              Pipeline
-            </TabsTrigger>
-            <TabsTrigger
-              value="data-area"
-              className="gap-2 rounded-none border-b-2 border-transparent px-4 py-2.5 data-[state=active]:border-success-600 data-[state=active]:bg-success-50 data-[state=active]:text-success-800 data-[state=active]:shadow-none"
-            >
-              <Boxes className="h-4 w-4" />
-              Data area
-            </TabsTrigger>
-            <TabsTrigger
-              value="classification"
-              className="gap-2 rounded-none border-b-2 border-transparent px-4 py-2.5 data-[state=active]:border-indigo-600 data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-800 data-[state=active]:shadow-none"
-            >
-              <Tags className="h-4 w-4" />
-              Classification
-            </TabsTrigger>
-            <TabsTrigger
-              value="messages"
-              className="gap-2 rounded-none border-b-2 border-transparent px-4 py-2.5 data-[state=active]:border-rose-600 data-[state=active]:bg-rose-50 data-[state=active]:text-rose-800 data-[state=active]:shadow-none"
-            >
-              <MessageSquareWarning className="h-4 w-4" />
-              Messages
-            </TabsTrigger>
-          </TabsList>
+          <div className="pb-8">
+            <TabsList variant="primary" className={sectionTabListClass}>
+              {diagnosticTabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    variant="section"
+                    className={sectionTabTriggerClass}
+                  >
+                    <Icon
+                      className="h-4 w-4 shrink-0 text-current"
+                      aria-hidden
+                    />
+                    {tab.label}
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </div>
 
-          <TabsContent value="pipeline" className="mt-4">
+          <TabsContent value="pipeline" className="mt-0">
             <div className="grid gap-4 lg:grid-cols-3">
               <RankedPanel
                 title="Failure steps"
                 description="Where issue handling stopped"
-                icon={<ListFilter className="h-4 w-4" />}
                 rows={byStepRows}
-                tone="amber"
+                barClassName="bg-warning-100/80"
+                countBadgeClassName="border-warning-200 bg-warning-50 text-warning-800"
                 emptyMessage="No failure-step data"
                 getRowHref={hrefFor("step")}
               />
               <RankedPanel
                 title="Services"
                 description="Services emitting notifications"
-                icon={<DatabaseZap className="h-4 w-4" />}
                 rows={byServiceRows}
-                tone="blue"
+                barClassName="bg-info-100/80"
+                countBadgeClassName="border-info-200 bg-info-50 text-info-800"
                 emptyMessage="No service data"
                 getRowHref={hrefFor("service")}
               />
               <RankedPanel
                 title="Queues"
                 description="Queues associated with failures"
-                icon={<Network className="h-4 w-4" />}
                 rows={byQueueRows}
-                tone="violet"
+                barClassName="bg-violet-100/80"
+                countBadgeClassName="border-violet-200 bg-violet-50 text-violet-800"
                 emptyMessage="No queue data"
                 getRowHref={hrefFor("queueName")}
               />
             </div>
           </TabsContent>
 
-          <TabsContent value="data-area" className="mt-4">
+          <TabsContent value="data-area" className="mt-0">
             <div className="grid gap-4 lg:grid-cols-2">
               <RankedPanel
                 title="Notification scope"
                 description="Broad scraper domains reporting failures"
-                icon={<Boxes className="h-4 w-4" />}
                 rows={byScopeRows}
-                tone="emerald"
+                barClassName="bg-success-100/80"
+                countBadgeClassName="border-success-200 bg-success-50 text-success-800"
                 emptyMessage="No notification-scope data"
                 getRowHref={hrefFor("scope")}
               />
               <RankedPanel
                 title="Issue scope"
                 description="Granular domains attached to issue rows"
-                icon={<Target className="h-4 w-4" />}
                 rows={byIssueScopeRows}
-                tone="cyan"
+                barClassName="bg-cyan-100/80"
+                countBadgeClassName="border-cyan-200 bg-cyan-50 text-cyan-800"
                 emptyMessage="No issue-scope data"
                 getRowHref={hrefFor("issueScope")}
               />
             </div>
           </TabsContent>
 
-          <TabsContent value="classification" className="mt-4">
+          <TabsContent value="classification" className="mt-0">
             <div className="grid gap-4 lg:grid-cols-2">
               <RankedPanel
                 title="Notification kinds"
                 description="Event types recorded by the notification feed"
-                icon={<Tags className="h-4 w-4" />}
                 rows={byKindRows}
-                tone="indigo"
+                barClassName="bg-indigo-100/80"
+                countBadgeClassName="border-indigo-200 bg-indigo-50 text-indigo-800"
                 emptyMessage="No notification-kind data"
                 getRowHref={hrefFor("kind")}
               />
               <RankedPanel
                 title="Issue severity"
                 description="Severity assigned to flattened issue rows"
-                icon={<AlertTriangle className="h-4 w-4" />}
                 rows={bySeverityRows}
-                tone="red"
+                barClassName="bg-error-100/80"
+                countBadgeClassName="border-error-200 bg-error-50 text-error-800"
                 emptyMessage="No severity data"
               />
             </div>
           </TabsContent>
 
-          <TabsContent value="messages" className="mt-4">
+          <TabsContent value="messages" className="mt-0">
             <RankedPanel
               title="Top messages"
               description="Repeated failure messages in the selected date range"
-              icon={<MessageSquareWarning className="h-4 w-4" />}
               rows={messageRows}
-              tone="rose"
+              barClassName="bg-rose-100/80"
+              countBadgeClassName="border-rose-200 bg-rose-50 text-rose-800"
               emptyMessage="No failure messages"
               getRowHref={hrefFor("message")}
             />
@@ -492,25 +410,21 @@ export function NotificationHealthDetailPanels({
         variant="compact"
       >
         <div className="grid gap-4 lg:grid-cols-2">
-          <ImpactCard
+          <ImpactPanel
             title="Fixture impact"
             description="Fixture processing reported by failing runs"
-            icon={<Boxes className="h-4 w-4" />}
             total={sums.fixturesTotal}
             succeeded={sums.fixturesSucceeded}
             failed={sums.fixturesFailed}
             duration={formatDurationNoMillis(sums.durationMs)}
-            accent="blue"
           />
-          <ImpactCard
+          <ImpactPanel
             title="Ingest impact"
             description="Downstream ingest outcomes reported by failing runs"
-            icon={<DatabaseZap className="h-4 w-4" />}
             total={sums.ingest_total}
             succeeded={sums.ingest_success}
             failed={sums.ingest_failed}
             retried={sums.ingest_retried}
-            accent="indigo"
           />
         </div>
       </SectionContainer>

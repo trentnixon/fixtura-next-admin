@@ -4,14 +4,13 @@ import { useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  Bell,
-  CheckCircle2,
   Gauge,
   RefreshCw,
 } from "lucide-react";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useScraperLogByJobId } from "@/hooks/data-collection/useScraperLogByJobId";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
@@ -26,19 +25,29 @@ import {
 import { cn } from "@/lib/utils";
 import { formatScopePageHeading } from "../../utils/formatScopePageHeading";
 import type { LogEntry } from "@/types/scraperLogs";
-import { findLatestCompletedEntry } from "../utils/jobLogPayloadUtils";
-import { JobDetailHeader } from "./JobDetailHeader";
-import { JobRunOverview } from "./JobRunOverview";
 import {
-  NotificationByRunSection,
-  type NotificationByRunIdSource,
+  findLatestCompletedEntry,
+  parseJobCompletedEntry,
+} from "../utils/jobLogPayloadUtils";
+import { JobDetailHeader } from "./JobDetailHeader";
+import {
+  completionIssueCount,
+  JobCompletionMissingState,
+  JobCompletionTabPanel,
+  jobCompletionTabs,
+  type JobCompletionDetailTab,
+} from "./JobCompletedVisualBlock";
+import { JobRunOverview, ScraperLogTruncationNotice } from "./JobRunOverview";
+import {
+  NotificationMetadataSection,
+  NotificationMetricsSection,
+  NotificationOverviewSection,
 } from "./NotificationByRunSection";
 import { ScraperArtifactDebugSection } from "./ScraperArtifactDebugSection";
 
 const jobTabs = [
   { value: "overview", label: "Overview", icon: Gauge },
-  { value: "completion", label: "Completion", icon: CheckCircle2 },
-  { value: "notification", label: "Notification", icon: Bell },
+  ...jobCompletionTabs,
 ] as const;
 
 function humanizeJobStatus(status: string): string {
@@ -62,18 +71,85 @@ function resolveRunIdForNotification(
   runIdFromSearch: string | null | undefined,
   jobRunId: string | null | undefined,
   entries: LogEntry[],
-): {
-  runId: string | undefined;
-  source: NotificationByRunIdSource | undefined;
-} {
+): string | undefined {
   const q = runIdFromSearch?.trim();
-  if (q) return { runId: q, source: "query" };
+  if (q) return q;
   const j = jobRunId?.trim();
-  if (j) return { runId: j, source: "job" };
+  if (j) return j;
   const completed = findLatestCompletedEntry(entries);
-  const c = completed?.runId?.trim();
-  if (c) return { runId: c, source: "completed" };
-  return { runId: undefined, source: undefined };
+  return completed?.runId?.trim() || undefined;
+}
+
+function JobCompletionTabContent({
+  tab,
+  completedEntry,
+  entryCount,
+  jobId,
+  notificationRunId,
+}: {
+  tab: JobCompletionDetailTab;
+  completedEntry: LogEntry | null;
+  entryCount: number;
+  jobId: string;
+  notificationRunId: string | undefined;
+}) {
+  const hasCompletionMetrics =
+    completedEntry != null &&
+    parseJobCompletedEntry(completedEntry).metrics != null;
+
+  if (!completedEntry) {
+    return (
+      <div className="space-y-6">
+        <ScraperLogTruncationNotice entryCount={entryCount} />
+        <JobCompletionMissingState />
+        {tab === "metrics" ? (
+          <NotificationMetricsSection
+            jobId={jobId}
+            runId={notificationRunId}
+            hasCompletionMetrics={false}
+          />
+        ) : null}
+        {tab === "metadata" ? (
+          <>
+            <NotificationMetadataSection
+              jobId={jobId}
+              runId={notificationRunId}
+            />
+            <ScraperArtifactDebugSection
+              jobId={jobId}
+              highlightRunId={notificationRunId}
+            />
+          </>
+        ) : null}
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <ScraperLogTruncationNotice entryCount={entryCount} />
+      <JobCompletionTabPanel entry={completedEntry} tab={tab} />
+      {tab === "metrics" ? (
+        <NotificationMetricsSection
+          jobId={jobId}
+          runId={notificationRunId}
+          hasCompletionMetrics={hasCompletionMetrics}
+        />
+      ) : null}
+      {tab === "metadata" ? (
+        <>
+          <NotificationMetadataSection
+            jobId={jobId}
+            runId={notificationRunId}
+          />
+          <ScraperArtifactDebugSection
+            jobId={jobId}
+            highlightRunId={notificationRunId ?? completedEntry.runId}
+          />
+        </>
+      ) : null}
+    </div>
+  );
 }
 
 export function ScraperJobDetailClient({
@@ -83,7 +159,7 @@ export function ScraperJobDetailClient({
   const { data, isLoading, error, refetch, isFetching } =
     useScraperLogByJobId(jobId);
 
-  const notificationRun = useMemo(
+  const notificationRunId = useMemo(
     () =>
       data
         ? resolveRunIdForNotification(
@@ -91,9 +167,16 @@ export function ScraperJobDetailClient({
             data.job.runId,
             data.entries,
           )
-        : { runId: undefined, source: undefined },
+        : undefined,
     [data, runIdFromSearch],
   );
+
+  const completedEntry = useMemo(
+    () => (data ? findLatestCompletedEntry(data.entries) : null),
+    [data],
+  );
+
+  const issueCount = completedEntry ? completionIssueCount(completedEntry) : 0;
 
   const pageTitle = data?.job
     ? formatScopePageHeading(data.job.scope)
@@ -205,12 +288,7 @@ export function ScraperJobDetailClient({
 
       <PageContainer padding="xs" spacing="lg">
         {data != null ? (
-          <Tabs
-            defaultValue={
-              runIdFromSearch?.trim() ? "notification" : "overview"
-            }
-            className="w-full"
-          >
+          <Tabs defaultValue="overview" className="w-full">
             <div className="pb-8">
               <TabsList variant="primary" className={sectionTabListClass}>
                 {jobTabs.map((tab) => {
@@ -227,6 +305,14 @@ export function ScraperJobDetailClient({
                         aria-hidden
                       />
                       {tab.label}
+                      {tab.value === "issues" && issueCount > 0 ? (
+                        <Badge
+                          variant="outline"
+                          className="ml-0.5 h-5 px-1.5 text-[10px] tabular-nums"
+                        >
+                          {issueCount.toLocaleString()}
+                        </Badge>
+                      ) : null}
                     </TabsTrigger>
                   );
                 })}
@@ -234,25 +320,41 @@ export function ScraperJobDetailClient({
             </div>
 
             <TabsContent value="overview" className="mt-0 space-y-6">
+              <ScraperLogTruncationNotice entryCount={data.entries.length} />
               <JobDetailHeader job={data.job} />
-              <JobRunOverview entries={data.entries} view="heartbeats" />
-              <ScraperArtifactDebugSection
+              {completedEntry ? (
+                <JobCompletionTabPanel
+                  entry={completedEntry}
+                  tab="summary"
+                />
+              ) : (
+                <JobCompletionMissingState />
+              )}
+              <JobRunOverview
+                entries={data.entries}
+                showTruncationNotice={false}
+              />
+              <NotificationOverviewSection
                 jobId={jobId}
-                highlightRunId={notificationRun.runId ?? data.job.runId}
+                runId={notificationRunId}
               />
             </TabsContent>
 
-            <TabsContent value="completion" className="mt-0">
-              <JobRunOverview entries={data.entries} view="completion" />
-            </TabsContent>
-
-            <TabsContent value="notification" className="mt-0">
-              <NotificationByRunSection
-                jobId={jobId}
-                runId={notificationRun.runId}
-                runIdSource={notificationRun.source}
-              />
-            </TabsContent>
+            {jobCompletionTabs.map((tab) => (
+              <TabsContent
+                key={tab.value}
+                value={tab.value}
+                className="mt-0"
+              >
+                <JobCompletionTabContent
+                  tab={tab.value}
+                  completedEntry={completedEntry}
+                  entryCount={data.entries.length}
+                  jobId={jobId}
+                  notificationRunId={notificationRunId}
+                />
+              </TabsContent>
+            ))}
           </Tabs>
         ) : null}
       </PageContainer>

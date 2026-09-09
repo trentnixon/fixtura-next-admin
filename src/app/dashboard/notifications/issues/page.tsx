@@ -1,6 +1,4 @@
 import { auth } from "@clerk/nextjs/server";
-import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
-import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import { NotificationIssuesClient } from "./components/NotificationIssuesClient";
 import type { NotificationIssuesSearchParamsInput } from "./utils/notificationIssuesUrl";
 
@@ -22,16 +20,5 @@ export default async function NotificationIssuesPage({
 
   const sp = searchParams != null ? await searchParams : {};
 
-  return (
-    <>
-      <CreatePageTitle
-        title="Notification issues"
-        byLine="Failure investigation inbox"
-        byLineBottom="Search issue signals, inspect operational context, and open the affected scraper run"
-      />
-      <PageContainer padding="xs" spacing="md">
-        <NotificationIssuesClient searchParams={sp} />
-      </PageContainer>
-    </>
-  );
+  return <NotificationIssuesClient searchParams={sp} />;
 }

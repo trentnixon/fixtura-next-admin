@@ -8,9 +8,11 @@ import {
   ImageIcon,
 } from "lucide-react";
 import { useGlobalContext } from "@/components/providers/GlobalContext";
+import EmptyState from "@/components/ui-library/states/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatScopeLabel } from "@/app/dashboard/data/utils/formatScrapeScope";
 import { cn } from "@/lib/utils";
 import { resolveStrapiMediaUrl } from "@/lib/utils/strapiMediaUrl";
@@ -78,7 +80,7 @@ function issueTone(row: NotificationIssueRow): {
   }
 }
 
-function ContextItem({
+function ContextDot({
   label,
   value,
   mono = false,
@@ -89,22 +91,24 @@ function ContextItem({
 }) {
   if (!value) return null;
   return (
-    <div className="inline-flex min-w-0 items-baseline gap-1 whitespace-nowrap">
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+    <span className="inline-flex min-w-0 items-center gap-1">
+      <span className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
         {label}
       </span>
       <span
         className={cn(
-          "max-w-[190px] truncate text-xs font-medium text-slate-700",
+          "max-w-[140px] truncate text-[11px] text-slate-700",
           mono && "font-mono",
         )}
         title={value}
       >
         {value}
       </span>
-    </div>
+    </span>
   );
 }
+
+const badgeCompactClass = "h-5 px-1.5 py-0 text-[10px] font-medium";
 
 export function NotificationIssuesList({
   issues,
@@ -116,185 +120,210 @@ export function NotificationIssuesList({
 
   if (issues.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50/60 px-5 py-12 text-center">
-        <AlertTriangle className="mx-auto h-7 w-7 text-slate-400" />
-        <p className="mt-3 text-sm font-medium text-slate-700">
-          No matching issue rows
-        </p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          No failure notifications matched this date range and filter set. This
-          is not proof that every scrape succeeded.
-        </p>
-      </div>
+      <EmptyState
+        variant="minimal"
+        title="No matching issue rows"
+        description="No failure notifications matched this date range and filter set. This is not proof that every scrape succeeded."
+        icon={<AlertTriangle className="h-8 w-8 text-muted-foreground" />}
+      />
     );
   }
 
   return (
-    <div className="space-y-3">
-      {issues.map((row) => {
-        const href = rowHref(row);
-        const key = `${row.notification.id}-${row.issueIndex}`;
-        const when = formatIssueWhen(row.notification.createdAt);
-        const page = row.url ? formatIssueUrl(row.url) : null;
-        const tone = issueTone(row);
-        const artifact = includeArtifacts
-          ? pickIssueScreenshotArtifact(row.artifacts)
-          : null;
-        const imageUrl = resolveStrapiMediaUrl(artifact?.fileUrl, cmsOrigin);
+    <ScrollArea className="h-[min(65vh,640px)]">
+      <div className="space-y-2 pr-3">
+        {issues.map((row) => {
+          const href = rowHref(row);
+          const key = `${row.notification.id}-${row.issueIndex}`;
+          const when = formatIssueWhen(row.notification.createdAt);
+          const page = row.url ? formatIssueUrl(row.url) : null;
+          const tone = issueTone(row);
+          const artifact = includeArtifacts
+            ? pickIssueScreenshotArtifact(row.artifacts)
+            : null;
+          const imageUrl = resolveStrapiMediaUrl(artifact?.fileUrl, cmsOrigin);
 
-        return (
-          <Card
-            key={key}
-            className={cn(
-              "overflow-hidden border-l-4 border-slate-200 shadow-none transition hover:border-slate-300 hover:shadow-sm",
-              tone.border,
-            )}
-          >
-            <CardContent className="p-0">
-              <div className="grid lg:grid-cols-[minmax(0,1fr)_180px]">
-                <div className="min-w-0 p-3.5">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant="outline" className={tone.severity}>
-                        {tone.severityLabel}
-                      </Badge>
-                      <Badge
-                        variant={stepBadgeVariant(row.step)}
-                        className="font-mono text-[10px] font-medium uppercase tracking-wide"
+          return (
+            <Card
+              key={key}
+              className={cn(
+                "overflow-hidden border-l-[3px] border-slate-200 shadow-none transition hover:border-slate-300",
+                tone.border,
+              )}
+            >
+              <CardContent className="p-0">
+                <div
+                  className={cn(
+                    "grid",
+                    includeArtifacts
+                      ? "lg:grid-cols-[minmax(0,1fr)_108px]"
+                      : "grid-cols-1",
+                  )}
+                >
+                  <div className="min-w-0 px-2.5 py-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-1">
+                        <Badge
+                          variant="outline"
+                          className={cn(badgeCompactClass, tone.severity)}
+                        >
+                          {tone.severityLabel}
+                        </Badge>
+                        <Badge
+                          variant={stepBadgeVariant(row.step)}
+                          className={cn(
+                            badgeCompactClass,
+                            "font-mono uppercase tracking-wide",
+                          )}
+                        >
+                          {formatStepLabel(row.step)}
+                        </Badge>
+                        {row.retryable ? (
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              badgeCompactClass,
+                              "border-info-200 bg-info-50 text-info-800",
+                            )}
+                          >
+                            Retry
+                          </Badge>
+                        ) : null}
+                        {row.selectorDriftSignal ? (
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              badgeCompactClass,
+                              "border-violet-200 bg-violet-50 text-violet-800",
+                            )}
+                          >
+                            Drift
+                          </Badge>
+                        ) : null}
+                        {row.fixtureKey ? (
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              badgeCompactClass,
+                              "max-w-[160px] truncate border-slate-200 bg-slate-50 font-mono text-slate-700",
+                            )}
+                            title={row.fixtureKey}
+                          >
+                            {row.fixtureKey}
+                          </Badge>
+                        ) : null}
+                      </div>
+
+                      <span
+                        className="hidden shrink-0 text-[11px] text-muted-foreground sm:inline"
+                        title={when.title || undefined}
                       >
-                        {formatStepLabel(row.step)}
-                      </Badge>
-                      {row.retryable ? (
-                        <Badge
+                        {when.label}
+                      </span>
+
+                      {href ? (
+                        <Button
+                          type="button"
                           variant="outline"
-                          className="border-info-200 bg-info-50 text-info-800"
+                          size="sm"
+                          className="h-6 shrink-0 gap-1 px-2 text-[11px] border-slate-200 bg-slate-50 text-slate-700 shadow-none hover:bg-slate-100 hover:text-slate-900"
+                          onClick={() => router.push(href)}
                         >
-                          Retryable
-                        </Badge>
-                      ) : null}
-                      {row.selectorDriftSignal ? (
-                        <Badge
-                          variant="outline"
-                          className="border-violet-200 bg-violet-50 text-violet-800"
-                        >
-                          Selector drift
-                        </Badge>
-                      ) : null}
-                      {row.fixtureKey ? (
-                        <Badge
-                          variant="outline"
-                          className="max-w-[220px] truncate border-slate-200 bg-slate-50 font-mono text-slate-700"
-                          title={row.fixtureKey}
-                        >
-                          Fixture: {row.fixtureKey}
-                        </Badge>
+                          Run
+                          <ArrowRight className="h-3 w-3" />
+                        </Button>
                       ) : null}
                     </div>
-                    <span
-                      className="shrink-0 text-xs font-medium text-muted-foreground"
-                      title={when.title || undefined}
+
+                    <p
+                      className="mt-1 line-clamp-1 text-sm font-medium leading-tight text-slate-900"
+                      title={row.message ?? undefined}
                     >
-                      {when.label}
-                    </span>
-                  </div>
+                      {row.message ?? "No issue message supplied"}
+                    </p>
 
-                  <p
-                    className="mt-2 text-sm font-semibold leading-snug text-slate-900"
-                    title={row.message ?? undefined}
-                  >
-                    {row.message ?? "No issue message supplied"}
-                  </p>
-
-                  {page ? (
-                    <a
-                      href={row.url!}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-2 inline-flex max-w-full items-center gap-1.5 text-xs text-info-700 hover:underline"
-                      title={page.title}
-                    >
-                      <span className="truncate">{page.label}</span>
-                      <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                    </a>
-                  ) : null}
-
-                  <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-md border border-slate-200 bg-slate-50/70 px-3 py-2.5">
-                    <ContextItem
-                      label="Service"
-                      value={row.notification.service}
-                      mono
-                    />
-                    <ContextItem
-                      label="Scope"
-                      value={
-                        row.notification.scope
-                          ? formatScopeLabel(row.notification.scope)
-                          : null
-                      }
-                    />
-                    <ContextItem
-                      label="Queue"
-                      value={row.notification.queueName}
-                      mono
-                    />
-                    <ContextItem
-                      label="Kind"
-                      value={row.notification.kind}
-                      mono
-                    />
-                    <ContextItem
-                      label="Issue scope"
-                      value={row.issueScope}
-                      mono
-                    />
-                    {href ? (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="ml-auto h-7 shrink-0 gap-1.5 px-2.5"
-                        onClick={() => router.push(href)}
-                      >
-                        Open run
-                        <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-
-                {includeArtifacts ? (
-                  <div className="flex min-h-[112px] items-center justify-center border-t border-slate-200 bg-slate-50 p-3 lg:border-l lg:border-t-0">
-                    {imageUrl ? (
+                    {page ? (
                       <a
-                        href={imageUrl}
+                        href={row.url!}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group relative block w-full overflow-hidden rounded-md border border-slate-200 bg-white"
+                        className="mt-0.5 inline-flex max-w-full items-center gap-1 text-[11px] text-info-700 hover:underline"
+                        title={page.title}
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={imageUrl}
-                          alt="Issue screenshot"
-                          className="h-24 w-full object-cover transition group-hover:scale-[1.02]"
-                          loading="lazy"
-                        />
-                        <span className="absolute bottom-1.5 right-1.5 rounded bg-slate-950/75 px-1.5 py-0.5 text-[10px] text-white">
-                          Open evidence
-                        </span>
+                        <span className="truncate">{page.label}</span>
+                        <ExternalLink className="h-3 w-3 shrink-0" />
                       </a>
-                    ) : (
-                      <div className="text-center text-slate-400">
-                        <ImageIcon className="mx-auto h-5 w-5" />
-                        <div className="mt-1 text-[11px]">No screenshot</div>
-                      </div>
-                    )}
+                    ) : null}
+
+                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 divide-x-0 text-[11px]">
+                      <ContextDot
+                        label="Svc"
+                        value={row.notification.service}
+                        mono
+                      />
+                      <ContextDot
+                        label="Scope"
+                        value={
+                          row.notification.scope
+                            ? formatScopeLabel(row.notification.scope)
+                            : null
+                        }
+                      />
+                      <ContextDot
+                        label="Queue"
+                        value={row.notification.queueName}
+                        mono
+                      />
+                      <ContextDot
+                        label="Kind"
+                        value={row.notification.kind}
+                        mono
+                      />
+                      <ContextDot
+                        label="Issue"
+                        value={row.issueScope}
+                        mono
+                      />
+                      <span
+                        className="text-[11px] text-muted-foreground sm:hidden"
+                        title={when.title || undefined}
+                      >
+                        {when.label}
+                      </span>
+                    </div>
                   </div>
-                ) : null}
-              </div>
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
+
+                  {includeArtifacts ? (
+                    <div className="flex items-center justify-center border-t border-slate-100 bg-slate-50/80 p-1.5 lg:border-l lg:border-t-0">
+                      {imageUrl ? (
+                        <a
+                          href={imageUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group relative block w-full overflow-hidden rounded border border-slate-200 bg-white"
+                        >
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={imageUrl}
+                            alt="Issue screenshot"
+                            className="h-14 w-full object-cover transition group-hover:scale-[1.02]"
+                            loading="lazy"
+                          />
+                        </a>
+                      ) : (
+                        <div className="flex flex-col items-center text-slate-400">
+                          <ImageIcon className="h-4 w-4" />
+                          <span className="text-[10px]">None</span>
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </ScrollArea>
   );
 }

@@ -33,9 +33,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   sectionTabListClass,
   sectionTabTriggerClass,
-  siteNavigationCtaClass,
 } from "@/lib/actions/siteNavigationButtonStyles";
-import { cn } from "@/lib/utils";
 import { CLUB_SCRAPE_SPORTS } from "@/constants/clubScrapeSportSlugs";
 import type { ClubScrapeSportSlug } from "@/constants/clubScrapeSportSlugs";
 import { triggerAssociationCompetitionRefresh } from "@/lib/services/data-collection/triggerAssociationCompetitionRefresh";
@@ -299,9 +297,9 @@ export function ScraperLogsSectionWithScopeSelector() {
                 splitOverviewAction={
                   config.hasTrigger ? (
                     <Button
-                      variant="ghost"
+                      variant="accent"
                       size="sm"
-                      className={cn(siteNavigationCtaClass, "shrink-0")}
+                      className="shrink-0"
                       onClick={() => {
                         setSportSlugForDialog(null);
                         setDialogOpenFor(item.value as TriggerableScope);

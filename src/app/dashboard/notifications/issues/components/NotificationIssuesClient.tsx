@@ -1,31 +1,32 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   AlertTriangle,
   ArrowLeft,
-  Bug,
+  BarChart3,
   ChevronDown,
   ImageIcon,
+  List,
   ListFilter,
-  RadioTower,
   RefreshCw,
   RotateCcw,
   Search,
   SlidersHorizontal,
   X,
 } from "lucide-react";
+import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
+import {
+  OverviewDataWorkspace,
+  type WorkspaceMetricTile,
+} from "@/app/dashboard/components/live-snapshot/OverviewDataWorkspace";
+import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
+import { LabeledSegmentedControl } from "@/components/ui-library/forms/LabeledSegmentedControl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
@@ -40,17 +41,18 @@ import {
   PaginationPages,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import { useNotificationIssues } from "@/hooks/data-collection/useNotificationIssues";
+import {
+  sectionTabListInverseClass,
+  sectionTabTriggerInverseClass,
+  siteNavigationGroupDividerClass,
+  siteNavigationGroupItemClass,
+  siteNavigationGroupShellClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
 import { cn } from "@/lib/utils";
 import type { NotificationHealthPresetDays } from "@/types/notificationHealth";
 import {
@@ -65,20 +67,16 @@ import {
   type NotificationIssuesSearchParamsInput,
 } from "../utils/notificationIssuesUrl";
 import { pickIssueScreenshotArtifact } from "../utils/notificationIssuesTableUi";
+import { NotificationIssuesCharts } from "./NotificationIssuesCharts";
 import { NotificationIssuesList } from "./NotificationIssuesList";
+
+const ISSUES_VIEW_TABS = [
+  { value: "list", label: "List", icon: List },
+  { value: "charts", label: "Charts", icon: BarChart3 },
+] as const;
 
 export interface NotificationIssuesClientProps {
   searchParams: NotificationIssuesSearchParamsInput;
-}
-
-interface SummaryCardProps {
-  label: string;
-  value: number;
-  meta: string;
-  icon: ReactNode;
-  tone: string;
-  selected?: boolean;
-  onClick?: () => void;
 }
 
 function firstParam(value: string | string[] | undefined): string | undefined {
@@ -90,51 +88,10 @@ function toDateInputFromIso(iso: string | undefined): string {
   return iso ? iso.slice(0, 10) : "";
 }
 
-function SummaryCard({
-  label,
-  value,
-  meta,
-  icon,
-  tone,
-  selected = false,
-  onClick,
-}: SummaryCardProps) {
-  const content = (
-    <Card
-      className={cn(
-        "h-full border shadow-sm transition",
-        tone,
-        onClick && "hover:shadow-md",
-        selected && "ring-2 ring-offset-1",
-      )}
-    >
-      <CardContent className="flex min-h-[92px] items-center gap-3 p-3.5">
-        <div className="rounded-md bg-white/75 p-2">{icon}</div>
-        <div className="min-w-0 flex-1 text-left">
-          <div className="text-xs font-medium opacity-75">{label}</div>
-          <div className="text-xl font-bold leading-tight tabular-nums">
-            {value.toLocaleString()}
-          </div>
-          <div className="truncate text-xs opacity-75">{meta}</div>
-        </div>
-        {selected ? (
-          <Badge
-            className="border-current bg-white/80 text-current"
-            variant="outline"
-          >
-            Active
-          </Badge>
-        ) : null}
-      </CardContent>
-    </Card>
-  );
-
-  return onClick ? (
-    <button type="button" className="h-full w-full" onClick={onClick}>
-      {content}
-    </button>
-  ) : (
-    content
+function groupedItemClass(withDivider: boolean) {
+  return cn(
+    siteNavigationGroupItemClass,
+    withDivider && siteNavigationGroupDividerClass,
   );
 }
 
@@ -163,7 +120,10 @@ function TextFilter({
         key={value}
         defaultValue={value}
         placeholder={placeholder}
-        className={cn("text-sm", mono && "font-mono")}
+        className={cn(
+          "rounded-full border-transparent bg-white text-sm shadow-none",
+          mono && "font-mono",
+        )}
         onBlur={(event) => {
           if (event.target.value !== value) onApply(event.target.value);
         }}
@@ -248,6 +208,18 @@ export function NotificationIssuesClient({
       (row) => pickIssueScreenshotArtifact(row.artifacts)?.fileUrl,
     ).length;
   }, [data?.issues, includeArtifacts]);
+
+  const presetSegmentOptions = PRESET_OPTIONS.map((option) => ({
+    value: String(option.value),
+    label: `${option.value}d`,
+  }));
+
+  const pageSizeOptions = NOTIFICATION_ISSUES_PAGE_SIZE_OPTIONS.map(
+    (option) => ({
+      value: String(option),
+      label: String(option),
+    }),
+  );
 
   const dimensionFilters = [
     { key: "service", label: "Service", value: params.service, tone: "blue" },
@@ -368,526 +340,610 @@ export function NotificationIssuesClient({
     );
   };
 
-  return (
-    <div className="flex flex-col gap-5">
-      <Link
-        href="/dashboard/notifications"
-        className="inline-flex w-fit items-center gap-1 text-sm text-slate-600 hover:text-slate-900"
+  const metrics = useMemo((): WorkspaceMetricTile[] => {
+    if (!data) return [];
+    return [
+      {
+        id: "total-issues",
+        label: "Total issues",
+        value: (pagination?.totalIssues ?? 0).toLocaleString(),
+        meta: "Matching issue rows",
+      },
+      {
+        id: "notifications",
+        label: "Notifications",
+        value: (pagination?.totalNotifications ?? 0).toLocaleString(),
+        meta: "Notifications represented",
+      },
+      {
+        id: "retryable",
+        label: "Retryable",
+        value: data.facets.retryableCount.toLocaleString(),
+        meta: params.retryable ? "Filter active" : "Tap to filter",
+      },
+      {
+        id: "selector-drift",
+        label: "Selector drift",
+        value: data.facets.selectorDriftCount.toLocaleString(),
+        meta: params.selectorDrift ? "Filter active" : "Tap to filter",
+      },
+    ];
+  }, [data, pagination?.totalIssues, pagination?.totalNotifications, params.retryable, params.selectorDrift]);
+
+  const headerActions = (
+    <div className={siteNavigationGroupShellClass}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className={groupedItemClass(true)}
+        asChild
       >
-        <ArrowLeft className="h-4 w-4" />
-        Back to notification health
-      </Link>
+        <Link href="/dashboard/notifications">
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          Health
+        </Link>
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        className={groupedItemClass(false)}
+        type="button"
+        onClick={() => refetch()}
+        disabled={isFetching || !queryEnabled}
+      >
+        <RefreshCw
+          className={cn("h-4 w-4", isFetching && "animate-spin")}
+          aria-hidden
+        />
+        Refresh
+      </Button>
+    </div>
+  );
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end sm:justify-end">
-        <div className="flex items-center gap-2 pb-2">
-          <Switch
-            id="notification-issues-custom"
-            checked={customRange}
-            onCheckedChange={handleCustomRangeToggle}
-          />
-          <Label htmlFor="notification-issues-custom">Custom range</Label>
-        </div>
+  const windowLabel = data?.window
+    ? `${new Date(data.window.from).toLocaleDateString()} – ${new Date(data.window.to).toLocaleDateString()}`
+    : null;
 
-        {!customRange ? (
-          <Select
-            value={String(presetDays)}
-            onValueChange={(value) =>
-              updateUrl(
-                {
-                  days: value,
-                  createdAt_gte: undefined,
-                  createdAt_lte: undefined,
-                },
-                { resetPage: true },
-              )
-            }
-          >
-            <SelectTrigger
-              id="notification-issue-range"
-              aria-label="Issue period"
-              className="w-[170px]"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {PRESET_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={String(option.value)}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            <div className="space-y-1">
-              <Label htmlFor="ni-from" className="text-xs">
-                From (UTC)
+  return (
+    <>
+      <CreatePageTitle
+        title="Notification issues"
+        byLine="Failure investigation inbox"
+        byLineBottom="Search issue signals, inspect operational context, and open the affected scraper run"
+      >
+        {headerActions}
+      </CreatePageTitle>
+
+      <PageContainer padding="xs" spacing="lg">
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 lg:flex-row lg:flex-wrap lg:items-center">
+            <div className="flex shrink-0 items-center gap-2">
+              <Switch
+                id="notification-issues-custom"
+                checked={customRange}
+                onCheckedChange={handleCustomRangeToggle}
+              />
+              <Label htmlFor="notification-issues-custom" className="text-sm">
+                Custom range
               </Label>
-              <Input
-                id="ni-from"
-                type="date"
-                value={dateFrom}
-                onChange={(event) =>
+            </div>
+
+            {!customRange ? (
+              <LabeledSegmentedControl
+                label="Period"
+                value={String(presetDays)}
+                onValueChange={(value) =>
                   updateUrl(
                     {
-                      days: undefined,
-                      createdAt_gte: event.target.value
-                        ? `${event.target.value}T00:00:00.000Z`
-                        : undefined,
+                      days: value,
+                      createdAt_gte: undefined,
+                      createdAt_lte: undefined,
                     },
                     { resetPage: true },
                   )
                 }
+                options={presetSegmentOptions}
+                className="min-w-0 shrink-0"
+                shellClassName="h-auto shrink-0 rounded-full"
+                ariaLabel="Issue period"
               />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="ni-to" className="text-xs">
-                To (UTC)
-              </Label>
-              <Input
-                id="ni-to"
-                type="date"
-                value={dateTo}
-                onChange={(event) =>
-                  updateUrl(
-                    {
-                      days: undefined,
-                      createdAt_lte: event.target.value
-                        ? `${event.target.value}T23:59:59.999Z`
-                        : undefined,
-                    },
-                    { resetPage: true },
-                  )
-                }
-              />
-            </div>
+            ) : (
+              <div className="flex flex-wrap items-center gap-2">
+                <Input
+                  id="ni-from"
+                  type="date"
+                  value={dateFrom}
+                  onChange={(event) =>
+                    updateUrl(
+                      {
+                        days: undefined,
+                        createdAt_gte: event.target.value
+                          ? `${event.target.value}T00:00:00.000Z`
+                          : undefined,
+                      },
+                      { resetPage: true },
+                    )
+                  }
+                  aria-label="From (UTC)"
+                  className="w-auto rounded-full border-transparent bg-white shadow-none"
+                />
+                <span className="text-sm text-muted-foreground">–</span>
+                <Input
+                  id="ni-to"
+                  type="date"
+                  value={dateTo}
+                  onChange={(event) =>
+                    updateUrl(
+                      {
+                        days: undefined,
+                        createdAt_lte: event.target.value
+                          ? `${event.target.value}T23:59:59.999Z`
+                          : undefined,
+                      },
+                      { resetPage: true },
+                    )
+                  }
+                  aria-label="To (UTC)"
+                  className="w-auto rounded-full border-transparent bg-white shadow-none"
+                />
+              </div>
+            )}
+
+            {windowLabel ? (
+              <span className="text-xs text-muted-foreground lg:ml-1">
+                {windowLabel}
+              </span>
+            ) : null}
           </div>
-        )}
 
-        {data?.window ? (
-          <div className="pb-2 text-xs text-muted-foreground">
-            {new Date(data.window.from).toLocaleDateString()} –{" "}
-            {new Date(data.window.to).toLocaleDateString()}
-          </div>
-        ) : null}
-
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={() => refetch()}
-          disabled={isFetching || !queryEnabled}
-          className="gap-2"
-        >
-          <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
-          Refresh
-        </Button>
-      </div>
-
-      {data && !isLoading ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <SummaryCard
-            label="Total issues"
-            value={pagination?.totalIssues ?? 0}
-            meta="Matching issue rows"
-            icon={<ListFilter className="h-4 w-4" />}
-            tone="border-slate-200 bg-slate-50 text-slate-800"
-          />
-          <SummaryCard
-            label="Notifications"
-            value={pagination?.totalNotifications ?? 0}
-            meta="Notifications represented"
-            icon={<RadioTower className="h-4 w-4" />}
-            tone="border-info-200 bg-info-50 text-info-800"
-          />
-          <SummaryCard
-            label="Retryable"
-            value={data.facets.retryableCount}
-            meta="Select to filter"
-            icon={<RefreshCw className="h-4 w-4" />}
-            tone="border-warning-200 bg-warning-50 text-warning-800 ring-warning-400"
-            selected={params.retryable === true}
-            onClick={() =>
-              updateUrl(
-                { retryable: params.retryable ? undefined : "true" },
-                { resetPage: true },
-              )
-            }
-          />
-          <SummaryCard
-            label="Selector drift"
-            value={data.facets.selectorDriftCount}
-            meta="Select to filter"
-            icon={<Bug className="h-4 w-4" />}
-            tone="border-violet-200 bg-violet-50 text-violet-800 ring-violet-400"
-            selected={params.selectorDrift === true}
-            onClick={() =>
-              updateUrl(
-                {
-                  selectorDrift: params.selectorDrift ? undefined : "true",
-                },
-                { resetPage: true },
-              )
-            }
-          />
-        </div>
-      ) : null}
-
-      <Card className="border-slate-200 shadow-none">
-        <CardContent className="space-y-4 p-4">
-          {activeFilters.length > 0 ? (
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="gap-2 text-muted-foreground"
-                onClick={clearFilters}
-              >
-                <RotateCcw className="h-4 w-4" />
-                Clear filters
-              </Button>
+          {!queryEnabled && customRange ? (
+            <div className="rounded-md border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900">
+              Choose both start and end dates to load issues.
             </div>
           ) : null}
 
-          <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-            <div className="grid gap-3 lg:grid-cols-[minmax(280px,1fr)_auto] lg:items-end">
-              <div className="space-y-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="ni-search"
-                    aria-label="Search notification issues"
-                    key={params.search ?? ""}
-                    defaultValue={params.search ?? ""}
-                    placeholder="Search messages, URLs, IDs, clubs…"
-                    className="pl-9"
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") {
-                        const search = (
-                          event.target as HTMLInputElement
-                        ).value.trim();
+          {meta?.notificationsTruncated ? (
+            <div
+              className="rounded-md border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900"
+              role="status"
+            >
+              <div className="flex gap-2">
+                <AlertTriangle className="h-5 w-5 shrink-0" />
+                <span>
+                  Results are capped at {meta.maxNotifications.toLocaleString()}{" "}
+                  notifications. Narrow the date range for complete issue
+                  coverage.
+                </span>
+              </div>
+            </div>
+          ) : null}
+
+          {isLoading ? (
+            <LoadingState message="Loading notification issues…" />
+          ) : null}
+
+          {error && !isLoading ? (
+            <ErrorState
+              title="Could not load notification issues"
+              error={error}
+              onRetry={() => refetch()}
+            />
+          ) : null}
+
+          {data && !isLoading ? (
+            <>
+              <OverviewDataWorkspace
+                title="Issue snapshot"
+                description={
+                  windowLabel
+                    ? `${windowLabel} · page ${pagination?.page ?? 1} of ${Math.max(pagination?.pageCount ?? 0, 1)}`
+                    : "Matching issue rows for the selected window"
+                }
+                icon={ListFilter}
+                badge={
+                  activeFilters.length > 0 ? (
+                    <Badge variant="outline">Filtered</Badge>
+                  ) : null
+                }
+                metrics={metrics}
+                columns={4}
+                action={
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button"
+                      variant={params.retryable ? "accent" : "outline"}
+                      size="sm"
+                      className={cn(
+                        !params.retryable &&
+                          "border-slate-200 bg-white shadow-none",
+                      )}
+                      onClick={() =>
                         updateUrl(
                           {
-                            search: search || undefined,
+                            retryable: params.retryable ? undefined : "true",
                           },
                           { resetPage: true },
-                        );
+                        )
                       }
-                    }}
-                  />
-                </div>
-              </div>
+                    >
+                      Retryable
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={params.selectorDrift ? "accent" : "outline"}
+                      size="sm"
+                      className={cn(
+                        !params.selectorDrift &&
+                          "border-slate-200 bg-white shadow-none",
+                      )}
+                      onClick={() =>
+                        updateUrl(
+                          {
+                            selectorDrift: params.selectorDrift
+                              ? undefined
+                              : "true",
+                          },
+                          { resetPage: true },
+                        )
+                      }
+                    >
+                      Selector drift
+                    </Button>
+                  </div>
+                }
+              />
 
-              <CollapsibleTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full gap-2 lg:w-auto"
-                >
-                  <SlidersHorizontal className="h-4 w-4" />
-                  More filters
-                  <ChevronDown
-                    className={cn(
-                      "h-4 w-4 transition",
-                      advancedOpen && "rotate-180",
-                    )}
-                  />
-                </Button>
-              </CollapsibleTrigger>
-            </div>
+              <OverviewRecordPanel
+                title="Search & filters"
+                description="Narrow the issue inbox by message, step, and scraper dimensions"
+                action={
+                  activeFilters.length > 0 ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 border-slate-200 bg-slate-50 shadow-none"
+                      onClick={clearFilters}
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                      Clear filters
+                    </Button>
+                  ) : null
+                }
+              >
+                <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
+                  <div className="flex flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 lg:flex-row lg:flex-wrap lg:items-center">
+                    <div className="relative min-w-0 flex-1">
+                      <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                      <Input
+                        id="ni-search"
+                        aria-label="Search notification issues"
+                        key={params.search ?? ""}
+                        defaultValue={params.search ?? ""}
+                        placeholder="Search messages, URLs, IDs, clubs…"
+                        className="rounded-full border-transparent bg-white pl-9 shadow-none"
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") {
+                            const search = (
+                              event.target as HTMLInputElement
+                            ).value.trim();
+                            updateUrl(
+                              { search: search || undefined },
+                              { resetPage: true },
+                            );
+                          }
+                        }}
+                      />
+                    </div>
 
-            <div className="mt-8 flex items-center justify-between gap-6 overflow-x-auto border-t border-slate-200 pt-4 whitespace-nowrap">
-              <div className="flex items-center gap-2">
-                {facetStepRows.length > 0 ? (
-                  <>
-                    <span className="text-xs text-muted-foreground">
-                      Top steps:
-                    </span>
-                    {facetStepRows.slice(0, 6).map((row) => (
-                      <button
-                        key={row.key}
+                    <CollapsibleTrigger asChild>
+                      <Button
                         type="button"
-                        onClick={() =>
+                        variant="outline"
+                        size="sm"
+                        className="w-full gap-2 rounded-full border-slate-200 bg-white shadow-none lg:w-auto"
+                      >
+                        <SlidersHorizontal className="h-4 w-4" />
+                        More filters
+                        <ChevronDown
+                          className={cn(
+                            "h-4 w-4 transition",
+                            advancedOpen && "rotate-180",
+                          )}
+                        />
+                      </Button>
+                    </CollapsibleTrigger>
+
+                    <LabeledSegmentedControl
+                      label="Per page"
+                      value={String(pageSize)}
+                      onValueChange={(value) =>
+                        updateUrl({ pageSize: value }, { resetPage: true })
+                      }
+                      options={pageSizeOptions}
+                      className="shrink-0"
+                      shellClassName="h-auto shrink-0 rounded-full"
+                    />
+
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Switch
+                        id="ni-artifacts"
+                        checked={includeArtifacts}
+                        onCheckedChange={(checked) =>
+                          updateUrl({
+                            includeArtifacts: checked ? undefined : "false",
+                          })
+                        }
+                      />
+                      <Label
+                        htmlFor="ni-artifacts"
+                        className="inline-flex items-center gap-1.5 text-sm"
+                      >
+                        <ImageIcon className="h-4 w-4" />
+                        Screenshots
+                      </Label>
+                    </div>
+                  </div>
+
+                  {facetStepRows.length > 0 ? (
+                    <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+                      <span className="text-xs text-muted-foreground">
+                        Top steps:
+                      </span>
+                      {facetStepRows.slice(0, 6).map((row) => (
+                        <button
+                          key={row.key}
+                          type="button"
+                          onClick={() =>
+                            updateUrl(
+                              {
+                                step:
+                                  params.step === row.key ? undefined : row.key,
+                              },
+                              { resetPage: true },
+                            )
+                          }
+                        >
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "cursor-pointer font-mono",
+                              params.step === row.key
+                                ? "border-warning-400 bg-warning-100 text-warning-900"
+                                : "border-warning-200 bg-warning-50 text-warning-800",
+                            )}
+                          >
+                            {row.key} · {row.count.toLocaleString()}
+                          </Badge>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <CollapsibleContent>
+                    <div className="mt-4 grid gap-3 rounded-lg border border-slate-200 bg-slate-50/70 p-4 sm:grid-cols-2 xl:grid-cols-5">
+                      <TextFilter
+                        id="ni-service"
+                        label="Service"
+                        value={params.service ?? ""}
+                        placeholder="python-scraper"
+                        mono
+                        onApply={(value) =>
                           updateUrl(
-                            {
-                              step:
-                                params.step === row.key ? undefined : row.key,
-                            },
+                            { service: value || undefined },
                             { resetPage: true },
                           )
                         }
-                      >
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "cursor-pointer font-mono",
-                            params.step === row.key
-                              ? "border-warning-400 bg-warning-100 text-warning-900"
-                              : "border-warning-200 bg-warning-50 text-warning-800",
-                          )}
-                        >
-                          {row.key} · {row.count.toLocaleString()}
-                        </Badge>
-                      </button>
-                    ))}
-                  </>
-                ) : null}
-              </div>
+                      />
+                      <TextFilter
+                        id="ni-scope"
+                        label="Scope"
+                        value={params.scope ?? ""}
+                        placeholder="fixtures"
+                        mono
+                        onApply={(value) =>
+                          updateUrl(
+                            { scope: value || undefined },
+                            { resetPage: true },
+                          )
+                        }
+                      />
+                      <TextFilter
+                        id="ni-queue"
+                        label="Queue"
+                        value={params.queueName ?? ""}
+                        placeholder="fixture-discovery"
+                        mono
+                        onApply={(value) =>
+                          updateUrl(
+                            { queueName: value || undefined },
+                            { resetPage: true },
+                          )
+                        }
+                      />
+                      <TextFilter
+                        id="ni-kind"
+                        label="Kind"
+                        value={params.kind ?? ""}
+                        placeholder="job.completed"
+                        mono
+                        onApply={(value) =>
+                          updateUrl(
+                            { kind: value || undefined },
+                            { resetPage: true },
+                          )
+                        }
+                      />
+                      <TextFilter
+                        id="ni-issue-scope"
+                        label="Issue scope"
+                        value={params.issueScope ?? ""}
+                        placeholder="fixture"
+                        mono
+                        onApply={(value) =>
+                          updateUrl(
+                            { issueScope: value || undefined },
+                            { resetPage: true },
+                          )
+                        }
+                      />
+                    </div>
+                  </CollapsibleContent>
 
-              <div className="flex shrink-0 items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Switch
-                    id="ni-artifacts"
-                    checked={includeArtifacts}
-                    onCheckedChange={(checked) =>
-                      updateUrl({
-                        includeArtifacts: checked ? undefined : "false",
-                      })
+                  {activeFilters.length > 0 ? (
+                    <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-slate-100 pt-4">
+                      <span className="text-xs font-medium text-muted-foreground">
+                        Active:
+                      </span>
+                      {activeFilters.map((filter) => (
+                        <button
+                          key={filter.key}
+                          type="button"
+                          onClick={() =>
+                            updateUrl(
+                              { [filter.key]: undefined },
+                              { resetPage: true },
+                            )
+                          }
+                          aria-label={`Remove ${filter.label} filter`}
+                        >
+                          <Badge
+                            variant="outline"
+                            className={chipTone(filter.tone)}
+                          >
+                            {filter.label}: {filter.value}
+                            <X className="ml-1 h-3 w-3" />
+                          </Badge>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                </Collapsible>
+              </OverviewRecordPanel>
+
+              <Tabs defaultValue="list" className="w-full">
+                <TabsList
+                  variant="sectionInverse"
+                  className={cn(sectionTabListInverseClass, "mb-4")}
+                >
+                  {ISSUES_VIEW_TABS.map((tab) => {
+                    const Icon = tab.icon;
+                    return (
+                      <TabsTrigger
+                        key={tab.value}
+                        value={tab.value}
+                        variant="sectionInverse"
+                        className={sectionTabTriggerInverseClass}
+                      >
+                        <Icon
+                          className="h-4 w-4 shrink-0 text-current"
+                          aria-hidden
+                        />
+                        {tab.label}
+                      </TabsTrigger>
+                    );
+                  })}
+                </TabsList>
+
+                <TabsContent value="list" className="mt-0">
+                  <OverviewRecordPanel
+                    title="Issue inbox"
+                    description={`Showing ${issueStart.toLocaleString()}–${issueEnd.toLocaleString()} of ${pagination?.totalIssues.toLocaleString() ?? 0} issues across ${pagination?.totalNotifications.toLocaleString() ?? 0} notifications`}
+                    badge={
+                      <div className="flex flex-wrap gap-2">
+                        <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600">
+                          Page {pagination?.page ?? 1} of{" "}
+                          {Math.max(pagination?.pageCount ?? 0, 1)}
+                        </span>
+                        {includeArtifacts &&
+                        meta?.artifactsIncluded === false ? (
+                          <Badge
+                            variant="outline"
+                            className="border-warning-200 bg-warning-50 text-warning-800"
+                          >
+                            Evidence unavailable from CMS
+                          </Badge>
+                        ) : includeArtifacts ? (
+                          <Badge
+                            variant="outline"
+                            className="border-info-200 bg-info-50 text-info-800"
+                          >
+                            {screenshotCountOnPage} of {data.issues.length}{" "}
+                            screenshots
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className="border-warning-200 bg-warning-50 text-warning-800"
+                          >
+                            Screenshots off · faster loading
+                          </Badge>
+                        )}
+                      </div>
                     }
-                  />
-                  <Label
-                    htmlFor="ni-artifacts"
-                    className="inline-flex items-center gap-1.5"
+                    footer={
+                      totalPages > 0 ? (
+                        <Pagination
+                          currentPage={currentPage}
+                          totalPages={Math.max(totalPages, 1)}
+                          onPageChange={(page) =>
+                            updateUrl({ page: String(page) })
+                          }
+                          variant="primary"
+                          className="w-full flex-wrap justify-between gap-4 rounded-none border-0 bg-transparent p-0"
+                        >
+                          <PaginationInfo
+                            format="long"
+                            totalItems={pagination?.totalIssues ?? 0}
+                            itemsPerPage={pageSize}
+                          />
+                          <div className="flex items-center gap-1">
+                            <PaginationPrevious />
+                            <PaginationPages />
+                            <PaginationNext />
+                          </div>
+                        </Pagination>
+                      ) : null
+                    }
                   >
-                    <ImageIcon className="h-4 w-4" />
-                    Screenshots
-                  </Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="ni-page-size" className="text-sm">
-                    Per page
-                  </Label>
-                  <select
-                    id="ni-page-size"
-                    value={pageSize}
-                    onChange={(event) =>
+                    <NotificationIssuesList
+                      issues={data.issues}
+                      includeArtifacts={includeArtifacts}
+                    />
+                  </OverviewRecordPanel>
+                </TabsContent>
+
+                <TabsContent value="charts" className="mt-0">
+                  <NotificationIssuesCharts
+                    facets={data.facets}
+                    pagination={data.pagination}
+                    issues={data.issues}
+                    activeStep={params.step}
+                    activeIssueScope={params.issueScope}
+                    onStepFilter={(step) =>
                       updateUrl(
-                        { pageSize: event.target.value },
+                        {
+                          step: params.step === step ? undefined : step,
+                        },
                         { resetPage: true },
                       )
                     }
-                    className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
-                  >
-                    {NOTIFICATION_ISSUES_PAGE_SIZE_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <CollapsibleContent>
-              <div className="grid gap-3 rounded-md border border-slate-200 bg-slate-50/70 p-4 sm:grid-cols-2 xl:grid-cols-5">
-                <TextFilter
-                  id="ni-service"
-                  label="Service"
-                  value={params.service ?? ""}
-                  placeholder="python-scraper"
-                  mono
-                  onApply={(value) =>
-                    updateUrl(
-                      { service: value || undefined },
-                      { resetPage: true },
-                    )
-                  }
-                />
-                <TextFilter
-                  id="ni-scope"
-                  label="Scope"
-                  value={params.scope ?? ""}
-                  placeholder="fixtures"
-                  mono
-                  onApply={(value) =>
-                    updateUrl(
-                      { scope: value || undefined },
-                      { resetPage: true },
-                    )
-                  }
-                />
-                <TextFilter
-                  id="ni-queue"
-                  label="Queue"
-                  value={params.queueName ?? ""}
-                  placeholder="fixture-discovery"
-                  mono
-                  onApply={(value) =>
-                    updateUrl(
-                      { queueName: value || undefined },
-                      { resetPage: true },
-                    )
-                  }
-                />
-                <TextFilter
-                  id="ni-kind"
-                  label="Kind"
-                  value={params.kind ?? ""}
-                  placeholder="job.completed"
-                  mono
-                  onApply={(value) =>
-                    updateUrl({ kind: value || undefined }, { resetPage: true })
-                  }
-                />
-                <TextFilter
-                  id="ni-issue-scope"
-                  label="Issue scope"
-                  value={params.issueScope ?? ""}
-                  placeholder="fixture"
-                  mono
-                  onApply={(value) =>
-                    updateUrl(
-                      { issueScope: value || undefined },
-                      { resetPage: true },
-                    )
-                  }
-                />
-              </div>
-            </CollapsibleContent>
-          </Collapsible>
-
-          {activeFilters.length > 0 ? (
-            <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-3">
-              <span className="text-xs font-medium text-muted-foreground">
-                Active:
-              </span>
-              {activeFilters.map((filter) => (
-                <button
-                  key={filter.key}
-                  type="button"
-                  onClick={() =>
-                    updateUrl({ [filter.key]: undefined }, { resetPage: true })
-                  }
-                  aria-label={`Remove ${filter.label} filter`}
-                >
-                  <Badge variant="outline" className={chipTone(filter.tone)}>
-                    {filter.label}: {filter.value}
-                    <X className="ml-1 h-3 w-3" />
-                  </Badge>
-                </button>
-              ))}
-            </div>
+                    onIssueScopeFilter={(scope) =>
+                      updateUrl(
+                        {
+                          issueScope:
+                            params.issueScope === scope ? undefined : scope,
+                        },
+                        { resetPage: true },
+                      )
+                    }
+                  />
+                </TabsContent>
+              </Tabs>
+            </>
           ) : null}
-        </CardContent>
-      </Card>
-
-      {!queryEnabled && customRange ? (
-        <div className="rounded-md border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900">
-          Choose both start and end dates to load issues.
         </div>
-      ) : null}
-
-      {meta?.notificationsTruncated ? (
-        <div
-          className="rounded-md border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-900"
-          role="status"
-        >
-          <div className="flex gap-2">
-            <AlertTriangle className="h-5 w-5 shrink-0" />
-            <span>
-              Results are capped at {meta.maxNotifications.toLocaleString()}{" "}
-              notifications. Narrow the date range for complete issue coverage.
-            </span>
-          </div>
-        </div>
-      ) : null}
-
-      {isLoading ? (
-        <LoadingState message="Loading notification issues…" />
-      ) : null}
-
-      {error && !isLoading ? (
-        <ErrorState
-          title="Could not load notification issues"
-          error={error}
-          onRetry={() => refetch()}
-        />
-      ) : null}
-
-      {data && !isLoading ? (
-        <section
-          className="space-y-4"
-          aria-labelledby="notification-issue-results"
-        >
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <h2
-                id="notification-issue-results"
-                className="text-base font-semibold text-slate-900"
-              >
-                Issue inbox
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                Showing {issueStart.toLocaleString()}–
-                {issueEnd.toLocaleString()} of{" "}
-                {pagination?.totalIssues.toLocaleString() ?? 0} issues across{" "}
-                {pagination?.totalNotifications.toLocaleString() ?? 0}{" "}
-                notifications
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-2 text-xs">
-              <Badge
-                variant="outline"
-                className="border-slate-200 bg-slate-50 text-slate-700"
-              >
-                Page {pagination?.page ?? 1} of{" "}
-                {Math.max(pagination?.pageCount ?? 0, 1)}
-              </Badge>
-              {includeArtifacts && meta?.artifactsIncluded === false ? (
-                <Badge
-                  variant="outline"
-                  className="border-warning-200 bg-warning-50 text-warning-800"
-                >
-                  Evidence unavailable from CMS
-                </Badge>
-              ) : includeArtifacts ? (
-                <Badge
-                  variant="outline"
-                  className="border-info-200 bg-info-50 text-info-800"
-                >
-                  {screenshotCountOnPage} of {data.issues.length} screenshots
-                </Badge>
-              ) : (
-                <Badge
-                  variant="outline"
-                  className="border-warning-200 bg-warning-50 text-warning-800"
-                >
-                  Screenshots off · faster loading
-                </Badge>
-              )}
-            </div>
-          </div>
-
-          <NotificationIssuesList
-            issues={data.issues}
-            includeArtifacts={includeArtifacts}
-          />
-
-          {totalPages > 0 ? (
-            <div className="rounded-lg border border-slate-200 bg-white p-3">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={Math.max(totalPages, 1)}
-                onPageChange={(page) => updateUrl({ page: String(page) })}
-                variant="primary"
-                className="w-full flex-wrap justify-between gap-4 rounded-none border-0 bg-transparent p-0"
-              >
-                <PaginationInfo
-                  format="long"
-                  totalItems={pagination?.totalIssues ?? 0}
-                  itemsPerPage={pageSize}
-                />
-                <div className="flex items-center gap-1">
-                  <PaginationPrevious />
-                  <PaginationPages />
-                  <PaginationNext />
-                </div>
-              </Pagination>
-            </div>
-          ) : null}
-        </section>
-      ) : null}
-    </div>
+      </PageContainer>
+    </>
   );
 }

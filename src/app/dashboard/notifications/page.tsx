@@ -1,6 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
+import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
 import { NotificationHealthDashboard } from "./components/NotificationHealthDashboard";
 
 export default async function NotificationsPage() {
@@ -17,8 +18,15 @@ export default async function NotificationsPage() {
         title="Notification health"
         byLine="System failure intelligence"
         byLineBottom="Failure volume, issue patterns, affected services, and scraper context"
-      />
-      <PageContainer padding="xs" spacing="md">
+      >
+        <DashboardLinkButton
+          href="/dashboard?tab=collection"
+          trailingIcon="external"
+        >
+          Dashboard
+        </DashboardLinkButton>
+      </CreatePageTitle>
+      <PageContainer padding="xs" spacing="lg">
         <NotificationHealthDashboard />
       </PageContainer>
     </>

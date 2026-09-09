@@ -14,12 +14,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
-import {
-  siteNavigationGroupDividerClass,
-  siteNavigationGroupItemClass,
-  siteNavigationGroupShellClass,
-} from "@/lib/actions/siteNavigationButtonStyles";
-import { cn } from "@/lib/utils";
 import { triggerWeeklyAssociationClubIntegrity } from "@/lib/services/data-collection/triggerWeeklyAssociationClubIntegrity";
 import { triggerWeeklyClubAssociationIntegrity } from "@/lib/services/data-collection/triggerWeeklyClubAssociationIntegrity";
 import { formatGlobalDataWorkflowToast } from "@/lib/utils/formatGlobalDataWorkflowToast";
@@ -52,13 +46,6 @@ function showWorkflowToast(
   } else {
     toast.success(title, { description });
   }
-}
-
-function groupedItemClass(withDivider: boolean) {
-  return cn(
-    siteNavigationGroupItemClass,
-    withDivider && siteNavigationGroupDividerClass,
-  );
 }
 
 export function OrgLinkSyncActions() {
@@ -101,13 +88,12 @@ export function OrgLinkSyncActions() {
           </span>
         }
         action={
-          <div className={siteNavigationGroupShellClass}>
-            {actions.map((action, index) => (
+          <div className="flex flex-wrap gap-2">
+            {actions.map((action) => (
               <Button
                 key={action}
-                variant="ghost"
+                variant="accent"
                 size="sm"
-                className={groupedItemClass(index < actions.length - 1)}
                 disabled={!!loadingFor}
                 onClick={() => setDialogOpenFor(action)}
               >

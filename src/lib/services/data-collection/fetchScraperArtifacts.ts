@@ -91,7 +91,13 @@ function normalizeArtifactsResponse(body: unknown): ScraperArtifactsResponse {
 
   const data = rows
     .map((row) => normalizeArtifact(row))
-    .filter((row): row is ScraperArtifact => row != null);
+    .filter((row): row is ScraperArtifact => row != null)
+    .sort((a, b) => {
+      if (a.createdAt && b.createdAt) {
+        return b.createdAt.localeCompare(a.createdAt);
+      }
+      return b.id - a.id;
+    });
 
   const meta =
     isRecord(o.meta) && isRecord(o.meta.pagination)
@@ -156,7 +162,6 @@ export async function fetchScraperArtifacts(
       filters,
       populate: { file: true },
       pagination: { page: 1, pageSize: PAGE_SIZE },
-      sort: ["createdAt:desc"],
     },
     { encodeValuesOnly: true },
   );
