@@ -6,10 +6,14 @@ import {
   CalendarDays,
   CheckCircle2,
   Clock,
+  DollarSign,
   Film,
+  RefreshCw,
+  Ticket,
 } from "lucide-react";
 import { useAccountAnalytics } from "@/hooks/analytics/useAccountAnalytics";
 import { cn, formatDate } from "@/lib/utils";
+import { getFinancialOverviewMetrics } from "./financialOverviewMetrics";
 
 type AccountOverviewPanelProps = {
   accountData: fixturaContentHubAccountDetails;
@@ -92,12 +96,88 @@ export default function AccountOverviewPanel({
     daysLeftLabel,
   });
 
+  const financialMetrics = buildFinancialMetrics({
+    isLoading: isSubscriptionLoading,
+    analytics,
+  });
+
   return (
     <div className="flex flex-col gap-3">
       <MetricGroup title="Account" metrics={accountMetrics} />
       <MetricGroup title="Subscription" metrics={[subscriptionMetric]} />
+      <MetricGroup title="Financial" metrics={financialMetrics} />
     </div>
   );
+}
+
+function buildFinancialMetrics({
+  isLoading,
+  analytics,
+}: {
+  isLoading: boolean;
+  analytics: ReturnType<typeof useAccountAnalytics>["data"];
+}): OverviewMetricItem[] {
+  if (isLoading) {
+    return [
+      {
+        label: "Total season revenue",
+        icon: <DollarSign className="h-4 w-4" />,
+        tone: "neutral",
+        value: "…",
+      },
+    ];
+  }
+
+  if (!analytics) {
+    return [
+      {
+        label: "Total season revenue",
+        icon: <DollarSign className="h-4 w-4" />,
+        tone: "neutral",
+        value: "—",
+        detail: "No financial data",
+      },
+    ];
+  }
+
+  const financials = getFinancialOverviewMetrics(analytics);
+  const seasonLabel = financials.paidOrderCount === 1 ? "season" : "seasons";
+  const passLabel =
+    financials.paidOrderCount === 1 ? "season pass" : "season passes";
+
+  return [
+    {
+      label: "Total season revenue",
+      icon: <DollarSign className="h-4 w-4" />,
+      tone: "accent",
+      value: financials.totalSeasonRevenue,
+      detail: `${financials.paidOrderCount} ${passLabel} purchased`,
+    },
+    {
+      label: "Season pass value",
+      icon: <Ticket className="h-4 w-4" />,
+      tone: "neutral",
+      value: financials.seasonPassValue,
+      detail: "Annual billing cycle",
+    },
+    {
+      label: "Renewal status",
+      icon: <RefreshCw className="h-4 w-4" />,
+      tone: financials.isRenewalActive ? "success" : "neutral",
+      value: financials.renewalStatus,
+      detail: `${financials.paidOrderCount} ${seasonLabel} subscribed`,
+      valueClassName: financials.isRenewalActive
+        ? "text-brandSuccess-700"
+        : "text-slate-600",
+    },
+    {
+      label: "Last season pass",
+      icon: <CalendarDays className="h-4 w-4" />,
+      tone: "info",
+      value: financials.lastSeasonPassDate,
+      detail: `${financials.paidOrderCount} ${seasonLabel} total`,
+    },
+  ];
 }
 
 function buildSubscriptionMetric({

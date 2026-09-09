@@ -10,15 +10,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
-import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
 import { LoadingState, EmptyState } from "@/components/ui-library";
-import { Label, H4 } from "@/components/type/titles";
 import { Edit } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import OrderHistorySummaryCards from "./OrderHistorySummaryCards";
 
 /**
  * OrderHistoryTable Component
@@ -45,9 +44,7 @@ export default function OrderHistoryTable({
     );
   }
 
-  const { orders, totalOrders, totalSpent, averageOrderValue } =
-    analytics.orderHistory;
-  const paymentStatus = analytics?.paymentStatus;
+  const { orders, totalOrders, totalSpent } = analytics.orderHistory;
 
   // Ensure orders is an array
   const safeOrders = Array.isArray(orders) ? orders : [];
@@ -104,20 +101,23 @@ export default function OrderHistoryTable({
   };
 
   return (
-    <SectionContainer
-      title="Order History"
-      description={`${totalOrders || 0} total orders • $${(
-        (totalSpent || 0) / 100
-      ).toLocaleString("en-AU", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })} total spent`}
-      variant="compact"
-    >
-      {sortedOrders.length === 0 ? (
-        <EmptyState title="No orders found" variant="minimal" />
-      ) : (
-        <Table>
+    <div className="space-y-4">
+      <OrderHistorySummaryCards analytics={analytics} />
+
+      <SectionContainer
+        title="Order History"
+        description={`${totalOrders || 0} total orders • $${(
+          (totalSpent || 0) / 100
+        ).toLocaleString("en-AU", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        })} total spent`}
+        variant="compact"
+      >
+        {sortedOrders.length === 0 ? (
+          <EmptyState title="No orders found" variant="minimal" />
+        ) : (
+          <Table>
           <TableHeader>
             <TableRow>
               <TableHead
@@ -191,60 +191,8 @@ export default function OrderHistoryTable({
             ))}
           </TableBody>
         </Table>
-      )}
-
-      {/* Summary Footer */}
-      <ElementContainer variant="dark" border padding="md" className="mt-4">
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-center">
-          <div className="space-y-1">
-            <Label className="text-sm m-0">Filtered Orders</Label>
-            <H4 className="text-lg font-semibold m-0">{sortedOrders.length}</H4>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-sm m-0">Avg Order Value</Label>
-            <H4 className="text-lg font-semibold m-0">
-              $
-              {((averageOrderValue || 0) / 100).toLocaleString("en-AU", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </H4>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-sm m-0">Total Displayed</Label>
-            <H4 className="text-lg font-semibold m-0">
-              $
-              {(
-                sortedOrders.reduce(
-                  (sum, order) => sum + (order.amount || 0),
-                  0
-                ) / 100 || 0
-              ).toLocaleString("en-AU", {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </H4>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-sm m-0">Success Rate</Label>
-            <H4 className="text-lg font-semibold m-0">
-              {paymentStatus?.successRate?.toFixed(1) || 0}%
-            </H4>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-sm m-0">Successful</Label>
-            <H4 className="text-lg font-semibold m-0 text-success-600">
-              {paymentStatus?.successfulPayments || 0}
-            </H4>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-sm m-0">Failed</Label>
-            <H4 className="text-lg font-semibold m-0 text-error-600">
-              {paymentStatus?.failedPayments || 0}
-            </H4>
-          </div>
-        </div>
-      </ElementContainer>
-    </SectionContainer>
+        )}
+      </SectionContainer>
+    </div>
   );
 }

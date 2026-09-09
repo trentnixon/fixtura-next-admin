@@ -2,7 +2,6 @@
 
 import { AccountAnalytics } from "@/types/analytics";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
-import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
 import { LoadingState, EmptyState } from "@/components/ui-library";
 import {
   Table,
@@ -13,9 +12,12 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Label, H4 } from "@/components/type/titles";
 import { CheckCircle, XCircle } from "lucide-react";
 import { formatDate } from "@/lib/utils";
+import {
+  calculateTrialDays,
+  getTrialSummaryMetrics,
+} from "../../trialSummaryMetrics";
 
 /**
  * TrialHistory Component
@@ -40,94 +42,9 @@ export default function TrialHistory({
     );
   }
 
-  const { trialInstance, trialHistory } = analytics.trialUsage;
-  const orders = analytics?.orderHistory?.orders || [];
+  const metrics = getTrialSummaryMetrics(analytics);
 
-  // Calculate trial duration in days
-  const calculateDays = (startDate: string, endDate: string) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  // Determine if a trial was converted by checking if there are paid orders after the trial end date
-  const checkTrialConversion = (trialEndDate: string) => {
-    const trialEnd = new Date(trialEndDate);
-    // Check if there's a paid Season Pass order after the trial ended
-    const paidOrdersAfterTrial = orders.filter((order) => {
-      if (!order.date) return false;
-      const orderDate = new Date(order.date);
-      if (isNaN(orderDate.getTime())) return false;
-
-      // Check if order is paid
-      const status = String(order.status || "").toLowerCase();
-      const isPaid = status === "paid" || status === "true";
-
-      // Check if it's a Season Pass or subscription order (not a trial)
-      const tier = order.subscriptionTier?.toLowerCase() || "";
-      const isSeasonPass =
-        tier.includes("season pass") ||
-        tier.includes("3 month pass") ||
-        tier.includes("month pass") ||
-        (tier.includes("pass") &&
-          !tier.includes("trial") &&
-          !tier.includes("free"));
-
-      return isPaid && isSeasonPass && orderDate > trialEnd;
-    });
-    return paidOrdersAfterTrial.length > 0;
-  };
-
-  // Combine trialInstance (active trial) with trialHistory (historical trials)
-  // Convert trialInstance to TrialEvent format for display
-  const allTrials = [];
-
-  // Add active trial if it exists
-  if (trialInstance) {
-    // Check if trial is actually still active based on endDate
-    const trialEndDate = new Date(trialInstance.endDate);
-    const now = new Date();
-    const isActuallyActive = trialInstance.isActive && trialEndDate > now;
-
-    // Check conversion status - only check if trial has ended
-    const isConverted =
-      !isActuallyActive && checkTrialConversion(trialInstance.endDate);
-
-    allTrials.push({
-      startDate: trialInstance.startDate,
-      endDate: trialInstance.endDate,
-      subscriptionTier: trialInstance.subscriptionTier,
-      converted: isConverted,
-      isActive: isActuallyActive,
-    });
-  }
-
-  // Add historical trials
-  if (trialHistory && Array.isArray(trialHistory)) {
-    trialHistory.forEach((trial) => {
-      // Check conversion status - use API value or infer from orders
-      const isConverted =
-        trial.converted || checkTrialConversion(trial.endDate);
-
-      allTrials.push({
-        ...trial,
-        converted: isConverted,
-        isActive: false,
-      });
-    });
-  }
-
-  // Calculate actual totals from combined data
-  const actualTotalTrials = allTrials.length;
-  const actualConvertedCount = allTrials.filter((t) => t.converted).length;
-  const actualConversionRate =
-    actualTotalTrials > 0
-      ? (actualConvertedCount / actualTotalTrials) * 100
-      : 0;
-
-  // Only show empty state if there are no trials at all
-  if (allTrials.length === 0) {
+  if (metrics.allTrials.length === 0) {
     return (
       <SectionContainer
         title="Trial History"
@@ -143,17 +60,16 @@ export default function TrialHistory({
     );
   }
 
-  // Sort by start date (most recent first)
-  const sortedHistory = [...allTrials].sort(
-    (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime()
+  const sortedHistory = [...metrics.allTrials].sort(
+    (a, b) => new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
   );
 
   return (
     <SectionContainer
       title="Trial History"
-      description={`${actualTotalTrials} total trials • ${actualConversionRate.toFixed(
-        1
-      )}% conversion rate`}
+      description={`${metrics.totalTrials} total trial${
+        metrics.totalTrials === 1 ? "" : "s"
+      } • ${metrics.conversionRate.toFixed(1)}% conversion rate`}
       variant="compact"
     >
       <Table>
@@ -168,9 +84,10 @@ export default function TrialHistory({
         </TableHeader>
         <TableBody>
           {sortedHistory.map((trial, index) => {
-            const duration = calculateDays(trial.startDate, trial.endDate);
+            const duration = calculateTrialDays(trial.startDate, trial.endDate);
+
             return (
-              <TableRow key={index}>
+              <TableRow key={`${trial.startDate}-${index}`}>
                 <TableCell className="font-medium">
                   {formatDate(trial.startDate)}
                 </TableCell>
@@ -179,18 +96,18 @@ export default function TrialHistory({
                 <TableCell>{trial.subscriptionTier}</TableCell>
                 <TableCell>
                   {trial.isActive ? (
-                    <Badge className="bg-success-500 text-white border-0 rounded-full flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3" />
+                    <Badge className="flex items-center gap-1 rounded-full border-0 bg-success-500 text-white">
+                      <CheckCircle className="h-3 w-3" />
                       Active
                     </Badge>
                   ) : trial.converted ? (
-                    <Badge className="bg-success-500 text-white border-0 rounded-full flex items-center gap-1">
-                      <CheckCircle className="w-3 h-3" />
+                    <Badge className="flex items-center gap-1 rounded-full border-0 bg-success-500 text-white">
+                      <CheckCircle className="h-3 w-3" />
                       Converted
                     </Badge>
                   ) : (
-                    <Badge className="bg-slate-500 text-white border-0 rounded-full flex items-center gap-1">
-                      <XCircle className="w-3 h-3" />
+                    <Badge className="flex items-center gap-1 rounded-full border-0 bg-slate-500 text-white">
+                      <XCircle className="h-3 w-3" />
                       Expired
                     </Badge>
                   )}
@@ -200,28 +117,6 @@ export default function TrialHistory({
           })}
         </TableBody>
       </Table>
-
-      {/* Summary Stats */}
-      <ElementContainer variant="dark" border padding="md" className="mt-4">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-          <div className="space-y-1">
-            <Label className="text-sm m-0">Total Trials</Label>
-            <H4 className="text-lg font-semibold m-0">{actualTotalTrials}</H4>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-sm m-0">Converted</Label>
-            <H4 className="text-lg font-semibold m-0 text-success-600">
-              {actualConvertedCount}
-            </H4>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-sm m-0">Conversion Rate</Label>
-            <H4 className="text-lg font-semibold m-0 text-purple-600">
-              {actualConversionRate.toFixed(1)}%
-            </H4>
-          </div>
-        </div>
-      </ElementContainer>
     </SectionContainer>
   );
 }

@@ -5,11 +5,22 @@ import { LoadingState, ErrorState, EmptyState } from "@/components/ui-library";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import FinancialOverview from "./FinancialOverview";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  sectionTabListInverseClass,
+  sectionTabTriggerInverseClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
+import { FlaskConical, Ticket } from "lucide-react";
 import SubscriptionStatusCard from "./SubscriptionStatusCard";
 import OrderHistoryTable from "./OrderHistoryTable";
-import TrialPerformancePanel from "./TrialPerformancePanel";
 import TrialHistory from "./TrialHistory";
+import TrialSummaryCards from "./TrialSummaryCards";
+
+const FINANCIAL_CHILD_TABS = [
+  { id: "subscription", label: "Subscription", icon: Ticket },
+  { id: "trials", label: "Trials", icon: FlaskConical },
+] as const;
 
 /**
  * AccountAnalyticsCards Component
@@ -59,51 +70,52 @@ export default function AccountAnalyticsCards({
     );
   }
 
-  // Check if we have any real data
-  const hasRealData = analyticsData?.orderHistory?.totalOrders > 0;
-
   // Check if account has an active order/subscription
   // Show "Create Invoice" button only if there's no active subscription
   const hasActiveOrder = analyticsData?.currentSubscription?.isActive || false;
 
   return (
-    <div className="space-y-6">
-      {/* Create Invoice Button - Only show if account has no active order */}
-      {!hasActiveOrder && (
-        <div className="flex justify-end">
-          <Button variant="primary" asChild>
-            <Link href={`/dashboard/orders/create/${accountId}`}>
-              Create Invoice
-            </Link>
-          </Button>
-        </div>
-      )}
+    <Tabs defaultValue="subscription" className="w-full">
+      <TabsList
+        variant="sectionInverse"
+        className={cn(sectionTabListInverseClass, "mb-4")}
+      >
+        {FINANCIAL_CHILD_TABS.map((tab) => {
+          const Icon = tab.icon;
 
-      {/* Financial Overview Section */}
-      {hasRealData ? (
-        <FinancialOverview analytics={analyticsData} />
-      ) : (
-        <EmptyState
-          title="Account Analytics"
-          description="No account analytics data available yet. This account has no orders or subscriptions yet. Check back once the account has activity."
-          variant="card"
-        />
-      )}
+          return (
+            <TabsTrigger
+              key={tab.id}
+              value={tab.id}
+              variant="sectionInverse"
+              className={sectionTabTriggerInverseClass}
+            >
+              <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden />
+              {tab.label}
+            </TabsTrigger>
+          );
+        })}
+      </TabsList>
 
-      {/* Subscription Status Section */}
-      <SubscriptionStatusCard analytics={analyticsData} />
+      <TabsContent value="subscription" className="mt-0 space-y-6">
+        {!hasActiveOrder && (
+          <div className="flex justify-end">
+            <Button variant="primary" asChild>
+              <Link href={`/dashboard/orders/create/${accountId}`}>
+                Create Invoice
+              </Link>
+            </Button>
+          </div>
+        )}
 
-      {/* Order History */}
-      <OrderHistoryTable analytics={analyticsData} />
+        <SubscriptionStatusCard analytics={analyticsData} />
+        <OrderHistoryTable analytics={analyticsData} />
+      </TabsContent>
 
-      {/* Trial Performance Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Trial Performance Panel */}
-        <TrialPerformancePanel analytics={analyticsData} />
-
-        {/* Trial History */}
+      <TabsContent value="trials" className="mt-0 space-y-6">
+        <TrialSummaryCards analytics={analyticsData} />
         <TrialHistory analytics={analyticsData} />
-      </div>
-    </div>
+      </TabsContent>
+    </Tabs>
   );
 }

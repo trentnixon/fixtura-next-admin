@@ -10,6 +10,22 @@ export { default as StatusBadge } from "./badges/StatusBadge";
 export { default as StatCard } from "./metrics/StatCard";
 export { default as MetricGrid } from "./metrics/MetricGrid";
 
+// Base Card Components
+export {
+  ActivityCard,
+  CompactKpiCard,
+  ComparisonCard,
+  OperationalStatusCard,
+} from "./cards";
+export type {
+  ActivityCardItem,
+  ActivityCardProps,
+  CompactKpiCardProps,
+  ComparisonCardProps,
+  ComparisonRow,
+  OperationalStatusCardProps,
+} from "./cards";
+
 // Form Components
 export {
   LabeledSegmentedControl,
