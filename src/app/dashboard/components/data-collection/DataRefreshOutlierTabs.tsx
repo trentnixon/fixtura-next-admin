@@ -1,6 +1,7 @@
 "use client";
 
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useMemo } from "react";
+import { LabeledSegmentedControl } from "@/components/ui-library/forms/LabeledSegmentedControl";
 import type { OutlierFilter } from "@/lib/account-health/globalRunAnalytics";
 import type { OutlierCounts } from "../account-health/DataRefreshOutlierChips";
 
@@ -28,37 +29,35 @@ interface DataRefreshOutlierTabsProps {
 }
 
 /**
- * Outlier filters for refresh runs — navigation.pattern.section-tabs.
+ * Outlier filters for refresh runs — `form.segmented-control.default`.
  */
 export function DataRefreshOutlierTabs({
   value,
   onValueChange,
   counts,
 }: DataRefreshOutlierTabsProps) {
+  const options = useMemo(
+    () =>
+      FILTER_TABS.map(({ value: filterValue, label, countKey }) => {
+        const count = countKey ? counts[countKey] : undefined;
+        const suffix = count != null && count > 0 ? ` (${count})` : "";
+
+        return {
+          value: filterValue,
+          label: `${label}${suffix}`,
+        };
+      }),
+    [counts],
+  );
+
   return (
-    <Tabs
+    <LabeledSegmentedControl
+      label="Filter"
       value={value}
       onValueChange={(next) => onValueChange(next as OutlierFilter)}
-      className="w-full"
-    >
-      <TabsList
-        variant="primary"
-        className="mb-4 flex h-auto flex-wrap justify-start gap-1"
-        aria-label="Refresh run filters"
-      >
-        {FILTER_TABS.map(({ value: filterValue, label, countKey }) => {
-          const count = countKey ? counts[countKey] : undefined;
-          const suffix =
-            count != null && count > 0 ? ` (${count})` : "";
-
-          return (
-            <TabsTrigger key={filterValue} value={filterValue}>
-              {label}
-              {suffix}
-            </TabsTrigger>
-          );
-        })}
-      </TabsList>
-    </Tabs>
+      options={options}
+      className="mb-4 w-full"
+      shellClassName="flex h-auto flex-wrap justify-start"
+    />
   );
 }

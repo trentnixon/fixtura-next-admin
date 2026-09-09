@@ -20,6 +20,10 @@ export const FORM_TOKENS = {
     withGroups: "form.select.with-groups",
     disabled: "form.select.disabled",
   },
+  segmentedControl: {
+    default: "form.segmented-control.default",
+    inverse: "form.segmented-control.inverse",
+  },
   checkbox: {
     default: "form.checkbox.default",
   },

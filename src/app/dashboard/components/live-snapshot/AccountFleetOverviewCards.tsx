@@ -42,9 +42,11 @@ interface AccountFleetOverviewCardsProps {
 function NewSignupsCard({
   signups,
   totalAccounts,
+  showFooterAction = true,
 }: {
   signups: AccountFleetOverviewModel["signups"];
   totalAccounts: number;
+  showFooterAction?: boolean;
 }) {
   const hasSignups = signups.total > 0;
 
@@ -147,16 +149,112 @@ function NewSignupsCard({
         <span className="text-xs text-muted-foreground">
           Based on account signup dates from account summary
         </span>
-        <Button
-          size="sm"
-          variant="ghost"
-          className={siteNavigationCtaClass}
-          asChild
-        >
-          <Link href="/dashboard/accounts">Open accounts</Link>
-        </Button>
+        {showFooterAction ? (
+          <Button
+            size="sm"
+            variant="ghost"
+            className={siteNavigationCtaClass}
+            asChild
+          >
+            <Link href="/dashboard/accounts">Open accounts</Link>
+          </Button>
+        ) : null}
       </CardFooter>
     </Card>
+  );
+}
+
+/**
+ * Association and club fleet type cards.
+ */
+export function AccountFleetTypeCards({
+  model,
+  className,
+}: {
+  model: AccountFleetOverviewModel;
+  className?: string;
+}) {
+  return (
+    <div className={cn("grid grid-cols-1 gap-3 lg:grid-cols-2", className)}>
+      {model.cards.map((card) => {
+        const meta = CARD_META[card.id];
+        const Icon = meta.icon;
+
+        return (
+          <Card key={card.id} className="border-slate-200 shadow-sm">
+            <CardHeader className="p-4 pb-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3">
+                  <div className={cn("rounded-md p-2", meta.iconTone)}>
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">{card.title}</CardTitle>
+                    <div
+                      className={cn(
+                        "mt-1 text-2xl font-bold leading-none",
+                        meta.valueTone
+                      )}
+                    >
+                      {card.total.toLocaleString()}
+                    </div>
+                  </div>
+                </div>
+                <Badge
+                  className="border-transparent bg-slate-100 px-2 py-0.5 text-slate-700"
+                  variant="outline"
+                >
+                  {card.fleetShareLabel}
+                </Badge>
+              </div>
+            </CardHeader>
+
+            <CardContent className="space-y-2 px-4 pb-4 pt-0">
+              {card.sportRows.map((row) => (
+                <div
+                  key={row.label}
+                  className="flex items-center justify-between rounded-md bg-slate-50 px-3 py-2"
+                >
+                  <span className="text-sm text-slate-600">{row.label}</span>
+                  <span
+                    className={cn("text-sm font-semibold", row.valueTone)}
+                  >
+                    {row.value}
+                  </span>
+                </div>
+              ))}
+            </CardContent>
+
+            <CardFooter className="justify-end px-4 pb-4 pt-0">
+              <Button
+                size="sm"
+                variant="ghost"
+                className={siteNavigationCtaClass}
+                asChild
+              >
+                <Link href={card.href}>{card.actionLabel}</Link>
+              </Button>
+            </CardFooter>
+          </Card>
+        );
+      })}
+    </div>
+  );
+}
+
+export function AccountNewSignupsCard({
+  model,
+  showFooterAction = true,
+}: {
+  model: AccountFleetOverviewModel;
+  showFooterAction?: boolean;
+}) {
+  return (
+    <NewSignupsCard
+      signups={model.signups}
+      totalAccounts={model.totalAccounts}
+      showFooterAction={showFooterAction}
+    />
   );
 }
 
@@ -200,72 +298,8 @@ export function AccountFleetOverviewCards({
 
   return (
     <div className={cn("space-y-3", className)}>
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        {model.cards.map((card) => {
-          const meta = CARD_META[card.id];
-          const Icon = meta.icon;
-
-          return (
-            <Card key={card.id} className="border-slate-200 shadow-sm">
-              <CardHeader className="p-4 pb-3">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-start gap-3">
-                    <div className={cn("rounded-md p-2", meta.iconTone)}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-base">{card.title}</CardTitle>
-                      <div
-                        className={cn(
-                          "mt-1 text-2xl font-bold leading-none",
-                          meta.valueTone
-                        )}
-                      >
-                        {card.total.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                  <Badge
-                    className="border-transparent bg-slate-100 px-2 py-0.5 text-slate-700"
-                    variant="outline"
-                  >
-                    {card.fleetShareLabel}
-                  </Badge>
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-2 px-4 pb-4 pt-0">
-                {card.sportRows.map((row) => (
-                  <div
-                    key={row.label}
-                    className="flex items-center justify-between rounded-md bg-slate-50 px-3 py-2"
-                  >
-                    <span className="text-sm text-slate-600">{row.label}</span>
-                    <span
-                      className={cn("text-sm font-semibold", row.valueTone)}
-                    >
-                      {row.value}
-                    </span>
-                  </div>
-                ))}
-              </CardContent>
-
-              <CardFooter className="justify-end px-4 pb-4 pt-0">
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className={siteNavigationCtaClass}
-                  asChild
-                >
-                  <Link href={card.href}>{card.actionLabel}</Link>
-                </Button>
-              </CardFooter>
-            </Card>
-          );
-        })}
-      </div>
-
-      <NewSignupsCard signups={model.signups} totalAccounts={model.totalAccounts} />
+      <AccountFleetTypeCards model={model} />
+      <AccountNewSignupsCard model={model} />
     </div>
   );
 }

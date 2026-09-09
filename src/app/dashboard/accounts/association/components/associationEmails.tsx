@@ -9,6 +9,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { LabeledSegmentedControl } from "@/components/ui-library/forms/LabeledSegmentedControl";
+import { siteNavigationCtaClass } from "@/lib/actions/siteNavigationButtonStyles";
+import { buildSubscriptionFilterOptions } from "@/lib/forms/subscriptionFilterOptions";
+import { cn } from "@/lib/utils";
 import {
   ExternalLink,
   MapPin,
@@ -147,6 +151,11 @@ export default function AssociationEmails({
     });
     return map;
   }, [accountsData]);
+
+  const filterOptions = useMemo(
+    () => buildSubscriptionFilterOptions(hideAllFilter),
+    [hideAllFilter],
+  );
 
   // Combined filtering logic
   const filteredAssociations = useMemo(() => {
@@ -304,51 +313,35 @@ export default function AssociationEmails({
         </div>
         <div className="space-y-4">
           {/* Controls: Search, Filters, Download */}
-          <div className="flex flex-col items-center justify-between gap-3 rounded-md border bg-slate-50/60 p-3 md:flex-row">
-            <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto flex-1">
-              <div className="relative w-full sm:w-80">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search associations, emails, IDs..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <div className="flex gap-2">
-                {!hideAllFilter && (
-                  <Button
-                    variant={filter === "all" ? "primary" : "secondary"}
-                    size="sm"
-                    onClick={() => setFilter("all")}
-                  >
-                    All
-                  </Button>
-                )}
-                <Button
-                  variant={filter === "active" ? "primary" : "secondary"}
-                  size="sm"
-                  onClick={() => setFilter("active")}
-                >
-                  Active
-                </Button>
-                <Button
-                  variant={filter === "inactive" ? "primary" : "secondary"}
-                  size="sm"
-                  onClick={() => setFilter("inactive")}
-                >
-                  Inactive
-                </Button>
-              </div>
+          <div className="flex flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 md:flex-row md:items-center">
+            <div className="relative min-w-0 flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder="Search associations, emails, IDs..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="rounded-full border-transparent bg-white pl-9 shadow-none"
+              />
             </div>
 
+            <LabeledSegmentedControl
+              label="Status"
+              value={filter}
+              onValueChange={(value) =>
+                setFilter(value as "all" | "active" | "inactive")
+              }
+              options={filterOptions}
+              className="shrink-0"
+              shellClassName="h-auto shrink-0 rounded-full"
+            />
+
             <Button
-              variant="accent"
+              variant="ghost"
               size="sm"
               onClick={downloadCSV}
-              className="w-full md:w-auto flex items-center gap-2"
+              className={cn(siteNavigationCtaClass, "w-full shrink-0 md:w-auto")}
             >
-              <Download className="h-4 w-4" />
+              <Download className="h-4 w-4" aria-hidden />
               Download CSV
             </Button>
           </div>
@@ -362,8 +355,7 @@ export default function AssociationEmails({
           </div>
 
           {/* Table */}
-          <div className="rounded-md border bg-card overflow-hidden">
-            <Table>
+          <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50 hover:bg-slate-50">
                   <TableHead className="w-[60px]">Logo</TableHead>
@@ -494,8 +486,9 @@ export default function AssociationEmails({
                                 {association.address &&
                                   association.address !== "No address" && (
                                     <Button
-                                      variant="secondary"
+                                      variant="ghost"
                                       size="sm"
+                                      className={siteNavigationCtaClass}
                                       asChild
                                     >
                                       <a
@@ -504,30 +497,41 @@ export default function AssociationEmails({
                                         )}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center gap-1"
                                       >
-                                        <MapPin className="h-3.5 w-3.5" />
-                                        <span>Map</span>
+                                        <MapPin className="h-3.5 w-3.5" aria-hidden />
+                                        Map
                                       </a>
                                     </Button>
                                   )}
                                 {association.website &&
                                   association.website !== "No website" && (
-                                    <Button variant="accent" size="sm" asChild>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className={siteNavigationCtaClass}
+                                      asChild
+                                    >
                                       <a
                                         href={association.website}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center gap-1"
                                       >
-                                        <ExternalLink className="h-3.5 w-3.5" />
-                                        <span>Web</span>
+                                        <ExternalLink
+                                          className="h-3.5 w-3.5"
+                                          aria-hidden
+                                        />
+                                        Web
                                       </a>
                                     </Button>
                                   )}
                               </>
                             )}
-                            <Button variant="primary" size="sm" asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={siteNavigationCtaClass}
+                              asChild
+                            >
                               <a
                                 href={`http://localhost:1337/admin/content-manager/collection-types/api::association.association/${association.id}`}
                                 target="_blank"
@@ -556,7 +560,6 @@ export default function AssociationEmails({
                 )}
               </TableBody>
             </Table>
-          </div>
 
           {/* Pagination */}
           {totalPages > 1 && (

@@ -1,18 +1,18 @@
 "use client";
 
-import { ArrowRight, Building2, Users } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Building2, Users } from "lucide-react";
+import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
+import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
 import AccountOverview from "./AccountOverview";
 import AccountSummaryCharts from "./AccountSummaryCharts";
 
 /**
- * Accounts hub — container.pattern.data-workspace
+ * Accounts hub — directory header plus grouped record panels by content type.
  */
 export default function AccountsDashboard() {
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-      <div className="flex flex-col gap-3 border-b border-slate-200 px-4 py-3 md:flex-row md:items-start md:justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <div className="rounded-md bg-blue-50 p-1.5 text-blue-700">
@@ -27,37 +27,31 @@ export default function AccountsDashboard() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button size="sm" variant="outline" asChild>
-            <Link href="/dashboard/accounts/association">
-              <Building2 className="mr-2 h-4 w-4" />
-              Associations
-            </Link>
-          </Button>
-          <Button size="sm" variant="outline" asChild>
-            <Link href="/dashboard/accounts/club">
-              <Users className="mr-2 h-4 w-4" />
-              Clubs
-            </Link>
-          </Button>
+          <DashboardLinkButton
+            href="/dashboard/accounts/association"
+            icon={Building2}
+          >
+            Associations
+          </DashboardLinkButton>
+          <DashboardLinkButton href="/dashboard/accounts/club" icon={Users}>
+            Clubs
+          </DashboardLinkButton>
         </div>
       </div>
 
-      <div className="space-y-6 p-4">
-        <AccountOverview />
-        <AccountSummaryCharts />
-      </div>
+      <AccountOverview />
 
-      <div className="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-4 py-3 text-sm md:flex-row md:items-center md:justify-between">
-        <span className="text-muted-foreground">
-          Browse association and club directories for operational actions
-        </span>
-        <Button size="sm" variant="primary" asChild>
-          <Link href="/dashboard/accounts/association">
+      <OverviewRecordPanel
+        title="Analytics"
+        description="Account mix, sports coverage, and engagement trends"
+        action={
+          <DashboardLinkButton href="/dashboard/accounts/association" trailingIcon="arrow">
             Open associations
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Link>
-        </Button>
-      </div>
+          </DashboardLinkButton>
+        }
+      >
+        <AccountSummaryCharts />
+      </OverviewRecordPanel>
     </div>
   );
 }

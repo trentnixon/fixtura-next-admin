@@ -4,8 +4,12 @@ import { Building2, Clock, Trophy, Users } from "lucide-react";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import EmptyState from "@/components/ui-library/states/EmptyState";
+import {
+  AccountFleetTypeCards,
+  AccountNewSignupsCard,
+} from "@/app/dashboard/components/live-snapshot/AccountFleetOverviewCards";
+import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
 import { useAccountSummaryQuery } from "@/hooks/accounts/useAccountSummaryQuery";
-import { AccountFleetOverviewCards } from "@/app/dashboard/components/live-snapshot/AccountFleetOverviewCards";
 import { buildAccountFleetOverview } from "@/lib/overview/accountFleetSummary";
 
 type CompactMetric = {
@@ -16,7 +20,7 @@ type CompactMetric = {
 };
 
 /**
- * Account summary metrics — card.stat.modern-overview + card.base.compact-kpi
+ * Account summary sections — grouped by browse type, fleet snapshot, and activity.
  */
 export default function AccountOverview() {
   const { data, isLoading, isError, error, refetch } =
@@ -66,6 +70,14 @@ export default function AccountOverview() {
     totalAccounts > 0 ? Math.round((setupComplete / totalAccounts) * 100) : 0;
 
   const accountFleetOverview = buildAccountFleetOverview(summary);
+  if (!accountFleetOverview) {
+    return (
+      <EmptyState
+        title="No account summary"
+        description="Summary data is unavailable."
+      />
+    );
+  }
 
   const compactMetrics: CompactMetric[] = [
     {
@@ -95,40 +107,56 @@ export default function AccountOverview() {
   ];
 
   return (
-    <div className="space-y-4">
-      <AccountFleetOverviewCards
-        model={accountFleetOverview}
-        isLoading={false}
-        error={null}
-      />
+    <div className="space-y-6">
+      <OverviewRecordPanel
+        title="Browse by account type"
+        description="Association and club directories with sport breakdown"
+      >
+        <AccountFleetTypeCards model={accountFleetOverview} />
+      </OverviewRecordPanel>
 
-      <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
-        {compactMetrics.map((metric) => {
-          const Icon = metric.icon;
+      <OverviewRecordPanel
+        title="Fleet snapshot"
+        description="Sports mix, trials, setup progress, and fleet totals"
+      >
+        <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
+          {compactMetrics.map((metric) => {
+            const Icon = metric.icon;
 
-          return (
-            <div
-              key={metric.label}
-              className="flex items-center gap-3 border-b border-slate-200 px-4 py-3 last:border-b-0 sm:[&:nth-last-child(-n+2)]:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0"
-            >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600">
-                <Icon className="h-4 w-4" />
+            return (
+              <div
+                key={metric.label}
+                className="flex items-center gap-3 border-b border-slate-200 px-4 py-3 last:border-b-0 sm:[&:nth-last-child(-n+2)]:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600">
+                  <Icon className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {metric.label}
+                  </div>
+                  <div className="mt-0.5 text-lg font-semibold text-slate-950">
+                    {metric.value}
+                  </div>
+                  <div className="truncate text-xs text-muted-foreground">
+                    {metric.detail}
+                  </div>
+                </div>
               </div>
-              <div className="min-w-0">
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  {metric.label}
-                </div>
-                <div className="mt-0.5 text-lg font-semibold text-slate-950">
-                  {metric.value}
-                </div>
-                <div className="truncate text-xs text-muted-foreground">
-                  {metric.detail}
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      </OverviewRecordPanel>
+
+      <OverviewRecordPanel
+        title="Recent signups"
+        description={`New accounts in the last ${accountFleetOverview.signups.windowDays} days`}
+      >
+        <AccountNewSignupsCard
+          model={accountFleetOverview}
+          showFooterAction={false}
+        />
+      </OverviewRecordPanel>
     </div>
   );
 }

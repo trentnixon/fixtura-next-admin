@@ -26,6 +26,22 @@ export default function UsageGuidelinesShowcase() {
         </div>
 
         <div>
+          <h4 className="font-semibold text-foreground mb-2">Segmented Control</h4>
+          <ul className="list-disc list-inside space-y-1 ml-2">
+            <li>
+              Use for 2–6 mutually exclusive filter presets (period, range, status)
+            </li>
+            <li>Prefer over dropdown select when all options should stay visible</li>
+            <li>Always include a visible label — use `form.segmented-control.default`</li>
+            <li>
+              Use `form.segmented-control.inverse` on dark surfaces or when the
+              control should match the sidebar shell
+            </li>
+            <li>Do not use for route navigation — use section tabs instead</li>
+          </ul>
+        </div>
+
+        <div>
           <h4 className="font-semibold text-foreground mb-2">Select Components</h4>
           <ul className="list-disc list-inside space-y-1 ml-2">
             <li>Use for single selection from a list</li>

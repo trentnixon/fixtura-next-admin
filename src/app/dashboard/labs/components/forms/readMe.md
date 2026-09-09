@@ -24,6 +24,7 @@ Tokens follow the pattern `form.{component}.{variant}` (e.g. `form.input.basic`,
   - `TextInputsShowcase.tsx`
   - `TextareaShowcase.tsx`
   - `SelectShowcase.tsx`
+  - `SegmentedControlShowcase.tsx`
   - `CheckboxRadioShowcase.tsx`
   - `SwitchShowcase.tsx`
   - `FormExamplesShowcase.tsx`

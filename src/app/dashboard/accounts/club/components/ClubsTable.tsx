@@ -8,6 +8,24 @@ import ClubEmails from "./clubEmails";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  LayoutDashboard,
+  Mail,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const CLUB_TABS = [
+  { value: "snapshot", label: "Club Snapshot", icon: LayoutDashboard },
+  { value: "active", label: "Active", icon: CheckCircle2 },
+  { value: "inactive", label: "Inactive", icon: AlertTriangle },
+  { value: "emails", label: "Contacts", icon: Mail },
+] as const;
 
 export default function DisplayClubsTable() {
   const { data, isLoading, isError, error, refetch } = useAccountsQuery();
@@ -33,18 +51,22 @@ export default function DisplayClubsTable() {
 
   return (
     <Tabs defaultValue="snapshot" className="space-y-4">
-      <TabsList
-        variant="secondary"
-        className="h-auto flex-wrap justify-start gap-1 rounded-md"
-      >
-        <TabsTrigger value="snapshot">Club Snapshot</TabsTrigger>
-        <TabsTrigger value="active">
-          Active Subscriptions ({activeClubs.length})
-        </TabsTrigger>
-        <TabsTrigger value="inactive">
-          Inactive Subscriptions ({inactiveClubs.length})
-        </TabsTrigger>
-        <TabsTrigger value="emails">Contacts</TabsTrigger>
+      <TabsList variant="primary" className={cn(sectionTabListClass, "mb-4")}>
+        {CLUB_TABS.map(({ value, label, icon: Icon }) => (
+          <TabsTrigger
+            key={value}
+            value={value}
+            variant="section"
+            className={sectionTabTriggerClass}
+          >
+            <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden />
+            {value === "active"
+              ? `${label} (${activeClubs.length})`
+              : value === "inactive"
+                ? `${label} (${inactiveClubs.length})`
+                : label}
+          </TabsTrigger>
+        ))}
       </TabsList>
 
       <TabsContent value="snapshot">
@@ -84,13 +106,7 @@ export default function DisplayClubsTable() {
       </TabsContent>
 
       <TabsContent value="emails">
-        <SectionContainer
-          title="Club Contacts"
-          description="Search, review, and export club contact details"
-          variant="compact"
-        >
-          <ClubEmails initialFilter="active" hideAllFilter />
-        </SectionContainer>
+        <ClubEmails initialFilter="active" hideAllFilter />
       </TabsContent>
     </Tabs>
   );

@@ -96,6 +96,15 @@ Metric and statistic display components:
   - Automatic responsive grid layout
   - Showcase: [`/dashboard/labs/components/data`](../../app/dashboard/labs/components/data/readMe.md)
 
+### Form Components (`forms/`)
+
+Labeled filter and preset controls:
+
+- **`LabeledSegmentedControl.tsx`**: Inline labeled segmented control for 2–6 mutually exclusive filter presets (period, range, status)
+  - Variants: `default` (`form.segmented-control.default`), `inverse` (`form.segmented-control.inverse`)
+  - Style tokens: `src/lib/forms/segmentedControlStyles.ts`
+  - Showcase: [`/dashboard/labs/components/forms`](../../app/dashboard/labs/components/forms/readMe.md)
+
 ## Radix UI Components (`ui/`)
 
 These components are built on Radix UI primitives with Tailwind CSS styling. Full documentation and examples available in the showcase pages:

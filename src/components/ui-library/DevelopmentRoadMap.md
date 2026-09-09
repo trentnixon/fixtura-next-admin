@@ -241,6 +241,12 @@ This roadmap outlines all components that will be built for the complete UI comp
   - [x] Code snippets and usage guidelines
 - [ ] Switch component (enhanced)
 
+- [x] **Segmented Control**
+  - [x] LabeledSegmentedControl component (default and inverse variants)
+  - [x] Style tokens in `src/lib/forms/segmentedControlStyles.ts`
+  - [x] SegmentedControlShowcase with usage guidelines
+  - [x] Exported from `ui-library/index.ts`
+
 #### Date & Time
 
 - [ ] **Date Components**

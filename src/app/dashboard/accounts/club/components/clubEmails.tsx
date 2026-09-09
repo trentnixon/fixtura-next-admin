@@ -9,6 +9,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { LabeledSegmentedControl } from "@/components/ui-library/forms/LabeledSegmentedControl";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { siteNavigationCtaClass } from "@/lib/actions/siteNavigationButtonStyles";
+import { buildSubscriptionFilterOptions } from "@/lib/forms/subscriptionFilterOptions";
+import { cn } from "@/lib/utils";
 import {
   ExternalLink,
   MapPin,
@@ -116,6 +121,11 @@ export default function ClubEmails({
     );
     return map;
   }, [accountsData]);
+
+  const filterOptions = useMemo(
+    () => buildSubscriptionFilterOptions(hideAllFilter),
+    [hideAllFilter],
+  );
 
   // Combined filtering logic
   const filteredClubs = useMemo(() => {
@@ -260,8 +270,13 @@ export default function ClubEmails({
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white md:grid-cols-3">
+    <div className="mt-4 space-y-4">
+      <SectionContainer
+        title="Club Contact Information"
+        description="Manage and export contact details for club accounts"
+        variant="default"
+      >
+        <div className="mb-4 grid overflow-hidden rounded-md border border-slate-200 bg-white md:grid-cols-3">
         {contactMetrics.map((metric) => {
           const Icon = metric.icon;
 
@@ -289,68 +304,48 @@ export default function ClubEmails({
             </div>
           );
         })}
-      </div>
+        </div>
 
-      <div className="space-y-4">
-        {/* Controls: Search, Filters, Download */}
-        <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50/60 p-3 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto flex-1">
-            <div className="relative w-full sm:w-80">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="space-y-4">
+          <div className="flex flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 md:flex-row md:items-center">
+            <div className="relative min-w-0 flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Search clubs, emails, IDs..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="rounded-full border-transparent bg-white pl-9 shadow-none"
               />
             </div>
-            <div className="flex gap-2">
-              {!hideAllFilter && (
-                <Button
-                  variant={filter === "all" ? "secondary" : "primary"}
-                  size="sm"
-                  onClick={() => setFilter("all")}
-                >
-                  All
-                </Button>
-              )}
-              <Button
-                variant={filter === "active" ? "secondary" : "primary"}
-                size="sm"
-                onClick={() => setFilter("active")}
-              >
-                Active
-              </Button>
-              <Button
-                variant={filter === "inactive" ? "secondary" : "primary"}
-                size="sm"
-                onClick={() => setFilter("inactive")}
-              >
-                Inactive
-              </Button>
-            </div>
+
+            <LabeledSegmentedControl
+              label="Status"
+              value={filter}
+              onValueChange={(value) =>
+                setFilter(value as "all" | "active" | "inactive")
+              }
+              options={filterOptions}
+              className="shrink-0"
+              shellClassName="h-auto shrink-0 rounded-full"
+            />
+
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={downloadCSV}
+              className={cn(siteNavigationCtaClass, "w-full shrink-0 md:w-auto")}
+            >
+              <Download className="h-4 w-4" aria-hidden />
+              Download CSV
+            </Button>
           </div>
 
-          <Button
-            variant="accent"
-            size="sm"
-            onClick={downloadCSV}
-            className="w-full md:w-auto flex items-center gap-2"
-          >
-            <Download className="h-4 w-4" />
-            Download CSV
-          </Button>
-        </div>
-
-        {/* Results Summary */}
-        <div className="text-sm text-muted-foreground px-2">
+          <div className="px-1 text-sm text-muted-foreground">
           Showing {paginatedClubs.length} of {filteredClubs.length} contacts
           {filteredClubs.length !== totalClubs &&
             ` (filtered from ${totalClubs})`}
-        </div>
+          </div>
 
-        {/* Table */}
-        <div className="rounded-md border bg-card overflow-hidden">
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50 hover:bg-slate-50">
@@ -473,37 +468,53 @@ export default function ClubEmails({
                             <>
                               {club.address &&
                                 club.address !== "No address" && (
-                                  <Button variant="secondary" size="sm" asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className={siteNavigationCtaClass}
+                                    asChild
+                                  >
                                     <a
                                       href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
                                         club.address,
                                       )}`}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="flex items-center gap-1"
                                     >
-                                      <MapPin className="h-3.5 w-3.5" />
-                                      <span>Map</span>
+                                      <MapPin className="h-3.5 w-3.5" aria-hidden />
+                                      Map
                                     </a>
                                   </Button>
                                 )}
                               {club.website &&
                                 club.website !== "No website" && (
-                                  <Button variant="primary" size="sm" asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className={siteNavigationCtaClass}
+                                    asChild
+                                  >
                                     <a
                                       href={club.website}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="flex items-center gap-1"
                                     >
-                                      <ExternalLink className="h-3.5 w-3.5" />
-                                      <span>Web</span>
+                                      <ExternalLink
+                                        className="h-3.5 w-3.5"
+                                        aria-hidden
+                                      />
+                                      Web
                                     </a>
                                   </Button>
                                 )}
                             </>
                           )}
-                          <Button variant="primary" size="sm" asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={siteNavigationCtaClass}
+                            asChild
+                          >
                             <a
                               href={`http://localhost:1337/admin/content-manager/collection-types/api::club.club/${club.id}`}
                               target="_blank"
@@ -532,10 +543,8 @@ export default function ClubEmails({
               )}
             </TableBody>
           </Table>
-        </div>
 
-        {/* Pagination */}
-        {totalPages > 1 && (
+          {totalPages > 1 && (
           <div className="flex items-center justify-between border-t pt-4">
             <Pagination
               currentPage={currentPage}
@@ -556,9 +565,10 @@ export default function ClubEmails({
                 <PaginationNext />
               </div>
             </Pagination>
-          </div>
-        )}
-      </div>
+            </div>
+          )}
+        </div>
+      </SectionContainer>
     </div>
   );
 }

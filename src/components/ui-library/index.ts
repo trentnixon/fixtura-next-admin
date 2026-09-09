@@ -10,6 +10,14 @@ export { default as StatusBadge } from "./badges/StatusBadge";
 export { default as StatCard } from "./metrics/StatCard";
 export { default as MetricGrid } from "./metrics/MetricGrid";
 
+// Form Components
+export {
+  LabeledSegmentedControl,
+  type LabeledSegmentedControlProps,
+  type SegmentedControlOption,
+  type SegmentedControlVariant,
+} from "./forms/LabeledSegmentedControl";
+
 // Foundation Components
 export { default as Text } from "./foundation/Text";
 export { default as Code } from "./foundation/Code";

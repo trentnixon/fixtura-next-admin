@@ -8,8 +8,27 @@ import AssociationEmails from "./associationEmails";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
-import { AlertTriangle, CheckCircle2, CreditCard, Trophy } from "lucide-react";
+import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  CreditCard,
+  LayoutDashboard,
+  Mail,
+  Trophy,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
 import { AccountLookupItem } from "@/types/adminAccountLookup";
+
+const ASSOCIATION_TABS = [
+  { value: "snapshot", label: "Association Snapshot", icon: LayoutDashboard },
+  { value: "active", label: "Active", icon: CheckCircle2 },
+  { value: "inactive", label: "Inactive", icon: AlertTriangle },
+  { value: "emails", label: "Contacts", icon: Mail },
+] as const;
 
 export default function DisplayAssociationsTable() {
   const { data, isLoading, isError, error, refetch } = useAccountsQuery();
@@ -38,18 +57,22 @@ export default function DisplayAssociationsTable() {
 
   return (
     <Tabs defaultValue="snapshot" className="space-y-4">
-      <TabsList
-        variant="secondary"
-        className="h-auto flex-wrap justify-start gap-1 rounded-md"
-      >
-        <TabsTrigger value="snapshot">Association Snapshot</TabsTrigger>
-        <TabsTrigger value="active">
-          Active ({activeAssociations.length})
-        </TabsTrigger>
-        <TabsTrigger value="inactive">
-          Inactive ({inactiveAssociations.length})
-        </TabsTrigger>
-        <TabsTrigger value="emails">Contacts</TabsTrigger>
+      <TabsList variant="primary" className={cn(sectionTabListClass, "mb-4")}>
+        {ASSOCIATION_TABS.map(({ value, label, icon: Icon }) => (
+          <TabsTrigger
+            key={value}
+            value={value}
+            variant="section"
+            className={sectionTabTriggerClass}
+          >
+            <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden />
+            {value === "active"
+              ? `${label} (${activeAssociations.length})`
+              : value === "inactive"
+                ? `${label} (${inactiveAssociations.length})`
+                : label}
+          </TabsTrigger>
+        ))}
       </TabsList>
 
       <TabsContent value="snapshot">

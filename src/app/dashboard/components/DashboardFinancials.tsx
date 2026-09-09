@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { AlertTriangle, DollarSign, FileText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LabeledSegmentedControl } from "@/components/ui-library/forms/LabeledSegmentedControl";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import { useAccountSummaryQuery } from "@/hooks/accounts/useAccountSummaryQuery";
 import { useGlobalAnalytics } from "@/hooks/analytics/useGlobalAnalytics";
@@ -37,11 +37,11 @@ const UNAVAILABLE = "—";
 const UNAVAILABLE_META = "Unavailable";
 const DEFAULT_CURRENCY = "AUD";
 
-const PERIOD_OPTIONS: Array<{ value: FinancialPeriodMonths; label: string }> = [
-  { value: 1, label: "1 month" },
-  { value: 3, label: "3 months" },
-  { value: 6, label: "6 months" },
-];
+const PERIOD_OPTIONS = [
+  { value: "1", label: "1 month" },
+  { value: "3", label: "3 months" },
+  { value: "6", label: "6 months" },
+] as const;
 
 /**
  * Fleet, revenue, orders, invoices, and billing metrics for the dashboard.
@@ -270,27 +270,14 @@ export default function DashboardFinancials() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-sm font-medium text-slate-700">Period</span>
-        <Tabs
-          value={String(periodMonths)}
-          onValueChange={(value) =>
-            setPeriodMonths(Number(value) as FinancialPeriodMonths)
-          }
-        >
-          <TabsList className="h-auto border border-slate-200 bg-white p-1">
-            {PERIOD_OPTIONS.map((option) => (
-              <TabsTrigger
-                key={option.value}
-                value={String(option.value)}
-                className="px-3 py-1.5"
-              >
-                {option.label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      </div>
+      <LabeledSegmentedControl
+        label="Period"
+        value={String(periodMonths)}
+        onValueChange={(value) =>
+          setPeriodMonths(Number(value) as FinancialPeriodMonths)
+        }
+        options={[...PERIOD_OPTIONS]}
+      />
 
       <OverviewDataWorkspace
         title="Financial snapshot"

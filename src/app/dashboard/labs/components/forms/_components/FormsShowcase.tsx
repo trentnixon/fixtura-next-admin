@@ -3,6 +3,7 @@
 import TextInputsShowcase from "./_elements/TextInputsShowcase";
 import TextareaShowcase from "./_elements/TextareaShowcase";
 import SelectShowcase from "./_elements/SelectShowcase";
+import SegmentedControlShowcase from "./_elements/SegmentedControlShowcase";
 import SwitchShowcase from "./_elements/SwitchShowcase";
 import CheckboxRadioShowcase from "./_elements/CheckboxRadioShowcase";
 import FormExamplesShowcase from "./_elements/FormExamplesShowcase";
@@ -19,6 +20,7 @@ export default function FormsShowcase() {
       <TextInputsShowcase />
       <TextareaShowcase />
       <SelectShowcase />
+      <SegmentedControlShowcase />
       <SwitchShowcase />
       <CheckboxRadioShowcase />
       <FormExamplesShowcase />

@@ -226,7 +226,7 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50/60 p-3 lg:flex-row lg:items-center">
+      <div className="flex flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 lg:flex-row lg:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -237,7 +237,7 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
               setSearchQuery(event.target.value);
               setCurrentPage(1);
             }}
-            className="pl-10 pr-10"
+            className="rounded-full border-transparent bg-white pl-10 pr-10 shadow-none"
           />
           {searchQuery && (
             <Button
@@ -262,7 +262,7 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
               setCurrentPage(1);
             }}
           >
-            <SelectTrigger className="w-full lg:w-[180px]">
+            <SelectTrigger className="w-full rounded-full bg-white lg:w-[180px]">
               <SelectValue placeholder="Filter by sport" />
             </SelectTrigger>
             <SelectContent>
@@ -284,7 +284,7 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
               setCurrentPage(1);
             }}
           >
-            <SelectTrigger className="w-full lg:w-[180px]">
+            <SelectTrigger className="w-full rounded-full bg-white lg:w-[180px]">
               <SelectValue placeholder="Filter by club" />
             </SelectTrigger>
             <SelectContent>
@@ -306,7 +306,7 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
               setCurrentPage(1);
             }}
           >
-            <SelectTrigger className="w-full lg:w-[220px]">
+            <SelectTrigger className="w-full rounded-full bg-white lg:w-[220px]">
               <SelectValue placeholder="Filter by association" />
             </SelectTrigger>
             <SelectContent>
@@ -324,7 +324,7 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
           <Button
             variant="accent"
             onClick={handleResetFilters}
-            className="whitespace-nowrap"
+            className="whitespace-nowrap rounded-full"
           >
             Reset Filters
           </Button>
@@ -339,8 +339,7 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
 
       {paginatedData.length > 0 ? (
         <>
-          <div className="overflow-hidden rounded-md border border-slate-200 bg-card">
-            <Table>
+          <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50 hover:bg-slate-50">
                   <TableHead className="w-[56px]">Logo</TableHead>
@@ -495,7 +494,6 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
                 })}
               </TableBody>
             </Table>
-          </div>
 
           {totalPages > 0 && (
             <div className="flex items-center justify-between">

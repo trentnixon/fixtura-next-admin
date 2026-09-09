@@ -9,9 +9,9 @@ import {
   PlayCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
+import { LabeledSegmentedControl } from "@/components/ui-library/forms/LabeledSegmentedControl";
 import { useSchedulerRollup } from "@/hooks/scheduler/useSchedulerRollup";
 import { useGetTodaysRenders } from "@/hooks/scheduler/useGetTodaysRenders";
 import { useAccountAssetRunRenderActivity } from "@/hooks/account-asset-run/useAccountAssetRunRenderActivity";
@@ -32,7 +32,6 @@ import { DashboardLinkButton } from "./live-snapshot/DashboardLinkButton";
 import { RenderActivityCharts } from "./account-asset-run/RenderActivityCharts";
 import { RenderActivityCompactList } from "./asset-creation/RenderActivityCompactList";
 import { AssetRunStatusChart } from "./asset-creation/AssetRunStatusChart";
-import { cn } from "@/lib/utils";
 
 const UNAVAILABLE = "—";
 const UNAVAILABLE_META = "Unavailable";
@@ -220,47 +219,23 @@ export default function DashboardAssetCreation() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-slate-700">Window</span>
-          <div className="inline-flex rounded-md border border-slate-200 bg-white p-0.5">
-            {WINDOW_OPTIONS.map((option) => (
-              <Button
-                key={option.value}
-                type="button"
-                size="sm"
-                variant={windowPreset === option.value ? "default" : "ghost"}
-                className={cn(
-                  "h-8 px-3",
-                  windowPreset !== option.value && "text-muted-foreground"
-                )}
-                onClick={() => setWindowPreset(option.value)}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </div>
-        </div>
+        <LabeledSegmentedControl
+          label="Window"
+          value={windowPreset}
+          onValueChange={(value) =>
+            setWindowPreset(value as RenderActivityWindowPreset)
+          }
+          options={[...WINDOW_OPTIONS]}
+        />
 
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-medium text-slate-700">Status</span>
-          <div className="inline-flex rounded-md border border-slate-200 bg-white p-0.5">
-            {STATUS_OPTIONS.map((option) => (
-              <Button
-                key={option.value}
-                type="button"
-                size="sm"
-                variant={statusFilter === option.value ? "default" : "ghost"}
-                className={cn(
-                  "h-8 px-3",
-                  statusFilter !== option.value && "text-muted-foreground"
-                )}
-                onClick={() => setStatusFilter(option.value)}
-              >
-                {option.label}
-              </Button>
-            ))}
-          </div>
-        </div>
+        <LabeledSegmentedControl
+          label="Status"
+          value={statusFilter}
+          onValueChange={(value) =>
+            setStatusFilter(value as RenderActivityStatusFilter)
+          }
+          options={[...STATUS_OPTIONS]}
+        />
       </div>
 
       {rollupError ? (
