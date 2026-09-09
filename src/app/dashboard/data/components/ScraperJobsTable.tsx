@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { EyeIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -99,16 +99,19 @@ interface ScraperJobsTableProps {
 
 export function ScraperJobsTable({ jobs }: ScraperJobsTableProps) {
   return (
-    <Table>
+    <div className="overflow-x-auto">
+      <Table>
         <TableHeader>
-          <TableRow className="bg-slate-100 hover:bg-slate-100">
-            <TableHead className="min-w-[200px]">Job</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Duration</TableHead>
-            <TableHead>Days ago</TableHead>
-            <TableHead>Started</TableHead>
-            <TableHead>Log entries</TableHead>
-            <TableHead className="w-[100px] text-right">Actions</TableHead>
+          <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
+            <TableHead className="min-w-[200px] font-semibold">Job</TableHead>
+            <TableHead className="font-semibold">Status</TableHead>
+            <TableHead className="font-semibold">Duration</TableHead>
+            <TableHead className="font-semibold">Days ago</TableHead>
+            <TableHead className="font-semibold">Started</TableHead>
+            <TableHead className="font-semibold">Log entries</TableHead>
+            <TableHead className="w-[72px] text-right font-semibold">
+              Actions
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -128,7 +131,10 @@ export function ScraperJobsTable({ jobs }: ScraperJobsTableProps) {
               const eventsTitle = formatEventCountsTitle(job.eventCounts);
 
               return (
-                <TableRow key={job.jobId}>
+                <TableRow
+                  key={job.jobId}
+                  className="transition-colors hover:bg-slate-50/50"
+                >
                   <TableCell>
                     <div className="flex min-w-0 flex-col gap-0.5">
                       <Link
@@ -184,16 +190,17 @@ export function ScraperJobsTable({ jobs }: ScraperJobsTableProps) {
                   </TableCell>
                   <TableCell className="text-right">
                     <Button
-                      variant={hasFailures ? "accent" : "outline"}
-                      size="sm"
+                      variant="outline"
+                      size="icon"
+                      className="border-slate-200 bg-slate-50 text-slate-700 shadow-none hover:bg-slate-100 hover:text-slate-900"
                       asChild
                     >
                       <Link
                         href={`/dashboard/data/${encodeURIComponent(job.jobId)}`}
-                        aria-label={`View full details for ${formatScopeLabel(job.scope)}`}
+                        title={`View details for ${formatScopeLabel(job.scope)}`}
+                        aria-label={`View details for ${formatScopeLabel(job.scope)}`}
                       >
-                        <ExternalLink className="h-4 w-4" />
-                        Details
+                        <EyeIcon className="h-4 w-4" />
                       </Link>
                     </Button>
                   </TableCell>
@@ -202,6 +209,7 @@ export function ScraperJobsTable({ jobs }: ScraperJobsTableProps) {
             })
           )}
         </TableBody>
-    </Table>
+      </Table>
+    </div>
   );
 }

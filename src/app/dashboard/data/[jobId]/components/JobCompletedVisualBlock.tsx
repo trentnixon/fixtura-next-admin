@@ -1,8 +1,14 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import type { LogEntry, LogMetrics, ScrapeIssue } from "@/types/scraperLogs";
 import ChartCard from "@/components/modules/charts/ChartCard";
+import { CompactKpiCard } from "@/components/ui-library/cards";
+import {
+  OverviewDataWorkspace,
+  type WorkspaceMetricTile,
+} from "@/app/dashboard/components/live-snapshot/OverviewDataWorkspace";
+import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
 import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import type { ChartConfig } from "@/components/ui/chart";
 import { formatDurationReadable } from "@/utils/chart-formatters";
@@ -18,13 +24,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  AlertTriangle,
   CheckCircle2,
   Copy,
   ExternalLink,
   Layers,
-  Package,
-  Timer,
   Upload,
 } from "lucide-react";
 import {
@@ -48,34 +51,6 @@ function artifactFileHref(relativePath: string): string | null {
 
 function num(v: unknown): number {
   return typeof v === "number" && !Number.isNaN(v) ? v : 0;
-}
-
-function StatTile({
-  icon,
-  label,
-  children,
-  className,
-}: {
-  icon: ReactNode;
-  label: string;
-  children: ReactNode;
-  className?: string;
-}) {
-  return (
-    <div
-      className={`flex min-h-[76px] gap-2.5 rounded-lg border bg-white p-3 ${className ?? ""}`}
-    >
-      <div className="text-muted-foreground shrink-0 mt-0.5">{icon}</div>
-      <div className="min-w-0 flex-1">
-        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wide">
-          {label}
-        </p>
-        <div className="mt-1 text-sm font-semibold leading-snug">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 function completionDurationMs(
@@ -122,79 +97,123 @@ function CompletionAtAGlance({
       : null;
   const artifactPaths = collectUniqueArtifactRefs(issues);
 
+  const fixtureValue =
+    fixturesTotal > 0 || succeeded > 0 || failedFx > 0
+      ? `${succeeded.toLocaleString()} ok · ${failedFx.toLocaleString()} failed`
+      : "—";
+
+  const ingestValue =
+    ingestOk > 0 || ingestFail > 0 || ingestTotal > 0 || ingestRetry > 0
+      ? `${ingestOk.toLocaleString()} ok · ${ingestFail.toLocaleString()} failed`
+      : "—";
+
+  const headlineMetrics = useMemo((): WorkspaceMetricTile[] => {
+    return [
+      {
+        id: "outcome",
+        label: "Outcome",
+        value:
+          fatal === true
+            ? "Fatal"
+            : fatal === false
+              ? "Non-fatal"
+              : "Not specified",
+        meta:
+          fatal === true
+            ? "Completion flagged as fatal"
+            : fatal === false
+              ? "Completed without fatal flag"
+              : "Fatal flag not set",
+      },
+      {
+        id: "duration",
+        label: "Scrape duration",
+        value:
+          durationMs > 0 ? formatDurationReadable(durationMs) : "—",
+        meta: "Wall-clock scrape time",
+      },
+      {
+        id: "artifacts",
+        label: "Artifacts",
+        value: artifacts ?? "—",
+        meta:
+          reportedArtifactTotal != null
+            ? `${reportedArtifactTotal.toLocaleString()} reported in metadata`
+            : "Capture file count",
+      },
+      {
+        id: "issues",
+        label: "Issues",
+        value: issueCount.toLocaleString(),
+        meta: issueCount === 1 ? "Issue on completion" : "Issues on completion",
+      },
+    ];
+  }, [
+    artifacts,
+    durationMs,
+    fatal,
+    issueCount,
+    reportedArtifactTotal,
+  ]);
+
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4 xl:grid-cols-8">
-        <StatTile
-          icon={
-            fatal === true ? (
-              <AlertTriangle className="h-4 w-4 text-red-600" />
-            ) : fatal === false ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-            ) : (
-              <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-            )
+    <div className="space-y-4">
+      <OverviewDataWorkspace
+        title="Completion snapshot"
+        description="Headline outcome and throughput from the job.completed event"
+        icon={CheckCircle2}
+        badge={
+          fatal === true ? (
+            <Badge variant="destructive">Fatal</Badge>
+          ) : fatal === false ? (
+            <Badge
+              variant="outline"
+              className="border-emerald-200 bg-emerald-50 text-emerald-800"
+            >
+              Non-fatal
+            </Badge>
+          ) : null
+        }
+        metrics={headlineMetrics}
+        columns={4}
+      />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <CompactKpiCard
+          label="Fixtures"
+          value={fixtureValue}
+          icon={<Layers className="h-4 w-4" />}
+          iconClassName="bg-emerald-50 text-emerald-700"
+          progressClassName="bg-emerald-500"
+          badge={
+            fixturesTotal > 0
+              ? `${fixturesTotal.toLocaleString()} total`
+              : undefined
           }
-          label="Outcome"
-          className={
-            fatal === true
-              ? "border-red-200 bg-red-50/50"
-              : fatal === false
-                ? "border-emerald-200/80 bg-emerald-50/40"
-                : ""
+        />
+        <CompactKpiCard
+          label="Ingest"
+          value={ingestValue}
+          icon={<Upload className="h-4 w-4" />}
+          iconClassName="bg-sky-50 text-sky-700"
+          progressClassName="bg-sky-500"
+          badge={
+            ingestTotal > 0
+              ? `${ingestTotal.toLocaleString()} total`
+              : ingestRetry > 0
+                ? `${ingestRetry.toLocaleString()} retried`
+                : undefined
           }
-        >
-          <span className="flex flex-wrap items-center gap-2">
-            {fatal !== undefined ? (
-              <Badge
-                variant={fatal ? "destructive" : "default"}
-                className={
-                  fatal
-                    ? "bg-red-100 text-red-900 border-red-200"
-                    : "bg-emerald-100 text-emerald-900 border-emerald-200"
-                }
-              >
-                {fatal ? "Fatal" : "Non-fatal"}
-              </Badge>
-            ) : (
-              <span className="text-xs text-muted-foreground">
-                Not specified
-              </span>
-            )}
-          </span>
-        </StatTile>
+        />
+      </div>
 
-        <StatTile icon={<Timer className="h-4 w-4" />} label="Scrape duration">
-          {durationMs > 0 ? (
-            <span className="tabular-nums text-base tracking-tight">
-              {formatDurationReadable(durationMs)}
-            </span>
-          ) : (
-            "—"
-          )}
-        </StatTile>
-
-        <StatTile icon={<Package className="h-4 w-4" />} label="Artifacts">
-          {artifacts ?? "—"}
-        </StatTile>
-
-        <StatTile icon={<AlertTriangle className="h-4 w-4" />} label="Issues">
-          <span className="tabular-nums text-base">{issueCount}</span>
-        </StatTile>
-        {(artifactPaths.length > 0 ||
-          (reportedArtifactTotal != null && reportedArtifactTotal > 0)) && (
-          <div className="order-last col-span-full space-y-2 rounded-lg border border-dashed bg-slate-50/70 px-3 py-2">
-            <p className="text-xs font-medium text-foreground">
-              Capture file paths
-            </p>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              These are storage paths from the scraper (often PNGs for failed
-              steps). They are not hosted by this admin app unless{" "}
-              <code className="rounded bg-muted px-1 text-[10px]">
-                NEXT_PUBLIC_SCRAPER_ARTIFACT_BASE_URL
-              </code>{" "}
-              is configured to point at the server or bucket that serves them.
-            </p>
+      {(artifactPaths.length > 0 ||
+        (reportedArtifactTotal != null && reportedArtifactTotal > 0)) && (
+          <OverviewRecordPanel
+            title="Capture file paths"
+            description="Storage paths from the scraper payload — not hosted here unless NEXT_PUBLIC_SCRAPER_ARTIFACT_BASE_URL is configured"
+          >
+          <div className="space-y-2">
             {artifactPaths.length > 0 ? (
               <details className="group">
                 <summary className="cursor-pointer text-xs font-medium text-foreground hover:underline">
@@ -246,83 +265,8 @@ function CompletionAtAGlance({
               </p>
             )}
           </div>
+          </OverviewRecordPanel>
         )}
-
-        <div className="contents">
-          <StatTile
-            icon={<Layers className="h-4 w-4" />}
-            label="Fixtures"
-            className="col-span-2 xl:col-span-2"
-          >
-            {fixturesTotal > 0 || succeeded > 0 || failedFx > 0 ? (
-              <div className="space-y-1 font-normal">
-                <p className="tabular-nums">
-                  <span className="text-emerald-700 font-semibold">
-                    {succeeded.toLocaleString()}
-                  </span>
-                  <span className="text-muted-foreground font-medium"> ok</span>
-                  <span className="text-muted-foreground"> · </span>
-                  <span className="text-red-700 font-semibold">
-                    {failedFx.toLocaleString()}
-                  </span>
-                  <span className="text-muted-foreground font-medium">
-                    {" "}
-                    failed
-                  </span>
-                </p>
-                <p className="text-xs text-muted-foreground tabular-nums">
-                  {fixturesTotal > 0
-                    ? `${fixturesTotal.toLocaleString()} total in scope`
-                    : null}
-                </p>
-              </div>
-            ) : (
-              "—"
-            )}
-          </StatTile>
-
-          <StatTile
-            icon={<Upload className="h-4 w-4" />}
-            label="Ingest"
-            className="col-span-2 xl:col-span-2"
-          >
-            {ingestOk > 0 ||
-            ingestFail > 0 ||
-            ingestTotal > 0 ||
-            ingestRetry > 0 ? (
-              <div className="space-y-1 font-normal">
-                <p className="tabular-nums text-sm">
-                  <span className="font-semibold text-sky-800">
-                    {ingestOk.toLocaleString()}
-                  </span>
-                  <span className="text-muted-foreground"> success</span>
-                  <span className="text-muted-foreground"> · </span>
-                  <span className="font-semibold text-amber-800">
-                    {ingestFail.toLocaleString()}
-                  </span>
-                  <span className="text-muted-foreground"> failed</span>
-                  {ingestRetry > 0 ? (
-                    <>
-                      <span className="text-muted-foreground"> · </span>
-                      <span className="font-semibold">
-                        {ingestRetry.toLocaleString()}
-                      </span>
-                      <span className="text-muted-foreground"> retried</span>
-                    </>
-                  ) : null}
-                </p>
-                {ingestTotal > 0 ? (
-                  <p className="text-xs text-muted-foreground tabular-nums">
-                    {ingestTotal.toLocaleString()} total
-                  </p>
-                ) : null}
-              </div>
-            ) : (
-              "—"
-            )}
-          </StatTile>
-        </div>
-      </div>
     </div>
   );
 }
@@ -724,8 +668,8 @@ function MetadataMetricsSnapshot({
   if (rows.length === 0) return null;
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-card">
-      <div className="border-b bg-slate-50 px-3 py-2">
+    <div className="overflow-hidden rounded-md border border-slate-200">
+      <div className="border-b border-slate-200 bg-slate-50/60 px-3 py-2">
         <p className="text-sm font-medium text-foreground">Reported metrics</p>
         <p className="text-[11px] text-muted-foreground">
           Raw values used by the outcome charts
@@ -736,10 +680,10 @@ function MetadataMetricsSnapshot({
           <TableBody>
             {rows.map(([k, v]) => (
               <TableRow key={String(k)}>
-                <TableCell className="font-mono text-xs py-1 w-[40%]">
+                <TableCell className="w-[40%] py-1 font-mono text-xs">
                   {k}
                 </TableCell>
-                <TableCell className="text-xs py-1 tabular-nums">
+                <TableCell className="py-1 text-xs tabular-nums">
                   {k === "durationMs"
                     ? formatDurationReadable(
                         typeof v === "number" ? v : Number(v),
@@ -775,24 +719,25 @@ function CompletedMetadataBreakdown({
   if (extraEntries.length === 0) return null;
 
   return (
-    <div className="space-y-4">
-      <p className="text-sm font-medium text-foreground">Additional metadata</p>
-
-      <div className="rounded-md border">
+    <OverviewRecordPanel
+      title="Additional metadata"
+      description="Extra completion metadata not already shown in charts or snapshot"
+    >
+      <div className="overflow-x-auto rounded-md border border-slate-200">
         <Table>
           <TableHeader>
-            <TableRow className="bg-slate-50 hover:bg-slate-50">
-              <TableHead className="h-9 text-xs">Key</TableHead>
-              <TableHead className="h-9 text-xs">Value</TableHead>
+            <TableRow className="bg-slate-50/50 hover:bg-slate-50/50">
+              <TableHead className="h-9 text-xs font-semibold">Key</TableHead>
+              <TableHead className="h-9 text-xs font-semibold">Value</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {extraEntries.map(([k, v]) => (
               <TableRow key={k}>
-                <TableCell className="font-mono text-xs align-top py-2">
+                <TableCell className="align-top py-2 font-mono text-xs">
                   {k}
                 </TableCell>
-                <TableCell className="text-xs break-all py-2">
+                <TableCell className="break-all py-2 text-xs">
                   {typeof v === "object"
                     ? JSON.stringify(v, null, 2)
                     : String(v)}
@@ -802,7 +747,7 @@ function CompletedMetadataBreakdown({
           </TableBody>
         </Table>
       </div>
-    </div>
+    </OverviewRecordPanel>
   );
 }
 
@@ -824,14 +769,15 @@ function RawMetadataJson({ metadata }: { metadata: Record<string, unknown> }) {
   };
 
   return (
-    <section className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-      <div className="flex items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-3 py-2">
-        <p className="text-sm font-medium text-slate-900">Raw metadata JSON</p>
+    <OverviewRecordPanel
+      title="Raw metadata JSON"
+      description="Full completion metadata object from the log entry"
+      action={
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5"
+          className="h-8 gap-1.5 border-slate-200 bg-slate-50 shadow-none"
           onClick={copyJson}
         >
           {copyState === "copied" ? (
@@ -845,11 +791,12 @@ function RawMetadataJson({ metadata }: { metadata: Record<string, unknown> }) {
               ? "Copy failed"
               : "Copy JSON"}
         </Button>
-      </div>
-      <pre className="max-h-[min(70vh,560px)] overflow-auto bg-slate-950 p-4 text-[11px] leading-relaxed text-slate-100">
+      }
+    >
+      <pre className="max-h-[min(70vh,560px)] overflow-auto rounded-md bg-slate-950 p-4 text-[11px] leading-relaxed text-slate-100">
         {json}
       </pre>
-    </section>
+    </OverviewRecordPanel>
   );
 }
 
@@ -871,8 +818,8 @@ export function JobCompletedVisualBlock({
   const issues = parsed.issues ?? [];
 
   return (
-    <div className="space-y-8">
-      {!compact && (
+    <div className="space-y-4">
+      {!compact ? (
         <CompletionAtAGlance
           metrics={metrics}
           fatal={fatal}
@@ -880,56 +827,64 @@ export function JobCompletedVisualBlock({
           issueCount={issues.length}
           issues={issues}
         />
-      )}
+      ) : null}
 
-      {metrics && (
-        <div className="space-y-3">
-          <p className="text-sm font-medium text-foreground">Outcomes</p>
+      {metrics ? (
+        <OverviewRecordPanel
+          title="Outcome charts"
+          description="Fixture and ingest results from the completion metrics"
+        >
           <div
-            className={`grid grid-cols-1 gap-4 ${metadata?.metrics ? "lg:grid-cols-3" : "lg:grid-cols-2"}`}
+            className={`grid grid-cols-1 gap-4 ${metadata?.metrics ? "lg:grid-cols-2" : "lg:grid-cols-2"}`}
           >
             <FixturesOutcomeChart metrics={metrics} />
             <IngestOutcomeChart metrics={metrics} />
-            <MetadataMetricsSnapshot metricsUnknown={metadata?.metrics} />
           </div>
-        </div>
-      )}
+          {metadata?.metrics ? (
+            <div className="mt-4">
+              <MetadataMetricsSnapshot metricsUnknown={metadata.metrics} />
+            </div>
+          ) : null}
+        </OverviewRecordPanel>
+      ) : null}
 
-      {issues.length > 0 && (
-        <div
-          id="job-completion-issue-analysis"
-          className="space-y-4 scroll-mt-24"
-        >
-          <div className="flex items-center justify-between gap-3">
-            <p className="text-sm font-medium text-foreground">
-              Issue analysis
-            </p>
+      {issues.length > 0 ? (
+        <OverviewRecordPanel
+          title="Issue analysis"
+          description="Severity, step, and message breakdown plus full issue list"
+          badge={
             <Badge variant="outline">
               {issues.length.toLocaleString()} issue
               {issues.length === 1 ? "" : "s"}
             </Badge>
+          }
+        >
+          <div id="job-completion-issue-analysis" className="space-y-4 scroll-mt-24">
+            <IssueDiagnosticBreakdown issues={issues} />
+            <div className="space-y-2">
+              <p className="text-sm font-medium text-foreground">All issues</p>
+              <IssuesDetailTable
+                issues={issues}
+                reportedAt={entry.timestamp ?? entry.createdAt}
+              />
+            </div>
           </div>
-          <IssueDiagnosticBreakdown issues={issues} />
-          <div className="space-y-2">
-            <p className="text-sm font-medium">All issues</p>
-            <IssuesDetailTable
-              issues={issues}
-              reportedAt={entry.timestamp ?? entry.createdAt}
-            />
-          </div>
-        </div>
-      )}
-
-      {issues.length === 0 && (
-        <p className="text-sm text-muted-foreground flex items-center gap-2">
-          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-          No issues on this completion event.
-        </p>
+        </OverviewRecordPanel>
+      ) : (
+        <OverviewRecordPanel
+          title="Issues"
+          description="Failure records attached to this completion event"
+        >
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            No issues on this completion event.
+          </p>
+        </OverviewRecordPanel>
       )}
 
       <CompletedMetadataBreakdown metadata={metadata} />
 
-      {metadata && <RawMetadataJson metadata={metadata} />}
+      {metadata ? <RawMetadataJson metadata={metadata} /> : null}
     </div>
   );
 }

@@ -22,12 +22,14 @@ export function SchedulerSearch() {
     const { data: results, isLoading } = useSchedulerSearch(debouncedSearch);
 
     return (
-        <div className="relative w-full max-w-md">
+        <div className="relative w-full max-w-sm lg:max-w-md">
             <div className="relative">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-sidebar" aria-hidden />
                 <Input
+                    type="search"
                     placeholder="Search schedulers by name or ID..."
-                    className="pl-10 h-10 bg-white border-slate-200 focus-visible:ring-brandPrimary-500"
+                    aria-label="Search schedulers by name or ID"
+                    className="h-9 rounded-full border-sidebar-border bg-transparent pl-10 shadow-sm focus-visible:ring-sidebar"
                     value={searchTerm}
                     onChange={(e) => {
                         setSearchTerm(e.target.value);

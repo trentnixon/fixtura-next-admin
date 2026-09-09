@@ -1,8 +1,9 @@
 "use client";
 
 import type { LogEntry } from "@/types/scraperLogs";
-import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
-import { HeartPulse, Info } from "lucide-react";
+import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
+import EmptyState from "@/components/ui-library/states/EmptyState";
+import { CheckCircle2, Info } from "lucide-react";
 import { findLatestCompletedEntry } from "../utils/jobLogPayloadUtils";
 import { JobCompletedVisualBlock } from "./JobCompletedVisualBlock";
 import { JobHeartbeatChart } from "./JobHeartbeatChart";
@@ -43,28 +44,29 @@ export function JobRunOverview({ entries, view = "all" }: JobRunOverviewProps) {
         </div>
       )}
 
-      {showHeartbeats && (
-        <SectionContainer
+      {showHeartbeats ? (
+        <OverviewRecordPanel
           title="Heartbeat timeline"
-          description="Scraper elapsed time and wall-clock spacing between heartbeat events."
-          icon={<HeartPulse className="h-5 w-5 text-muted-foreground" />}
-          variant="compact"
+          description="Scraper elapsed time and wall-clock spacing between heartbeat events"
         >
           <JobHeartbeatChart entries={entries} />
-        </SectionContainer>
-      )}
+        </OverviewRecordPanel>
+      ) : null}
 
       {showCompletion && completedEntry ? (
         <JobCompletedVisualBlock entry={completedEntry} />
       ) : showCompletion ? (
-        <div className="rounded-lg border border-dashed border-slate-200 py-12 text-center">
-          <p className="text-sm font-medium text-slate-900">
-            No completion event found
-          </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            This job may still be running or stopped before completion.
-          </p>
-        </div>
+        <OverviewRecordPanel
+          title="Completion"
+          description="Latest job.completed payload and summary metrics"
+        >
+          <EmptyState
+            variant="minimal"
+            title="No completion event found"
+            description="This job may still be running or stopped before completion."
+            icon={<CheckCircle2 className="h-8 w-8 text-muted-foreground" />}
+          />
+        </OverviewRecordPanel>
       ) : null}
     </div>
   );

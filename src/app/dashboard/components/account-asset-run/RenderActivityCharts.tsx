@@ -251,8 +251,8 @@ export function RenderActivityCharts({
         />
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-2">
-        <div className="rounded-md border border-slate-200 bg-white p-4">
+      <div className="space-y-4">
+        <div className="w-full rounded-md border border-slate-200 bg-white p-4">
           <div className="mb-3">
             <h3 className="text-sm font-semibold text-slate-900">
               Slowest runs
@@ -303,7 +303,7 @@ export function RenderActivityCharts({
           </ChartContainer>
         </div>
 
-        <div className="rounded-md border border-slate-200 bg-white p-4">
+        <div className="w-full rounded-md border border-slate-200 bg-white p-4">
           <div className="mb-3">
             <h3 className="text-sm font-semibold text-slate-900">
               Started to ended overlap

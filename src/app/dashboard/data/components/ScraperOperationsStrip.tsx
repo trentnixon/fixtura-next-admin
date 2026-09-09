@@ -1,13 +1,23 @@
 "use client";
 
-import { Activity, CheckCircle2, Clock3, ListTodo } from "lucide-react";
+import { useMemo } from "react";
+import {
+  Activity,
+  CheckCircle2,
+  Clock3,
+  Database,
+  ListTodo,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import ErrorState from "@/components/ui-library/states/ErrorState";
+import {
+  OverviewDataWorkspace,
+  type WorkspaceMetricTile,
+} from "@/app/dashboard/components/live-snapshot/OverviewDataWorkspace";
 import { useScraperLogs } from "@/hooks/data-collection/useScraperLogs";
-import { cn } from "@/lib/utils";
 
 function formatDurationMs(ms: number | null | undefined): string {
-  if (ms == null || ms < 0) return "-";
+  if (ms == null || ms < 0) return "—";
   if (ms < 1000) return `${ms}ms`;
 
   const seconds = Math.floor(ms / 1000);
@@ -27,6 +37,7 @@ export function ScraperOperationsStrip() {
     meta: scraperMeta,
     isLoading: logsLoading,
     error: logsError,
+    refetch,
   } = useScraperLogs({
     page: 1,
     pageSize: 1,
@@ -36,71 +47,102 @@ export function ScraperOperationsStrip() {
   const inProgress = byStatus?.in_progress ?? 0;
   const retryLater = byStatus?.retry_later ?? 0;
   const completed = byStatus?.completed ?? 0;
-  const stats = [
-    {
-      label: "Pipeline",
-      value: logsLoading ? "Loading" : inProgress > 0 ? "Running" : "Idle",
-      meta:
-        logsError != null
-          ? "Log feed unavailable"
-          : `${inProgress} active, ${retryLater} retry`,
-      icon: inProgress > 0 ? Activity : CheckCircle2,
-      tone:
-        logsError != null
-          ? "border-red-200 bg-red-50 text-red-800"
-          : inProgress > 0
-            ? "border-cyan-200 bg-cyan-50 text-cyan-800"
-            : "border-emerald-200 bg-emerald-50 text-emerald-800",
-    },
-    {
-      label: "Jobs Indexed",
-      value: logsLoading ? "..." : (scraperMeta?.summary.totalJobs ?? 0),
-      meta: `${completed} completed in current window`,
-      icon: ListTodo,
-      tone: "border-slate-200 bg-slate-50 text-slate-800",
-    },
-    {
-      label: "Avg Duration",
-      value: logsLoading
-        ? "..."
-        : formatDurationMs(scraperMeta?.summary.avgDurationMs),
-      meta: "Loaded job sample",
-      icon: Clock3,
-      tone: "border-indigo-200 bg-indigo-50 text-indigo-800",
-    },
-  ];
+
+  const metrics = useMemo((): WorkspaceMetricTile[] => {
+    return [
+      {
+        id: "pipeline",
+        label: "Pipeline",
+        value: logsLoading ? "—" : inProgress > 0 ? "Running" : "Idle",
+        meta:
+          logsError != null
+            ? "Log feed unavailable"
+            : `${inProgress} active · ${retryLater} retry`,
+        isLoading: logsLoading,
+      },
+      {
+        id: "jobs-indexed",
+        label: "Jobs indexed",
+        value: logsLoading
+          ? "—"
+          : String(scraperMeta?.summary.totalJobs ?? 0),
+        meta: `${completed} completed in current window`,
+        isLoading: logsLoading,
+      },
+      {
+        id: "avg-duration",
+        label: "Avg duration",
+        value: logsLoading
+          ? "—"
+          : formatDurationMs(scraperMeta?.summary.avgDurationMs),
+        meta: "Loaded job sample",
+        isLoading: logsLoading,
+      },
+    ];
+  }, [
+    completed,
+    inProgress,
+    logsError,
+    logsLoading,
+    retryLater,
+    scraperMeta?.summary.avgDurationMs,
+    scraperMeta?.summary.totalJobs,
+  ]);
+
+  if (logsError != null && !logsLoading && !scraperMeta) {
+    return (
+      <ErrorState
+        variant="default"
+        title="Scraper log feed unavailable"
+        error={
+          logsError instanceof Error ? logsError : new Error(String(logsError))
+        }
+        onRetry={() => refetch()}
+      />
+    );
+  }
+
+  const statusBadge =
+    logsError != null ? (
+      <Badge variant="outline" className="gap-1 border-red-200 text-red-800">
+        Unavailable
+      </Badge>
+    ) : inProgress > 0 ? (
+      <Badge variant="secondary" className="gap-1">
+        <Activity className="h-3 w-3 animate-pulse" aria-hidden />
+        Live
+      </Badge>
+    ) : (
+      <Badge variant="outline" className="gap-1 border-emerald-200 text-emerald-800">
+        <CheckCircle2 className="h-3 w-3" aria-hidden />
+        Idle
+      </Badge>
+    );
 
   return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-      {stats.map((stat) => {
-        const Icon = stat.icon;
-        return (
-          <Card key={stat.label} className={cn("border shadow-sm", stat.tone)}>
-            <CardContent className="flex min-h-[92px] items-center gap-3 p-3.5">
-              <div className="rounded-md bg-white/70 p-2">
-                <Icon className="h-4 w-4" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-medium opacity-75">
-                  {stat.label}
-                </div>
-                <div className="truncate text-lg font-bold leading-tight">
-                  {stat.value}
-                </div>
-                <div className="truncate text-xs opacity-75">{stat.meta}</div>
-              </div>
-              {stat.label === "Pipeline" && inProgress > 0 ? (
-                <Badge
-                  className="shrink-0 bg-white/80 text-current"
-                  variant="outline"
-                >
-                  Live
-                </Badge>
-              ) : null}
-            </CardContent>
-          </Card>
-        );
-      })}
-    </div>
+    <OverviewDataWorkspace
+      title="Scraper operations"
+      description="Pipeline health and indexed job volume across all scopes"
+      icon={Database}
+      badge={statusBadge}
+      metrics={metrics}
+      columns={3}
+      footer={
+        <span className="inline-flex flex-wrap items-center gap-x-3 text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <Activity className="h-3.5 w-3.5" aria-hidden />
+            Active jobs
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <ListTodo className="h-3.5 w-3.5" aria-hidden />
+            Indexed volume
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Clock3 className="h-3.5 w-3.5" aria-hidden />
+            Run duration
+          </span>
+        </span>
+      }
+    />
   );
 }

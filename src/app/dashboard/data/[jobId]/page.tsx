@@ -1,5 +1,4 @@
 import { auth } from "@clerk/nextjs/server";
-import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import { ScraperJobDetailClient } from "./components/ScraperJobDetailClient";
 
 interface PageProps {
@@ -31,9 +30,6 @@ export default async function ScraperJobDetailPage({
         : undefined;
 
   return (
-    <PageContainer padding="xs" spacing="lg">
-      {/* Page heading (scope + job id) is rendered in ScraperJobDetailClient after job loads */}
-      <ScraperJobDetailClient jobId={jobId} runIdFromSearch={runIdFromSearch} />
-    </PageContainer>
+    <ScraperJobDetailClient jobId={jobId} runIdFromSearch={runIdFromSearch} />
   );
 }

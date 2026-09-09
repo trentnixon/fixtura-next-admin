@@ -31,6 +31,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+  siteNavigationCtaClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
 import { CLUB_SCRAPE_SPORTS } from "@/constants/clubScrapeSportSlugs";
 import type { ClubScrapeSportSlug } from "@/constants/clubScrapeSportSlugs";
 import { triggerAssociationCompetitionRefresh } from "@/lib/services/data-collection/triggerAssociationCompetitionRefresh";
@@ -250,28 +256,32 @@ export function ScraperLogsSectionWithScopeSelector() {
         onValueChange={(value) => setScope(value as ScraperScope)}
         className="w-full"
       >
-        <TabsList
-          variant="primary"
-          className="mb-4 flex h-auto flex-wrap justify-start gap-1"
-        >
-          {SCOPES.map((item) => {
-            const Icon = item.icon;
+        <div className="pb-8">
+          <TabsList variant="primary" className={sectionTabListClass}>
+            {SCOPES.map((item) => {
+              const Icon = item.icon;
 
-            return (
-              <TabsTrigger key={item.value} value={item.value} className="gap-2">
-                <Icon className="h-3.5 w-3.5 shrink-0" />
-                {item.label}
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
+              return (
+                <TabsTrigger
+                  key={item.value}
+                  value={item.value}
+                  variant="section"
+                  className={sectionTabTriggerClass}
+                >
+                  <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden />
+                  {item.label}
+                </TabsTrigger>
+              );
+            })}
+          </TabsList>
+        </div>
 
         {SCOPES.map((item) => {
           const Icon = item.icon;
           const config = SCOPE_CONFIG[item.value];
 
           return (
-            <TabsContent key={item.value} value={item.value}>
+            <TabsContent key={item.value} value={item.value} className="mt-0">
               <SectionContainer
                 title={config.title}
                 description={config.description}
@@ -280,8 +290,9 @@ export function ScraperLogsSectionWithScopeSelector() {
                 action={
                   config.hasTrigger ? (
                     <Button
-                      variant="accent"
+                      variant="ghost"
                       size="sm"
+                      className={cn(siteNavigationCtaClass, "shrink-0")}
                       onClick={() => {
                         setSportSlugForDialog(null);
                         setDialogOpenFor(item.value as TriggerableScope);

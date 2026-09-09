@@ -1,8 +1,14 @@
 "use client";
 
-import type { ComponentType, ReactNode } from "react";
-import { Activity, Clock, Cpu, Fingerprint, Route } from "lucide-react";
+import type { ReactNode } from "react";
+import { useMemo } from "react";
+import { Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import {
+  OverviewDataWorkspace,
+  type WorkspaceMetricTile,
+} from "@/app/dashboard/components/live-snapshot/OverviewDataWorkspace";
+import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
 import type { JobSummary } from "@/types/scraperLogs";
 import {
   getStatusBadgeClassName,
@@ -27,7 +33,6 @@ function plural(n: number, one: string, many: string): string {
   return n === 1 ? one : many;
 }
 
-/** Non-zero event counts for the mix row (ordered for readability). */
 function buildEventMixChips(job: JobSummary): { key: string; text: string }[] {
   const c = job.eventCounts;
   const out: { key: string; text: string }[] = [];
@@ -98,51 +103,6 @@ function Field({
   );
 }
 
-function SectionTitle({
-  icon: Icon,
-  title,
-}: {
-  icon: ComponentType<{ className?: string }>;
-  title: string;
-}) {
-  return (
-    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-      <span className="flex h-7 w-7 items-center justify-center rounded-md bg-slate-100 text-slate-600">
-        <Icon className="h-4 w-4 shrink-0" aria-hidden />
-      </span>
-      {title}
-    </div>
-  );
-}
-
-function MetricCard({
-  icon: Icon,
-  label,
-  children,
-  className,
-  iconClassName,
-}: {
-  icon: ComponentType<{ className?: string }>;
-  label: string;
-  children: ReactNode;
-  className: string;
-  iconClassName: string;
-}) {
-  return (
-    <div className={`min-h-[96px] rounded-lg border p-3.5 ${className}`}>
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
-        <Icon className={`h-4 w-4 ${iconClassName}`} aria-hidden />
-      </div>
-      <div className="mt-3 text-base font-semibold text-slate-900">
-        {children}
-      </div>
-    </div>
-  );
-}
-
 function Identifier({ label, value }: { label: string; value: string }) {
   return (
     <div className="min-w-0">
@@ -161,65 +121,58 @@ interface JobDetailHeaderProps {
 export function JobDetailHeader({ job }: JobDetailHeaderProps) {
   const mixChips = buildEventMixChips(job);
   const kindDisplay = displayText(job.kind);
+  const humanStatus = job.status.replace(/_/g, " ");
+
+  const metrics = useMemo((): WorkspaceMetricTile[] => {
+    return [
+      {
+        id: "status",
+        label: "Status",
+        value: humanStatus,
+        meta: formatScopeLabel(job.scope),
+      },
+      {
+        id: "events",
+        label: "Events",
+        value: job.entryCount.toLocaleString(),
+        meta: plural(job.entryCount, "log entry", "log entries"),
+      },
+      {
+        id: "duration",
+        label: "Duration",
+        value: job.durationFormatted ?? "—",
+        meta: `Started ${formatDateTime(job.startedAt)}`,
+      },
+      {
+        id: "latest",
+        label: "Latest event",
+        value: formatDateTime(job.latestAt),
+        meta: kindDisplay !== "—" ? kindDisplay : "Kind not set",
+      },
+    ];
+  }, [humanStatus, job, kindDisplay]);
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard
-          icon={Activity}
-          label="Status"
-          className="border-slate-200 bg-slate-50/70"
-          iconClassName="text-slate-500"
-        >
-          <div className="flex items-center">
-            <Badge
-              variant={getStatusBadgeVariant(job.status)}
-              className={`${getStatusBadgeClassName(job.status)} px-2 py-0.5 text-xs capitalize`}
-            >
-              {job.status.replace(/_/g, " ")}
-            </Badge>
-          </div>
-        </MetricCard>
-
-        <MetricCard
-          icon={Route}
-          label="Events"
-          className="border-info-200 bg-info-50/70"
-          iconClassName="text-info-700"
-        >
-          <span className="tabular-nums">
-            {job.entryCount.toLocaleString()}
-          </span>{" "}
-          <span className="text-xs font-normal text-muted-foreground">
-            {plural(job.entryCount, "event", "events")}
-          </span>
-        </MetricCard>
-
-        <MetricCard
-          icon={Clock}
-          label="Duration"
-          className="border-amber-200 bg-amber-50/70"
-          iconClassName="text-amber-700"
-        >
-          <span className="tabular-nums">{job.durationFormatted ?? "—"}</span>
-        </MetricCard>
-
-        <MetricCard
-          icon={Clock}
-          label="Latest event"
-          className="border-emerald-200 bg-emerald-50/60"
-          iconClassName="text-emerald-700"
-        >
-          <span className="text-sm font-medium">
-            {formatDateTime(job.latestAt)}
-          </span>
-        </MetricCard>
-      </div>
+      <OverviewDataWorkspace
+        title="Job snapshot"
+        description={`${formatScopeLabel(job.scope)} run summary`}
+        icon={Activity}
+        badge={
+          <Badge
+            variant={getStatusBadgeVariant(job.status)}
+            className={`${getStatusBadgeClassName(job.status)} capitalize`}
+          >
+            {humanStatus}
+          </Badge>
+        }
+        metrics={metrics}
+        columns={4}
+      />
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <section className="rounded-lg border border-slate-200 bg-white p-4">
-          <SectionTitle icon={Route} title="Run context" />
-          <div className="mt-3 grid gap-x-6 sm:grid-cols-2">
+        <OverviewRecordPanel title="Run context" description="Scope, queue, and service">
+          <div className="grid gap-x-6 sm:grid-cols-2">
             <div>
               <Field label="Scope">{formatScopeLabel(job.scope)}</Field>
               <Field label="Queue" mono>
@@ -230,7 +183,7 @@ export function JobDetailHeader({ job }: JobDetailHeaderProps) {
               <Field label="Service">{displayText(job.service)}</Field>
               <Field label="Kind">
                 {kindDisplay === "—" ? (
-                  <span className="text-muted-foreground italic text-sm">
+                  <span className="text-sm italic text-muted-foreground">
                     Not set
                   </span>
                 ) : (
@@ -239,11 +192,10 @@ export function JobDetailHeader({ job }: JobDetailHeaderProps) {
               </Field>
             </div>
           </div>
-        </section>
+        </OverviewRecordPanel>
 
-        <section className="rounded-lg border border-slate-200 bg-white p-4">
-          <SectionTitle icon={Cpu} title="Execution" />
-          <div className="mt-3 grid gap-x-6 sm:grid-cols-2">
+        <OverviewRecordPanel title="Execution" description="Timing, attempt, and event mix">
+          <div className="grid gap-x-6 sm:grid-cols-2">
             <div>
               <Field label="Started">{formatDateTime(job.startedAt)}</Field>
               <Field label="Attempt">
@@ -277,16 +229,18 @@ export function JobDetailHeader({ job }: JobDetailHeaderProps) {
               </div>
             </div>
           ) : null}
-        </section>
+        </OverviewRecordPanel>
       </div>
 
-      <section className="rounded-lg border border-slate-200 bg-slate-50/60 p-4">
-        <SectionTitle icon={Fingerprint} title="Identifiers" />
-        <div className="mt-3 grid gap-4 lg:grid-cols-2 lg:gap-8">
+      <OverviewRecordPanel
+        title="Identifiers"
+        description="Job and run IDs for cross-referencing logs and notifications"
+      >
+        <div className="grid gap-4 lg:grid-cols-2 lg:gap-8">
           <Identifier label="Job ID" value={displayText(job.jobId)} />
           <Identifier label="Run ID" value={displayText(job.runId)} />
         </div>
-      </section>
+      </OverviewRecordPanel>
     </div>
   );
 }

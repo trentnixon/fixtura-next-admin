@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
-import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,7 @@ import { useGlobalContext } from "@/components/providers/GlobalContext";
 import { useScraperArtifacts } from "@/hooks/data-collection/useScraperArtifacts";
 import { resolveStrapiMediaUrl } from "@/lib/utils/strapiMediaUrl";
 import type { ScraperArtifact } from "@/types/scraperArtifact";
-import { Camera, ExternalLink, RefreshCw } from "lucide-react";
+import { ExternalLink, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ScraperArtifactDebugSectionProps {
@@ -142,11 +142,9 @@ export function ScraperArtifactDebugSection({
   const filterHint = `jobId ${jobId}`;
 
   return (
-    <SectionContainer
+    <OverviewRecordPanel
       title="Debug screenshots"
       description={`Failure capture files stored in CMS (fixtura-scraper-artifact). Filtered by ${filterHint}.`}
-      icon={<Camera className="h-5 w-5 text-muted-foreground" />}
-      variant="compact"
       action={
         <Button
           type="button"
@@ -154,7 +152,7 @@ export function ScraperArtifactDebugSection({
           size="sm"
           onClick={() => refetch()}
           disabled={isFetching}
-          className="gap-2"
+          className="gap-2 border-slate-200 bg-slate-50 text-slate-700 shadow-none hover:bg-slate-100 hover:text-slate-900"
         >
           <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
           Refresh
@@ -199,6 +197,6 @@ export function ScraperArtifactDebugSection({
           ))}
         </div>
       )}
-    </SectionContainer>
+    </OverviewRecordPanel>
   );
 }

@@ -13,6 +13,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
+import {
+  siteNavigationGroupDividerClass,
+  siteNavigationGroupItemClass,
+  siteNavigationGroupShellClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
 import { triggerWeeklyAssociationClubIntegrity } from "@/lib/services/data-collection/triggerWeeklyAssociationClubIntegrity";
 import { triggerWeeklyClubAssociationIntegrity } from "@/lib/services/data-collection/triggerWeeklyClubAssociationIntegrity";
 import { formatGlobalDataWorkflowToast } from "@/lib/utils/formatGlobalDataWorkflowToast";
@@ -21,14 +28,14 @@ type SyncAction = "club_to_association" | "association_to_club";
 
 const SYNC_CONFIG = {
   club_to_association: {
-    buttonLabel: "Sync club → association links",
+    buttonLabel: "Club → association",
     dialogTitle: "Confirm club → association link sync",
     dialogDescription:
       "Copies club_to_competition data into club.associations and association.clubs (club → association direction). Best run after a club competition refresh completes. Safe without a prior scrape (add-only). Full catalogue only — no per-club sync.",
     trigger: triggerWeeklyClubAssociationIntegrity,
   },
   association_to_club: {
-    buttonLabel: "Sync association → club links",
+    buttonLabel: "Association → club",
     dialogTitle: "Confirm association → club link sync",
     dialogDescription:
       "Copies club_to_competition data into association.clubs and club.associations (association → club direction). Best run after a club competition refresh completes. Safe without a prior scrape (add-only). Full catalogue only — no per-club sync.",
@@ -45,6 +52,13 @@ function showWorkflowToast(
   } else {
     toast.success(title, { description });
   }
+}
+
+function groupedItemClass(withDivider: boolean) {
+  return cn(
+    siteNavigationGroupItemClass,
+    withDivider && siteNavigationGroupDividerClass,
+  );
 }
 
 export function OrgLinkSyncActions() {
@@ -73,30 +87,46 @@ export function OrgLinkSyncActions() {
     }
   };
 
+  const actions = Object.keys(SYNC_CONFIG) as SyncAction[];
+
   return (
     <>
-      <div className="mb-4 flex flex-wrap items-center gap-2 rounded-md border border-slate-200 bg-slate-50/80 p-3">
-        <div className="flex min-w-0 flex-1 items-start gap-2 text-sm text-slate-600">
-          <Link2 className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
-          <p>
-            After club competition refresh completes, run both syncs (order does
-            not matter) to repair org links across the full catalogue.
-          </p>
-        </div>
-        {(Object.keys(SYNC_CONFIG) as SyncAction[]).map((action) => (
-          <Button
-            key={action}
-            variant="secondary"
-            size="sm"
-            disabled={!!loadingFor}
-            onClick={() => setDialogOpenFor(action)}
-          >
-            {loadingFor === action
-              ? "Queuing..."
-              : SYNC_CONFIG[action].buttonLabel}
-          </Button>
-        ))}
-      </div>
+      <OverviewRecordPanel
+        className="mb-4"
+        title="Org link sync"
+        description="After club competition refresh completes, run both syncs (order does not matter) to repair org links across the full catalogue."
+        badge={
+          <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600">
+            <Link2 className="h-3 w-3" aria-hidden />
+            Post-refresh
+          </span>
+        }
+        action={
+          <div className={siteNavigationGroupShellClass}>
+            {actions.map((action, index) => (
+              <Button
+                key={action}
+                variant="ghost"
+                size="sm"
+                className={groupedItemClass(index < actions.length - 1)}
+                disabled={!!loadingFor}
+                onClick={() => setDialogOpenFor(action)}
+              >
+                {loadingFor === action
+                  ? "Queuing..."
+                  : SYNC_CONFIG[action].buttonLabel}
+              </Button>
+            ))}
+          </div>
+        }
+      >
+        <p className="text-sm text-muted-foreground">
+          These workflows copy relationship data from club competition scrape
+          results into club and association records. They are safe to run without
+          a prior scrape (add-only) but are most useful after a full catalogue
+          refresh.
+        </p>
+      </OverviewRecordPanel>
 
       <Dialog
         open={!!dialogOpenFor}

@@ -13,10 +13,11 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, EyeIcon } from "lucide-react";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import EmptyState from "@/components/ui-library/states/EmptyState";
+import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
 import { RenderAuditItem } from "@/types/render";
 import { formatDate } from "@/utils/chart-formatters";
 
@@ -59,16 +60,46 @@ export function GlobalRenderTable() {
   const [page, setPage] = useState(1);
   const { data, isLoading, isError, error } = useRenderAudit(page);
 
-  if (isLoading) return <LoadingState />;
-  if (isError) return <ErrorState error={error} />;
+  if (isLoading) {
+    return (
+      <OverviewRecordPanel
+        title="Global operational audit"
+        description="Most recent renders (25 per page), newest first"
+      >
+        <LoadingState variant="default" message="Loading render audit…" />
+      </OverviewRecordPanel>
+    );
+  }
+
+  if (isError) {
+    return (
+      <OverviewRecordPanel
+        title="Global operational audit"
+        description="Most recent renders (25 per page), newest first"
+      >
+        <ErrorState error={error} title="Unable to load render audit" />
+      </OverviewRecordPanel>
+    );
+  }
 
   const renders = data?.data ?? [];
   const pagination = data?.pagination;
   const pageSize = pagination?.pageSize ?? 25;
 
   return (
-    <div className="space-y-4">
-      <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
+    <OverviewRecordPanel
+      title="Global operational audit"
+      description="Most recent renders (25 per page), newest first"
+      badge={
+        pagination ? (
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600">
+            {pagination.total} total
+          </span>
+        ) : null
+      }
+    >
+      <div className="space-y-4">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow className="bg-slate-50 hover:bg-slate-50">
@@ -131,10 +162,17 @@ export function GlobalRenderTable() {
                   {render.aiArticlesCount}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button variant="primary" size="sm" asChild>
-                    <Link href={`/dashboard/renders/${render.renderId}`}>
-                      View
-                      <ArrowRight className="h-4 w-4" />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="border-slate-200 bg-slate-50 text-slate-700 shadow-none hover:bg-slate-100 hover:text-slate-900"
+                    asChild
+                  >
+                    <Link
+                      href={`/dashboard/renders/${render.renderId}`}
+                      title="View render details"
+                    >
+                      <EyeIcon className="h-4 w-4" />
                     </Link>
                   </Button>
                 </TableCell>
@@ -153,7 +191,7 @@ export function GlobalRenderTable() {
             )}
           </TableBody>
         </Table>
-      </div>
+        </div>
 
       {pagination && pagination.pageCount > 1 && (
         <div className="flex flex-wrap items-center justify-between gap-3 px-1">
@@ -197,6 +235,7 @@ export function GlobalRenderTable() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </OverviewRecordPanel>
   );
 }

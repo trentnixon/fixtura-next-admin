@@ -1,8 +1,12 @@
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
-import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RenderActivitySection } from "@/app/dashboard/components/account-asset-run/RenderActivitySection";
+import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
+import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
 import {
   Activity,
   BarChart3,
@@ -26,7 +30,7 @@ const renderTabs = [
   },
   { value: "analytics", label: "Analytics", icon: BarChart3 },
   { value: "audit", label: "Audit", icon: ClipboardCheck },
-];
+] as const;
 
 export default function Renders() {
   return (
@@ -35,33 +39,40 @@ export default function Renders() {
         title="Renders"
         byLine="Render operations workspace"
         byLineBottom="Monitor live processing, scheduler queues, analytics, and recent render output"
-      />
+      >
+        <DashboardLinkButton href="/dashboard/schedulers" trailingIcon="external">
+          Schedulers
+        </DashboardLinkButton>
+      </CreatePageTitle>
       <PageContainer padding="xs" spacing="lg">
         <Tabs defaultValue="overview" className="w-full min-w-0 max-w-full">
-          <TabsList className="h-auto w-full flex-wrap justify-start rounded-md bg-slate-100 p-1 lg:w-auto">
-            {renderTabs.map((tab) => {
-              const Icon = tab.icon;
+          <div className="pb-8">
+            <TabsList variant="primary" className={sectionTabListClass}>
+              {renderTabs.map((tab) => {
+                const Icon = tab.icon;
 
-              return (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  className="min-h-10 gap-2"
-                >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
+                return (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    variant="section"
+                    className={sectionTabTriggerClass}
+                  >
+                    <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden />
+                    {tab.label}
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </div>
 
-          <TabsContent value="overview" className="mt-6 space-y-6">
+          <TabsContent value="overview" className="mt-0 space-y-6">
             <GlobalRenderRollup />
             <RenderPipelineOverview />
             <AssetRunOverviewSection />
           </TabsContent>
 
-          <TabsContent value="render-activity" className="mt-6">
+          <TabsContent value="render-activity" className="mt-0">
             <RenderActivitySection
               defaultPageSize={25}
               title="Render activity"
@@ -69,19 +80,14 @@ export default function Renders() {
             />
           </TabsContent>
 
-          <TabsContent value="analytics" className="mt-6 space-y-6">
+          <TabsContent value="analytics" className="mt-0 space-y-6">
             <RenderAnalyticsDashboard />
             <AssetRunOutcomesByDaySection />
             <RenderResourceLeaders />
           </TabsContent>
 
-          <TabsContent value="audit" className="mt-6">
-            <SectionContainer
-              title="Global Operational Audit"
-              description="Most recent renders (25 per page), newest first."
-            >
-              <GlobalRenderTable />
-            </SectionContainer>
+          <TabsContent value="audit" className="mt-0">
+            <GlobalRenderTable />
           </TabsContent>
         </Tabs>
       </PageContainer>
