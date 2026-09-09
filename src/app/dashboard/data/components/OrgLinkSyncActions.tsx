@@ -92,7 +92,6 @@ export function OrgLinkSyncActions() {
   return (
     <>
       <OverviewRecordPanel
-        className="mb-4"
         title="Org link sync"
         description="After club competition refresh completes, run both syncs (order does not matter) to repair org links across the full catalogue."
         badge={
