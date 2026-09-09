@@ -12,7 +12,6 @@ import {
   Users,
 } from "lucide-react";
 import { toast } from "sonner";
-import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -85,7 +84,7 @@ const SCOPE_CONFIG = {
   [ALL_SCOPES_VALUE]: {
     hasTrigger: false as const,
     title: "All scraper jobs",
-    description: "Cross-scope scraper activity, charts, and job logs",
+    description: "Cross-scope scraper activity and charts",
     dialogTitle: "",
     dialogDescription: "",
     buttonLabel: "",
@@ -121,7 +120,7 @@ const SCOPE_CONFIG = {
   grades_comps: {
     hasTrigger: true as const,
     title: "Grades to competition scraper",
-    description: "Competition grade discovery jobs and logs",
+    description: "Competition grade discovery jobs",
     dialogTitle: "Confirm Grades to Competition Scrape",
     dialogDescription:
       "This will enqueue a job to scrape grades for all competitions from PlayHQ. The job runs asynchronously. Continue?",
@@ -282,12 +281,22 @@ export function ScraperLogsSectionWithScopeSelector() {
 
           return (
             <TabsContent key={item.value} value={item.value} className="mt-0">
-              <SectionContainer
-                title={config.title}
-                description={config.description}
-                icon={<Icon className="h-5 w-5 text-brandPrimary-500" />}
-                variant="compact"
-                action={
+              <ScraperLogsSection
+                layout="split"
+                scope={
+                  item.value === ALL_SCOPES_VALUE
+                    ? undefined
+                    : (item.value as Exclude<
+                        ScraperScope,
+                        typeof ALL_SCOPES_VALUE
+                      >)
+                }
+                splitOverviewTitle={config.title}
+                splitOverviewDescription={config.description}
+                splitOverviewIcon={
+                  <Icon className="h-5 w-5 text-brandPrimary-500" />
+                }
+                splitOverviewAction={
                   config.hasTrigger ? (
                     <Button
                       variant="ghost"
@@ -305,21 +314,12 @@ export function ScraperLogsSectionWithScopeSelector() {
                     </Button>
                   ) : null
                 }
-              >
-                {item.value === "club_to_competition" ? (
-                  <OrgLinkSyncActions />
-                ) : null}
-                <ScraperLogsSection
-                  scope={
-                    item.value === ALL_SCOPES_VALUE
-                      ? undefined
-                      : (item.value as Exclude<
-                          ScraperScope,
-                          typeof ALL_SCOPES_VALUE
-                        >)
-                  }
-                />
-              </SectionContainer>
+                splitBeforeJobLog={
+                  item.value === "club_to_competition" ? (
+                    <OrgLinkSyncActions />
+                  ) : null
+                }
+              />
             </TabsContent>
           );
         })}

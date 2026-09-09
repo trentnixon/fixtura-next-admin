@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import {
   BarChart3,
   CheckCircle2,
@@ -24,6 +24,7 @@ import ErrorState from "@/components/ui-library/states/ErrorState";
 import EmptyState from "@/components/ui-library/states/EmptyState";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import { CompactKpiCard } from "@/components/ui-library/cards";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
 import { useScraperLogs } from "@/hooks/data-collection/useScraperLogs";
 import {
@@ -43,6 +44,14 @@ interface ScraperLogsSectionProps {
     | "grades_comps"
     | "grades_lookup_teams"
     | "club_active_check";
+  /** Overview in SectionContainer, job log as its own panel below */
+  layout?: "default" | "split";
+  splitOverviewTitle?: string;
+  splitOverviewDescription?: string;
+  splitOverviewIcon?: ReactNode;
+  splitOverviewAction?: ReactNode;
+  /** Rendered between overview section and job log (e.g. org link sync) */
+  splitBeforeJobLog?: ReactNode;
 }
 
 function formatDurationMs(ms: number | null): string {
@@ -70,7 +79,15 @@ function formatStatusSummary(byStatus: Record<string, number>): string {
   );
 }
 
-export function ScraperLogsSection({ scope }: ScraperLogsSectionProps) {
+export function ScraperLogsSection({
+  scope,
+  layout = "default",
+  splitOverviewTitle = "All scraper jobs",
+  splitOverviewDescription = "Cross-scope scraper activity and charts",
+  splitOverviewIcon,
+  splitOverviewAction,
+  splitBeforeJobLog,
+}: ScraperLogsSectionProps) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [dateFrom, setDateFrom] = useState<string>("");
@@ -244,140 +261,185 @@ export function ScraperLogsSection({ scope }: ScraperLogsSectionProps) {
     </div>
   );
 
-  return (
+  const summaryCards =
+    !isLoading && !error && meta?.summary ? (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <CompactKpiCard
+          label="Total jobs"
+          value={meta.summary.totalJobs.toLocaleString()}
+          icon={<ListTodo className="h-4 w-4" />}
+          iconClassName="bg-blue-50 text-blue-700"
+          progressClassName="bg-blue-500"
+        />
+        <CompactKpiCard
+          label="Avg duration"
+          value={formatDurationMs(meta.summary.avgDurationMs)}
+          icon={<Clock className="h-4 w-4" />}
+          iconClassName="bg-slate-100 text-slate-700"
+          progressClassName="bg-slate-500"
+        />
+        <CompactKpiCard
+          label="Completed"
+          value={(meta.summary.byStatus.completed ?? 0).toLocaleString()}
+          icon={<CheckCircle2 className="h-4 w-4" />}
+          iconClassName="bg-emerald-50 text-emerald-700"
+          progressClassName="bg-emerald-500"
+        />
+        <CompactKpiCard
+          label="Status mix"
+          value={formatStatusSummary(meta.summary.byStatus)}
+          icon={<BarChart3 className="h-4 w-4" />}
+          iconClassName="bg-amber-50 text-amber-700"
+          progressClassName="bg-amber-500"
+        />
+      </div>
+    ) : null;
+
+  const activityCharts =
+    !isLoading && !error && meta?.timeline ? (
+      <OverviewRecordPanel
+        title="Activity charts"
+        description="Job volume, status mix, and duration over the selected window"
+      >
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <ScraperLogsJobsOverTimeChart meta={meta} />
+          <ScraperLogsStatusDistributionChart meta={meta} />
+          <ScraperLogsDurationOverTimeChart meta={meta} />
+        </div>
+      </OverviewRecordPanel>
+    ) : null;
+
+  const overviewContent = (
     <div className="space-y-4">
-      {!isLoading && !error && meta?.summary ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <CompactKpiCard
-            label="Total jobs"
-            value={meta.summary.totalJobs.toLocaleString()}
-            icon={<ListTodo className="h-4 w-4" />}
-            iconClassName="bg-blue-50 text-blue-700"
-            progressClassName="bg-blue-500"
-          />
-          <CompactKpiCard
-            label="Avg duration"
-            value={formatDurationMs(meta.summary.avgDurationMs)}
-            icon={<Clock className="h-4 w-4" />}
-            iconClassName="bg-slate-100 text-slate-700"
-            progressClassName="bg-slate-500"
-          />
-          <CompactKpiCard
-            label="Completed"
-            value={(meta.summary.byStatus.completed ?? 0).toLocaleString()}
-            icon={<CheckCircle2 className="h-4 w-4" />}
-            iconClassName="bg-emerald-50 text-emerald-700"
-            progressClassName="bg-emerald-500"
-          />
-          <CompactKpiCard
-            label="Status mix"
-            value={formatStatusSummary(meta.summary.byStatus)}
-            icon={<BarChart3 className="h-4 w-4" />}
-            iconClassName="bg-amber-50 text-amber-700"
-            progressClassName="bg-amber-500"
-          />
+      {isLoading ? (
+        <LoadingState variant="skeleton" message="Loading scraper summary…" />
+      ) : null}
+      {error ? (
+        <ErrorState
+          variant="card"
+          error={error}
+          title="Error loading scraper summary"
+          description="Failed to fetch scraper logs. Please try again."
+          onRetry={refetch}
+        />
+      ) : null}
+      {summaryCards}
+      {activityCharts}
+    </div>
+  );
+
+  const jobLogPanel = (
+    <OverviewRecordPanel
+      title="Job log"
+      description="Paginated scraper jobs for this scope"
+      badge={
+        searchQuery ? (
+          <Badge variant="outline">Filtered</Badge>
+        ) : total > 0 ? (
+          <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600">
+            {total.toLocaleString()} total
+          </span>
+        ) : null
+      }
+      footer={
+        totalPages > 0 && !isLoading && !error && data && data.length > 0 ? (
+          <div className="flex w-full flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">Per page:</span>
+              <select
+                value={pageSize}
+                onChange={handlePageSizeChange}
+                className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
+                aria-label="Items per page"
+              >
+                {PAGE_SIZE_OPTIONS.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              variant="primary"
+            >
+              <PaginationInfo
+                format="long"
+                totalItems={total}
+                itemsPerPage={pageSize}
+                className="mr-2"
+              />
+              <div className="flex items-center gap-1">
+                <PaginationPrevious />
+                <PaginationPages />
+                <PaginationNext />
+              </div>
+            </Pagination>
+          </div>
+        ) : null
+      }
+    >
+      {jobLogFilters}
+
+      {isLoading ? (
+        <LoadingState variant="skeleton" message="Loading scraper logs..." />
+      ) : null}
+
+      {error ? (
+        <ErrorState
+          variant="card"
+          error={error}
+          title="Error Loading Scraper Logs"
+          description="Failed to fetch scraper logs. Please try again."
+          onRetry={refetch}
+        />
+      ) : null}
+
+      {!isLoading && !error && (!data || data.length === 0) ? (
+        <EmptyState
+          variant="card"
+          title="No Scraper Logs"
+          description="No scraper logs found for this scope."
+        />
+      ) : null}
+
+      {!isLoading && !error && data && data.length > 0 ? (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Showing {filteredJobs.length} of {data.length} loaded jobs
+            {total ? ` (${total.toLocaleString()} total)` : ""}
+          </p>
+          <ScraperJobsTable jobs={filteredJobs} />
         </div>
       ) : null}
+    </OverviewRecordPanel>
+  );
 
-      {!isLoading && !error && meta?.timeline ? (
-        <OverviewRecordPanel
-          title="Activity charts"
-          description="Job volume, status mix, and duration over the selected window"
+  if (layout === "split") {
+    return (
+      <div className="space-y-4">
+        <SectionContainer
+          title={splitOverviewTitle ?? "Scraper activity"}
+          description={splitOverviewDescription}
+          icon={splitOverviewIcon}
+          variant="compact"
+          action={splitOverviewAction}
         >
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-            <ScraperLogsJobsOverTimeChart meta={meta} />
-            <ScraperLogsStatusDistributionChart meta={meta} />
-            <ScraperLogsDurationOverTimeChart meta={meta} />
-          </div>
-        </OverviewRecordPanel>
-      ) : null}
+          {overviewContent}
+        </SectionContainer>
+        {splitBeforeJobLog}
+        {jobLogPanel}
+      </div>
+    );
+  }
 
-      <OverviewRecordPanel
-        title="Job log"
-        description="Paginated scraper jobs for this scope"
-        badge={
-          searchQuery ? (
-            <Badge variant="outline">Filtered</Badge>
-          ) : total > 0 ? (
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs font-medium text-slate-600">
-              {total.toLocaleString()} total
-            </span>
-          ) : null
-        }
-        footer={
-          totalPages > 0 && !isLoading && !error && data && data.length > 0 ? (
-            <div className="flex w-full flex-wrap items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Per page:</span>
-                <select
-                  value={pageSize}
-                  onChange={handlePageSizeChange}
-                  className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm"
-                  aria-label="Items per page"
-                >
-                  {PAGE_SIZE_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <Pagination
-                currentPage={page}
-                totalPages={totalPages}
-                onPageChange={handlePageChange}
-                variant="primary"
-              >
-                <PaginationInfo
-                  format="long"
-                  totalItems={total}
-                  itemsPerPage={pageSize}
-                  className="mr-2"
-                />
-                <div className="flex items-center gap-1">
-                  <PaginationPrevious />
-                  <PaginationPages />
-                  <PaginationNext />
-                </div>
-              </Pagination>
-            </div>
-          ) : null
-        }
-      >
-        {jobLogFilters}
-
-        {isLoading ? (
-          <LoadingState variant="skeleton" message="Loading scraper logs..." />
-        ) : null}
-
-        {error ? (
-          <ErrorState
-            variant="card"
-            error={error}
-            title="Error Loading Scraper Logs"
-            description="Failed to fetch scraper logs. Please try again."
-            onRetry={refetch}
-          />
-        ) : null}
-
-        {!isLoading && !error && (!data || data.length === 0) ? (
-          <EmptyState
-            variant="card"
-            title="No Scraper Logs"
-            description="No scraper logs found for this scope."
-          />
-        ) : null}
-
-        {!isLoading && !error && data && data.length > 0 ? (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Showing {filteredJobs.length} of {data.length} loaded jobs
-              {total ? ` (${total.toLocaleString()} total)` : ""}
-            </p>
-            <ScraperJobsTable jobs={filteredJobs} />
-          </div>
-        ) : null}
-      </OverviewRecordPanel>
+  return (
+    <div className="space-y-4">
+      {summaryCards}
+      {activityCharts}
+      {jobLogPanel}
     </div>
   );
 }
