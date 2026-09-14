@@ -657,8 +657,7 @@ export const GanttFeatureItem = React.forwardRef<
         className,
       )}
       {...rest}
-      onClick={(event) => {
-        rest.onClick?.(event);
+      onClick={() => {
         onFeatureClick?.();
       }}
       {...(!onFeatureClick ? attributes : {})}
