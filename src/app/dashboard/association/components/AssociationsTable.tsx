@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import {
   Table,
@@ -11,10 +10,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
 import { Button } from "@/components/ui/button";
+import { siteNavigationCtaClass } from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  segmentedControlLabelClass,
+  segmentedControlRowClass,
+} from "@/lib/forms/segmentedControlStyles";
 import {
   Pagination,
   PaginationPrevious,
@@ -25,13 +30,10 @@ import {
 import { AssociationDetail } from "@/types/associationInsights";
 import {
   ArrowDown,
-  ArrowRight,
   ArrowUp,
   ArrowUpDown,
   ExternalLink,
-  FilterX,
   Search,
-  X,
 } from "lucide-react";
 
 interface AssociationsTableProps {
@@ -218,23 +220,17 @@ export default function AssociationsTable({
 
   if (associations.length === 0) {
     return (
-      <div className="rounded-md border border-dashed border-slate-300 bg-slate-50 px-4 py-8 text-center text-muted-foreground">
-        <Search className="mx-auto mb-2 h-5 w-5 text-slate-400" />
-        <p className="text-sm font-medium text-slate-700">
-          No associations found
-        </p>
-        <p className="mt-1 text-xs">
-          The selected sport filter did not return association records.
-        </p>
+      <div className="py-8 text-center text-muted-foreground">
+        <p className="text-sm">No associations found</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 lg:flex-row lg:items-end">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+    <div id="association-table" className="space-y-4">
+      <div className="flex flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 md:flex-row md:flex-wrap md:items-center">
+        <div className="relative min-w-0 flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search by name or sport..."
@@ -243,107 +239,76 @@ export default function AssociationsTable({
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            className="h-9 bg-white pl-10 pr-10"
+            className="rounded-full border-transparent bg-white pl-9 shadow-none"
           />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setSearchQuery("");
-                setCurrentPage(1);
-              }}
-              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-transparent"
-              aria-label="Clear search"
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          )}
         </div>
 
-        <div className="flex items-end gap-2">
-          <div className="space-y-1 min-w-[120px]">
-            <Label
-              htmlFor="grades-filter"
-              className="text-xs text-muted-foreground"
-            >
-              Grade Count (&gt;=)
-            </Label>
-            <Input
-              id="grades-filter"
-              type="number"
-              placeholder="More than"
-              value={minGrades ?? ""}
-              onChange={(e) => {
-                const value =
-                  e.target.value === ""
-                    ? undefined
-                    : parseInt(e.target.value, 10);
-                setMinGrades(value);
-                setCurrentPage(1);
-              }}
-              min="0"
-              className="h-9 bg-white text-sm"
-            />
-          </div>
+        <div className={cn(segmentedControlRowClass, "shrink-0")}>
+          <label htmlFor="grades-filter" className={segmentedControlLabelClass}>
+            Min grades
+          </label>
+          <Input
+            id="grades-filter"
+            type="number"
+            placeholder="≥"
+            value={minGrades ?? ""}
+            onChange={(e) => {
+              const value =
+                e.target.value === ""
+                  ? undefined
+                  : parseInt(e.target.value, 10);
+              setMinGrades(value);
+              setCurrentPage(1);
+            }}
+            min="0"
+            className="h-9 w-24 rounded-full border-transparent bg-white text-sm shadow-none"
+          />
         </div>
 
-        <div className="flex items-end gap-2">
-          <div className="space-y-1 min-w-[120px]">
-            <Label
-              htmlFor="competitions-filter"
-              className="text-xs text-muted-foreground"
-            >
-              Competition Count (&gt;=)
-            </Label>
-            <Input
-              id="competitions-filter"
-              type="number"
-              placeholder="More than"
-              value={minCompetitions ?? ""}
-              onChange={(e) => {
-                const value =
-                  e.target.value === ""
-                    ? undefined
-                    : parseInt(e.target.value, 10);
-                setMinCompetitions(value);
-                setCurrentPage(1);
-              }}
-              min="0"
-              className="h-9 bg-white text-sm"
-            />
-          </div>
+        <div className={cn(segmentedControlRowClass, "shrink-0")}>
+          <label
+            htmlFor="competitions-filter"
+            className={segmentedControlLabelClass}
+          >
+            Min comps
+          </label>
+          <Input
+            id="competitions-filter"
+            type="number"
+            placeholder="≥"
+            value={minCompetitions ?? ""}
+            onChange={(e) => {
+              const value =
+                e.target.value === ""
+                  ? undefined
+                  : parseInt(e.target.value, 10);
+              setMinCompetitions(value);
+              setCurrentPage(1);
+            }}
+            min="0"
+            className="h-9 w-24 rounded-full border-transparent bg-white text-sm shadow-none"
+          />
         </div>
 
         {hasActiveFilters && (
           <Button
-            variant="secondary"
+            variant="ghost"
             size="sm"
             onClick={handleResetFilters}
-            className="whitespace-nowrap h-9"
+            className={cn(siteNavigationCtaClass, "w-full shrink-0 md:w-auto")}
           >
-            <FilterX className="mr-2 h-4 w-4" />
-            Reset
+            Reset filters
           </Button>
         )}
       </div>
 
-      <div className="flex flex-col gap-2 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <span>
-          Showing {paginatedData.length} of {sortedData.length} results
-          {filteredData.length !== associations.length &&
-            ` (filtered from ${associations.length} total)`}
-        </span>
-        <span>
-          Sorted by{" "}
-          {sortField && sortDirection
-            ? `${sortField} ${sortDirection}`
-            : "default API order"}
-        </span>
+      <div className="px-1 text-sm text-muted-foreground">
+        Showing {paginatedData.length} of {sortedData.length} results
+        {filteredData.length !== associations.length &&
+          ` (filtered from ${associations.length} total)`}
       </div>
 
-      <div className="overflow-hidden rounded-md border border-slate-200">
-        <Table>
+      <Table>
           <TableHeader>
             <TableRow className="bg-slate-50 hover:bg-slate-50">
               <TableHead>
@@ -498,25 +463,30 @@ export default function AssociationsTable({
                     </div>
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
+                    <div className="flex flex-wrap justify-end gap-2">
                       {association.href ? (
-                        <Button variant="primary" size="sm" asChild>
-                          <Link
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={cn(siteNavigationCtaClass, "shrink-0")}
+                          asChild
+                        >
+                          <a
                             href={association.href}
                             target="_blank"
                             rel="noopener noreferrer"
                           >
-                            <ExternalLink className="h-4 w-4" />
+                            <ExternalLink className="h-4 w-4 shrink-0 text-current" aria-hidden />
                             PlayHQ
-                          </Link>
+                          </a>
                         </Button>
                       ) : null}
-                      <Button variant="primary" size="sm" asChild>
-                        <Link href={`/dashboard/association/${association.id}`}>
-                          View
-                          <ArrowRight className="h-4 w-4" />
-                        </Link>
-                      </Button>
+                      <DashboardLinkButton
+                        href={`/dashboard/association/${association.id}`}
+                        trailingIcon="arrow"
+                      >
+                        View
+                      </DashboardLinkButton>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -524,7 +494,6 @@ export default function AssociationsTable({
             )}
           </TableBody>
         </Table>
-      </div>
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between">

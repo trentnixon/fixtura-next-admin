@@ -8,7 +8,6 @@ import {
   CalendarDays,
   ClipboardList,
   Gauge,
-  Home,
   Link2,
   RefreshCcw,
   Trophy,
@@ -18,31 +17,27 @@ import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { Badge } from "@/components/ui/badge";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
+import LoadingState from "@/components/ui-library/states/LoadingState";
+import ErrorState from "@/components/ui-library/states/ErrorState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+  siteNavigationCtaClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
 import { useAssociationInsights } from "@/hooks/association/useAssociationInsights";
 import {
   AssociationInsightsResponse,
   SportFilter,
 } from "@/types/associationInsights";
 
-// Component imports
-import DataWrapper from "./components/DataWrapper";
 import SportFilterComponent from "./components/SportFilter";
-import OverviewStatsCard from "./components/OverviewStatsCard";
-import GradesAndClubsStatsCard from "./components/GradesAndClubsStatsCard";
-import CompetitionStatsCard from "./components/CompetitionStatsCard";
-import CompetitionDatePatternsCard from "./components/CompetitionDatePatternsCard";
+import AssociationCoverageSection from "./components/AssociationCoverageSection";
+import AssociationCompetitionsSection from "./components/AssociationCompetitionsSection";
 import AssociationsTable from "./components/AssociationsTable";
-import { AssociationGanttSection } from "./components/AssociationGanttSection";
+import AssociationTimelineSection from "./components/AssociationTimelineSection";
 
 const associationTabs = [
   {
@@ -80,190 +75,97 @@ export default function AssociationData() {
         title="Associations"
         byLine="Association directory and operational insight"
         byLineBottom="Compact view of linked accounts, competitions, clubs, and grades"
-      />
+      >
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end sm:justify-end">
+          <SportFilterComponent
+            selectedSport={selectedSport}
+            onSportChange={setSelectedSport}
+          />
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className={cn(siteNavigationCtaClass, "shrink-0 self-end sm:self-auto")}
+          >
+            <RefreshCcw className="h-4 w-4 shrink-0 text-current" aria-hidden />
+            Refresh
+          </Button>
+        </div>
+      </CreatePageTitle>
       <PageContainer padding="xs" spacing="lg">
-        <SectionContainer
-          title="Association Workspace"
-          description="Route context, active filter, and endpoint health for the association insight workflow."
-          variant="compact"
-          contentClassName="space-y-4"
-        >
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
-            <div className="space-y-2">
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink
-                      className="flex items-center gap-1"
-                      href="/dashboard"
-                    >
-                      <Home className="h-3.5 w-3.5" />
-                      Dashboard
-                    </BreadcrumbLink>
-                  </BreadcrumbItem>
-                  <BreadcrumbSeparator />
-                  <BreadcrumbItem>
-                    <BreadcrumbPage>Associations</BreadcrumbPage>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
-              <div>
-                <h2 className="text-lg font-semibold leading-tight text-slate-950">
-                  Association insight workspace
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  Review association coverage, operational scale, and
-                  competition activity from one filtered dataset.
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center lg:justify-end">
-              <SportFilterComponent
-                selectedSport={selectedSport}
-                onSportChange={setSelectedSport}
-              />
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => refetch()}
-                disabled={isLoading}
-                className="w-full sm:w-auto"
-              >
-                <RefreshCcw className="mr-2 h-4 w-4" />
-                Refresh
-              </Button>
-            </div>
-          </div>
+        {isLoading && (
+          <SectionContainer title="Loading">
+            <LoadingState message="Loading association insights..." />
+          </SectionContainer>
+        )}
 
-          <div className="grid grid-cols-1 gap-2 border-t border-slate-200 pt-3 text-sm sm:grid-cols-3">
-            <WorkspaceStatus
-              label="Sport filter"
-              value={selectedSport ?? "All sports"}
+        {error && !isLoading && (
+          <SectionContainer title="Error">
+            <ErrorState
+              error={error}
+              title="Failed to load association insights"
+              onRetry={() => refetch()}
             />
-            <WorkspaceStatus
-              label="Records"
-              value={
-                data?.data?.associations
-                  ? data.data.associations.length.toLocaleString()
-                  : isLoading
-                    ? "Loading"
-                    : "No data"
-              }
-            />
-            <WorkspaceStatus
-              label="Generated"
-              value={
-                data?.data?.meta.generatedAt
-                  ? new Date(data.data.meta.generatedAt).toLocaleString()
-                  : "Pending"
-              }
-            />
-          </div>
-        </SectionContainer>
+          </SectionContainer>
+        )}
 
-        <DataWrapper
-          isLoading={isLoading}
-          error={error}
-          data={data}
-          onRetry={() => refetch()}
-        >
+        {data?.data && (
           <Tabs defaultValue="snapshot" className="w-full min-w-0 max-w-full">
-            <TabsList className="h-auto w-full flex-wrap justify-start rounded-md bg-slate-100 p-1">
-              {associationTabs.map((tab) => {
-                const Icon = tab.icon;
+            <div className="pb-8">
+              <TabsList variant="primary" className={sectionTabListClass}>
+                {associationTabs.map((tab) => {
+                  const Icon = tab.icon;
 
-                return (
-                  <TabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    className="min-h-10 gap-2"
-                  >
-                    <Icon className="h-4 w-4" />
-                    {tab.label}
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
+                  return (
+                    <TabsTrigger
+                      key={tab.value}
+                      value={tab.value}
+                      variant="section"
+                      className={sectionTabTriggerClass}
+                    >
+                      <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden />
+                      {tab.label}
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
+            </div>
 
-            <TabsContent value="snapshot" className="mt-6 space-y-6">
-              {data?.data && <AssociationSnapshot insights={data} />}
-              {data?.data?.associations && (
-                <SectionContainer
-                  title="Associations"
-                  description="Search, sort, and open association detail records."
-                >
-                  <AssociationsTable associations={data.data.associations} />
-                </SectionContainer>
-              )}
+            <TabsContent value="snapshot" className="mt-0 space-y-6">
+              <AssociationSnapshot insights={data} />
+              <AssociationsTable associations={data.data.associations} />
             </TabsContent>
 
             <TabsContent
               value="timeline"
-              className="mt-6 min-w-0 max-w-full overflow-hidden"
+              className="mt-0 min-w-0 max-w-full overflow-hidden"
             >
-              {data?.data?.associations && (
-                <AssociationGanttSection
-                  associations={data.data.associations}
+              <AssociationTimelineSection
+                associations={data.data.associations}
+              />
+            </TabsContent>
+
+            <TabsContent value="coverage" className="mt-0">
+              {data.data.overview && data.data.gradesAndClubs && (
+                <AssociationCoverageSection
+                  overview={data.data.overview}
+                  gradesAndClubs={data.data.gradesAndClubs}
                 />
               )}
             </TabsContent>
 
-            <TabsContent value="coverage" className="mt-6 space-y-6">
-              {data?.data?.overview && (
-                <SectionContainer
-                  title="Account Coverage"
-                  description="How many associations exist, how many are linked to accounts, and where the largest account gaps are."
-                >
-                  <OverviewStatsCard data={data.data.overview} />
-                </SectionContainer>
-              )}
-
-              {data?.data?.gradesAndClubs && (
-                <SectionContainer
-                  title="Participation Structure"
-                  description="Grade and club depth across associations so sparse and high-volume groups are easier to spot."
-                >
-                  <GradesAndClubsStatsCard data={data.data.gradesAndClubs} />
-                </SectionContainer>
-              )}
-            </TabsContent>
-
-            <TabsContent value="competitions" className="mt-6 space-y-6">
-              {data?.data?.competitions && (
-                <SectionContainer
-                  title="Competition Mix"
-                  description="Status, team size, and grade depth across competitions for the selected sport."
-                >
-                  <CompetitionStatsCard data={data.data.competitions} />
-                </SectionContainer>
-              )}
-
-              {data?.data?.competitions?.datePatterns && (
-                <SectionContainer
-                  title="Competition Timing"
-                  description="Start and end timing, duration, and near-term activity for competitions with valid dates."
-                >
-                  <CompetitionDatePatternsCard
-                    data={data.data.competitions.datePatterns}
-                  />
-                </SectionContainer>
+            <TabsContent value="competitions" className="mt-0">
+              {data.data.competitions && (
+                <AssociationCompetitionsSection
+                  competitions={data.data.competitions}
+                />
               )}
             </TabsContent>
           </Tabs>
-        </DataWrapper>
+        )}
       </PageContainer>
     </>
-  );
-}
-
-function WorkspaceStatus({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md bg-slate-50 px-3 py-2">
-      <div className="text-xs font-medium uppercase text-slate-500">
-        {label}
-      </div>
-      <div className="mt-1 truncate font-semibold text-slate-900">{value}</div>
-    </div>
   );
 }
 

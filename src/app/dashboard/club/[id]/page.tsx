@@ -9,6 +9,17 @@ import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import {
+  BarChart3,
+  Building2,
+  Gauge,
+  Trophy,
+  Users,
+} from "lucide-react";
 import ClubHeader from "./components/ClubHeader";
 import StatisticsOverview from "./components/StatisticsOverview";
 import AssociationsList from "./components/AssociationsList";
@@ -16,6 +27,15 @@ import TeamsList from "./components/TeamsList";
 import CompetitionsList from "./components/CompetitionsList";
 import AccountsList from "./components/AccountsList";
 import InsightsSection from "./components/InsightsSection";
+
+const clubDetailTabs = [
+  { value: "snapshot", label: "Snapshot", icon: Gauge },
+  { value: "competitions", label: "Competitions", icon: Trophy },
+  { value: "teams", label: "Teams", icon: Users },
+  { value: "associations", label: "Associations", icon: Building2 },
+  { value: "accounts", label: "Accounts", icon: Users },
+  { value: "insights", label: "Insights", icon: BarChart3 },
+] as const;
 
 export default function ClubAdminDetailPage() {
   const params = useParams<{ id: string }>();
@@ -117,26 +137,33 @@ export default function ClubAdminDetailPage() {
     <>
       <CreatePageTitle
         title={club.name}
-        byLine={`${club.sport} - Club ID: ${clubId}`}
+        byLine={`${club.sport} • Club ID: ${clubId}`}
         byLineBottom={isFetching ? "Refreshing..." : "Club Admin Detail"}
       />
-      <PageContainer padding="md" spacing="lg">
-        <Tabs defaultValue="snapshot" className="w-full">
-          <TabsList variant="primary" className="mb-4">
-            <TabsTrigger value="snapshot">Club Snapshot</TabsTrigger>
-            <TabsTrigger value="competitions">Competitions</TabsTrigger>
-            <TabsTrigger value="teams">Teams</TabsTrigger>
-            <TabsTrigger value="associations">Associations</TabsTrigger>
-            <TabsTrigger value="accounts">Accounts</TabsTrigger>
-            <TabsTrigger value="insights">Insights</TabsTrigger>
-          </TabsList>
+      <PageContainer padding="xs" spacing="lg">
+        <Tabs defaultValue="snapshot" className="w-full min-w-0 max-w-full">
+          <div className="pb-8">
+            <TabsList variant="primary" className={sectionTabListClass}>
+              {clubDetailTabs.map(({ value, label, icon: Icon }) => (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  variant="section"
+                  className={sectionTabTriggerClass}
+                >
+                  <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden />
+                  {label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
-          <TabsContent value="snapshot" className="space-y-6">
+          <TabsContent value="snapshot" className="mt-0 space-y-6">
             <ClubHeader club={club} statistics={statistics} />
             <StatisticsOverview statistics={statistics} />
           </TabsContent>
 
-          <TabsContent value="competitions">
+          <TabsContent value="competitions" className="mt-0">
             <SectionContainer
               title="Competitions"
               description={`${competitions.length} competition(s) this club is involved in, including timeline and participation.`}
@@ -145,7 +172,7 @@ export default function ClubAdminDetailPage() {
             </SectionContainer>
           </TabsContent>
 
-          <TabsContent value="teams">
+          <TabsContent value="teams" className="mt-0">
             <SectionContainer
               title="Teams"
               description={`${teams.length} team(s) for this club with competition and grade context.`}
@@ -154,7 +181,7 @@ export default function ClubAdminDetailPage() {
             </SectionContainer>
           </TabsContent>
 
-          <TabsContent value="associations">
+          <TabsContent value="associations" className="mt-0">
             <SectionContainer
               title="Associations"
               description={`${associations.length} association(s) this club participates in.`}
@@ -163,7 +190,7 @@ export default function ClubAdminDetailPage() {
             </SectionContainer>
           </TabsContent>
 
-          <TabsContent value="accounts">
+          <TabsContent value="accounts" className="mt-0">
             <SectionContainer
               title="Accounts"
               description={`${accounts.length} account(s) linked to this club and their subscription status.`}
@@ -172,7 +199,7 @@ export default function ClubAdminDetailPage() {
             </SectionContainer>
           </TabsContent>
 
-          <TabsContent value="insights">
+          <TabsContent value="insights" className="mt-0">
             <SectionContainer
               title="Insights"
               description="Analytics and insights for this club."

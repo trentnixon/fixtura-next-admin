@@ -36,6 +36,8 @@ import {
   type DataRefreshAttentionRun,
   type DataRefreshAttentionSeverity,
 } from "@/lib/account-health/globalRunAnalytics";
+import AbortAccountHealthRunButton from "@/app/dashboard/accounts/components/account-health/AbortAccountHealthRunButton";
+import ReconcileAccountHealthRunButton from "@/app/dashboard/accounts/components/account-health/ReconcileAccountHealthRunButton";
 import { cn } from "@/lib/utils";
 
 interface DataRefreshAttentionPanelProps {
@@ -44,10 +46,39 @@ interface DataRefreshAttentionPanelProps {
   isLoading: boolean;
   error: Error | null;
   onRetry?: () => void;
+  /** Active runs reported by API but missing from latestRuns window. */
+  hiddenActiveCount?: number;
   /** When true, omit outer title — parent section provides the heading. */
   embedded?: boolean;
   /** Compact record rows for overview panels; default table for full views. */
   layout?: "table" | "rows";
+  /** Reconcile / abort shortcuts on fleet views. */
+  showOperatorActions?: boolean;
+}
+
+function SyncRunOperatorActions({ run }: { run: DataRefreshAttentionRun }) {
+  if (run.attentionKind === "completed_limbo") {
+    return (
+      <ReconcileAccountHealthRunButton
+        runId={run.id}
+        accountId={run.accountId}
+        size="sm"
+      />
+    );
+  }
+  if (
+    run.attentionKind === "stuck" ||
+    (run.attentionKind === "active" && run.severity === "error")
+  ) {
+    return (
+      <AbortAccountHealthRunButton
+        runId={run.id}
+        accountId={run.accountId}
+        size="sm"
+      />
+    );
+  }
+  return null;
 }
 
 const PANEL_THEME: Record<
@@ -193,19 +224,36 @@ function runActionVariant(
 /**
  * Dashboard alert list for account sync runs that are active, stuck, or in completed limbo.
  */
+function HiddenActiveRunsBanner({ count }: { count: number }) {
+  return (
+    <div className="rounded-md border border-red-300 bg-red-50/90 px-4 py-3 text-sm text-red-950">
+      <p className="font-medium">
+        {count} active account sync{count === 1 ? "" : "s"} not shown in the
+        recent run window
+      </p>
+      <p className="mt-1 text-xs text-red-900/85">
+        Long-running or stalled syncs may be missing from the list below. Open
+        Data Collection or Strapi account-health runs to inspect the full fleet.
+      </p>
+    </div>
+  );
+}
+
 export function DataRefreshAttentionPanel({
   runs,
   activeCount,
   isLoading,
   error,
   onRetry,
+  hiddenActiveCount = 0,
   embedded = false,
   layout = "table",
+  showOperatorActions = false,
 }: DataRefreshAttentionPanelProps) {
   const hasLiveClock = runs.some((run) => run.attentionKind !== "completed_limbo");
   const nowMs = useLiveRunClock(hasLiveClock);
 
-  if (!isLoading && !error && runs.length === 0) {
+  if (!isLoading && !error && runs.length === 0 && hiddenActiveCount === 0) {
     return null;
   }
 
@@ -278,9 +326,18 @@ export function DataRefreshAttentionPanel({
     };
   });
 
+  if (!isLoading && !error && runs.length === 0 && hiddenActiveCount > 0) {
+    return (
+      <HiddenActiveRunsBanner count={hiddenActiveCount} />
+    );
+  }
+
   if (embedded && layout === "rows") {
     return (
       <div className="space-y-3">
+        {hiddenActiveCount > 0 ? (
+          <HiddenActiveRunsBanner count={hiddenActiveCount} />
+        ) : null}
         {hiddenActive > 0 ? (
           <p className={cn("text-xs", theme.subText)}>
             Showing {visibleActive} of {activeCount} active runs from the recent
@@ -327,17 +384,22 @@ export function DataRefreshAttentionPanel({
                   {run.attentionLabel}
                 </Badge>
 
-                <Button
-                  variant={runActionVariant(run)}
-                  size="sm"
-                  className="w-fit shrink-0 sm:justify-self-end"
-                  asChild
-                >
-                  <Link href={runHref}>
-                    {runActionLabel(run)}
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
-                </Button>
+                <div className="flex w-fit shrink-0 flex-wrap items-center gap-2 sm:justify-self-end">
+                  {showOperatorActions ? (
+                    <SyncRunOperatorActions run={run} />
+                  ) : null}
+                  <Button
+                    variant={runActionVariant(run)}
+                    size="sm"
+                    className="w-fit shrink-0"
+                    asChild
+                  >
+                    <Link href={runHref}>
+                      {runActionLabel(run)}
+                      <ArrowRight className="h-3.5 w-3.5" />
+                    </Link>
+                  </Button>
+                </div>
               </div>
             )
           )}
@@ -395,6 +457,12 @@ export function DataRefreshAttentionPanel({
           Data Collection
         </DashboardLinkButton>
       </div>
+
+      {hiddenActiveCount > 0 && runs.length > 0 ? (
+        <div className={cn(embedded ? "px-4 pt-3" : "mb-3")}>
+          <HiddenActiveRunsBanner count={hiddenActiveCount} />
+        </div>
+      ) : null}
 
       {hiddenActive > 0 ? (
         <p className={cn("text-xs", embedded ? "px-4 pt-3" : "mb-3", theme.subText)}>
@@ -480,17 +548,22 @@ export function DataRefreshAttentionPanel({
                     {elapsedLabel}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      variant={runActionVariant(run)}
-                      size="sm"
-                      className="shrink-0"
-                      asChild
-                    >
-                      <Link href={runHref}>
-                        {runActionLabel(run)}
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </Button>
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      {showOperatorActions ? (
+                        <SyncRunOperatorActions run={run} />
+                      ) : null}
+                      <Button
+                        variant={runActionVariant(run)}
+                        size="sm"
+                        className="shrink-0"
+                        asChild
+                      >
+                        <Link href={runHref}>
+                          {runActionLabel(run)}
+                          <ArrowRight className="h-3.5 w-3.5" />
+                        </Link>
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               )

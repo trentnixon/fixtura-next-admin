@@ -41,16 +41,58 @@ import {
 } from "@/components/ui/table";
 import EmptyState from "@/components/ui-library/states/EmptyState";
 import { SubscriptionBadge } from "./SubscriptionBadge";
+import {
+  useFleetOpsAccountIndex,
+  type FleetOpsAccountFlags,
+} from "@/hooks/fleet/useFleetOpsAccountIndex";
 
 interface AccountsTableProps {
   accounts: AccountLookupItem[];
   emptyMessage: string;
+  showFleetOpsColumn?: boolean;
+}
+
+function FleetOpsCell({
+  flags,
+}: {
+  flags: FleetOpsAccountFlags | undefined;
+}) {
+
+  if (!flags?.renderStuck && !flags?.syncAttention) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+
+  return (
+    <div className="flex flex-col gap-1">
+      {flags.renderStuck ? (
+        <Badge
+          variant="outline"
+          className="w-fit border-amber-300 bg-amber-50 text-amber-900"
+        >
+          Render
+        </Badge>
+      ) : null}
+      {flags.syncAttention ? (
+        <Badge
+          variant="outline"
+          className="w-fit border-orange-300 bg-orange-50 text-orange-900"
+        >
+          Sync
+        </Badge>
+      ) : null}
+    </div>
+  );
 }
 
 type SortField = "firstName" | "sport" | "subscription" | null;
 type SortDirection = "asc" | "desc" | null;
 
-export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
+export function AccountTable({
+  accounts,
+  emptyMessage,
+  showFleetOpsColumn = false,
+}: AccountsTableProps) {
+  const fleetOpsByAccount = useFleetOpsAccountIndex();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -379,6 +421,9 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
                       {getSortIcon("subscription")}
                     </Button>
                   </TableHead>
+                  {showFleetOpsColumn ? (
+                    <TableHead className="hidden md:table-cell">Fleet</TableHead>
+                  ) : null}
                   <TableHead className="w-[110px] text-right">
                     Actions
                   </TableHead>
@@ -479,6 +524,11 @@ export function AccountTable({ accounts, emptyMessage }: AccountsTableProps) {
                           }
                         />
                       </TableCell>
+                      {showFleetOpsColumn ? (
+                        <TableCell className="hidden md:table-cell">
+                          <FleetOpsCell flags={fleetOpsByAccount.get(account.id)} />
+                        </TableCell>
+                      ) : null}
                       <TableCell className="text-right">
                         <Button
                           variant="primary"

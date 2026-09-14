@@ -9,8 +9,10 @@ import LoadingState from "@/components/ui-library/states/LoadingState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLiveRunClock } from "@/hooks/account-asset-run/useLiveRunClock";
 import { getAccountPagePath } from "@/lib/account-health/accountRoutes";
-import { formatDurationMs } from "@/lib/account-health/globalRunAnalytics";
-import type { StuckRenderingAttentionItem } from "@/lib/scheduler/renderAttention";
+import {
+  formatStuckRenderingElapsedLabel,
+  type StuckRenderingAttentionItem,
+} from "@/lib/scheduler/renderAttention";
 import { cn } from "@/lib/utils";
 
 function normalizeAccountType(
@@ -23,13 +25,25 @@ function normalizeAccountType(
 }
 
 function severityBadgeClass(severity: StuckRenderingAttentionItem["severity"]) {
-  return severity === "stuck"
-    ? "border-amber-300 bg-amber-100 text-amber-900"
-    : "border-orange-300 bg-orange-100 text-orange-900";
+  switch (severity) {
+    case "error":
+      return "border-red-300 bg-red-100 text-red-900";
+    case "issue":
+      return "border-orange-300 bg-orange-100 text-orange-900";
+    default:
+      return "border-amber-300 bg-amber-100 text-amber-900";
+  }
 }
 
 function severityRowClass(severity: StuckRenderingAttentionItem["severity"]) {
-  return severity === "stuck" ? "bg-amber-50/60" : "bg-orange-50/50";
+  switch (severity) {
+    case "error":
+      return "bg-red-50/70";
+    case "issue":
+      return "bg-orange-50/60";
+    default:
+      return "bg-amber-50/60";
+  }
 }
 
 interface StuckRenderingAttentionListProps {
@@ -84,10 +98,10 @@ export function StuckRenderingAttentionList({
         const elapsedMs = Number.isFinite(startMs)
           ? Math.max(0, nowMs - startMs)
           : item.elapsedMs;
-        const elapsedLabel =
-          elapsedMs != null && Number.isFinite(elapsedMs)
-            ? `${formatDurationMs(elapsedMs)} (running)`
-            : "Duration unknown";
+        const elapsedLabel = formatStuckRenderingElapsedLabel(
+          elapsedMs != null && Number.isFinite(elapsedMs) ? elapsedMs : null,
+          item.startedAt
+        );
 
         return (
           <div

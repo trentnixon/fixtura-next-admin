@@ -2,19 +2,22 @@
 
 import { useMemo, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import {
   ArrowDown,
-  ArrowRight,
   ArrowUp,
   ArrowUpDown,
   Search,
-  X,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
+import { siteNavigationCtaClass } from "@/lib/actions/siteNavigationButtonStyles";
+import {
+  segmentedControlLabelClass,
+  segmentedControlRowClass,
+} from "@/lib/forms/segmentedControlStyles";
+import { cn } from "@/lib/utils";
 import {
   Pagination,
   PaginationInfo,
@@ -183,10 +186,10 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col items-end gap-4 lg:flex-row">
-        <div className="relative max-w-md flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+    <div id="clubs-table" className="space-y-4">
+      <div className="flex flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 md:flex-row md:flex-wrap md:items-center">
+        <div className="relative min-w-0 flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             type="search"
             placeholder="Search by name, sport, or association..."
@@ -195,34 +198,18 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
               setSearchQuery(event.target.value);
               setCurrentPage(1);
             }}
-            className="h-9 pl-10 pr-10"
+            className="rounded-full border-transparent bg-white pl-9 shadow-none"
           />
-          {searchQuery && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setSearchQuery("");
-                setCurrentPage(1);
-              }}
-              className="absolute right-1 top-1/2 h-7 w-7 -translate-y-1/2 p-0 hover:bg-transparent"
-            >
-              <X className="h-3 w-3" />
-            </Button>
-          )}
         </div>
 
-        <div className="min-w-[120px] space-y-1">
-          <Label
-            htmlFor="teams-filter"
-            className="text-xs text-muted-foreground"
-          >
+        <div className={cn(segmentedControlRowClass, "shrink-0")}>
+          <label htmlFor="teams-filter" className={segmentedControlLabelClass}>
             Min teams
-          </Label>
+          </label>
           <Input
             id="teams-filter"
             type="number"
-            placeholder="More than"
+            placeholder="≥"
             value={minTeams ?? ""}
             onChange={(event) => {
               const value =
@@ -233,21 +220,21 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
               setCurrentPage(1);
             }}
             min="0"
-            className="h-9 text-sm"
+            className="h-9 w-24 rounded-full border-transparent bg-white text-sm shadow-none"
           />
         </div>
 
-        <div className="min-w-[150px] space-y-1">
-          <Label
+        <div className={cn(segmentedControlRowClass, "shrink-0")}>
+          <label
             htmlFor="competitions-filter"
-            className="text-xs text-muted-foreground"
+            className={segmentedControlLabelClass}
           >
-            Min competitions
-          </Label>
+            Min comps
+          </label>
           <Input
             id="competitions-filter"
             type="number"
-            placeholder="More than"
+            placeholder="≥"
             value={minCompetitions ?? ""}
             onChange={(event) => {
               const value =
@@ -258,22 +245,23 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
               setCurrentPage(1);
             }}
             min="0"
-            className="h-9 text-sm"
+            className="h-9 w-24 rounded-full border-transparent bg-white text-sm shadow-none"
           />
         </div>
 
         {hasActiveFilters && (
           <Button
-            variant="outline"
+            variant="ghost"
+            size="sm"
             onClick={handleResetFilters}
-            className="h-9 whitespace-nowrap"
+            className={cn(siteNavigationCtaClass, "w-full shrink-0 md:w-auto")}
           >
             Reset Filters
           </Button>
         )}
       </div>
 
-      <div className="text-sm text-muted-foreground">
+      <div className="px-1 text-sm text-muted-foreground">
         Showing {paginatedData.length} of {sortedData.length} results
         {filteredData.length !== clubs.length &&
           ` (filtered from ${clubs.length} total)`}
@@ -417,12 +405,12 @@ export default function ClubsTable({ clubs }: ClubsTableProps) {
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end">
-                    <Button variant="primary" size="sm" asChild>
-                      <Link href={`/dashboard/club/${club.id}`}>
-                        View
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </Button>
+                    <DashboardLinkButton
+                      href={`/dashboard/club/${club.id}`}
+                      trailingIcon="arrow"
+                    >
+                      View
+                    </DashboardLinkButton>
                   </div>
                 </TableCell>
               </TableRow>

@@ -1,14 +1,36 @@
+import type { ReactNode } from "react";
 import { GanttFeature } from "@/components/ui/shadcn-io/gantt";
+import { cn } from "@/lib/utils";
 import { differenceInDays, differenceInWeeks, format } from "date-fns";
 
 interface AssociationTooltipContentProps {
   feature: GanttFeature;
 }
 
+function DetailRow({
+  label,
+  value,
+  valueClassName,
+}: {
+  label: string;
+  value: ReactNode;
+  valueClassName?: string;
+}) {
+  return (
+    <>
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd
+        className={cn("text-right font-medium text-slate-900", valueClassName)}
+      >
+        {value}
+      </dd>
+    </>
+  );
+}
+
 export function AssociationTooltipContent({
   feature,
 }: AssociationTooltipContentProps) {
-  // Calculate duration
   let durationText = "Ongoing";
   if (feature.endAt) {
     const durationDays = differenceInDays(feature.endAt, feature.startAt);
@@ -25,73 +47,65 @@ export function AssociationTooltipContent({
   const gradeCount = feature.gradeCount as number | undefined;
   const clubCount = feature.clubCount as number | undefined;
   const sport = feature.sport as string | undefined;
+  const weight = Number(feature.weight);
+  const priorityBand =
+    weight >= 75
+      ? "High"
+      : weight >= 50
+        ? "Med–high"
+        : weight >= 25
+          ? "Medium"
+          : "Lower";
+
+  const competitionLabel =
+    competitionCount !== undefined && competitionCount !== null
+      ? validDateCount !== undefined &&
+          validDateCount !== null &&
+          validDateCount < competitionCount
+        ? `${competitionCount} (${validDateCount} dated)`
+        : String(competitionCount)
+      : null;
 
   return (
-    <div className="space-y-2">
-      {/* Association Name */}
-      <div className="font-semibold text-foreground border-b pb-2">
-        {feature.name}
-      </div>
-
-      {/* Dates */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-muted-foreground">Start:</span>
-          <span className="font-medium">
-            {format(feature.startAt, "EEE, MMM d, yyyy")}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-muted-foreground">End:</span>
-          <span className="font-medium">
-            {feature.endAt
-              ? format(feature.endAt, "EEE, MMM d, yyyy")
-              : "Ongoing"}
-          </span>
-        </div>
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-muted-foreground">Duration:</span>
-          <span className="font-medium text-primary">{durationText}</span>
-        </div>
-      </div>
-
-      {/* Additional Details */}
-      <div className="space-y-1 border-t pt-2">
+    <div className="min-w-[220px] space-y-3">
+      <div>
+        <p className="font-semibold leading-snug text-slate-950">
+          {feature.name}
+        </p>
         {sport && (
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-muted-foreground">Sport:</span>
-            <span className="capitalize">{sport}</span>
-          </div>
-        )}
-
-        {competitionCount !== undefined && competitionCount !== null && (
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-muted-foreground">Competitions:</span>
-            <span>{competitionCount}</span>
-            {validDateCount !== undefined &&
-              validDateCount !== null &&
-              validDateCount < competitionCount && (
-                <span className="text-muted-foreground">
-                  ({validDateCount} with dates)
-                </span>
-              )}
-          </div>
-        )}
-
-        {gradeCount !== undefined && gradeCount !== null && (
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-muted-foreground">Grades:</span>
-            <span>{gradeCount}</span>
-          </div>
-        )}
-
-        {clubCount !== undefined && clubCount !== null && (
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-muted-foreground">Clubs:</span>
-            <span>{clubCount}</span>
-          </div>
+          <p className="mt-0.5 text-xs capitalize text-muted-foreground">
+            {sport}
+          </p>
         )}
       </div>
+
+      <dl className="grid grid-cols-[minmax(4.5rem,auto)_1fr] gap-x-3 gap-y-1.5 text-xs">
+        <DetailRow
+          label="Start"
+          value={format(feature.startAt, "d MMM yyyy")}
+        />
+        <DetailRow
+          label="End"
+          value={
+            feature.endAt ? format(feature.endAt, "d MMM yyyy") : "Ongoing"
+          }
+        />
+        <DetailRow label="Duration" value={durationText} />
+        <DetailRow label="Priority" value={priorityBand} />
+        {competitionLabel !== null && (
+          <DetailRow label="Comps" value={competitionLabel} />
+        )}
+        {gradeCount !== undefined && gradeCount !== null && (
+          <DetailRow label="Grades" value={gradeCount} />
+        )}
+        {clubCount !== undefined && clubCount !== null && (
+          <DetailRow label="Clubs" value={clubCount} />
+        )}
+      </dl>
+
+      <p className="border-t border-slate-100 pt-2 text-[11px] text-muted-foreground">
+        Click bar to open association in a new tab
+      </p>
     </div>
   );
 }

@@ -1,23 +1,22 @@
 "use client";
 
-import { useMemo, useState } from "react";
-
-import { useCompetitionAdminStats } from "@/hooks/competitions/useCompetitionAdminStats";
+import { Dispatch, SetStateAction, useMemo } from "react";
+import { BarChart3, CalendarDays, Gauge } from "lucide-react";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import LoadingState from "@/components/ui-library/states/LoadingState";
-import ErrorState from "@/components/ui-library/states/ErrorState";
-import { FiltersSection } from "./CompetitionAdminStats/sections/FiltersSection";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import { ChartConfig } from "@/components/ui/chart";
+import { CompetitionAdminStatsResponse } from "@/types/competitionAdminStats";
 import { OverviewSection } from "./CompetitionAdminStats/sections/OverviewSection";
 import { DistributionsSection } from "./CompetitionAdminStats/sections/DistributionsSection";
 import { AvailableCompetitionsSection } from "./CompetitionAdminStats/sections/AvailableCompetitionsSection";
-import { GanttSection } from "./CompetitionAdminStats/sections/GanttSection";
-import {
-  buildSeasonChartData,
-  getSeasonsFromSummary,
-} from "./CompetitionAdminStats/helpers";
-import { ChartConfig } from "@/components/ui/chart";
-
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart3, CalendarDays, Gauge } from "lucide-react";
+import CompetitionTimelineSection from "./CompetitionTimelineSection";
+import { FiltersSection } from "./CompetitionAdminStats/sections/FiltersSection";
+import { buildSeasonChartData } from "./CompetitionAdminStats/helpers";
 
 const competitionTabs = [
   {
@@ -37,34 +36,29 @@ const competitionTabs = [
   },
 ] as const;
 
-export default function CompetitionAdminStats() {
-  const [associationInput, setAssociationInput] = useState<string>("");
-  const [seasonFilter, setSeasonFilter] = useState<string | undefined>(
-    undefined,
-  );
+interface CompetitionAdminStatsProps {
+  data: CompetitionAdminStatsResponse | undefined;
+  isInitialLoading: boolean;
+  associationInput: string;
+  setAssociationInput: Dispatch<SetStateAction<string>>;
+  seasonFilter: string | undefined;
+  setSeasonFilter: Dispatch<SetStateAction<string | undefined>>;
+  seasons: string[];
+  isFetching: boolean;
+  isAssociationInvalid: boolean;
+}
 
-  const associationIdFilter = useMemo(() => {
-    if (!associationInput.trim()) {
-      return undefined;
-    }
-
-    const parsed = Number(associationInput);
-    return Number.isNaN(parsed) ? undefined : parsed;
-  }, [associationInput]);
-
-  const params = useMemo(
-    () => ({
-      associationId: associationIdFilter,
-      season: seasonFilter,
-    }),
-    [associationIdFilter, seasonFilter],
-  );
-
-  const { data, isLoading, isFetching, isError, error, refetch } =
-    useCompetitionAdminStats(params);
-
-  const seasons = useMemo(() => getSeasonsFromSummary(data), [data]);
-
+export default function CompetitionAdminStats({
+  data,
+  isInitialLoading,
+  associationInput,
+  setAssociationInput,
+  seasonFilter,
+  setSeasonFilter,
+  seasons,
+  isFetching,
+  isAssociationInvalid,
+}: CompetitionAdminStatsProps) {
   const seasonChartData = useMemo(() => {
     if (!data) {
       return [] as Array<{ season: string; count: number }>;
@@ -76,55 +70,46 @@ export default function CompetitionAdminStats() {
     );
   }, [data]);
 
-  const isAssociationInvalid =
-    associationInput.trim().length > 0 &&
-    Number.isNaN(Number(associationInput));
+  const statusChartData = useMemo(
+    () =>
+      data?.charts.byStatus.map((item) => ({
+        status: item.status,
+        count: item.count,
+      })) ?? [],
+    [data],
+  );
 
-  if (isLoading && !data) {
-    return <LoadingState message="Loading competition statistics..." />;
-  }
+  const timingChartData = useMemo(
+    () =>
+      data?.charts.byTiming.map((item) => ({
+        timing: item.timing,
+        count: item.count,
+      })) ?? [],
+    [data],
+  );
 
-  if (isError) {
-    return (
-      <ErrorState
-        error={
-          error instanceof Error
-            ? error
-            : new Error("Unable to load competition admin statistics.")
-        }
-        onRetry={refetch}
-      />
-    );
-  }
+  const sizeCategoryChartData = useMemo(
+    () =>
+      data?.charts.sizeCategories.map((item) => ({
+        category: item.category,
+        count: item.count,
+      })) ?? [],
+    [data],
+  );
 
-  if (!data) {
-    return null;
-  }
-
-  const statusChartData = data.charts.byStatus.map((item) => ({
-    status: item.status,
-    count: item.count,
-  }));
-
-  const timingChartData = data.charts.byTiming.map((item) => ({
-    timing: item.timing,
-    count: item.count,
-  }));
-
-  const sizeCategoryChartData = data.charts.sizeCategories.map((item) => ({
-    category: item.category,
-    count: item.count,
-  }));
-
-  const statusChartConfig: ChartConfig = statusChartData.reduce(
-    (acc, item, index) => ({
-      ...acc,
-      [item.status]: {
-        label: item.status,
-        color: `hsl(var(--chart-${(index % 5) + 1}))`,
-      },
-    }),
-    {} as ChartConfig,
+  const statusChartConfig: ChartConfig = useMemo(
+    () =>
+      statusChartData.reduce(
+        (acc, item, index) => ({
+          ...acc,
+          [item.status]: {
+            label: item.status,
+            color: `hsl(var(--chart-${(index % 5) + 1}))`,
+          },
+        }),
+        {} as ChartConfig,
+      ),
+    [statusChartData],
   );
 
   const timingChartConfig: ChartConfig = {
@@ -139,22 +124,19 @@ export default function CompetitionAdminStats() {
     count: { label: "Competitions", color: "hsl(var(--chart-3))" },
   };
 
-  const filters = (
-    <FiltersSection
-      associationInput={associationInput}
-      setAssociationInput={setAssociationInput}
-      seasonFilter={seasonFilter}
-      setSeasonFilter={setSeasonFilter}
-      seasons={seasons}
-      isFetching={isFetching}
-      isAssociationInvalid={isAssociationInvalid}
-    />
-  );
-
   return (
     <Tabs defaultValue="snapshot" className="w-full min-w-0 max-w-full">
-      <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <TabsList className="h-auto w-full flex-wrap justify-start rounded-md bg-slate-100 p-1 lg:w-auto">
+      <div className="flex flex-col gap-4 pb-8">
+        <FiltersSection
+          associationInput={associationInput}
+          setAssociationInput={setAssociationInput}
+          seasonFilter={seasonFilter}
+          setSeasonFilter={setSeasonFilter}
+          seasons={seasons}
+          isFetching={isFetching}
+          isAssociationInvalid={isAssociationInvalid}
+        />
+        <TabsList variant="primary" className={sectionTabListClass}>
           {competitionTabs.map((tab) => {
             const Icon = tab.icon;
 
@@ -162,45 +144,58 @@ export default function CompetitionAdminStats() {
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
-                className="min-h-10 gap-2"
+                variant="section"
+                className={sectionTabTriggerClass}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden />
                 {tab.label}
               </TabsTrigger>
             );
           })}
         </TabsList>
-
-        <div className="flex justify-start lg:justify-end">{filters}</div>
       </div>
 
-      <TabsContent value="snapshot" className="mt-6 space-y-6">
-        <OverviewSection
-          summary={data.summary}
-          competitions={data.tables.available}
-        />
-        <AvailableCompetitionsSection competitions={data.tables.available} />
-      </TabsContent>
+      {isInitialLoading && (
+        <SectionContainer title="Loading">
+          <LoadingState message="Loading competition statistics..." />
+        </SectionContainer>
+      )}
 
-      <TabsContent
-        value="timeline"
-        className="mt-6 min-w-0 max-w-full overflow-hidden"
-      >
-        <GanttSection competitions={data.tables.available} />
-      </TabsContent>
+      {data && !isInitialLoading && (
+        <>
+          <TabsContent value="snapshot" className="mt-0 space-y-6">
+            <OverviewSection
+              summary={data.summary}
+              competitions={data.tables.available}
+            />
+            <AvailableCompetitionsSection
+              competitions={data.tables.available}
+            />
+          </TabsContent>
 
-      <TabsContent value="coverage" className="mt-6 space-y-6">
-        <DistributionsSection
-          statusChartData={statusChartData}
-          timingChartData={timingChartData}
-          sizeCategoryChartData={sizeCategoryChartData}
-          seasonChartData={seasonChartData}
-          statusChartConfig={statusChartConfig}
-          timingChartConfig={timingChartConfig}
-          sizeCategoryChartConfig={sizeCategoryChartConfig}
-          seasonChartConfig={seasonChartConfig}
-        />
-      </TabsContent>
+          <TabsContent
+            value="timeline"
+            className="mt-0 min-w-0 max-w-full overflow-hidden"
+          >
+            <CompetitionTimelineSection
+              competitions={data.tables.available}
+            />
+          </TabsContent>
+
+          <TabsContent value="coverage" className="mt-0 space-y-6">
+            <DistributionsSection
+              statusChartData={statusChartData}
+              timingChartData={timingChartData}
+              sizeCategoryChartData={sizeCategoryChartData}
+              seasonChartData={seasonChartData}
+              statusChartConfig={statusChartConfig}
+              timingChartConfig={timingChartConfig}
+              sizeCategoryChartConfig={sizeCategoryChartConfig}
+              seasonChartConfig={seasonChartConfig}
+            />
+          </TabsContent>
+        </>
+      )}
     </Tabs>
   );
 }

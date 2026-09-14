@@ -32,6 +32,7 @@ import { DashboardLinkButton } from "./live-snapshot/DashboardLinkButton";
 import { RenderActivityCharts } from "./account-asset-run/RenderActivityCharts";
 import { RenderActivityCompactList } from "./asset-creation/RenderActivityCompactList";
 import { AssetRunStatusChart } from "./asset-creation/AssetRunStatusChart";
+import { FleetAttentionSection } from "./fleet/FleetAttentionSection";
 
 const UNAVAILABLE = "—";
 const UNAVAILABLE_META = "Unavailable";
@@ -218,6 +219,8 @@ export default function DashboardAssetCreation() {
 
   return (
     <div className="space-y-6">
+      <FleetAttentionSection />
+
       <div className="flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center">
         <LabeledSegmentedControl
           label="Window"

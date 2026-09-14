@@ -5,39 +5,50 @@ import { AccountsInsights } from "@/types/clubInsights";
 
 interface AccountsInsightsCardProps {
   data: AccountsInsights;
+  /** Hide club linkage counts (shown in Coverage rollup). */
+  omitClubLinkage?: boolean;
 }
 
 export default function AccountsInsightsCard({
   data,
+  omitClubLinkage = false,
 }: AccountsInsightsCardProps) {
   return (
     <div className="space-y-4">
-      <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-3">
+      <div
+        className={
+          omitClubLinkage
+            ? "grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2"
+            : "grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-3"
+        }
+      >
         <Stat
-          label="Total Accounts"
+          label="Total accounts"
           value={data.totalAccounts.toLocaleString()}
         />
         <Stat
-          label="Active Accounts"
+          label="Active accounts"
           value={
             data.activeAccounts !== null
               ? data.activeAccounts.toLocaleString()
               : "N/A"
           }
         />
-        <Stat
-          label="Linked Clubs"
-          value={data.clubsWithAccounts.toLocaleString()}
-        />
+        {!omitClubLinkage && (
+          <Stat
+            label="Linked clubs"
+            value={data.clubsWithAccounts.toLocaleString()}
+          />
+        )}
       </div>
 
       <div className="flex flex-wrap items-center gap-2 text-sm">
-        <span className="text-muted-foreground">Trials:</span>
+        <span className="text-muted-foreground">Trials on clubs:</span>
         <Badge variant="outline" className="text-xs">
-          {data.clubsWithTrials.toLocaleString()} With trials
+          {data.clubsWithTrials.toLocaleString()} with trials
         </Badge>
         <Badge variant="secondary" className="text-xs">
-          {data.clubsWithActiveTrials.toLocaleString()} Active trials
+          {data.clubsWithActiveTrials.toLocaleString()} active trials
         </Badge>
       </div>
     </div>

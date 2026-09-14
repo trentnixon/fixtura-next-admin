@@ -7,6 +7,11 @@ import { useFixtureInsights } from "@/hooks/fixtures/useFixtureInsights";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
+import {
   Table,
   TableBody,
   TableCell,
@@ -78,9 +83,21 @@ export function TopEntities() {
       className="h-full"
     >
       <Tabs defaultValue="associations" className="w-full">
-        <TabsList className="mb-4">
-          <TabsTrigger value="associations">Associations</TabsTrigger>
-          <TabsTrigger value="competitions">Competitions</TabsTrigger>
+        <TabsList variant="primary" className={cn(sectionTabListClass, "mb-4")}>
+          <TabsTrigger
+            value="associations"
+            variant="section"
+            className={sectionTabTriggerClass}
+          >
+            Associations
+          </TabsTrigger>
+          <TabsTrigger
+            value="competitions"
+            variant="section"
+            className={sectionTabTriggerClass}
+          >
+            Competitions
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="associations" className="mt-0">

@@ -318,6 +318,81 @@ export function getDataRefreshAttentionRuns(
   });
 }
 
+/** Alert list only — excludes in-flight runs under 20 minutes (normal severity). */
+export function filterDataRefreshPolicyRuns(
+  runs: DataRefreshAttentionRun[]
+): DataRefreshAttentionRun[] {
+  return runs.filter(
+    (run) => run.attentionKind !== "active" || run.severity !== "normal"
+  );
+}
+
+export type DataRefreshAttentionState = {
+  allAttentionRuns: DataRefreshAttentionRun[];
+  policyRuns: DataRefreshAttentionRun[];
+  visibleActiveInWindow: number;
+  hiddenActiveCount: number;
+};
+
+export function computeDataRefreshAttentionState(
+  latestRuns: AccountHealthGlobalLatestRunRow[],
+  activeCount: number,
+  nowMs: number = Date.now()
+): DataRefreshAttentionState {
+  const allAttentionRuns = getDataRefreshAttentionRuns(latestRuns, nowMs);
+  const policyRuns = filterDataRefreshPolicyRuns(allAttentionRuns);
+  const visibleActiveInWindow = allAttentionRuns.filter(
+    (run) =>
+      run.attentionKind === "active" || run.attentionKind === "stuck"
+  ).length;
+  const hiddenActiveCount =
+    activeCount > visibleActiveInWindow
+      ? activeCount - visibleActiveInWindow
+      : 0;
+
+  return {
+    allAttentionRuns,
+    policyRuns,
+    visibleActiveInWindow,
+    hiddenActiveCount,
+  };
+}
+
+export function formatDataSyncAttentionMeta(input: {
+  errorCount: number;
+  issueCount: number;
+  policyRunCount: number;
+  activeCount: number;
+  hiddenActiveCount: number;
+}): string {
+  const {
+    errorCount,
+    issueCount,
+    policyRunCount,
+    activeCount,
+    hiddenActiveCount,
+  } = input;
+
+  if (errorCount > 0) {
+    return issueCount > 0
+      ? `${errorCount} error · ${issueCount} issue`
+      : `${errorCount} error`;
+  }
+  if (issueCount > 0) {
+    return `${issueCount} issue`;
+  }
+  if (policyRunCount > 0) {
+    return `${policyRunCount} slow, stuck, or unreconciled`;
+  }
+  if (hiddenActiveCount > 0) {
+    return `${hiddenActiveCount} active outside recent window`;
+  }
+  if (activeCount > 0) {
+    return `${activeCount} active · under policy threshold`;
+  }
+  return "All clear";
+}
+
 export function maxDataRefreshAttentionSeverity(
   runs: DataRefreshAttentionRun[]
 ): DataRefreshAttentionSeverity | null {

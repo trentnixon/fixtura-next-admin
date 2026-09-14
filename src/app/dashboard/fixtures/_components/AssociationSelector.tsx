@@ -15,8 +15,9 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useFixtureInsights } from "@/hooks/fixtures/useFixtureInsights";
 import ErrorState from "@/components/ui-library/states/ErrorState";
-import { ArrowRight } from "lucide-react";
 import { useSorting } from "./_utils/useSorting";
+import { siteNavigationCtaClass } from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
 import { SearchInput } from "./_utils/SearchInput";
 import { formatDateRange } from "./_utils/dateUtils";
 
@@ -196,22 +197,20 @@ export function AssociationSelector({ onSelect }: AssociationSelectorProps) {
       description="Search, sort, and open association fixture records."
       variant="compact"
     >
-      <div className="space-y-4">
-        {/* Search Filter */}
-        <SearchInput
-          value={searchQuery}
-          onChange={setSearchQuery}
-          placeholder="Search by association name..."
-        />
+      <div id="fixtures-associations-table" className="space-y-4">
+        <div className="rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2">
+          <SearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            placeholder="Search by association name..."
+          />
+        </div>
 
-        {/* Results Count */}
-        {searchQuery && (
-          <div className="text-sm text-muted-foreground">
-            Showing {associations.length} result
-            {associations.length !== 1 ? "s" : ""}
-            {searchQuery && ` for "${searchQuery}"`}
-          </div>
-        )}
+        <div className="px-1 text-sm text-muted-foreground">
+          Showing {associations.length} association
+          {associations.length !== 1 ? "s" : ""}
+          {searchQuery ? ` matching “${searchQuery}”` : ""}
+        </div>
 
         <Table>
           <TableHeader>
@@ -306,11 +305,11 @@ export function AssociationSelector({ onSelect }: AssociationSelectorProps) {
                 <TableCell className="text-right">
                   <Button
                     size="sm"
-                    variant="primary"
+                    variant="ghost"
                     onClick={() => onSelect(association.associationId)}
+                    className={cn(siteNavigationCtaClass, "shrink-0")}
                   >
-                    View
-                    <ArrowRight className="ml-1 h-4 w-4" />
+                    View fixtures
                   </Button>
                 </TableCell>
               </TableRow>

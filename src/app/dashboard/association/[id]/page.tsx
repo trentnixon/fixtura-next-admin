@@ -9,12 +9,31 @@ import SectionContainer from "@/components/scaffolding/containers/SectionContain
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import {
+  BarChart3,
+  Building2,
+  Gauge,
+  Trophy,
+  Users,
+} from "lucide-react";
 import AssociationHeader from "./components/AssociationHeader";
 import StatisticsOverview from "./components/StatisticsOverview";
 import CompetitionsList from "./components/CompetitionsList";
 import ClubsList from "./components/ClubsList";
 import AccountsList from "./components/AccountsList";
 import InsightsSection from "./components/InsightsSection";
+
+const associationDetailTabs = [
+  { value: "snapshot", label: "Snapshot", icon: Gauge },
+  { value: "competitions", label: "Competitions", icon: Trophy },
+  { value: "clubs", label: "Clubs", icon: Building2 },
+  { value: "accounts", label: "Accounts", icon: Users },
+  { value: "insights", label: "Insights", icon: BarChart3 },
+] as const;
 
 export default function AssociationDetailPage() {
   const params = useParams<{ id: string }>();
@@ -104,17 +123,25 @@ export default function AssociationDetailPage() {
         byLine={`${association.sport} • Association ID: ${associationId}`}
         byLineBottom={isFetching ? "Refreshing..." : "Association Detail"}
       />
-      <PageContainer padding="md" spacing="lg">
-        <Tabs defaultValue="snapshot" className="w-full">
-          <TabsList variant="primary" className="mb-4">
-            <TabsTrigger value="snapshot">Association Snapshot</TabsTrigger>
-            <TabsTrigger value="competitions">Competitions</TabsTrigger>
-            <TabsTrigger value="clubs">Clubs</TabsTrigger>
-            <TabsTrigger value="accounts">Accounts</TabsTrigger>
-            <TabsTrigger value="insights">Insights</TabsTrigger>
-          </TabsList>
+      <PageContainer padding="xs" spacing="lg">
+        <Tabs defaultValue="snapshot" className="w-full min-w-0 max-w-full">
+          <div className="pb-8">
+            <TabsList variant="primary" className={sectionTabListClass}>
+              {associationDetailTabs.map(({ value, label, icon: Icon }) => (
+                <TabsTrigger
+                  key={value}
+                  value={value}
+                  variant="section"
+                  className={sectionTabTriggerClass}
+                >
+                  <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden />
+                  {label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
-          <TabsContent value="snapshot" className="space-y-6">
+          <TabsContent value="snapshot" className="mt-0 space-y-6">
             <AssociationHeader
               association={association}
               associationId={associationId}
@@ -122,7 +149,7 @@ export default function AssociationDetailPage() {
             <StatisticsOverview statistics={statistics} />
           </TabsContent>
 
-          <TabsContent value="competitions">
+          <TabsContent value="competitions" className="mt-0">
             <SectionContainer
               title="Competitions"
               description={`${competitions.length} competition(s) with timeline and details`}
@@ -131,7 +158,7 @@ export default function AssociationDetailPage() {
             </SectionContainer>
           </TabsContent>
 
-          <TabsContent value="clubs">
+          <TabsContent value="clubs" className="mt-0">
             <SectionContainer
               title="Clubs"
               description={`${clubs.length} club(s) participating in this association`}
@@ -140,7 +167,7 @@ export default function AssociationDetailPage() {
             </SectionContainer>
           </TabsContent>
 
-          <TabsContent value="accounts">
+          <TabsContent value="accounts" className="mt-0">
             <SectionContainer
               title="Accounts"
               description={`${accounts.length} account(s) associated with this association`}
@@ -149,7 +176,7 @@ export default function AssociationDetailPage() {
             </SectionContainer>
           </TabsContent>
 
-          <TabsContent value="insights">
+          <TabsContent value="insights" className="mt-0">
             <SectionContainer
               title="Insights"
               description="Analytics and insights (Phase 8 - Coming Soon)"

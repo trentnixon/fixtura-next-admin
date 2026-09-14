@@ -1,14 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { GradesAndClubsAnalytics } from "@/types/associationInsights";
 import ChartCard from "@/components/modules/charts/ChartCard";
 import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -27,10 +19,13 @@ import type { ChartConfig } from "@/components/ui/chart";
  */
 interface GradesAndClubsStatsCardProps {
   data: GradesAndClubsAnalytics;
+  /** When true, omit top summary grid (shown in Coverage rollup). */
+  hideSummary?: boolean;
 }
 
 export default function GradesAndClubsStatsCard({
   data,
+  hideSummary = false,
 }: GradesAndClubsStatsCardProps) {
   // Prepare data for grade distribution chart
   const gradeChartData = useMemo(() => {
@@ -105,22 +100,23 @@ export default function GradesAndClubsStatsCard({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Total Grades" value={data.totalGrades.toLocaleString()} />
-        <Stat label="Total Clubs" value={data.totalClubs.toLocaleString()} />
-        <Stat
-          label="Avg Grades/Association"
-          value={data.averageGradesPerAssociation.toFixed(2)}
-        />
-        <Stat
-          label="Avg Clubs/Association"
-          value={data.averageClubsPerAssociation.toFixed(2)}
-        />
-      </div>
+    <div className="space-y-4">
+      {!hideSummary && (
+        <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
+          <Stat label="Total Grades" value={data.totalGrades.toLocaleString()} />
+          <Stat label="Total Clubs" value={data.totalClubs.toLocaleString()} />
+          <Stat
+            label="Avg Grades/Association"
+            value={data.averageGradesPerAssociation.toFixed(2)}
+          />
+          <Stat
+            label="Avg Clubs/Association"
+            value={data.averageClubsPerAssociation.toFixed(2)}
+          />
+        </div>
+      )}
 
-      {/* Charts Grid Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-4">
         {/* Grade Distribution Chart */}
         <ChartCard
           title="Grade Distribution"
@@ -191,11 +187,6 @@ export default function GradesAndClubsStatsCard({
           </BarChart>
         </ChartCard>
       </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <DistributionTable title="Grade Buckets" rows={gradeChartData} />
-        <DistributionTable title="Club Buckets" rows={clubChartData} />
-      </div>
     </div>
   );
 }
@@ -209,38 +200,3 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function DistributionTable({
-  title,
-  rows,
-}: {
-  title: string;
-  rows: Array<{ label: string; value: number }>;
-}) {
-  return (
-    <div className="rounded-md border border-slate-200 bg-white">
-      <div className="border-b border-slate-200 px-4 py-3">
-        <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
-      </div>
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-slate-50 hover:bg-slate-50">
-            <TableHead>Range</TableHead>
-            <TableHead className="text-right">Associations</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.label}>
-              <TableCell className="text-sm font-medium text-slate-900">
-                {row.label}
-              </TableCell>
-              <TableCell className="text-right">
-                {row.value.toLocaleString()}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}

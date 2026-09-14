@@ -2,14 +2,6 @@
 
 import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { AssociationCompetitionAnalytics } from "@/types/associationInsights";
 import ChartCard from "@/components/modules/charts/ChartCard";
 import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -28,10 +20,13 @@ import type { ChartConfig } from "@/components/ui/chart";
  */
 interface CompetitionStatsCardProps {
   data: AssociationCompetitionAnalytics;
+  /** When true, omit top summary grid (shown in Competitions rollup). */
+  hideSummary?: boolean;
 }
 
 export default function CompetitionStatsCard({
   data,
+  hideSummary = false,
 }: CompetitionStatsCardProps) {
   // Prepare data for competition size distribution chart
   const sizeChartData = useMemo(() => {
@@ -122,34 +117,45 @@ export default function CompetitionStatsCard({
   }, [statusChartData]);
 
   return (
-    <div className="space-y-6">
-      <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-3">
-        <Stat
-          label="Total Competitions"
-          value={data.totalCompetitions.toLocaleString()}
-        />
-        <Stat
-          label="Active Competitions"
-          value={data.activeCompetitions.toLocaleString()}
-        />
-        <Stat
-          label="Inactive Competitions"
-          value={data.inactiveCompetitions.toLocaleString()}
-        />
-      </div>
+    <div className="space-y-4">
+      {!hideSummary && (
+        <>
+          <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-3">
+            <Stat
+              label="Total Competitions"
+              value={data.totalCompetitions.toLocaleString()}
+            />
+            <Stat
+              label="Active Competitions"
+              value={data.activeCompetitions.toLocaleString()}
+            />
+            <Stat
+              label="Inactive Competitions"
+              value={data.inactiveCompetitions.toLocaleString()}
+            />
+          </div>
 
-      {data.inactiveCompetitions > 0 && (
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-muted-foreground">Status Breakdown:</span>
-          <Badge variant="default">{data.activeCompetitions} Active</Badge>
-          <Badge variant="secondary">
-            {data.inactiveCompetitions} Inactive
-          </Badge>
-        </div>
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Status:</span>
+            <Badge variant="default" className="text-xs">
+              {data.activeCompetitions.toLocaleString()} active
+            </Badge>
+            {data.inactiveCompetitions > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                {data.inactiveCompetitions.toLocaleString()} inactive
+              </Badge>
+            )}
+          </div>
+        </>
       )}
 
-      {/* Charts Grid Layout */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div
+        className={
+          hideSummary
+            ? "grid grid-cols-1 gap-4"
+            : "grid gap-6 lg:grid-cols-3"
+        }
+      >
         {statusChartData.length > 0 && (
           <ChartCard
             title="Competition Status"
@@ -257,27 +263,6 @@ export default function CompetitionStatsCard({
           </BarChart>
         </ChartCard>
       </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <DistributionTable
-          title="Status Buckets"
-          valueLabel="Competitions"
-          rows={statusChartData.map((row) => ({
-            label: row.name,
-            value: row.value,
-          }))}
-        />
-        <DistributionTable
-          title="Team Size Buckets"
-          valueLabel="Competitions"
-          rows={sizeChartData}
-        />
-        <DistributionTable
-          title="Grade Buckets"
-          valueLabel="Competitions"
-          rows={gradeChartData}
-        />
-      </div>
     </div>
   );
 }
@@ -291,40 +276,3 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function DistributionTable({
-  title,
-  valueLabel,
-  rows,
-}: {
-  title: string;
-  valueLabel: string;
-  rows: Array<{ label: string; value: number }>;
-}) {
-  return (
-    <div className="rounded-md border border-slate-200 bg-white">
-      <div className="border-b border-slate-200 px-4 py-3">
-        <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
-      </div>
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-slate-50 hover:bg-slate-50">
-            <TableHead>Range</TableHead>
-            <TableHead className="text-right">{valueLabel}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.label}>
-              <TableCell className="text-sm font-medium text-slate-900">
-                {row.label}
-              </TableCell>
-              <TableCell className="text-right">
-                {row.value.toLocaleString()}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </div>
-  );
-}

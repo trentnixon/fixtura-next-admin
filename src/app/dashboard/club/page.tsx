@@ -9,6 +9,7 @@ import {
   CalendarRange,
   Gauge,
   Link2,
+  RefreshCcw,
   Trophy,
   Users,
 } from "lucide-react";
@@ -20,15 +21,19 @@ import { ClubInsightsResponse, ClubSportFilter } from "@/types/clubInsights";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+  siteNavigationCtaClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
 import SportFilter from "./components/SportFilter";
-import { ClubGanttSection } from "./components/ClubGanttSection";
+import ClubTimelineSection from "./components/ClubTimelineSection";
 import ClubsTable from "./components/ClubsTable";
-import OverviewStatsCard from "./components/OverviewStatsCard";
-import DistributionsCard from "./components/DistributionsCard";
-import TeamsInsightsCard from "./components/TeamsInsightsCard";
-import AccountsInsightsCard from "./components/AccountsInsightsCard";
-import CompetitionTimelineCard from "./components/CompetitionTimelineCard";
+import ClubCoverageSection from "./components/ClubCoverageSection";
+import ClubCompetitionsSection from "./components/ClubCompetitionsSection";
 
 const clubTabs = [
   {
@@ -64,7 +69,24 @@ export default function ClubData() {
         title="Clubs"
         byLine="Club directory and operational insight"
         byLineBottom="Compact view of linked accounts, competitions, teams, and timelines"
-      />
+      >
+        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-end sm:justify-end">
+          <SportFilter
+            selectedSport={selectedSport}
+            onSportChange={setSelectedSport}
+          />
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => refetch()}
+            disabled={isLoading}
+            className={cn(siteNavigationCtaClass, "shrink-0 self-end sm:self-auto")}
+          >
+            <RefreshCcw className="h-4 w-4 shrink-0 text-current" aria-hidden />
+            Refresh
+          </Button>
+        </div>
+      </CreatePageTitle>
       <PageContainer padding="xs" spacing="lg">
         {isLoading && (
           <SectionContainer title="Loading">
@@ -72,7 +94,7 @@ export default function ClubData() {
           </SectionContainer>
         )}
 
-        {error && (
+        {error && !isLoading && (
           <SectionContainer title="Error">
             <ErrorState
               error={error}
@@ -84,8 +106,8 @@ export default function ClubData() {
 
         {data?.data && (
           <Tabs defaultValue="snapshot" className="w-full min-w-0 max-w-full">
-            <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <TabsList className="h-auto w-full flex-wrap justify-start rounded-md bg-slate-100 p-1 lg:w-auto">
+            <div className="pb-8">
+              <TabsList variant="primary" className={sectionTabListClass}>
                 {clubTabs.map((tab) => {
                   const Icon = tab.icon;
 
@@ -93,119 +115,53 @@ export default function ClubData() {
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
-                      className="min-h-10 gap-2"
+                      variant="section"
+                      className={sectionTabTriggerClass}
                     >
-                      <Icon className="h-4 w-4" />
+                      <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden />
                       {tab.label}
                     </TabsTrigger>
                   );
                 })}
               </TabsList>
-
-              <SportFilter
-                selectedSport={selectedSport}
-                onSportChange={setSelectedSport}
-              />
             </div>
 
-            <TabsContent value="snapshot" className="mt-6 space-y-6">
+            <TabsContent value="snapshot" className="mt-0 space-y-6">
               <ClubSnapshot insights={data} />
-
-              <SectionContainer
-                title="Clubs"
-                description="Search, sort, and open club detail records."
-              >
-                <ClubsTable clubs={data.data.clubs} />
-              </SectionContainer>
+              <ClubsTable clubs={data.data.clubs} />
             </TabsContent>
 
             <TabsContent
               value="timeline"
-              className="mt-6 min-w-0 max-w-full overflow-hidden"
+              className="mt-0 min-w-0 max-w-full overflow-hidden"
             >
-              <ClubGanttSection clubs={data.data.clubs} />
+              <ClubTimelineSection clubs={data.data.clubs} />
             </TabsContent>
 
-            <TabsContent value="coverage" className="mt-6 space-y-6">
-              {data.data.overview && (
-                <SectionContainer
-                  title="Account Coverage"
-                  description="How many clubs exist, how many are linked to accounts, and where account coverage gaps remain."
-                >
-                  <OverviewStatsCard data={data.data.overview} />
-                </SectionContainer>
-              )}
-
-              {data.data.distributions && (
-                <SectionContainer
-                  title="Participation Structure"
-                  description="Club depth by teams, competitions, associations, and account coverage."
-                >
-                  <DistributionsCard data={data.data.distributions} />
-                </SectionContainer>
-              )}
-
-              <div className="grid gap-6 lg:grid-cols-2">
-                {data.data.teams && (
-                  <SectionContainer
-                    title="Teams"
-                    description="Team volume and average team depth across clubs."
-                  >
-                    <TeamsInsightsCard data={data.data.teams} />
-                  </SectionContainer>
-                )}
-
-                {data.data.accounts && (
-                  <SectionContainer
-                    title="Accounts"
-                    description="Account and trial coverage across club records."
-                  >
-                    <AccountsInsightsCard data={data.data.accounts} />
-                  </SectionContainer>
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="competitions" className="mt-6 space-y-6">
-              {data.data.overview && (
-                <SectionContainer
-                  title="Competition Mix"
-                  description="Competition volume and average competition depth across clubs."
-                >
-                  <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-3">
-                    <SnapshotStat
-                      label="Competitions"
-                      value={data.data.meta.dataPoints.competitions.toLocaleString()}
-                    />
-                    <SnapshotStat
-                      label="Average per Club"
-                      value={data.data.overview.averageCompetitionsPerClub.toFixed(
-                        1,
-                      )}
-                    />
-                    <SnapshotStat
-                      label="Clubs With Timelines"
-                      value={data.data.clubs
-                        .filter(
-                          (club) =>
-                            club.competitionDateRange?.earliestStartDate &&
-                            club.competitionDateRange.latestEndDate,
-                        )
-                        .length.toLocaleString()}
-                    />
-                  </div>
-                </SectionContainer>
-              )}
-
-              {data.data.insights?.competitionTimeline?.length > 0 && (
-                <SectionContainer
-                  title="Competition Timing"
-                  description="Start, end, and active competition volume by month for the selected sport."
-                >
-                  <CompetitionTimelineCard
-                    data={data.data.insights.competitionTimeline}
+            <TabsContent value="coverage" className="mt-0">
+              {data.data.overview &&
+                data.data.distributions &&
+                data.data.teams &&
+                data.data.accounts && (
+                  <ClubCoverageSection
+                    overview={data.data.overview}
+                    distributions={data.data.distributions}
+                    teams={data.data.teams}
+                    accounts={data.data.accounts}
                   />
-                </SectionContainer>
+                )}
+            </TabsContent>
+
+            <TabsContent value="competitions" className="mt-0">
+              {data.data.overview && (
+                <ClubCompetitionsSection
+                  overview={data.data.overview}
+                  clubs={data.data.clubs}
+                  totalCompetitions={data.data.meta.dataPoints.competitions}
+                  competitionTimeline={
+                    data.data.insights?.competitionTimeline ?? []
+                  }
+                />
               )}
             </TabsContent>
           </Tabs>
@@ -359,15 +315,6 @@ function SnapshotMetric({
           <div className="mt-0.5 text-slate-500">{supportingLabel}</div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function SnapshotStat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="border-b border-slate-200 px-4 py-3 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0">
-      <p className="text-xs font-medium uppercase text-slate-500">{label}</p>
-      <p className="mt-1 text-lg font-semibold text-slate-900">{value}</p>
     </div>
   );
 }

@@ -28,9 +28,14 @@ import type { ChartConfig } from "@/components/ui/chart";
  */
 interface OverviewStatsCardProps {
   data: OverviewAnalytics;
+  /** When true, omit top summary grid (shown in Coverage rollup). */
+  hideSummary?: boolean;
 }
 
-export default function OverviewStatsCard({ data }: OverviewStatsCardProps) {
+export default function OverviewStatsCard({
+  data,
+  hideSummary = false,
+}: OverviewStatsCardProps) {
   const accountCountTableData = useMemo(() => {
     return [
       {
@@ -70,39 +75,50 @@ export default function OverviewStatsCard({ data }: OverviewStatsCardProps) {
   }, [accountCountChartData]);
 
   return (
-    <div className="space-y-6">
-      {/* Summary Stats Grid */}
-      <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
-        <Stat
-          label="Total Associations"
-          value={data.totalAssociations.toLocaleString()}
-        />
-        <Stat
-          label="Active Associations"
-          value={data.activeAssociations.toLocaleString()}
-        />
-        <Stat
-          label="With Accounts"
-          value={data.associationsWithAccounts.toLocaleString()}
-        />
-        <Stat
-          label="Without Accounts"
-          value={data.associationsWithoutAccounts.toLocaleString()}
-        />
-      </div>
+    <div className="space-y-4">
+      {!hideSummary && (
+        <>
+          <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
+            <Stat
+              label="Total Associations"
+              value={data.totalAssociations.toLocaleString()}
+            />
+            <Stat
+              label="Active Associations"
+              value={data.activeAssociations.toLocaleString()}
+            />
+            <Stat
+              label="With Accounts"
+              value={data.associationsWithAccounts.toLocaleString()}
+            />
+            <Stat
+              label="Without Accounts"
+              value={data.associationsWithoutAccounts.toLocaleString()}
+            />
+          </div>
 
-      {/* Active/Inactive Breakdown */}
-      {data.inactiveAssociations > 0 && (
-        <div className="flex flex-wrap items-center gap-2 text-sm">
-          <span className="text-muted-foreground">Status Breakdown:</span>
-          <Badge variant="default">{data.activeAssociations} Active</Badge>
-          <Badge variant="secondary">
-            {data.inactiveAssociations} Inactive
-          </Badge>
-        </div>
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-muted-foreground">Status:</span>
+            <Badge variant="default" className="text-xs">
+              {data.activeAssociations.toLocaleString()} active
+            </Badge>
+            {data.inactiveAssociations > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                {data.inactiveAssociations.toLocaleString()} inactive
+              </Badge>
+            )}
+            <span className="text-muted-foreground">Linkage:</span>
+            <Badge variant="primary" className="text-xs">
+              {data.associationsWithAccounts.toLocaleString()} linked
+            </Badge>
+            <Badge variant="outline" className="text-xs">
+              {data.associationsWithoutAccounts.toLocaleString()} missing
+            </Badge>
+          </div>
+        </>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-3">
+      <div className="grid gap-4 lg:grid-cols-3">
         {/* Account Count Distribution - Pie Chart */}
         {accountCountChartData.length > 0 ? (
           <ChartCard
@@ -184,36 +200,39 @@ export default function OverviewStatsCard({ data }: OverviewStatsCardProps) {
             </Table>
           </div>
         )}
-      </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="rounded-md border border-slate-200 bg-white lg:col-span-2">
-          <div className="border-b border-slate-200 px-4 py-3">
-            <h4 className="text-sm font-semibold text-slate-900">
-              Account Count Buckets
-            </h4>
-          </div>
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-slate-50 hover:bg-slate-50">
-                <TableHead>Bucket</TableHead>
-                <TableHead className="text-right">Associations</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {accountCountTableData.map((row) => (
-                <TableRow key={row.name}>
-                  <TableCell className="text-sm font-medium text-slate-900">
-                    {row.name}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    {row.value.toLocaleString()}
-                  </TableCell>
+        {!data.sportDistribution && accountCountChartData.length > 0 && (
+          <div className="rounded-md border border-slate-200 bg-white lg:col-span-1">
+            <div className="border-b border-slate-200 px-4 py-3">
+              <h4 className="text-sm font-semibold text-slate-900">
+                Account buckets
+              </h4>
+              <p className="text-xs text-muted-foreground">
+                Associations by linked account count
+              </p>
+            </div>
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50 hover:bg-slate-50">
+                  <TableHead>Bucket</TableHead>
+                  <TableHead className="text-right">Count</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHeader>
+              <TableBody>
+                {accountCountTableData.map((row) => (
+                  <TableRow key={row.name}>
+                    <TableCell className="text-sm font-medium text-slate-900">
+                      {row.name}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {row.value.toLocaleString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
       </div>
     </div>
   );

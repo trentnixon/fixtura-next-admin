@@ -38,16 +38,16 @@ export default function SportFilterComponent({
   };
 
   return (
-    <div className="flex w-full items-center justify-end">
-      <div className="flex w-full max-w-sm items-center gap-3">
+    <div className="flex w-full items-end justify-end sm:w-auto">
+      <div className="w-full min-w-[220px] space-y-1 sm:w-auto">
         <Label
           htmlFor="sport-filter"
-          className="whitespace-nowrap text-xs font-medium uppercase text-slate-500"
+          className="text-xs font-medium uppercase text-slate-500"
         >
-          Sport
+          Sport filter
         </Label>
         <Select value={selectedSport} onValueChange={handleValueChange}>
-          <SelectTrigger id="sport-filter" className="h-9">
+          <SelectTrigger id="sport-filter" className="h-9 w-full sm:w-[220px]">
             <SelectValue placeholder="Select a sport" />
           </SelectTrigger>
           <SelectContent>

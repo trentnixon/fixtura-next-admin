@@ -15,173 +15,118 @@ import {
   useGantt,
 } from "@/components/ui/shadcn-io/gantt";
 import { AssociationDetail } from "@/types/associationInsights";
-import { GanttTooltip } from "@/app/dashboard/competitions/components/CompetitionAdminStats/sections/GanttTooltip";
+import {
+  GanttChartTooltipProvider,
+  GanttTooltip,
+} from "@/app/dashboard/competitions/components/CompetitionAdminStats/sections/GanttTooltip";
+import { GanttColorLegend } from "@/app/dashboard/competitions/components/CompetitionAdminStats/sections/GanttColorLegend";
 import { AssociationTooltipContent } from "./AssociationTooltipContent";
+import { LabeledSegmentedControl } from "@/components/ui-library/forms/LabeledSegmentedControl";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { siteNavigationCtaClass } from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
+import { Download, Search } from "lucide-react";
+import {
+  associationToGanttFeature,
+  computeSportWeightThresholds,
+  downloadTimelineCampaignCsv,
+  filterAssociationsForTimelineView,
+  type TimelineCampaignPreset,
+} from "./associationTimelineUtils";
+
+const SORT_OPTIONS = [
+  { value: "date", label: "Start date" },
+  { value: "name", label: "Name" },
+] as const;
+
+const CAMPAIGN_PRESET_OPTIONS = [
+  { value: "marketing", label: "Marketing picks" },
+  { value: "starting-soon", label: "Starting soon" },
+  { value: "high-value", label: "High value" },
+  { value: "all", label: "All timelines" },
+] as const;
 
 interface AssociationGanttSectionProps {
   associations: AssociationDetail[];
+  embedded?: boolean;
 }
 
 export function AssociationGanttSection({
   associations,
+  embedded = false,
 }: AssociationGanttSectionProps) {
-  const [hideFinished, setHideFinished] = useState(true);
+  const [hideFinished, setHideFinished] = useState(false);
   const [sortByDate, setSortByDate] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [campaignPreset, setCampaignPreset] =
+    useState<TimelineCampaignPreset>("marketing");
 
-  // Filter associations with valid date ranges and apply hideFinished filter
-  const filteredAssociations = useMemo(() => {
-    return associations.filter((association) => {
-      // Filter out associations without date ranges
-      if (!association.competitionDateRange) {
-        return false;
-      }
+  const thresholds = useMemo(
+    () => computeSportWeightThresholds(associations),
+    [associations],
+  );
 
-      const dateRange = association.competitionDateRange;
-      if (!dateRange.earliestStartDate || !dateRange.latestEndDate) {
-        return false;
-      }
+  const filteredAssociations = useMemo(
+    () =>
+      filterAssociationsForTimelineView(associations, {
+        preset: campaignPreset,
+        hideFinished,
+        searchQuery,
+        thresholds,
+      }),
+    [associations, campaignPreset, hideFinished, searchQuery, thresholds],
+  );
 
-      // Apply hideFinished filter (hide if ends before 1 month from now)
-      if (hideFinished) {
-        const endDate = new Date(dateRange.latestEndDate);
-        const cutoffDate = new Date();
-        cutoffDate.setMonth(cutoffDate.getMonth() + 1);
+  const ganttFeatures: GanttFeature[] = useMemo(
+    () =>
+      filteredAssociations.map((association) =>
+        associationToGanttFeature(association, thresholds),
+      ),
+    [filteredAssociations, thresholds],
+  );
 
-        // Hide if it finishes before 1 month from now (i.e. already finished or finishing soon)
-        if (endDate < cutoffDate) {
-          return false;
-        }
-      }
-
-      return true;
-    });
-  }, [associations, hideFinished]);
-
-  // Calculate weight thresholds (quartiles) by sport across ALL associations
-  const sportThresholds = useMemo(() => {
-    const weightsBySport: Record<string, number[]> = {};
-
-    // Collect weights (using combined weighting: competitionCount + gradeCount)
-    filteredAssociations.forEach((assoc) => {
-      const sport = assoc.sport || "Unspecified";
-      // Calculate weight as combination of competition and grade counts
-      // Similar to how AssociationsTable calculates combinedWeighting
-      const weight = assoc.competitionCount + assoc.gradeCount;
-      if (!weightsBySport[sport]) weightsBySport[sport] = [];
-      weightsBySport[sport].push(weight);
-    });
-
-    // Calculate thresholds
-    const thresholds: Record<
-      string,
-      { p75: number; p50: number; p25: number }
-    > = {};
-
-    Object.keys(weightsBySport).forEach((sport) => {
-      const weights = weightsBySport[sport].sort((a, b) => a - b);
-      const len = weights.length;
-
-      if (len === 0) {
-        thresholds[sport] = { p75: 0, p50: 0, p25: 0 };
-        return;
-      }
-
-      const getPercentile = (p: number) => {
-        const index = Math.floor(len * p);
-        return weights[Math.min(index, len - 1)];
-      };
-
-      thresholds[sport] = {
-        p75: getPercentile(0.75),
-        p50: getPercentile(0.5),
-        p25: getPercentile(0.25),
-      };
-    });
-
-    return thresholds;
-  }, [filteredAssociations]);
-
-  // Transform associations to Gantt features
-  const ganttFeatures: GanttFeature[] = useMemo(() => {
-    return filteredAssociations.map((assoc) => {
-      const dateRange = assoc.competitionDateRange!;
-      const start = new Date(dateRange.earliestStartDate!);
-      const end = new Date(dateRange.latestEndDate!);
-
-      const sport = assoc.sport || "Unspecified";
-      // Calculate weight as combination of competition and grade counts
-      const rawWeight = assoc.competitionCount + assoc.gradeCount;
-      const thresholds = sportThresholds[sport] || { p75: 0, p50: 0, p25: 0 };
-
-      // Normalize weight based on quartiles (same logic as competition Gantt)
-      let normalizedWeight = 0;
-      if (rawWeight === 0) {
-        normalizedWeight = 0; // Gray
-      } else if (rawWeight >= thresholds.p75) {
-        normalizedWeight = 80; // Green
-      } else if (rawWeight >= thresholds.p50) {
-        normalizedWeight = 60; // Yellow
-      } else if (rawWeight >= thresholds.p25) {
-        normalizedWeight = 40; // Orange
-      } else {
-        normalizedWeight = 20; // Gray
-      }
-
-      // Calculate duration in days for display
-      const durationDays = Math.ceil(
-        (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24),
-      );
-
-      return {
-        id: `association-${assoc.id}`,
-        name: assoc.name,
-        startAt: start,
-        endAt: end,
-        group: sport,
-        weight: normalizedWeight,
-        originalWeight: rawWeight, // Store original for display
-        // Store additional data for tooltip
-        associationId: assoc.id,
-        sport: assoc.sport,
-        competitionCount: dateRange.totalCompetitions,
-        validDateCount: dateRange.competitionsWithValidDates,
-        durationDays: durationDays,
-        gradeCount: assoc.gradeCount,
-        clubCount: assoc.clubCount,
-      } as GanttFeature;
-    });
-  }, [filteredAssociations, sportThresholds]);
-
-  // Sort by start date or alphabetically
   const sortedFeatures = useMemo(() => {
     if (sortByDate) {
-      // Sort by start date (current behavior)
       return [...ganttFeatures].sort(
         (a, b) => a.startAt.getTime() - b.startAt.getTime(),
       );
-    } else {
-      // Sort alphabetically by name
-      return [...ganttFeatures].sort((a, b) => a.name.localeCompare(b.name));
     }
+    return [...ganttFeatures].sort((a, b) => a.name.localeCompare(b.name));
   }, [ganttFeatures, sortByDate]);
 
-  // Color coding based on weight (same logic as competition Gantt)
+  const stats = useMemo(() => {
+    const withValidDates = associations.filter(
+      (association) =>
+        association.competitionDateRange?.earliestStartDate &&
+        association.competitionDateRange.latestEndDate,
+    ).length;
+
+    return {
+      withValidDates,
+      displayed: ganttFeatures.length,
+      hiddenByFilter: withValidDates - ganttFeatures.length,
+    };
+  }, [associations, ganttFeatures.length]);
+
   const getWeightColorDynamic = (weight: number) => {
-    const w = Number(weight); // Ensure it's a number
+    const w = Number(weight);
 
     if (w >= 75) {
       return {
         backgroundColor: "rgba(34, 197, 94, 0.5)",
         borderColor: "rgba(34, 197, 94, 1)",
       };
-    } else if (w >= 50) {
+    }
+    if (w >= 50) {
       return {
         backgroundColor: "rgba(234, 179, 8, 0.5)",
         borderColor: "rgba(234, 179, 8, 1)",
       };
-    } else if (w >= 25) {
+    }
+    if (w >= 25) {
       return {
         backgroundColor: "rgba(249, 115, 22, 0.5)",
         borderColor: "rgba(249, 115, 22, 1)",
@@ -193,110 +138,199 @@ export function AssociationGanttSection({
     };
   };
 
-  const hasActiveFilters = hideFinished;
+  const hasActiveFilters =
+    campaignPreset !== "marketing" ||
+    hideFinished ||
+    !sortByDate ||
+    searchQuery.trim().length > 0;
 
-  if (ganttFeatures.length === 0) {
+  const handleResetFilters = () => {
+    setCampaignPreset("marketing");
+    setHideFinished(false);
+    setSortByDate(true);
+    setSearchQuery("");
+  };
+
+  const toolbar = (
+    <div className="space-y-3">
+      <div className="flex flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 md:flex-row md:items-center">
+        <div className="relative min-w-0 flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search associations on timeline..."
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            className="rounded-full border-transparent bg-white pl-9 shadow-none"
+          />
+        </div>
+
+        <LabeledSegmentedControl
+          label="Campaign"
+          value={campaignPreset}
+          onValueChange={(value) =>
+            setCampaignPreset(value as TimelineCampaignPreset)
+          }
+          options={[...CAMPAIGN_PRESET_OPTIONS]}
+          className="shrink-0"
+          shellClassName="h-auto max-w-full shrink-0 rounded-full"
+        />
+      </div>
+
+      <div className="flex flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 md:flex-row md:flex-wrap md:items-center">
+        <LabeledSegmentedControl
+          label="Sort"
+          value={sortByDate ? "date" : "name"}
+          onValueChange={(value) => setSortByDate(value === "date")}
+          options={[...SORT_OPTIONS]}
+          className="shrink-0"
+          shellClassName="h-auto shrink-0 rounded-full"
+        />
+
+        <div className="flex shrink-0 items-center gap-3">
+          <Label
+            htmlFor="gantt-hide-finished-filter"
+            className="text-sm font-medium text-slate-700"
+          >
+            Hide finished
+          </Label>
+          <Switch
+            id="gantt-hide-finished-filter"
+            checked={hideFinished}
+            onCheckedChange={setHideFinished}
+          />
+        </div>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          disabled={sortedFeatures.length === 0}
+          onClick={() => downloadTimelineCampaignCsv(sortedFeatures)}
+          className={cn(siteNavigationCtaClass, "w-full shrink-0 md:w-auto")}
+        >
+          <Download className="h-4 w-4 shrink-0 text-current" aria-hidden />
+          Export CSV
+        </Button>
+
+        {hasActiveFilters && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleResetFilters}
+            className={cn(siteNavigationCtaClass, "w-full shrink-0 md:w-auto")}
+          >
+            Reset filters
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+
+  const summaryLine = (
+    <div className="px-1 text-sm text-muted-foreground">
+      Showing {stats.displayed} association{stats.displayed === 1 ? "" : "s"} for
+      outreach
+      {stats.hiddenByFilter > 0 &&
+        ` (${stats.hiddenByFilter} hidden by filters)`}
+      {" · "}
+      Click a bar to open detail in a new tab
+    </div>
+  );
+
+  const emptyState = (
+    <div className="space-y-4">
+      {toolbar}
+      {summaryLine}
+      <div className="rounded-md border border-dashed border-slate-200 bg-slate-50/50 px-4 py-10 text-center text-sm text-muted-foreground">
+        {hasActiveFilters
+          ? "No associations match the current campaign filters. Try Marketing picks, widen the preset, or reset filters."
+          : "No associations with competition date ranges are available for this sport."}
+      </div>
+    </div>
+  );
+
+  const chart = (
+    <div className="space-y-4">
+      {toolbar}
+      <GanttColorLegend />
+      {summaryLine}
+      <div className="relative h-[min(70vh,700px)] min-h-[420px] w-full min-w-0 max-w-full overflow-hidden rounded-md border border-slate-200">
+        <GanttProvider
+          range="monthly"
+          zoom={100}
+          className="h-full w-full min-w-0 max-w-full overflow-auto"
+          style={{ contain: "layout size" }}
+        >
+          <GanttJumpToToday />
+          <GanttChartTooltipProvider>
+            <GanttContent
+              sortedFeatures={sortedFeatures}
+              getWeightColorDynamic={getWeightColorDynamic}
+            />
+          </GanttChartTooltipProvider>
+        </GanttProvider>
+      </div>
+    </div>
+  );
+
+  const body = ganttFeatures.length === 0 ? emptyState : chart;
+
+  if (embedded) {
     return (
       <SectionContainer
-        title="Association Competition Timeline"
-        description="Gantt chart view of association competition start and end dates"
+        title="Season timeline"
+        description="Prioritized for marketing: seasons starting soon and large associations by sport. Export CSV for campaign lists."
+        variant="compact"
+        className="min-w-0 overflow-hidden"
+        contentClassName="min-w-0 overflow-hidden space-y-4"
       >
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-end gap-4 border-b pb-4">
-            <div className="flex items-center gap-3 h-10">
-              <Label
-                htmlFor="gantt-hide-finished-filter"
-                className="text-sm font-medium"
-              >
-                Hide Finished
-              </Label>
-              <Switch
-                id="gantt-hide-finished-filter"
-                checked={hideFinished}
-                onCheckedChange={setHideFinished}
-              />
-            </div>
-            <div className="flex items-center gap-3 h-10">
-              <Label
-                htmlFor="gantt-sort-by-date-filter"
-                className="text-sm font-medium"
-              >
-                Sort by Date
-              </Label>
-              <Switch
-                id="gantt-sort-by-date-filter"
-                checked={sortByDate}
-                onCheckedChange={setSortByDate}
-              />
-            </div>
-          </div>
-          <div className="py-8 text-center text-muted-foreground">
-            {hasActiveFilters
-              ? "No associations match the current filters. Try adjusting your filter selections."
-              : "No associations with date information available to display."}
-          </div>
-        </div>
+        {body}
       </SectionContainer>
     );
   }
 
   return (
     <SectionContainer
-      title="Association Competition Timeline"
-      description={`Gantt chart showing ${ganttFeatures.length} association${
-        ganttFeatures.length !== 1 ? "s" : ""
-      } with competition date information`}
+      title="Association competition timeline"
+      description="Gantt view of aggregated competition seasons per association."
       className="min-w-0 overflow-hidden"
       contentClassName="min-w-0 overflow-hidden"
     >
-      <div className="min-w-0 space-y-4">
-        <div className="flex flex-wrap items-end gap-4 border-b pb-4">
-          <div className="flex items-center gap-3 h-10">
-            <Label
-              htmlFor="gantt-hide-finished-filter"
-              className="text-sm font-medium"
-            >
-              Hide Finished
-            </Label>
-            <Switch
-              id="gantt-hide-finished-filter"
-              checked={hideFinished}
-              onCheckedChange={setHideFinished}
-            />
-          </div>
-          <div className="flex items-center gap-3 h-10">
-            <Label
-              htmlFor="gantt-sort-by-date-filter"
-              className="text-sm font-medium"
-            >
-              Sort by Date
-            </Label>
-            <Switch
-              id="gantt-sort-by-date-filter"
-              checked={sortByDate}
-              onCheckedChange={setSortByDate}
-            />
-          </div>
-        </div>
-        <div className="h-[min(70vh,700px)] min-h-[420px] w-full min-w-0 max-w-full overflow-hidden rounded-md border border-slate-200">
-          <GanttProvider
-            range="monthly"
-            zoom={100}
-            className="h-full w-full min-w-0 max-w-full overflow-auto"
-            style={{ contain: "layout size" }}
-          >
-            <GanttContent
-              sortedFeatures={sortedFeatures}
-              getWeightColorDynamic={getWeightColorDynamic}
-            />
-          </GanttProvider>
-        </div>
-      </div>
+      {body}
     </SectionContainer>
   );
 }
 
-// Inner component that uses Gantt context for scroll-to-view functionality
+function GanttJumpToToday() {
+  const gantt = useGantt();
+
+  return (
+    <div className="pointer-events-none absolute right-3 top-3 z-10">
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        className={cn(
+          siteNavigationCtaClass,
+          "pointer-events-auto bg-white/95 shadow-sm",
+        )}
+        onClick={() => {
+          const today = new Date();
+          today.setHours(12, 0, 0, 0);
+          gantt.scrollToFeature({
+            id: "__today__",
+            name: "Today",
+            startAt: today,
+            endAt: today,
+          });
+        }}
+      >
+        Jump to today
+      </Button>
+    </div>
+  );
+}
+
 function GanttContent({
   sortedFeatures,
   getWeightColorDynamic,
@@ -314,6 +348,14 @@ function GanttContent({
     if (feature) {
       gantt.scrollToFeature(feature);
     }
+  };
+
+  const openAssociationDetail = (associationId: number) => {
+    window.open(
+      `/dashboard/association/${associationId}`,
+      "_blank",
+      "noopener,noreferrer",
+    );
   };
 
   return (
@@ -361,11 +403,11 @@ function GanttContent({
                     onClick={() => {
                       const associationId = feature.associationId as number;
                       if (associationId) {
-                        window.location.href = `/dashboard/association/${associationId}`;
+                        openAssociationDetail(associationId);
                       }
                     }}
                   >
-                    <div className="flex flex-col flex-1 min-w-0">
+                    <div className="flex min-w-0 flex-1 flex-col">
                       <p className="truncate text-xs font-medium">
                         {feature.name}
                       </p>
@@ -376,7 +418,7 @@ function GanttContent({
                             { day: "numeric", month: "short" },
                           )}
                         </span>
-                        <span>-</span>
+                        <span>→</span>
                         <span>
                           {feature.endAt
                             ? new Date(feature.endAt).toLocaleDateString(
@@ -392,7 +434,7 @@ function GanttContent({
                       </div>
                     </div>
                     {feature.group && typeof feature.group === "string" && (
-                      <span className="text-[10px] text-muted-foreground whitespace-nowrap ml-2">
+                      <span className="ml-2 whitespace-nowrap text-[10px] text-muted-foreground">
                         {feature.group}
                       </span>
                     )}

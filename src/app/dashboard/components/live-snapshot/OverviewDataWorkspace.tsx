@@ -11,6 +11,7 @@ export type WorkspaceMetricTile = {
   value: string;
   meta: string;
   isLoading?: boolean;
+  metaTone?: "default" | "warning" | "critical";
 };
 
 interface OverviewDataWorkspaceProps {
@@ -78,7 +79,18 @@ export function OverviewDataWorkspace({
                 {tile.value}
               </div>
             )}
-            <div className="mt-2 text-xs text-slate-500">{tile.meta}</div>
+            <div
+              className={cn(
+                "mt-2 text-xs",
+                tile.metaTone === "critical" && "font-medium text-red-700",
+                tile.metaTone === "warning" && "font-medium text-amber-800",
+                !tile.metaTone || tile.metaTone === "default"
+                  ? "text-slate-500"
+                  : null
+              )}
+            >
+              {tile.meta}
+            </div>
           </div>
         ))}
       </div>

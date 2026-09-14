@@ -2,10 +2,21 @@
 
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
+import {
+  ClipboardCheck,
+  Gauge,
+  Link2,
+  Trophy,
+} from "lucide-react";
 
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
 import { ErrorState, LoadingState } from "@/components/ui-library";
 import { useSingleFixtureDetail } from "@/hooks/fixtures/useSingleFixtureDetail";
 
@@ -15,6 +26,13 @@ import FixtureMatch from "./_components/FixtureMatch";
 import FixtureRelatedEntities from "./_components/FixtureRelatedEntities";
 import FixtureSnapshot from "./_components/FixtureSnapshot";
 import FixtureValidation from "./_components/FixtureValidation";
+
+const fixtureDetailTabs = [
+  { value: "snapshot", label: "Snapshot", icon: Gauge },
+  { value: "scorecard", label: "Scorecard", icon: Trophy },
+  { value: "validation", label: "Validation", icon: ClipboardCheck },
+  { value: "related", label: "Related", icon: Link2 },
+] as const;
 
 export default function FixturePage() {
   const params = useParams<{ id: string }>();
@@ -31,11 +49,13 @@ export default function FixturePage() {
     return (
       <>
         <CreatePageTitle
-          title="Fixture Detail"
-          byLine={`Fixture ID: ${fixtureId || "Loading..."}`}
+          title="Fixture detail"
+          byLine={`Fixture ID: ${fixtureId || "Loading…"}`}
         />
-        <PageContainer padding="md" spacing="lg">
-          <LoadingState message="Loading fixture detail..." />
+        <PageContainer padding="xs" spacing="lg">
+          <SectionContainer title="Loading">
+            <LoadingState message="Loading fixture detail..." />
+          </SectionContainer>
         </PageContainer>
       </>
     );
@@ -45,18 +65,21 @@ export default function FixturePage() {
     return (
       <>
         <CreatePageTitle
-          title="Fixture Detail"
+          title="Fixture detail"
           byLine={`Fixture ID: ${fixtureId || "Invalid"}`}
         />
-        <PageContainer padding="md" spacing="lg">
-          <ErrorState
-            error={
-              error instanceof Error
-                ? error
-                : new Error("Failed to load fixture detail")
-            }
-            onRetry={() => refetch()}
-          />
+        <PageContainer padding="xs" spacing="lg">
+          <SectionContainer title="Error">
+            <ErrorState
+              error={
+                error instanceof Error
+                  ? error
+                  : new Error("Failed to load fixture detail")
+              }
+              title="Failed to load fixture detail"
+              onRetry={() => refetch()}
+            />
+          </SectionContainer>
         </PageContainer>
       </>
     );
@@ -65,16 +88,18 @@ export default function FixturePage() {
   if (!fixtureId || !data) {
     return (
       <>
-        <CreatePageTitle title="Fixture Detail" byLine="Invalid Fixture ID" />
-        <PageContainer padding="md" spacing="lg">
-          <ErrorState
-            error={
-              new Error(
-                "Invalid fixture ID. Please provide a valid numeric ID.",
-              )
-            }
-            onRetry={() => window.location.reload()}
-          />
+        <CreatePageTitle title="Fixture detail" byLine="Invalid fixture ID" />
+        <PageContainer padding="xs" spacing="lg">
+          <SectionContainer title="Error">
+            <ErrorState
+              error={
+                new Error(
+                  "Invalid fixture ID. Please provide a valid numeric ID.",
+                )
+              }
+              onRetry={() => window.location.reload()}
+            />
+          </SectionContainer>
         </PageContainer>
       </>
     );
@@ -92,24 +117,38 @@ export default function FixturePage() {
         data.grade.association ? data.grade.association.name : null,
       ]
         .filter(Boolean)
-        .join(" - ")
-    : "Fixture Details";
+        .join(" · ")
+    : "Fixture details";
 
   return (
     <>
       <CreatePageTitle
         title={`Fixture #${fixtureId}`}
-        byLine={`${data.fixture.round || "Fixture"} - ${data.fixture.type}`}
+        byLine={`${data.fixture.round || "Fixture"} · ${data.fixture.type}`}
         byLineBottom={titleContext}
       />
       <PageContainer padding="xs" spacing="lg">
-        <Tabs defaultValue="snapshot" className="w-full">
-          <div className="mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <TabsList variant="primary">
-              <TabsTrigger value="snapshot">Fixture Snapshot</TabsTrigger>
-              <TabsTrigger value="scorecard">Scorecard</TabsTrigger>
-              <TabsTrigger value="validation">Validation</TabsTrigger>
-              <TabsTrigger value="related">Related</TabsTrigger>
+        <Tabs defaultValue="snapshot" className="w-full min-w-0 max-w-full">
+          <div className="flex flex-col gap-4 pb-8 lg:flex-row lg:items-end lg:justify-between">
+            <TabsList variant="primary" className={sectionTabListClass}>
+              {fixtureDetailTabs.map((tab) => {
+                const Icon = tab.icon;
+
+                return (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    variant="section"
+                    className={sectionTabTriggerClass}
+                  >
+                    <Icon
+                      className="h-4 w-4 shrink-0 text-current"
+                      aria-hidden
+                    />
+                    {tab.label}
+                  </TabsTrigger>
+                );
+              })}
             </TabsList>
 
             <FixtureActionsBar
@@ -123,19 +162,19 @@ export default function FixturePage() {
             />
           </div>
 
-          <TabsContent value="snapshot">
+          <TabsContent value="snapshot" className="mt-0">
             <FixtureSnapshot data={data} />
           </TabsContent>
 
-          <TabsContent value="scorecard">
+          <TabsContent value="scorecard" className="mt-0">
             <FixtureMatch data={data} />
           </TabsContent>
 
-          <TabsContent value="validation">
+          <TabsContent value="validation" className="mt-0">
             <FixtureValidation data={data} />
           </TabsContent>
 
-          <TabsContent value="related" className="space-y-6">
+          <TabsContent value="related" className="mt-0 space-y-6">
             <FixtureRelatedEntities data={data} />
             <FixtureAdditional data={data} />
           </TabsContent>

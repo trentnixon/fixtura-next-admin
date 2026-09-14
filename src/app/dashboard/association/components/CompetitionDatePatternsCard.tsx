@@ -1,14 +1,6 @@
 "use client";
 
 import { useMemo } from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { DatePatterns } from "@/types/associationInsights";
 import ChartCard from "@/components/modules/charts/ChartCard";
 import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -27,10 +19,16 @@ import type { ChartConfig } from "@/components/ui/chart";
  */
 interface CompetitionDatePatternsCardProps {
   data: DatePatterns;
+  /** When true, omit top summary grid (shown in Competitions rollup). */
+  hideSummary?: boolean;
+  /** Optional ending-soon total for a compact summary line. */
+  endingSoon?: number;
 }
 
 export default function CompetitionDatePatternsCard({
   data,
+  hideSummary = false,
+  endingSoon,
 }: CompetitionDatePatternsCardProps) {
   // Format date string or return placeholder
   const formatDate = (dateString: string | null) => {
@@ -83,20 +81,29 @@ export default function CompetitionDatePatternsCard({
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white md:grid-cols-3">
-        <Stat
-          label="Avg Duration"
-          value={`${data.averageCompetitionDurationDays.toFixed(1)} days`}
-        />
-        <Stat
-          label="Earliest Start"
-          value={formatDate(data.earliestStartDate)}
-        />
-        <Stat label="Latest End" value={formatDate(data.latestEndDate)} />
-      </div>
+    <div className="space-y-4">
+      {!hideSummary && (
+        <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white md:grid-cols-3">
+          <Stat
+            label="Avg Duration"
+            value={`${data.averageCompetitionDurationDays.toFixed(1)} days`}
+          />
+          <Stat
+            label="Earliest Start"
+            value={formatDate(data.earliestStartDate)}
+          />
+          <Stat label="Latest End" value={formatDate(data.latestEndDate)} />
+        </div>
+      )}
 
-      {/* Temporal Patterns Chart */}
+      {hideSummary && endingSoon !== undefined && (
+        <p className="text-sm text-muted-foreground">
+          {data.competitionsEndingThisMonth.toLocaleString()} ending this month
+          · {data.competitionsEndingNextMonth.toLocaleString()} next month (
+          {endingSoon.toLocaleString()} total in the next two months)
+        </p>
+      )}
+
       <ChartCard
         title="Competition Timeline"
         description="Monthly breakdown of competition activity"
@@ -142,38 +149,6 @@ export default function CompetitionDatePatternsCard({
           />
         </LineChart>
       </ChartCard>
-
-      <div className="rounded-md border border-slate-200 bg-white">
-        <div className="border-b border-slate-200 px-4 py-3">
-          <h4 className="text-sm font-semibold text-slate-900">
-            Monthly Activity
-          </h4>
-        </div>
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-slate-50 hover:bg-slate-50">
-              <TableHead>Period</TableHead>
-              <TableHead className="text-right">Starting</TableHead>
-              <TableHead className="text-right">Ending</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {temporalChartData.map((row) => (
-              <TableRow key={row.name}>
-                <TableCell className="text-sm font-medium text-slate-900">
-                  {row.name}
-                </TableCell>
-                <TableCell className="text-right">
-                  {row.starting.toLocaleString()}
-                </TableCell>
-                <TableCell className="text-right">
-                  {row.ending.toLocaleString()}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
     </div>
   );
 }

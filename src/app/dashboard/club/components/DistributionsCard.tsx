@@ -25,32 +25,15 @@ import {
 import { formatNumber, formatPercentage } from "@/utils/chart-formatters";
 import type { ChartConfig } from "@/components/ui/chart";
 
-/**
- * DistributionsCard Component
- *
- * Displays distribution analytics for clubs:
- * - Clubs by Teams Distribution (zero, oneToFive, sixToTen, elevenToTwenty, twentyOnePlus)
- * - Clubs by Competitions Distribution (zero, one, twoToThree, fourToSix, sevenPlus)
- * - Clubs by Associations Distribution (zero, one, twoToThree, fourPlus)
- * - Clubs by Account Coverage Distribution (withAccounts, withoutAccounts, withTrials)
- */
 interface DistributionsCardProps {
   data: Distributions;
 }
 
 export default function DistributionsCard({ data }: DistributionsCardProps) {
-  const teamsChartData = useMemo(() => {
-    return [
-      {
-        name: "Zero",
-        label: "Zero teams",
-        value: data.clubsByTeams.zero,
-      },
-      {
-        name: "1-5",
-        label: "1-5 teams",
-        value: data.clubsByTeams.oneToFive,
-      },
+  const teamsChartData = useMemo(
+    () => [
+      { name: "Zero", label: "Zero teams", value: data.clubsByTeams.zero },
+      { name: "1-5", label: "1-5 teams", value: data.clubsByTeams.oneToFive },
       {
         name: "6-10",
         label: "6-10 teams",
@@ -66,11 +49,12 @@ export default function DistributionsCard({ data }: DistributionsCardProps) {
         label: "21+ teams",
         value: data.clubsByTeams.twentyOnePlus,
       },
-    ];
-  }, [data.clubsByTeams]);
+    ],
+    [data.clubsByTeams],
+  );
 
-  const competitionsChartData = useMemo(() => {
-    return [
+  const competitionsChartData = useMemo(
+    () => [
       {
         name: "Zero",
         label: "Zero competitions",
@@ -96,11 +80,12 @@ export default function DistributionsCard({ data }: DistributionsCardProps) {
         label: "7+ competitions",
         value: data.clubsByCompetitions.sevenPlus,
       },
-    ];
-  }, [data.clubsByCompetitions]);
+    ],
+    [data.clubsByCompetitions],
+  );
 
-  const associationsChartData = useMemo(() => {
-    return [
+  const associationsChartData = useMemo(
+    () => [
       {
         name: "Zero",
         label: "Zero associations",
@@ -121,45 +106,37 @@ export default function DistributionsCard({ data }: DistributionsCardProps) {
         label: "4+ associations",
         value: data.clubsByAssociations.fourPlus,
       },
-    ];
-  }, [data.clubsByAssociations]);
+    ],
+    [data.clubsByAssociations],
+  );
 
-  const accountCoverageChartData = useMemo(() => {
-    return [
-      {
-        name: "With Accounts",
-        value: data.clubsByAccountCoverage.withAccounts,
-      },
-      {
-        name: "Without Accounts",
-        value: data.clubsByAccountCoverage.withoutAccounts,
-      },
-      {
-        name: "With Trials",
-        value: data.clubsByAccountCoverage.withTrials,
-      },
-    ].filter((item) => item.value > 0);
-  }, [data.clubsByAccountCoverage]);
+  const accountCoverageChartData = useMemo(
+    () =>
+      [
+        {
+          name: "With Accounts",
+          value: data.clubsByAccountCoverage.withAccounts,
+        },
+        {
+          name: "Without Accounts",
+          value: data.clubsByAccountCoverage.withoutAccounts,
+        },
+        {
+          name: "With Trials",
+          value: data.clubsByAccountCoverage.withTrials,
+        },
+      ].filter((item) => item.value > 0),
+    [data.clubsByAccountCoverage],
+  );
 
   const teamsChartConfig: ChartConfig = {
-    value: {
-      label: "Clubs",
-      color: "hsl(var(--chart-1))",
-    },
+    value: { label: "Clubs", color: "hsl(var(--chart-1))" },
   };
-
   const competitionsChartConfig: ChartConfig = {
-    value: {
-      label: "Clubs",
-      color: "hsl(var(--chart-2))",
-    },
+    value: { label: "Clubs", color: "hsl(var(--chart-2))" },
   };
-
   const associationsChartConfig: ChartConfig = {
-    value: {
-      label: "Clubs",
-      color: "hsl(var(--chart-3))",
-    },
+    value: { label: "Clubs", color: "hsl(var(--chart-3))" },
   };
 
   const accountCoverageChartConfig = useMemo(() => {
@@ -174,156 +151,144 @@ export default function DistributionsCard({ data }: DistributionsCardProps) {
   }, [accountCoverageChartData]);
 
   return (
-    <div className="space-y-6">
-      <div className="grid gap-6 lg:grid-cols-3">
-        <ChartCard
-          title="Clubs by Teams"
-          description="Number of clubs by team count"
-          chartConfig={teamsChartConfig}
-          chartClassName="h-[260px]"
-        >
-          <BarChart data={teamsChartData}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="name"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => formatNumber(value)}
-            />
-            <ChartTooltip
-              content={<ChartTooltipContent />}
-              formatter={(value: number) => [formatNumber(value), "Clubs"]}
-            />
-            <Bar
-              dataKey="value"
-              fill="var(--color-value)"
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
-        </ChartCard>
-
-        <ChartCard
-          title="Clubs by Competitions"
-          description="Number of clubs by competition count"
-          chartConfig={competitionsChartConfig}
-          chartClassName="h-[260px]"
-        >
-          <BarChart data={competitionsChartData}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="name"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => formatNumber(value)}
-            />
-            <ChartTooltip
-              content={<ChartTooltipContent />}
-              formatter={(value: number) => [formatNumber(value), "Clubs"]}
-            />
-            <Bar
-              dataKey="value"
-              fill="var(--color-value)"
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
-        </ChartCard>
-
-        <ChartCard
-          title="Clubs by Associations"
-          description="Number of clubs by association count"
-          chartConfig={associationsChartConfig}
-          chartClassName="h-[260px]"
-        >
-          <BarChart data={associationsChartData}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="name"
-              tickLine={false}
-              tickMargin={10}
-              axisLine={false}
-            />
-            <YAxis
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => formatNumber(value)}
-            />
-            <ChartTooltip
-              content={<ChartTooltipContent />}
-              formatter={(value: number) => [formatNumber(value), "Clubs"]}
-            />
-            <Bar
-              dataKey="value"
-              fill="var(--color-value)"
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
-        </ChartCard>
+    <div className="space-y-10">
+      <div className="space-y-4">
+        <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+          Team, competition, and association depth
+        </p>
+        <div className="grid gap-6 xl:grid-cols-3">
+          <DistributionColumn
+            chartTitle="Clubs by teams"
+            chartDescription="Clubs in each team-count bucket"
+            chartConfig={teamsChartConfig}
+            chartData={teamsChartData}
+            tableTitle="Team buckets"
+          />
+          <DistributionColumn
+            chartTitle="Clubs by competitions"
+            chartDescription="Clubs in each competition-count bucket"
+            chartConfig={competitionsChartConfig}
+            chartData={competitionsChartData}
+            tableTitle="Competition buckets"
+          />
+          <DistributionColumn
+            chartTitle="Clubs by associations"
+            chartDescription="Clubs in each association-count bucket"
+            chartConfig={associationsChartConfig}
+            chartData={associationsChartData}
+            tableTitle="Association buckets"
+          />
+        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {accountCoverageChartData.length > 0 ? (
-          <ChartCard
-            title="Clubs by Account Coverage"
-            description="Distribution of clubs by account coverage"
-            chartConfig={accountCoverageChartConfig}
-            chartClassName="h-[260px]"
-            emptyStateMessage="No account coverage data available"
-            cardClassName="lg:col-span-2"
-          >
-            <PieChart>
-              <Pie
-                data={accountCoverageChartData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) =>
-                  `${name}: ${formatPercentage(percent * 100)}`
-                }
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {accountCoverageChartData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={
-                      accountCoverageChartConfig[entry.name]?.color ||
-                      `hsl(var(--chart-${(index % 5) + 1}))`
-                    }
-                  />
-                ))}
-              </Pie>
-              <ChartTooltip
-                content={<ChartTooltipContent />}
-                formatter={(value: number, name: string) => [
-                  formatNumber(value),
-                  accountCoverageChartConfig[
-                    name as keyof typeof accountCoverageChartConfig
-                  ]?.label || name,
-                ]}
+      {accountCoverageChartData.length > 0 && (
+        <div className="space-y-4 border-t border-slate-200 pt-8">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+            Account coverage
+          </p>
+          <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-5">
+            <ChartCard
+              title="Clubs by account coverage"
+              description="Linked accounts, gaps, and trials"
+              chartConfig={accountCoverageChartConfig}
+              chartClassName="h-[280px]"
+              emptyStateMessage="No account coverage data available"
+              cardClassName="xl:col-span-3"
+            >
+              <PieChart>
+                <Pie
+                  data={accountCoverageChartData}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) =>
+                    `${name}: ${formatPercentage(percent * 100)}`
+                  }
+                  outerRadius={110}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {accountCoverageChartData.map((entry, index) => (
+                    <Cell
+                      key={`cell-${index}`}
+                      fill={
+                        accountCoverageChartConfig[entry.name]?.color ||
+                        `hsl(var(--chart-${(index % 5) + 1}))`
+                      }
+                    />
+                  ))}
+                </Pie>
+                <ChartTooltip
+                  content={<ChartTooltipContent />}
+                  formatter={(value: number, name: string) => [
+                    formatNumber(value),
+                    accountCoverageChartConfig[
+                      name as keyof typeof accountCoverageChartConfig
+                    ]?.label || name,
+                  ]}
+                />
+              </PieChart>
+            </ChartCard>
+
+            <div className="xl:col-span-2">
+              <BucketTable
+                title="Account coverage buckets"
+                rows={accountCoverageChartData}
               />
-            </PieChart>
-          </ChartCard>
-        ) : null}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
-        <BucketTable title="Team Buckets" rows={teamsChartData} />
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <BucketTable title="Competition Buckets" rows={competitionsChartData} />
-        <BucketTable title="Association Buckets" rows={associationsChartData} />
-        <BucketTable title="Account Coverage" rows={accountCoverageChartData} />
-      </div>
+function DistributionColumn({
+  chartTitle,
+  chartDescription,
+  chartConfig,
+  chartData,
+  tableTitle,
+}: {
+  chartTitle: string;
+  chartDescription: string;
+  chartConfig: ChartConfig;
+  chartData: Array<{ name: string; label?: string; value: number }>;
+  tableTitle: string;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-4">
+      <ChartCard
+        title={chartTitle}
+        description={chartDescription}
+        chartConfig={chartConfig}
+        chartClassName="h-[240px]"
+      >
+        <BarChart data={chartData}>
+          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+          <XAxis
+            dataKey="name"
+            tickLine={false}
+            tickMargin={10}
+            axisLine={false}
+          />
+          <YAxis
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(value) => formatNumber(value)}
+          />
+          <ChartTooltip
+            content={<ChartTooltipContent />}
+            formatter={(value: number) => [formatNumber(value), "Clubs"]}
+          />
+          <Bar
+            dataKey="value"
+            fill="var(--color-value)"
+            radius={[4, 4, 0, 0]}
+          />
+        </BarChart>
+      </ChartCard>
+      <BucketTable title={tableTitle} rows={chartData} />
     </div>
   );
 }

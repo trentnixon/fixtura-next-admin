@@ -6,10 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import { useAccountHealthGlobalStatus } from "@/hooks/account-health/useAccountHealthGlobalStatus";
+import { useDataRefreshAttentionState } from "@/hooks/account-health/useDataRefreshAttentionState";
 import { useScraperLogs } from "@/hooks/data-collection/useScraperLogs";
 import {
   filterRunsByOutlier,
-  getDataRefreshAttentionRuns,
+  formatDataSyncAttentionMeta,
   getOutlierCounts,
   partitionOutliers,
   runsByDay,
@@ -97,12 +98,11 @@ export default function DashboardDataCollection() {
 
   const chartData = useMemo(() => runsByDay(latestRuns), [latestRuns]);
 
-  const attentionRuns = useMemo(
-    () => getDataRefreshAttentionRuns(latestRuns),
-    [latestRuns]
-  );
-
   const activeCount = healthGlobal?.data?.activeCount ?? 0;
+  const {
+    policyRuns: attentionRuns,
+    hiddenActiveCount: hiddenActiveSyncCount,
+  } = useDataRefreshAttentionState(latestRuns, activeCount);
   const failedCount = healthGlobal?.data?.failedCount ?? 0;
   const completedEmptyCount = healthGlobal?.data?.completedEmptyCount ?? 0;
 
@@ -159,13 +159,13 @@ export default function DashboardDataCollection() {
         value: healthError ? UNAVAILABLE : String(attentionRuns.length),
         meta: healthError
           ? UNAVAILABLE_META
-          : errorSyncCount > 0
-            ? `${errorSyncCount} error · ${issueSyncCount} issue`
-            : issueSyncCount > 0
-              ? `${issueSyncCount} issue`
-              : attentionRuns.length > 0
-                ? "Active, stuck, or unreconciled"
-                : "All clear",
+          : formatDataSyncAttentionMeta({
+              errorCount: errorSyncCount,
+              issueCount: issueSyncCount,
+              policyRunCount: attentionRuns.length,
+              activeCount,
+              hiddenActiveCount: hiddenActiveSyncCount,
+            }),
         isLoading: healthLoading,
       },
       {
@@ -201,6 +201,7 @@ export default function DashboardDataCollection() {
     failedCount,
     healthError,
     healthLoading,
+    hiddenActiveSyncCount,
     issueSyncCount,
     scrapeError,
     scrapeLoading,
@@ -229,7 +230,10 @@ export default function DashboardDataCollection() {
   ].filter(Boolean);
 
   const showAttentionSection =
-    healthLoading || healthError || attentionRuns.length > 0;
+    healthLoading ||
+    healthError ||
+    attentionRuns.length > 0 ||
+    hiddenActiveSyncCount > 0;
 
   return (
     <div className="space-y-6">
@@ -293,7 +297,7 @@ export default function DashboardDataCollection() {
           {showAttentionSection ? (
             <OverviewRecordPanel
               title="Needs attention"
-              description="Account sync runs that are active, stuck, or waiting to finalize"
+              description="Sync runs ≥20m, stuck ≥2h, or completed without finalize"
               badge={
                 attentionRuns.length > 0 ? (
                   <Badge variant="outline">
@@ -317,6 +321,7 @@ export default function DashboardDataCollection() {
               <DataRefreshAttentionPanel
                 runs={attentionRuns}
                 activeCount={activeCount}
+                hiddenActiveCount={hiddenActiveSyncCount}
                 isLoading={healthLoading}
                 error={
                   healthError

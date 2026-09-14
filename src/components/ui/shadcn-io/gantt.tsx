@@ -579,19 +579,29 @@ export type GanttFeatureItemProps = {
   feature: GanttFeature;
   onMove?: (id: string, startAt: Date, endAt: Date | null) => void;
   children?: ReactNode;
-  className?: string;
-  style?: React.CSSProperties;
   onClick?: () => void;
+} & Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  "children" | "onClick" | "style"
+> & {
+  style?: React.CSSProperties;
 };
 
-export const GanttFeatureItem: FC<GanttFeatureItemProps> = ({
-  feature,
-  onMove,
-  children,
-  className,
-  style: customStyle,
-  onClick,
-}) => {
+export const GanttFeatureItem = React.forwardRef<
+  HTMLDivElement,
+  GanttFeatureItemProps
+>(function GanttFeatureItem(
+  {
+    feature,
+    onMove,
+    children,
+    className,
+    style: customStyle,
+    onClick: onFeatureClick,
+    ...rest
+  },
+  forwardedRef,
+) {
   const gantt = useGantt();
   const startOffset = useMemo(
     () => getOffset(feature.startAt, gantt.timelineStartDate, gantt),
@@ -609,16 +619,28 @@ export const GanttFeatureItem: FC<GanttFeatureItemProps> = ({
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: feature.id,
-    disabled: !onMove || !!onClick,
+    disabled: !onMove || !!onFeatureClick,
   });
 
   const style = transform
     ? { transform: CSS.Translate.toString(transform) }
     : undefined;
 
+  const mergedRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      setNodeRef(node);
+      if (typeof forwardedRef === "function") {
+        forwardedRef(node);
+      } else if (forwardedRef) {
+        forwardedRef.current = node;
+      }
+    },
+    [forwardedRef, setNodeRef],
+  );
+
   return (
     <div
-      ref={setNodeRef}
+      ref={mergedRef}
       style={{
         ...style,
         position: "absolute",
@@ -630,18 +652,24 @@ export const GanttFeatureItem: FC<GanttFeatureItemProps> = ({
       }}
       className={cn(
         "flex items-center gap-2 rounded px-2 py-1 text-xs",
-        onMove && !onClick && "cursor-move",
-        onClick && "cursor-pointer",
+        onMove && !onFeatureClick && "cursor-move",
+        onFeatureClick && "cursor-pointer",
         className,
       )}
-      onClick={onClick}
-      {...(!onClick ? attributes : {})}
-      {...(!onClick ? listeners : {})}
+      {...rest}
+      onClick={(event) => {
+        rest.onClick?.(event);
+        onFeatureClick?.();
+      }}
+      {...(!onFeatureClick ? attributes : {})}
+      {...(!onFeatureClick ? listeners : {})}
     >
       {children || <span className="truncate">{feature.name}</span>}
     </div>
   );
-};
+});
+
+GanttFeatureItem.displayName = "GanttFeatureItem";
 
 // Marker Components
 export type GanttMarkerProps = {

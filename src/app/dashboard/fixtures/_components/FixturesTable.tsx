@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import Link from "next/link";
+import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
 import {
   Table,
   TableBody,
@@ -12,8 +12,6 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Eye } from "lucide-react";
 import type { Fixture } from "../types";
 
 interface FixturesTableProps {
@@ -92,12 +90,12 @@ export function FixturesTable({ fixtures }: FixturesTableProps) {
                   </TableCell>
                   <TableCell>{getStatusBadge(fixture.status)}</TableCell>
                   <TableCell className="text-right">
-                    <Link href={`/dashboard/fixtures/${fixture.id}`}>
-                      <Button variant="ghost" size="sm">
-                        <Eye className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                    </Link>
+                    <DashboardLinkButton
+                      href={`/dashboard/fixtures/${fixture.id}`}
+                      trailingIcon="arrow"
+                    >
+                      View
+                    </DashboardLinkButton>
                   </TableCell>
                 </TableRow>
               ))}

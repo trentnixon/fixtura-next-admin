@@ -15,6 +15,17 @@ import { AnalyticsSection } from "./CompetitionAdminDetail/sections/AnalyticsSec
 import { GradesSection } from "./CompetitionAdminDetail/sections/GradesSection";
 import { TeamsSection } from "./CompetitionAdminDetail/sections/TeamsSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import { Gauge, Layers, Users } from "lucide-react";
+
+const competitionDetailTabs = [
+  { value: "snapshot", label: "Snapshot", icon: Gauge },
+  { value: "grades", label: "Grades", icon: Layers },
+  { value: "teams", label: "Teams", icon: Users },
+] as const;
 
 function formatDate(value: string | null): string {
   if (!value) return "—";
@@ -81,14 +92,31 @@ export default function CompetitionAdminDetail() {
       />
 
       <PageContainer padding="xs" spacing="lg">
-        <Tabs defaultValue="snapshot" className="w-full">
-          <TabsList variant="primary" className="mb-4">
-            <TabsTrigger value="snapshot">Competition Snapshot</TabsTrigger>
-            <TabsTrigger value="grades">Grades</TabsTrigger>
-            <TabsTrigger value="teams">Teams</TabsTrigger>
-          </TabsList>
+        <Tabs defaultValue="snapshot" className="w-full min-w-0 max-w-full">
+          <div className="pb-8">
+            <TabsList variant="primary" className={sectionTabListClass}>
+              {competitionDetailTabs.map((tab) => {
+                const Icon = tab.icon;
 
-          <TabsContent value="snapshot" className="space-y-6">
+                return (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    variant="section"
+                    className={sectionTabTriggerClass}
+                  >
+                    <Icon
+                      className="h-4 w-4 shrink-0 text-current"
+                      aria-hidden
+                    />
+                    {tab.label}
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </div>
+
+          <TabsContent value="snapshot" className="mt-0 space-y-6">
             <SnapshotSection
               meta={meta}
               counts={counts}
@@ -103,11 +131,11 @@ export default function CompetitionAdminDetail() {
             <AnalyticsSection analytics={analytics} />
           </TabsContent>
 
-          <TabsContent value="grades">
+          <TabsContent value="grades" className="mt-0">
             <GradesSection grades={grades} />
           </TabsContent>
 
-          <TabsContent value="teams">
+          <TabsContent value="teams" className="mt-0">
             <TeamsSection teams={analytics.tables.teams} clubs={clubs} />
           </TabsContent>
         </Tabs>

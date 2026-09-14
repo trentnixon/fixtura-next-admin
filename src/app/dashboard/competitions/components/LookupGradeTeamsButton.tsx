@@ -11,6 +11,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Loader2, Users } from "lucide-react";
+import { siteNavigationCtaAltClass } from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
 import { useTriggerGradesLookupTeamsScrape } from "@/hooks/competitions/useTriggerGradesLookupTeamsScrape";
 
 /**
@@ -36,11 +38,12 @@ export function LookupGradeTeamsButton() {
       <Button
         onClick={() => setIsDialogOpen(true)}
         disabled={triggerScrape.isPending}
-        variant="accent"
+        variant="ghost"
         size="sm"
+        className={cn(siteNavigationCtaAltClass, "shrink-0")}
       >
-        <Users className="h-4 w-4 mr-2" />
-        Lookup Grade Teams
+        <Users className="mr-2 h-4 w-4 shrink-0" aria-hidden />
+        Lookup grade teams
       </Button>
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

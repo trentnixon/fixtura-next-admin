@@ -8,6 +8,11 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import {
+  siteNavigationCtaAltClass,
+  siteNavigationCtaClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
 import FixtureMetadata from "./FixtureMetadata";
 import TriggerResultSingleScrapeButton from "./TriggerResultSingleScrapeButton";
 
@@ -38,8 +43,12 @@ export default function FixtureActionsBar({
         {hasOpenItems && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="primary" size="sm">
-                Open <ChevronDown className="ml-1 h-4 w-4" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(siteNavigationCtaClass, "shrink-0")}
+              >
+                Open <ChevronDown className="ml-1 h-4 w-4 shrink-0" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-64">
@@ -86,8 +95,12 @@ export default function FixtureActionsBar({
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="accent" size="sm">
-              Data actions <ChevronDown className="ml-1 h-4 w-4" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className={cn(siteNavigationCtaAltClass, "shrink-0")}
+            >
+              Data actions <ChevronDown className="ml-1 h-4 w-4 shrink-0" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56 p-1">

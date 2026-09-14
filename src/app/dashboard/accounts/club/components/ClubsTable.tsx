@@ -88,6 +88,7 @@ export default function DisplayClubsTable() {
           <AccountTable
             accounts={activeClubs}
             emptyMessage="No clubs with active subscriptions available."
+            showFleetOpsColumn
           />
         </SectionContainer>
       </TabsContent>
@@ -101,6 +102,7 @@ export default function DisplayClubsTable() {
           <AccountTable
             accounts={inactiveClubs}
             emptyMessage="No clubs with inactive subscriptions available."
+            showFleetOpsColumn
           />
         </SectionContainer>
       </TabsContent>

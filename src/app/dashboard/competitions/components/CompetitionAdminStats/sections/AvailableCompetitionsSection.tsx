@@ -1,5 +1,4 @@
 import { useMemo, useState } from "react";
-import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import {
   Table,
   TableBody,
@@ -8,9 +7,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -28,13 +27,16 @@ import {
 } from "@/components/ui/pagination";
 import {
   ArrowDown,
-  ArrowRight,
   ArrowUp,
   ArrowUpDown,
   Search,
-  X,
 } from "lucide-react";
-import { Label } from "@/components/ui/label";
+import {
+  segmentedControlLabelClass,
+  segmentedControlRowClass,
+} from "@/lib/forms/segmentedControlStyles";
+import { siteNavigationCtaClass } from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
 
 import { CompetitionAdminStatsAvailableCompetition } from "@/types/competitionAdminStats";
 import { formatNumber } from "../helpers";
@@ -224,48 +226,27 @@ export function AvailableCompetitionsSection({
     itemsPerPage !== ITEMS_PER_PAGE_OPTIONS[0];
 
   return (
-    <SectionContainer
-      title="Competitions"
-      description="Search, sort, and open competition detail records."
-    >
-      <div className="space-y-4">
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="competition-search" className="text-sm font-medium">
-              Search
-            </Label>
-            <div className="relative w-[240px]">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="competition-search"
-                placeholder="Search competitions..."
-                value={searchQuery}
-                onChange={(event) => {
-                  setSearchQuery(event.target.value);
-                  setCurrentPage(1);
-                }}
-                className="pl-8"
-              />
-              {searchQuery && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1.5 top-1.5 h-6 w-6"
-                  onClick={() => {
-                    setSearchQuery("");
-                    setCurrentPage(1);
-                  }}
-                >
-                  <X className="h-3 w-3" />
-                </Button>
-              )}
-            </div>
+    <div id="competitions-table" className="space-y-4">
+        <div className="flex flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 md:flex-row md:flex-wrap md:items-center">
+          <div className="relative min-w-0 flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="competition-search"
+              type="search"
+              placeholder="Search name, association, season, sport…"
+              value={searchQuery}
+              onChange={(event) => {
+                setSearchQuery(event.target.value);
+                setCurrentPage(1);
+              }}
+              className="rounded-full border-transparent bg-white pl-9 shadow-none"
+            />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="size-filter" className="text-sm font-medium">
-              Size Category
-            </Label>
+          <div className={cn(segmentedControlRowClass, "shrink-0")}>
+            <label htmlFor="size-filter" className={segmentedControlLabelClass}>
+              Size
+            </label>
             <Select
               value={sizeFilter}
               onValueChange={(value) => {
@@ -273,7 +254,10 @@ export function AvailableCompetitionsSection({
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger id="size-filter" className="w-[180px]">
+              <SelectTrigger
+                id="size-filter"
+                className="h-9 w-[140px] rounded-full border-transparent bg-white shadow-none"
+              >
                 <SelectValue placeholder="All sizes" />
               </SelectTrigger>
               <SelectContent>
@@ -286,10 +270,10 @@ export function AvailableCompetitionsSection({
             </Select>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="sport-filter" className="text-sm font-medium">
+          <div className={cn(segmentedControlRowClass, "shrink-0")}>
+            <label htmlFor="sport-filter" className={segmentedControlLabelClass}>
               Sport
-            </Label>
+            </label>
             <Select
               value={sportFilter}
               onValueChange={(value) => {
@@ -297,7 +281,10 @@ export function AvailableCompetitionsSection({
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger id="sport-filter" className="w-[200px]">
+              <SelectTrigger
+                id="sport-filter"
+                className="h-9 w-[160px] rounded-full border-transparent bg-white shadow-none"
+              >
                 <SelectValue placeholder="All sports" />
               </SelectTrigger>
               <SelectContent>
@@ -311,10 +298,13 @@ export function AvailableCompetitionsSection({
             </Select>
           </div>
 
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="items-per-page" className="text-sm font-medium">
-              Rows per page
-            </Label>
+          <div className={cn(segmentedControlRowClass, "shrink-0")}>
+            <label
+              htmlFor="items-per-page"
+              className={segmentedControlLabelClass}
+            >
+              Rows
+            </label>
             <Select
               value={itemsPerPage.toString()}
               onValueChange={(value) => {
@@ -323,7 +313,10 @@ export function AvailableCompetitionsSection({
                 setCurrentPage(1);
               }}
             >
-              <SelectTrigger id="items-per-page" className="w-[140px]">
+              <SelectTrigger
+                id="items-per-page"
+                className="h-9 w-[88px] rounded-full border-transparent bg-white shadow-none"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -336,17 +329,19 @@ export function AvailableCompetitionsSection({
             </Select>
           </div>
 
-          <Button
-            size="sm"
-            disabled={!hasActiveFilters}
-            onClick={handleResetFilters}
-            variant="outline"
-          >
-            Reset Filters
-          </Button>
+          {hasActiveFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleResetFilters}
+              className={cn(siteNavigationCtaClass, "w-full shrink-0 md:w-auto")}
+            >
+              Reset filters
+            </Button>
+          )}
         </div>
 
-        <div className="text-sm text-muted-foreground">
+        <div className="px-1 text-sm text-muted-foreground">
           Showing {paginatedData.length} of {sortedData.length} results
           {filteredData.length !== competitions.length &&
             ` (filtered from ${competitions.length} total)`}
@@ -445,12 +440,12 @@ export function AvailableCompetitionsSection({
                       : "-"}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button asChild size="sm" variant="primary">
-                      <Link href={`/dashboard/competitions/${competition.id}`}>
-                        View
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </Link>
-                    </Button>
+                    <DashboardLinkButton
+                      href={`/dashboard/competitions/${competition.id}`}
+                      trailingIcon="arrow"
+                    >
+                      View
+                    </DashboardLinkButton>
                   </TableCell>
                 </TableRow>
               ))}
@@ -488,7 +483,6 @@ export function AvailableCompetitionsSection({
             <PaginationNext showLabel={false} />
           </div>
         </Pagination>
-      </div>
-    </SectionContainer>
+    </div>
   );
 }

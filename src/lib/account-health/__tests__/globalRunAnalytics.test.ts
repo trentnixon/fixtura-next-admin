@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   ATTENTION_ERROR_MS,
   ATTENTION_WARNING_MS,
+  computeDataRefreshAttentionState,
+  filterDataRefreshPolicyRuns,
+  formatDataSyncAttentionMeta,
   getDataRefreshAttentionRuns,
   resolveDataRefreshAttentionSeverity,
   resolveRunDurationMs,
@@ -248,6 +251,84 @@ describe("getDataRefreshAttentionRuns", () => {
     expect(runs[0]?.attentionKind).toBe("active");
     expect(runs[0]?.severity).toBe("error");
     expect(runs[0]?.attentionLabel).toBe("Running · overdue");
+  });
+});
+
+describe("filterDataRefreshPolicyRuns", () => {
+  const nowMs = Date.parse("2026-09-08T12:00:00.000Z");
+
+  it("drops active runs under 20 minutes", () => {
+    const all = getDataRefreshAttentionRuns(
+      [
+        baseRun({
+          status: "running",
+          startedAt: new Date(nowMs - 5 * 60_000).toISOString(),
+        }),
+      ],
+      nowMs
+    );
+    expect(filterDataRefreshPolicyRuns(all)).toHaveLength(0);
+  });
+
+  it("keeps warning, stuck, and completed limbo runs", () => {
+    const all = getDataRefreshAttentionRuns(
+      [
+        baseRun({
+          id: 1,
+          status: "running",
+          startedAt: new Date(nowMs - ATTENTION_WARNING_MS - 60_000).toISOString(),
+        }),
+        baseRun({
+          id: 2,
+          status: "running",
+          startedAt: new Date(
+            nowMs - STUCK_RUN_THRESHOLD_MS - 60_000
+          ).toISOString(),
+        }),
+        baseRun({
+          id: 3,
+          status: "completed",
+          finalizedAt: null,
+          startedAt: "2026-09-08T10:00:00.000Z",
+        }),
+      ],
+      nowMs
+    );
+    expect(filterDataRefreshPolicyRuns(all)).toHaveLength(3);
+  });
+});
+
+describe("computeDataRefreshAttentionState", () => {
+  const nowMs = Date.parse("2026-09-08T12:00:00.000Z");
+
+  it("computes hidden active count when API reports more actives than the window", () => {
+    const state = computeDataRefreshAttentionState(
+      [
+        baseRun({
+          status: "running",
+          startedAt: new Date(nowMs - 37 * 60_000).toISOString(),
+        }),
+      ],
+      3,
+      nowMs
+    );
+    expect(state.policyRuns).toHaveLength(1);
+    expect(state.visibleActiveInWindow).toBe(1);
+    expect(state.hiddenActiveCount).toBe(2);
+  });
+});
+
+describe("formatDataSyncAttentionMeta", () => {
+  it("never returns all clear when actives remain hidden", () => {
+    expect(
+      formatDataSyncAttentionMeta({
+        errorCount: 0,
+        issueCount: 0,
+        policyRunCount: 0,
+        activeCount: 4,
+        hiddenActiveCount: 4,
+      })
+    ).toBe("4 active outside recent window");
   });
 });
 

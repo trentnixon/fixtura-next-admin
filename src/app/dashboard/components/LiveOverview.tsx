@@ -16,7 +16,8 @@ import { OverviewDataWorkspace } from "./live-snapshot/OverviewDataWorkspace";
 import { OverviewRecordPanel } from "./live-snapshot/OverviewRecordPanel";
 import { LIVE_OVERVIEW_REFETCH_MS } from "./live-snapshot/liveOverviewConfig";
 import { useAccountHealthGlobalStatus } from "@/hooks/account-health/useAccountHealthGlobalStatus";
-import { getDataRefreshAttentionRuns } from "@/lib/account-health/globalRunAnalytics";
+import { useDataRefreshAttentionState } from "@/hooks/account-health/useDataRefreshAttentionState";
+import { formatDataSyncAttentionMeta } from "@/lib/account-health/globalRunAnalytics";
 import { DataRefreshAttentionPanel } from "./account-health/DataRefreshAttentionPanel";
 import { useLiveOverviewRefreshToast } from "./live-snapshot/useLiveOverviewRefreshToast";
 import { DashboardLinkButton } from "./live-snapshot/DashboardLinkButton";
@@ -25,7 +26,10 @@ import { RerenderRequestAttentionList } from "./live-snapshot/RerenderRequestAtt
 import { ContactFormAttentionList } from "./live-snapshot/ContactFormAttentionList";
 import { NotificationHealthAttentionSummary } from "./live-snapshot/NotificationHealthAttentionSummary";
 import { AccountFleetOverviewCards } from "./live-snapshot/AccountFleetOverviewCards";
-import { getStuckRenderingAttention } from "@/lib/scheduler/renderAttention";
+import {
+  getStuckRenderingAttention,
+  STUCK_RENDERING_POLICY_DESCRIPTION,
+} from "@/lib/scheduler/renderAttention";
 import { buildAccountFleetOverview, buildAccountLookupMap } from "@/lib/overview/accountFleetSummary";
 import {
   countContactFormActionQueue,
@@ -131,9 +135,13 @@ export default function LiveOverview() {
     isFetching: telemetryFetching,
   } = useRenderTelemetry();
 
-  const attentionRuns = useMemo(
-    () => getDataRefreshAttentionRuns(healthGlobal?.data?.latestRuns ?? []),
-    [healthGlobal?.data?.latestRuns]
+  const activeSyncCount = healthGlobal?.data?.activeCount ?? 0;
+  const {
+    policyRuns: attentionRuns,
+    hiddenActiveCount: hiddenActiveSyncCount,
+  } = useDataRefreshAttentionState(
+    healthGlobal?.data?.latestRuns,
+    activeSyncCount
   );
 
   const stuckRenderingItems = useMemo(
@@ -184,7 +192,6 @@ export default function LiveOverview() {
   const contactActionCount = countContactFormActionQueue(contactSubmissions);
   const unseenContactCount = countUnseenContactSubmissions(contactSubmissions);
 
-  const activeSyncCount = healthGlobal?.data?.activeCount ?? 0;
   const errorSyncCount = attentionRuns.filter(
     (run) => run.severity === "error"
   ).length;
@@ -247,13 +254,23 @@ export default function LiveOverview() {
         value: healthError ? UNAVAILABLE : String(activeSyncCount),
         meta: healthError
           ? UNAVAILABLE_META
-          : errorSyncCount > 0
-            ? `${errorSyncCount} error · ${issueSyncCount} issue`
-            : issueSyncCount > 0
-              ? `${issueSyncCount} issue`
-              : attentionRuns.length > 0
-                ? `${attentionRuns.length} in attention list`
-                : "All clear",
+          : formatDataSyncAttentionMeta({
+              errorCount: errorSyncCount,
+              issueCount: issueSyncCount,
+              policyRunCount: attentionRuns.length,
+              activeCount: activeSyncCount,
+              hiddenActiveCount: hiddenActiveSyncCount,
+            }),
+        metaTone:
+          healthError || healthLoading
+            ? "default"
+            : hiddenActiveSyncCount > 0 || errorSyncCount > 0
+              ? "critical"
+              : issueSyncCount > 0 || attentionRuns.length > 0
+                ? "warning"
+                : activeSyncCount > 0
+                  ? "warning"
+                  : "default",
         isLoading: healthLoading,
       },
       {
@@ -293,6 +310,7 @@ export default function LiveOverview() {
     errorSyncCount,
     healthError,
     healthLoading,
+    hiddenActiveSyncCount,
     issueSyncCount,
     renderTelemetry,
     rendersError,
@@ -319,7 +337,10 @@ export default function LiveOverview() {
     rendersLoading || rendersError || stuckRenderingItems.length > 0;
 
   const showAttentionSection =
-    healthLoading || healthError || attentionRuns.length > 0;
+    healthLoading ||
+    healthError ||
+    attentionRuns.length > 0 ||
+    hiddenActiveSyncCount > 0;
 
   const showRerenderSection =
     rerenderLoading ||
@@ -398,7 +419,7 @@ export default function LiveOverview() {
           {showStuckRenderingSection ? (
             <OverviewRecordPanel
               title="Stuck rendering"
-              description="Accounts processing or rendering longer than 30 minutes today"
+              description={STUCK_RENDERING_POLICY_DESCRIPTION}
               badge={
                 stuckRenderingItems.length > 0 ? (
                   <Badge
@@ -437,7 +458,7 @@ export default function LiveOverview() {
           {showAttentionSection ? (
             <OverviewRecordPanel
               title="Needs attention"
-              description="Account sync runs that are active, stuck, or waiting to finalize"
+              description="Sync runs ≥20m, stuck ≥2h, or completed without finalize"
               badge={
                 attentionRuns.length > 0 ? (
                   <Badge variant="outline">
@@ -461,6 +482,7 @@ export default function LiveOverview() {
               <DataRefreshAttentionPanel
                 runs={attentionRuns}
                 activeCount={activeSyncCount}
+                hiddenActiveCount={hiddenActiveSyncCount}
                 isLoading={healthLoading}
                 error={
                   healthError

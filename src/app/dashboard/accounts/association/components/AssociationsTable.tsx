@@ -95,6 +95,7 @@ export default function DisplayAssociationsTable() {
           <AccountTable
             accounts={activeAssociations}
             emptyMessage="No associations with active subscriptions available."
+            showFleetOpsColumn
           />
         </SectionContainer>
       </TabsContent>
@@ -107,6 +108,7 @@ export default function DisplayAssociationsTable() {
           <AccountTable
             accounts={inactiveAssociations}
             emptyMessage="No associations with inactive subscriptions available."
+            showFleetOpsColumn
           />
         </SectionContainer>
       </TabsContent>

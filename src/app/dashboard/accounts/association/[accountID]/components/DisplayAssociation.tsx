@@ -2,6 +2,7 @@
 
 import { useAccountQuery } from "@/hooks/accounts/useAccountQuery";
 import AccountTitle from "../../../components/ui/AccountTitle";
+import { AccountDetailAttentionBanner } from "../../../components/AccountDetailAttentionBanner";
 import AccountDetailWorkspace from "../../../components/overview/AccountDetailWorkspace";
 import AccountSnapshotActions from "../../../components/overview/AccountSnapshotActions";
 import AccountsBreadcrumbHeader from "../../../components/AccountsBreadcrumbHeader";
@@ -67,6 +68,7 @@ export default function DisplayAssociation() {
             className="shrink-0 self-end sm:self-auto"
           />
         </div>
+        <AccountDetailAttentionBanner accountId={Number(accountID)} />
         <AccountDetailWorkspace
           accountData={accountData}
           accountID={accountID as string}

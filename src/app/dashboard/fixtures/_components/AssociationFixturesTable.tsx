@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -24,7 +23,14 @@ import {
 import { useFixtureDetails } from "@/hooks/fixtures/useFixtureDetails";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import { isAfter, isBefore, startOfDay, parseISO } from "date-fns";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
+import {
+  segmentedControlLabelClass,
+  segmentedControlRowClass,
+} from "@/lib/forms/segmentedControlStyles";
+import { siteNavigationCtaClass } from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
 import { useSorting } from "./_utils/useSorting";
 import { SearchInput } from "./_utils/SearchInput";
 import { formatDate } from "./_utils/dateUtils";
@@ -48,7 +54,6 @@ export function AssociationFixturesTable({
   associationId,
   onBack,
 }: AssociationFixturesTableProps) {
-  const router = useRouter();
   const { data, isLoading, error, refetch } = useFixtureDetails({
     association: associationId,
   });
@@ -177,10 +182,6 @@ export function AssociationFixturesTable({
   }, [data]);
 
   // Handle view details
-  const handleViewDetails = (fixtureId: number) => {
-    router.push(`/dashboard/fixtures/${fixtureId}`);
-  };
-
   // Loading state
   if (isLoading) {
     return (
@@ -191,9 +192,14 @@ export function AssociationFixturesTable({
       >
         <div className="flex items-center justify-between mb-6">
           <div></div>
-          <Button variant="secondary" size="sm" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to Associations
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className={siteNavigationCtaClass}
+          >
+            <ArrowLeft className="mr-1 h-4 w-4 shrink-0" aria-hidden />
+            Back to associations
           </Button>
         </div>
         <Table>
@@ -264,9 +270,14 @@ export function AssociationFixturesTable({
       >
         <div className="flex items-center justify-between mb-6">
           <div></div>
-          <Button variant="secondary" size="sm" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to Associations
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className={siteNavigationCtaClass}
+          >
+            <ArrowLeft className="mr-1 h-4 w-4 shrink-0" aria-hidden />
+            Back to associations
           </Button>
         </div>
         <ErrorState
@@ -289,9 +300,14 @@ export function AssociationFixturesTable({
       >
         <div className="flex items-center justify-between mb-6">
           <div></div>
-          <Button variant="secondary" size="sm" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to Associations
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className={siteNavigationCtaClass}
+          >
+            <ArrowLeft className="mr-1 h-4 w-4 shrink-0" aria-hidden />
+            Back to associations
           </Button>
         </div>
         <p className="text-center text-muted-foreground py-8">
@@ -309,50 +325,74 @@ export function AssociationFixturesTable({
     >
       <div className="mb-6 space-y-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <div className="grid flex-1 gap-3 md:grid-cols-[minmax(0,1fr)_200px_180px]">
-            {/* Team Search */}
+          <div className="flex min-w-0 flex-1 flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 md:flex-row md:flex-wrap md:items-center">
             <SearchInput
               value={teamSearchQuery}
               onChange={setTeamSearchQuery}
               placeholder="Search by team name..."
-              className="min-w-0"
+              className="min-w-0 flex-1"
             />
 
-            {/* Grade Filter */}
             {availableGrades.length > 0 && (
-              <Select value={selectedGrade} onValueChange={setSelectedGrade}>
-                <SelectTrigger className="w-[200px]">
-                  <SelectValue placeholder="Filter by grade" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">
-                    All Grades ({data?.data?.fixtures?.length || 0})
-                  </SelectItem>
-                  {availableGrades.map((grade) => (
-                    <SelectItem key={grade.name} value={grade.name}>
-                      {grade.name} ({grade.count})
+              <div className={cn(segmentedControlRowClass, "shrink-0")}>
+                <label
+                  htmlFor="fixture-grade-filter"
+                  className={segmentedControlLabelClass}
+                >
+                  Grade
+                </label>
+                <Select value={selectedGrade} onValueChange={setSelectedGrade}>
+                  <SelectTrigger
+                    id="fixture-grade-filter"
+                    className="h-9 w-[200px] rounded-full border-transparent bg-white shadow-none"
+                  >
+                    <SelectValue placeholder="All grades" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">
+                      All grades ({data?.data?.fixtures?.length || 0})
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    {availableGrades.map((grade) => (
+                      <SelectItem key={grade.name} value={grade.name}>
+                        {grade.name} ({grade.count})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             )}
 
-            {/* Date Filter */}
-            <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by date" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Dates</SelectItem>
-                <SelectItem value="upcoming">Upcoming</SelectItem>
-                <SelectItem value="past">Past</SelectItem>
-                <SelectItem value="today">Today</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className={cn(segmentedControlRowClass, "shrink-0")}>
+              <label
+                htmlFor="fixture-date-filter"
+                className={segmentedControlLabelClass}
+              >
+                When
+              </label>
+              <Select value={dateFilter} onValueChange={setDateFilter}>
+                <SelectTrigger
+                  id="fixture-date-filter"
+                  className="h-9 w-[140px] rounded-full border-transparent bg-white shadow-none"
+                >
+                  <SelectValue placeholder="All dates" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All dates</SelectItem>
+                  <SelectItem value="upcoming">Upcoming</SelectItem>
+                  <SelectItem value="past">Past</SelectItem>
+                  <SelectItem value="today">Today</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <Button variant="secondary" size="sm" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4 mr-1" />
-            Back to Associations
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onBack}
+            className={cn(siteNavigationCtaClass, "shrink-0")}
+          >
+            <ArrowLeft className="mr-1 h-4 w-4 shrink-0" aria-hidden />
+            Back to associations
           </Button>
         </div>
       </div>
@@ -452,14 +492,12 @@ export function AssociationFixturesTable({
                     </TableCell>
                     <TableCell>{getStatusBadge(fixture.status)}</TableCell>
                     <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="primary"
-                        onClick={() => handleViewDetails(fixture.id)}
+                      <DashboardLinkButton
+                        href={`/dashboard/fixtures/${fixture.id}`}
+                        trailingIcon="arrow"
                       >
                         View
-                        <ArrowRight className="ml-1 h-4 w-4" />
-                      </Button>
+                      </DashboardLinkButton>
                     </TableCell>
                   </TableRow>
                 )),
