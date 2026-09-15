@@ -1,9 +1,9 @@
 "use client";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
-import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
+import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
 import { useTopAccountsByCost } from "@/hooks/rollups/useTopAccountsByCost";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import { useMemo } from "react";
@@ -40,18 +40,21 @@ export default function RenderListPage() {
         title="Render Analytics"
         byLine="Render-specific cost analysis and breakdowns"
         byLineBottom="Select a render to view detailed cost analytics"
-      />
+      >
+        <DashboardLinkButton href="/dashboard/budget" trailingIcon="arrow">
+          Budget overview
+        </DashboardLinkButton>
+        <DashboardLinkButton href="/dashboard/renders" trailingIcon="external">
+          Renders
+        </DashboardLinkButton>
+      </CreatePageTitle>
 
-      <PageContainer padding="xs" spacing="lg">
-        <SectionContainer
-          title="Select Render"
-          description="Choose a render to view detailed cost analytics"
+      <PageContainer padding="xs" spacing="md">
+        <OverviewRecordPanel
+          title="Select render"
+          description="Render list is aggregated from account cost rollups."
         >
-          <Card className="bg-white border shadow-none">
-            <CardHeader className="p-4">
-              <CardTitle>Recent Renders</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
+          <div className="rounded-md border border-slate-200 bg-white p-4">
               {accountsLoading && (
                 <LoadingState message="Loading renders..." />
               )}
@@ -70,21 +73,8 @@ export default function RenderListPage() {
                   </p>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </SectionContainer>
-
-        <SectionContainer
-          title="Render Analytics"
-          description="Select a render from the list above to view analytics"
-        >
-          <div className="text-center py-12 text-muted-foreground">
-            <p className="text-sm">
-              Please select a render from the list above to view detailed
-              analytics.
-            </p>
           </div>
-        </SectionContainer>
+        </OverviewRecordPanel>
       </PageContainer>
     </>
   );

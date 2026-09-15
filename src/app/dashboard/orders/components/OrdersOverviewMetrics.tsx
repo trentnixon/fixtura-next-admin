@@ -19,6 +19,8 @@ import {
 interface OrdersOverviewMetricsProps {
   stats: OrderOverviewStats;
   currency?: string | null;
+  /** Hide section title when wrapped in OverviewRecordPanel */
+  embedded?: boolean;
 }
 
 const DEFAULT_CURRENCY = "AUD";
@@ -26,6 +28,7 @@ const DEFAULT_CURRENCY = "AUD";
 export function OrdersOverviewMetrics({
   stats,
   currency,
+  embedded = false,
 }: OrdersOverviewMetricsProps) {
   const currencyCode = currency ?? DEFAULT_CURRENCY;
 
@@ -83,21 +86,23 @@ export function OrdersOverviewMetrics({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-slate-900">
-            Orders snapshot
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Compact summary for the selected filters.
+      {!embedded ? (
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="text-base font-semibold text-slate-900">
+              Orders snapshot
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              Compact summary for the selected filters.
+            </p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Updated {formatRelativeTime(stats.lastUpdated, "recently")}
           </p>
         </div>
-        <p className="text-xs text-muted-foreground">
-          Updated {formatRelativeTime(stats.lastUpdated, "recently")}
-        </p>
-      </div>
+      ) : null}
 
-      <div className="grid overflow-hidden rounded-md border bg-white sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-3">
         {metrics.map((metric) => {
           const Icon = metric.icon;
 

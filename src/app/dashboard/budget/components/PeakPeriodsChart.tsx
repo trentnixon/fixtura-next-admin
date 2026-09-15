@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useDailyRollupsRange } from "@/hooks/rollups/useDailyRollupsRange";
 import { useWeeklyRollupsRange } from "@/hooks/rollups/useWeeklyRollupsRange";
 import { useMonthlyRollupsRange } from "@/hooks/rollups/useMonthlyRollupsRange";
@@ -21,20 +21,33 @@ import {
 } from "@/components/ui/select";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
-import { formatCurrency } from "@/utils/chart-formatters";
+import {
+  formatCurrency,
+  formatNumber,
+} from "@/utils/chart-formatters";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from "recharts";
-import { TrendingUp, DollarSign, Calendar } from "lucide-react";
+import { TrendingUp, DollarSign, Calendar, BarChart3 } from "lucide-react";
 
-type PeriodType = "daily" | "weekly" | "monthly";
+export type PeakPeriodType = "daily" | "weekly" | "monthly";
 
-export default function PeakPeriodsChart() {
-  const [periodType, setPeriodType] = useState<PeriodType>("daily");
+export interface PeakPeriodsChartProps {
+  periodType?: PeakPeriodType;
+  onPeriodTypeChange?: (value: PeakPeriodType) => void;
+  /** When false, chart only (header lives in OverviewRecordPanel). */
+  showHeader?: boolean;
+}
 
-  // Calculate date ranges for last 90 days, 12 weeks, or 12 months
+export default function PeakPeriodsChart({
+  periodType: controlledPeriodType,
+  onPeriodTypeChange,
+  showHeader = true,
+}: PeakPeriodsChartProps) {
+  const periodType = controlledPeriodType ?? "daily";
+
   const dailyParams = useMemo(() => {
     const end = new Date();
     const start = new Date(end);
-    start.setDate(end.getDate() - 89); // Last 90 days
+    start.setDate(end.getDate() - 89);
     return {
       startDate: start.toISOString().slice(0, 10),
       endDate: end.toISOString().slice(0, 10),
@@ -48,7 +61,7 @@ export default function PeakPeriodsChart() {
     const currentWeek = getWeekNumber(now);
     return {
       startYear: currentYear,
-      startWeek: Math.max(1, currentWeek - 11), // Last 12 weeks
+      startWeek: Math.max(1, currentWeek - 11),
       endYear: currentYear,
       endWeek: currentWeek,
       limit: 12,
@@ -61,7 +74,7 @@ export default function PeakPeriodsChart() {
     const currentMonth = now.getMonth() + 1;
     return {
       startYear: currentYear,
-      startMonth: Math.max(1, currentMonth - 11), // Last 12 months
+      startMonth: Math.max(1, currentMonth - 11),
       endYear: currentYear,
       endMonth: currentMonth,
       limit: 12,
@@ -98,10 +111,9 @@ export default function PeakPeriodsChart() {
     periodType === "daily"
       ? (dailyError as unknown as Error | null)
       : periodType === "weekly"
-      ? (weeklyError as unknown as Error | null)
-      : (monthlyError as unknown as Error | null);
+        ? (weeklyError as unknown as Error | null)
+        : (monthlyError as unknown as Error | null);
 
-  // Chart configuration
   const chartConfig = {
     cost: {
       label: "Cost",
@@ -109,21 +121,18 @@ export default function PeakPeriodsChart() {
     },
   } satisfies ChartConfig;
 
-  // Helper to format date safely
   const formatDate = (dateString: string | undefined | null): string => {
     if (!dateString) return "Unknown Date";
     try {
-      // Handle ISO date strings and YYYY-MM-DD format
       const date = new Date(dateString);
-      if (isNaN(date.getTime())) {
-        // Try parsing as YYYY-MM-DD if direct parsing fails
+      if (Number.isNaN(date.getTime())) {
         const parts = dateString.split("-");
         if (parts.length === 3) {
           const year = parseInt(parts[0], 10);
           const month = parseInt(parts[1], 10) - 1;
           const day = parseInt(parts[2], 10);
           const parsedDate = new Date(year, month, day);
-          if (!isNaN(parsedDate.getTime())) {
+          if (!Number.isNaN(parsedDate.getTime())) {
             const formatted = parsedDate.toLocaleDateString("en-US", {
               month: "short",
               day: "numeric",
@@ -139,37 +148,32 @@ export default function PeakPeriodsChart() {
         day: "numeric",
         year: "numeric",
       });
-      return formatted.replace(",", ""); // "Nov 3 2025"
+      return formatted.replace(",", "");
     } catch {
       return "Invalid Date";
     }
   };
 
-  // Helper to format month/year safely
   const formatMonthYear = (year: number, month: number): string => {
     try {
       const date = new Date(year, month - 1);
-      if (isNaN(date.getTime())) {
-        return `${year}-${month}`; // Fallback format
-      }
+      if (Number.isNaN(date.getTime())) return `${year}-${month}`;
       const formatted = date.toLocaleDateString("en-US", {
         month: "short",
         year: "numeric",
       });
-      return formatted.replace(",", ""); // "Nov 2025"
+      return formatted.replace(",", "");
     } catch {
-      return `${year}-${month}`; // Fallback format
+      return `${year}-${month}`;
     }
   };
 
-  // Transform and sort data to get top 10 peak periods
   const peakData = useMemo(() => {
     let data: Array<{ period: string; cost: number; renders: number }> = [];
 
     if (periodType === "daily" && dailyData) {
       data = dailyData
         .map((rollup) => {
-          // Try date first, then periodStart as fallback
           const dateStr = rollup.date || rollup.periodStart;
           const period = formatDate(dateStr);
           return {
@@ -180,7 +184,7 @@ export default function PeakPeriodsChart() {
         })
         .filter(
           (item) =>
-            item.period !== "Invalid Date" && item.period !== "Unknown Date"
+            item.period !== "Invalid Date" && item.period !== "Unknown Date",
         )
         .sort((a, b) => b.cost - a.cost)
         .slice(0, 10);
@@ -214,133 +218,147 @@ export default function PeakPeriodsChart() {
     return data;
   }, [periodType, dailyData, weeklyData, monthlyData]);
 
-  // Summary stats for ChartCard
   const summaryStats: ChartSummaryStat[] = useMemo(() => {
     if (peakData.length === 0) return [];
+    const top = peakData[0];
     const total = peakData.reduce((sum, p) => sum + p.cost, 0);
     const average = peakData.length > 0 ? total / peakData.length : 0;
     return [
       {
         icon: Calendar,
-        label: "Peak Period",
-        value: peakData[0]?.period || "N/A",
+        label: "#1 period",
+        value: top?.period ?? "—",
       },
       {
         icon: DollarSign,
-        label: "Total (Top 10)",
-        value: formatCurrency(total),
+        label: "Peak cost",
+        value: formatCurrency(top?.cost ?? 0),
       },
       {
         icon: TrendingUp,
-        label: "Avg (Top 10)",
+        label: "Avg (top 10)",
         value: formatCurrency(average),
       },
     ];
   }, [peakData]);
 
-  if (isLoading)
-    return <LoadingState message={`Loading peak ${periodType} periods...`} />;
-  if (isError && error)
+  if (isLoading) {
+    return (
+      <LoadingState variant="minimal" message={`Loading peak ${periodType}…`} />
+    );
+  }
+  if (isError && error) {
     return (
       <ErrorState
-        variant="card"
+        variant="minimal"
         title={`Unable to load peak ${periodType} periods`}
         error={error as unknown as Error}
       />
     );
+  }
+
+  const chart = (
+    <ChartCard
+      title={showHeader ? "Peak periods (top 10)" : "Ranked by cost"}
+      description={
+        showHeader
+          ? `Highest-cost ${periodType} buckets in the rollup library`
+          : `${periodType.charAt(0).toUpperCase()}${periodType.slice(1)} · top 10 by spend`
+      }
+      icon={BarChart3}
+      chartConfig={chartConfig}
+      summaryStats={summaryStats}
+      summaryStatsLayout="inline"
+      chartClassName="h-[320px]"
+      emptyStateMessage={`No ${periodType} data for peak periods`}
+    >
+      {peakData.length > 0 ? (
+        <BarChart data={peakData} layout="vertical">
+          <CartesianGrid strokeDasharray="3 3" vertical={false} />
+          <XAxis
+            type="number"
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(value) => formatCurrency(value)}
+          />
+          <YAxis
+            dataKey="period"
+            type="category"
+            width={110}
+            tick={{ fontSize: 12 }}
+            tickLine={false}
+            axisLine={false}
+          />
+          <ChartTooltip
+            content={({ active, payload }) => {
+              if (!active || !payload || !payload[0]) return null;
+              const row = payload[0].payload as {
+                period: string;
+                cost: number;
+                renders: number;
+              };
+              return (
+                <ChartTooltipContent
+                  active={active}
+                  payload={payload}
+                  label={row.period}
+                  formatter={(value, name) => {
+                    if (name === "cost") {
+                      return [formatCurrency(value as number), "Cost"];
+                    }
+                    return [formatNumber(value as number), String(name)];
+                  }}
+                />
+              );
+            }}
+          />
+          <Bar
+            dataKey="cost"
+            fill="var(--color-cost)"
+            radius={[0, 4, 4, 0]}
+          />
+        </BarChart>
+      ) : null}
+    </ChartCard>
+  );
+
+  if (!showHeader) {
+    return chart;
+  }
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-lg font-semibold">Peak Periods (Top 10)</h3>
+          <h3 className="text-lg font-semibold">Peak periods</h3>
           <p className="text-sm text-muted-foreground">
-            Top 10 peak periods by cost ({periodType})
+            Top 10 by cost ({periodType})
           </p>
         </div>
-        <Select
-          value={periodType}
-          onValueChange={(v) => setPeriodType(v as PeriodType)}
-        >
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="daily">Daily</SelectItem>
-            <SelectItem value="weekly">Weekly</SelectItem>
-            <SelectItem value="monthly">Monthly</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <ChartCard
-        title=""
-        description=""
-        chartConfig={chartConfig}
-        summaryStats={summaryStats}
-        chartClassName="h-[350px]"
-        emptyStateMessage={`No ${periodType} data available for peak periods`}
-      >
-        {peakData.length > 0 ? (
-          <BarChart data={peakData} layout="vertical">
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              type="number"
-              tickLine={false}
-              axisLine={false}
-              tickFormatter={(value) => formatCurrency(value)}
-            />
-            <YAxis
-              dataKey="period"
-              type="category"
-              width={100}
-              tick={{ fontSize: 12 }}
-              tickLine={false}
-              axisLine={false}
-            />
-            <ChartTooltip
-              content={({ active, payload }) => {
-                if (!active || !payload || !payload[0]) return null;
-                const data = payload[0].payload as {
-                  period: string;
-                  cost: number;
-                  renders: number;
-                };
-                return (
-                  <div className="relative">
-                    <ChartTooltipContent
-                      active={active}
-                      payload={payload}
-                      label={data.period}
-                      formatter={(value) => [
-                        formatCurrency(value as number),
-                        "Cost",
-                      ]}
-                    />
-                    <div className="absolute -bottom-8 left-0 right-0 flex justify-center">
-                      <div className="text-xs text-muted-foreground bg-background px-2 py-1 rounded border">
-                        Renders: {data.renders.toLocaleString()}
-                      </div>
-                    </div>
-                  </div>
-                );
-              }}
-            />
-            <Bar
-              dataKey="cost"
-              fill="var(--color-cost)"
-              radius={[0, 4, 4, 0]}
-            />
-          </BarChart>
+        {onPeriodTypeChange ? (
+          <Select
+            value={periodType}
+            onValueChange={(v) => onPeriodTypeChange(v as PeakPeriodType)}
+          >
+            <SelectTrigger className="h-9 w-[130px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="daily">Daily</SelectItem>
+              <SelectItem value="weekly">Weekly</SelectItem>
+              <SelectItem value="monthly">Monthly</SelectItem>
+            </SelectContent>
+          </Select>
         ) : null}
-      </ChartCard>
+      </div>
+      {chart}
     </div>
   );
 }
 
-// Helper function to get week number
 function getWeekNumber(date: Date): number {
   const d = new Date(
-    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
   );
   const dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);

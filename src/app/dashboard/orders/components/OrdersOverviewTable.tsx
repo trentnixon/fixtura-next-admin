@@ -45,6 +45,7 @@ import {
 interface OrdersOverviewTableProps {
   orders: OrderOverviewRow[];
   currency?: string | null;
+  embedded?: boolean;
 }
 
 type SortField = "account" | "orderLength" | "updatedAt" | "total" | null;
@@ -70,6 +71,7 @@ import { centsToUnits } from "../utils/currencyHelpers";
 export function OrdersOverviewTable({
   orders,
   currency,
+  embedded = false,
 }: OrdersOverviewTableProps) {
   const currencyCode = currency ?? DEFAULT_CURRENCY;
   const [searchQuery, setSearchQuery] = useState("");
@@ -248,17 +250,27 @@ export function OrdersOverviewTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h3 className="text-base font-semibold text-slate-900">Orders</h3>
-          <p className="text-sm text-muted-foreground">
-            Showing {formatNumber(paginatedOrders.length)} of{" "}
-            {formatNumber(sortedOrders.length)} results
-            {sortedOrders.length !== orders.length &&
-              ` (filtered from ${formatNumber(orders.length)} total)`}
-          </p>
+      {!embedded ? (
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h3 className="text-base font-semibold text-slate-900">Orders</h3>
+            <p className="text-sm text-muted-foreground">
+              Showing {formatNumber(paginatedOrders.length)} of{" "}
+              {formatNumber(sortedOrders.length)} results
+              {sortedOrders.length !== orders.length &&
+                ` (filtered from ${formatNumber(orders.length)} total)`}
+            </p>
+          </div>
         </div>
-      </div>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          Showing {formatNumber(paginatedOrders.length)} of{" "}
+          {formatNumber(sortedOrders.length)} in view
+          {sortedOrders.length !== orders.length
+            ? ` (filtered from ${formatNumber(orders.length)})`
+            : ""}
+        </p>
+      )}
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="relative flex-1">

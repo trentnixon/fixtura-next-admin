@@ -1,19 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { useDailyRollupsRange } from "@/hooks/rollups/useDailyRollupsRange";
-import { useWeeklyRollupsRange } from "@/hooks/rollups/useWeeklyRollupsRange";
-import { useMonthlyRollupsRange } from "@/hooks/rollups/useMonthlyRollupsRange";
+import { useMemo } from "react";
+import { useRouter } from "next/navigation";
+import { CalendarRange, Clapperboard, Cpu, DollarSign } from "lucide-react";
+import ChartSummaryStats from "@/components/modules/charts/ChartSummaryStats";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
-import { formatCurrency, formatNumber } from "./_utils/formatCurrency";
 import {
   Table,
   TableBody,
@@ -22,98 +14,71 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useDailyRollupsRange } from "@/hooks/rollups/useDailyRollupsRange";
+import { useWeeklyRollupsRange } from "@/hooks/rollups/useWeeklyRollupsRange";
+import { useMonthlyRollupsRange } from "@/hooks/rollups/useMonthlyRollupsRange";
+import {
+  formatCurrency,
+  formatNumber,
+  formatPercentage,
+} from "@/utils/chart-formatters";
+import { formatPeriodDate } from "./_utils/budgetChartHelpers";
+import {
+  getDailyRollupRangeParams,
+  getMonthlyRollupRangeParams,
+  getWeeklyRollupRangeParams,
+} from "./_utils/budgetRollupRanges";
+import { extractGlobalLambdaAi } from "./_utils/extractGlobalCosts";
+import { getPeriodDetailUrl } from "./_utils/navigation";
+import type { PeakPeriodType } from "./PeakPeriodsChart";
 
-type PeriodType = "daily" | "weekly" | "monthly";
+export type RollupTablePeriodType = PeakPeriodType;
 
-// Helper to format period dates for display
-const formatPeriodDate = (dateString: string | undefined | null): string => {
-  if (!dateString) return "Unknown Date";
-  try {
-    // Handle ISO date strings and YYYY-MM-DD format
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) {
-      // Try parsing as YYYY-MM-DD if direct parsing fails
-      const parts = dateString.split("-");
-      if (parts.length === 3) {
-        const year = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1;
-        const day = parseInt(parts[2], 10);
-        const parsedDate = new Date(year, month, day);
-        if (!isNaN(parsedDate.getTime())) {
-          return parsedDate.toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          });
-        }
-      }
-      return "Invalid Date";
-    }
-    return date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  } catch {
-    return "Invalid Date";
-  }
+interface PeriodTableProps {
+  periodType?: RollupTablePeriodType;
+  showHeader?: boolean;
+}
+
+type PeriodRow = {
+  id: number | string;
+  label: string;
+  periodKey: string;
+  sortKey?: number;
+  totalCost: number;
+  lambda: number | null;
+  ai: number | null;
+  renders: number;
+  schedulers?: number;
+  avgDaily?: number;
 };
 
-export default function PeriodTable() {
-  const [periodType, setPeriodType] = useState<PeriodType>("daily");
+export default function PeriodTable({
+  periodType = "daily",
+  showHeader = true,
+}: PeriodTableProps) {
+  const router = useRouter();
 
-  // Calculate default date ranges
-  const dailyParams = useMemo(() => {
-    const end = new Date();
-    const start = new Date(end);
-    start.setDate(end.getDate() - 29); // Last 30 days
-    return {
-      startDate: start.toISOString().slice(0, 10),
-      endDate: end.toISOString().slice(0, 10),
-      limit: 30,
-    };
-  }, []);
-
-  const weeklyParams = useMemo(() => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentWeek = getWeekNumber(now);
-    return {
-      startYear: currentYear,
-      startWeek: Math.max(1, currentWeek - 11), // Last 12 weeks
-      endYear: currentYear,
-      endWeek: currentWeek,
-      limit: 12,
-    };
-  }, []);
-
-  const monthlyParams = useMemo(() => {
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth() + 1;
-    return {
-      startYear: currentYear,
-      startMonth: Math.max(1, currentMonth - 11), // Last 12 months
-      endYear: currentYear,
-      endMonth: currentMonth,
-      limit: 12,
-    };
-  }, []);
+  const dailyParams = useMemo(() => getDailyRollupRangeParams(30), []);
+  const weeklyParams = useMemo(() => getWeeklyRollupRangeParams(12), []);
+  const monthlyParams = useMemo(() => getMonthlyRollupRangeParams(12), []);
 
   const {
     data: dailyData,
     isLoading: dailyLoading,
     isError: dailyError,
+    error: dailyErr,
   } = useDailyRollupsRange(dailyParams);
   const {
     data: weeklyData,
     isLoading: weeklyLoading,
     isError: weeklyError,
+    error: weeklyErr,
   } = useWeeklyRollupsRange(weeklyParams);
   const {
     data: monthlyData,
     isLoading: monthlyLoading,
     isError: monthlyError,
+    error: monthlyErr,
   } = useMonthlyRollupsRange(monthlyParams);
 
   const isLoading =
@@ -126,267 +91,232 @@ export default function PeriodTable() {
     (periodType === "weekly" && weeklyError) ||
     (periodType === "monthly" && monthlyError);
 
-  if (isLoading)
-    return <LoadingState message={`Loading ${periodType} rollups...`} />;
-  if (isError)
+  const rows: PeriodRow[] = useMemo(() => {
+    if (periodType === "daily" && dailyData) {
+      return [...dailyData]
+        .map((rollup) => {
+          const { lambda, ai } = extractGlobalLambdaAi(rollup.costBreakdown);
+          const periodKey = rollup.date || rollup.periodStart;
+          return {
+            id: rollup.id,
+            label: formatPeriodDate(periodKey),
+            periodKey,
+            totalCost: rollup.totalCost ?? 0,
+            lambda,
+            ai,
+            renders: rollup.totalRenders ?? 0,
+            schedulers: rollup.totalSchedulers ?? 0,
+          };
+        })
+        .sort(
+          (a, b) =>
+            new Date(b.periodKey).getTime() - new Date(a.periodKey).getTime(),
+        );
+    }
+
+    if (periodType === "weekly" && weeklyData) {
+      return [...weeklyData]
+        .map((rollup) => {
+          const { lambda, ai } = extractGlobalLambdaAi(rollup.costBreakdown);
+          const periodKey = `${rollup.year}-W${rollup.week}`;
+          return {
+            id: rollup.id,
+            label: `${rollup.year} W${rollup.week}`,
+            periodKey,
+            sortKey: rollup.year * 100 + rollup.week,
+            totalCost: rollup.totalCost ?? 0,
+            lambda,
+            ai,
+            renders: rollup.totalRenders ?? 0,
+            avgDaily: rollup.averageDailyCost,
+          };
+        })
+        .sort((a, b) => (b.sortKey ?? 0) - (a.sortKey ?? 0));
+    }
+
+    if (periodType === "monthly" && monthlyData) {
+      return [...monthlyData]
+        .map((rollup) => {
+          const { lambda, ai } = extractGlobalLambdaAi(rollup.costBreakdown);
+          const periodKey = `${rollup.year}-${String(rollup.month).padStart(2, "0")}`;
+          const date = new Date(rollup.year, rollup.month - 1);
+          return {
+            id: rollup.id,
+            label: date.toLocaleDateString("en-US", {
+              month: "long",
+              year: "numeric",
+            }),
+            periodKey,
+            sortKey: rollup.year * 100 + rollup.month,
+            totalCost: rollup.totalCost ?? 0,
+            lambda,
+            ai,
+            renders: rollup.totalRenders ?? 0,
+          };
+        })
+        .sort((a, b) => (b.sortKey ?? 0) - (a.sortKey ?? 0));
+    }
+
+    return [];
+  }, [periodType, dailyData, weeklyData, monthlyData]);
+
+  const totals = useMemo(() => {
+    const totalCost = rows.reduce((sum, r) => sum + r.totalCost, 0);
+    const totalRenders = rows.reduce((sum, r) => sum + r.renders, 0);
+    const totalLambda = rows.reduce((sum, r) => sum + (r.lambda ?? 0), 0);
+    const totalAi = rows.reduce((sum, r) => sum + (r.ai ?? 0), 0);
+    const infra = totalLambda + totalAi;
+    return {
+      totalCost,
+      totalRenders,
+      totalLambda,
+      totalAi,
+      aiShare: infra > 0 ? (totalAi / infra) * 100 : 0,
+      avgBucket: rows.length > 0 ? totalCost / rows.length : 0,
+      avgPerRender: totalRenders > 0 ? totalCost / totalRenders : 0,
+    };
+  }, [rows]);
+
+  if (isLoading) {
+    return (
+      <LoadingState variant="minimal" message={`Loading ${periodType} rollups…`} />
+    );
+  }
+  if (isError) {
+    const err = (dailyErr || weeklyErr || monthlyErr) as Error;
     return (
       <ErrorState
-        variant="card"
+        variant="minimal"
         title={`Unable to load ${periodType} rollups`}
-        error={
-          (periodType === "daily"
-            ? dailyError
-            : periodType === "weekly"
-            ? weeklyError
-            : monthlyError) as unknown as Error
-        }
+        error={err}
       />
     );
+  }
+
+  if (rows.length === 0) {
+    return (
+      <p className="py-8 text-center text-sm text-muted-foreground">
+        No {periodType} rollup data in this library window.
+      </p>
+    );
+  }
+
+  const periodColumn =
+    periodType === "daily"
+      ? "Date"
+      : periodType === "weekly"
+        ? "Week"
+        : "Month";
 
   return (
-    <div className="space-y-4 w-full">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Period Rollup Table</h3>
-        <Select
-          value={periodType}
-          onValueChange={(v) => setPeriodType(v as PeriodType)}
-        >
-          <SelectTrigger className="w-32">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="daily">Daily</SelectItem>
-            <SelectItem value="weekly">Weekly</SelectItem>
-            <SelectItem value="monthly">Monthly</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      {((periodType === "daily" && dailyData && dailyData.length > 0) ||
-        (periodType === "weekly" && weeklyData && weeklyData.length > 0) ||
-        (periodType === "monthly" &&
-          monthlyData &&
-          monthlyData.length > 0)) && (
-        <div className="space-y-4">
-          <div className="border rounded-lg overflow-hidden shadow-none w-full">
-            <Table className="w-full">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>
-                      {periodType === "daily"
-                        ? "Date"
-                        : periodType === "weekly"
-                        ? "Week"
-                        : "Month"}
-                    </TableHead>
-                    <TableHead className="text-right">Total Cost</TableHead>
-                    <TableHead className="text-right">Lambda Cost</TableHead>
-                    <TableHead className="text-right">AI Cost</TableHead>
-                    <TableHead className="text-right">Renders</TableHead>
-                    {periodType === "daily" && (
-                      <TableHead className="text-right">Schedulers</TableHead>
-                    )}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {periodType === "daily" &&
-                    dailyData?.map((rollup) => {
-                      // Try to get lambda and AI costs from costBreakdown
-                      const lambdaCost =
-                        rollup.costBreakdown?.global?.lambda ??
-                        rollup.costBreakdown?.global?.["lambda"] ??
-                        rollup.costBreakdown?.global?.["lambdaCost"] ??
-                        null;
-                      const aiCost =
-                        rollup.costBreakdown?.global?.ai ??
-                        rollup.costBreakdown?.global?.["ai"] ??
-                        rollup.costBreakdown?.global?.["aiCost"] ??
-                        null;
-                      return (
-                        <TableRow key={rollup.id}>
-                          <TableCell className="font-medium">
-                            {formatPeriodDate(rollup.date || rollup.periodStart)}
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            {formatCurrency(rollup.totalCost)}
-                          </TableCell>
-                          <TableCell className="text-right text-sm">
-                            {lambdaCost != null
-                              ? formatCurrency(lambdaCost)
-                              : "-"}
-                          </TableCell>
-                          <TableCell className="text-right text-sm">
-                            {aiCost != null ? formatCurrency(aiCost) : "-"}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatNumber(rollup.totalRenders)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatNumber(rollup.totalSchedulers)}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  {periodType === "weekly" &&
-                    weeklyData?.map((rollup) => {
-                      const lambdaCost =
-                        rollup.costBreakdown?.global?.lambda ??
-                        rollup.costBreakdown?.global?.["lambda"] ??
-                        rollup.costBreakdown?.global?.["lambdaCost"] ??
-                        null;
-                      const aiCost =
-                        rollup.costBreakdown?.global?.ai ??
-                        rollup.costBreakdown?.global?.["ai"] ??
-                        rollup.costBreakdown?.global?.["aiCost"] ??
-                        null;
-                      return (
-                        <TableRow key={rollup.id}>
-                          <TableCell className="font-medium">
-                            {rollup.year} W{rollup.week}
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            {formatCurrency(rollup.totalCost)}
-                          </TableCell>
-                          <TableCell className="text-right text-sm">
-                            {lambdaCost != null
-                              ? formatCurrency(lambdaCost)
-                              : "-"}
-                          </TableCell>
-                          <TableCell className="text-right text-sm">
-                            {aiCost != null ? formatCurrency(aiCost) : "-"}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatNumber(rollup.totalRenders)}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  {periodType === "monthly" &&
-                    monthlyData?.map((rollup) => {
-                      const lambdaCost =
-                        rollup.costBreakdown?.global?.lambda ??
-                        rollup.costBreakdown?.global?.["lambda"] ??
-                        rollup.costBreakdown?.global?.["lambdaCost"] ??
-                        null;
-                      const aiCost =
-                        rollup.costBreakdown?.global?.ai ??
-                        rollup.costBreakdown?.global?.["ai"] ??
-                        rollup.costBreakdown?.global?.["aiCost"] ??
-                        null;
-                      const date = new Date(rollup.year, rollup.month - 1);
-                      return (
-                        <TableRow key={rollup.id}>
-                          <TableCell className="font-medium">
-                            {date.toLocaleDateString("en-US", {
-                              month: "long",
-                              year: "numeric",
-                            })}
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            {formatCurrency(rollup.totalCost)}
-                          </TableCell>
-                          <TableCell className="text-right text-sm">
-                            {lambdaCost != null
-                              ? formatCurrency(lambdaCost)
-                              : "-"}
-                          </TableCell>
-                          <TableCell className="text-right text-sm">
-                            {aiCost != null ? formatCurrency(aiCost) : "-"}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatNumber(rollup.totalRenders)}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                </TableBody>
-              </Table>
-          </div>
+    <div className="space-y-4">
+      {showHeader ? (
+        <div>
+          <h3 className="text-lg font-semibold">Period rollup table</h3>
+          <p className="text-sm text-muted-foreground">
+            Latest {periodType} buckets from the rollup library — click a row to
+            open period detail when available.
+          </p>
+        </div>
+      ) : null}
 
-            {/* Summary totals */}
-            {(() => {
-              const currentData =
-                periodType === "daily"
-                  ? dailyData
-                  : periodType === "weekly"
-                  ? weeklyData
-                  : monthlyData;
-              if (!currentData || currentData.length === 0) return null;
+      <ChartSummaryStats
+        layout="inline"
+        stats={[
+          {
+            icon: DollarSign,
+            label: "Total cost",
+            value: formatCurrency(totals.totalCost),
+          },
+          {
+            icon: Clapperboard,
+            label: "Renders",
+            value: formatNumber(totals.totalRenders),
+          },
+          {
+            icon: Cpu,
+            label: "Lambda / AI",
+            value: `${formatCurrency(totals.totalLambda)} / ${formatCurrency(totals.totalAi)}`,
+          },
+          {
+            icon: CalendarRange,
+            label: "Avg / render",
+            value: formatCurrency(totals.avgPerRender),
+          },
+          {
+            icon: Cpu,
+            label: "AI share",
+            value: formatPercentage(totals.aiShare),
+          },
+        ]}
+      />
+
+      <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>{periodColumn}</TableHead>
+              <TableHead className="text-right">Total</TableHead>
+              <TableHead className="text-right">Lambda</TableHead>
+              <TableHead className="text-right">AI</TableHead>
+              <TableHead className="text-right">Renders</TableHead>
+              {periodType === "daily" ? (
+                <TableHead className="text-right">Schedulers</TableHead>
+              ) : null}
+              {periodType === "weekly" ? (
+                <TableHead className="text-right">Avg / day</TableHead>
+              ) : null}
+              <TableHead className="text-right">Avg / render</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {rows.map((row) => {
+              const avgRender =
+                row.renders > 0 ? row.totalCost / row.renders : null;
               return (
-                <div className="grid grid-cols-4 gap-4 p-4 bg-muted rounded-lg">
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-1">
-                      Total Cost
-                    </div>
-                    <div className="text-lg font-semibold">
-                      {formatCurrency(
-                        currentData.reduce(
-                          (sum, r) => sum + (r.totalCost ?? 0),
-                          0
-                        )
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-1">
-                      Total Renders
-                    </div>
-                    <div className="text-lg font-semibold">
-                      {formatNumber(
-                        currentData.reduce(
-                          (sum, r) => sum + (r.totalRenders ?? 0),
-                          0
-                        )
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-1">
-                      Avg Cost
-                    </div>
-                    <div className="text-lg font-semibold">
-                      {formatCurrency(
-                        currentData.length > 0
-                          ? currentData.reduce(
-                              (sum, r) => sum + (r.totalCost ?? 0),
-                              0
-                            ) / currentData.length
-                          : 0
-                      )}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-muted-foreground mb-1">
-                      Periods
-                    </div>
-                    <div className="text-lg font-semibold">
-                      {currentData.length}
-                    </div>
-                  </div>
-                </div>
+                <TableRow
+                  key={row.id}
+                  className="cursor-pointer hover:bg-slate-50"
+                  onClick={() =>
+                    router.push(
+                      getPeriodDetailUrl(row.periodKey, periodType),
+                    )
+                  }
+                >
+                  <TableCell className="font-medium">{row.label}</TableCell>
+                  <TableCell className="text-right font-medium tabular-nums">
+                    {formatCurrency(row.totalCost)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-sm">
+                    {row.lambda != null ? formatCurrency(row.lambda) : "—"}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums text-sm">
+                    {row.ai != null ? formatCurrency(row.ai) : "—"}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {formatNumber(row.renders)}
+                  </TableCell>
+                  {periodType === "daily" ? (
+                    <TableCell className="text-right tabular-nums">
+                      {formatNumber(row.schedulers ?? 0)}
+                    </TableCell>
+                  ) : null}
+                  {periodType === "weekly" ? (
+                    <TableCell className="text-right tabular-nums text-sm">
+                      {row.avgDaily != null
+                        ? formatCurrency(row.avgDaily)
+                        : "—"}
+                    </TableCell>
+                  ) : null}
+                  <TableCell className="text-right tabular-nums text-sm text-muted-foreground">
+                    {avgRender != null ? formatCurrency(avgRender) : "—"}
+                  </TableCell>
+                </TableRow>
               );
-            })()}
-        </div>
-      )}
-      {((periodType === "daily" && (!dailyData || dailyData.length === 0)) ||
-        (periodType === "weekly" &&
-          (!weeklyData || weeklyData.length === 0)) ||
-        (periodType === "monthly" &&
-          (!monthlyData || monthlyData.length === 0))) && (
-        <div className="text-sm text-muted-foreground text-center py-8">
-          No {periodType} rollup data available
-        </div>
-      )}
+            })}
+          </TableBody>
+        </Table>
+      </div>
     </div>
   );
-}
-
-// Helper function to get week number
-function getWeekNumber(date: Date): number {
-  const d = new Date(
-    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
-  );
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
 }

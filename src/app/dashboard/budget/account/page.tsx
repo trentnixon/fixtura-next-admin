@@ -3,9 +3,9 @@
 import { useRouter } from "next/navigation";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
-import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
+import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
 import { useTopAccountsByCost } from "@/hooks/rollups/useTopAccountsByCost";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import { ChevronRight } from "lucide-react";
@@ -39,19 +39,22 @@ export default function AccountAnalyticsListPage() {
         title="Account Analytics"
         byLine="Account-specific cost analysis and trends"
         byLineBottom="Select an account to view detailed analytics"
-      />
+      >
+        <DashboardLinkButton href="/dashboard/budget" trailingIcon="arrow">
+          Budget overview
+        </DashboardLinkButton>
+      </CreatePageTitle>
 
-      <PageContainer padding="xs" spacing="lg">
-        {/* Account Selection Section */}
-        <SectionContainer
-          title="Select Account"
-          description="Choose an account to view detailed cost analytics"
+      <PageContainer padding="xs" spacing="md">
+        <OverviewRecordPanel
+          title="Select account"
+          description="Accounts ranked by all-time render cost."
         >
-          <Card className="bg-white border shadow-none">
-            <CardHeader className="p-4">
-              <CardTitle>Accounts</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4">
+          <div className="rounded-md border border-slate-200 bg-white">
+            <div className="border-b border-slate-200 px-4 py-3">
+              <h3 className="text-sm font-semibold text-slate-900">Accounts</h3>
+            </div>
+            <div className="p-4">
               {accountsLoading && (
                 <LoadingState message="Loading accounts..." />
               )}
@@ -109,20 +112,9 @@ export default function AccountAnalyticsListPage() {
                   No accounts found
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </SectionContainer>
-
-        <SectionContainer
-          title="Account Analytics"
-          description="Select an account from the list above to view analytics"
-        >
-          <div className="text-center py-12 text-muted-foreground">
-            <p className="text-sm">
-              Please select an account from the list above to view detailed analytics.
-            </p>
+            </div>
           </div>
-        </SectionContainer>
+        </OverviewRecordPanel>
       </PageContainer>
     </>
   );

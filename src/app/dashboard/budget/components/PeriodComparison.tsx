@@ -1,24 +1,88 @@
 "use client";
 
-import { useGlobalCostSummary } from "@/hooks/rollups/useGlobalCostSummary";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency, formatNumber } from "./_utils/formatCurrency";
+import { ArrowDown, ArrowUp, GitCompare, Minus } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import ChartSummaryStats, {
+  type ChartSummaryStat,
+} from "@/components/modules/charts/ChartSummaryStats";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
-import { ArrowUp, ArrowDown, Minus } from "lucide-react";
-import { SummaryPeriod } from "./PeriodControls";
+import { useGlobalCostSummary } from "@/hooks/rollups/useGlobalCostSummary";
+import {
+  formatCurrency,
+  formatNumber,
+  formatPercentage,
+} from "@/utils/chart-formatters";
+import { periodLabel } from "./_utils/budgetPeriods";
+import type { SummaryPeriod } from "./PeriodControls";
 
 interface PeriodComparisonProps {
   currentPeriod?: SummaryPeriod;
   comparePeriod?: SummaryPeriod;
 }
 
-const PERIOD_LABELS: Record<string, string> = {
-  "current-month": "Current Month",
-  "last-month": "Last Month",
-  "current-year": "Current Year",
-  "all-time": "All Time",
+type ChangeResult = {
+  value: number;
+  percentage: number;
+  direction: "stable" | "up" | "down";
 };
+
+function calculateChange(current: number, previous: number): ChangeResult {
+  if (previous === 0) return { value: 0, percentage: 0, direction: "stable" };
+  const change = current - previous;
+  const percentage = (change / previous) * 100;
+  return {
+    value: change,
+    percentage: Math.abs(percentage),
+    direction: change > 0 ? "up" : change < 0 ? "down" : "stable",
+  };
+}
+
+function changeStat(
+  label: string,
+  change: ChangeResult,
+  invertColors = false,
+): ChartSummaryStat {
+  const Icon =
+    change.direction === "up"
+      ? ArrowUp
+      : change.direction === "down"
+        ? ArrowDown
+        : Minus;
+
+  const upClass = invertColors ? "text-green-600" : "text-red-600";
+  const downClass = invertColors ? "text-red-600" : "text-green-600";
+  const colorClass =
+    change.direction === "up"
+      ? upClass
+      : change.direction === "down"
+        ? downClass
+        : "text-muted-foreground";
+
+  return {
+    icon: Icon,
+    label,
+    value:
+      change.percentage > 0 ? (
+        <span className={colorClass}>
+          {formatPercentage(change.percentage)}{" "}
+          {change.direction === "up"
+            ? "↑"
+            : change.direction === "down"
+              ? "↓"
+              : ""}
+        </span>
+      ) : (
+        "No change"
+      ),
+  };
+}
 
 export default function PeriodComparison({
   currentPeriod = "current-month",
@@ -41,7 +105,9 @@ export default function PeriodComparison({
   const isError = currentError || compareError;
 
   if (isLoading) {
-    return <LoadingState message="Loading period comparison..." />;
+    return (
+      <LoadingState variant="minimal" message="Loading period comparison…" />
+    );
   }
 
   if (isError) {
@@ -58,113 +124,109 @@ export default function PeriodComparison({
     return null;
   }
 
-  const calculateChange = (
-    current: number,
-    previous: number
-  ): {
-    value: number;
-    percentage: number;
-    direction: "stable" | "up" | "down";
-  } => {
-    if (previous === 0) return { value: 0, percentage: 0, direction: "stable" };
-    const change = current - previous;
-    const percentage = (change / previous) * 100;
-    return {
-      value: change,
-      percentage: Math.abs(percentage),
-      direction: change > 0 ? "up" : change < 0 ? "down" : "stable",
-    };
-  };
-
   const totalCostChange = calculateChange(
     currentData.totalCost ?? 0,
-    compareData.totalCost ?? 0
+    compareData.totalCost ?? 0,
   );
   const lambdaCostChange = calculateChange(
     currentData.totalLambdaCost ?? 0,
-    compareData.totalLambdaCost ?? 0
+    compareData.totalLambdaCost ?? 0,
   );
   const aiCostChange = calculateChange(
     currentData.totalAiCost ?? 0,
-    compareData.totalAiCost ?? 0
+    compareData.totalAiCost ?? 0,
   );
   const rendersChange = calculateChange(
     currentData.totalRenders ?? 0,
-    compareData.totalRenders ?? 0
+    compareData.totalRenders ?? 0,
+  );
+  const accountsChange = calculateChange(
+    currentData.totalAccounts ?? 0,
+    compareData.totalAccounts ?? 0,
+  );
+  const schedulersChange = calculateChange(
+    currentData.totalSchedulers ?? 0,
+    compareData.totalSchedulers ?? 0,
   );
 
+  const headlineStats: ChartSummaryStat[] = [
+    {
+      icon: GitCompare,
+      label: "Total spend",
+      value: formatCurrency(currentData.totalCost ?? 0),
+    },
+    changeStat("Spend vs prior", totalCostChange),
+    changeStat("Renders vs prior", rendersChange, true),
+    changeStat("Active accounts", accountsChange, true),
+  ];
+
   return (
-    <Card>
+    <Card className="rounded-md border bg-slate-50 shadow-none">
       <CardHeader>
-        <CardTitle>
-          Period Comparison: {PERIOD_LABELS[currentPeriod]} vs{" "}
-          {PERIOD_LABELS[comparePeriod]}
-        </CardTitle>
+        <div className="flex items-center gap-2">
+          <GitCompare className="h-5 w-5 text-muted-foreground" aria-hidden />
+          <CardTitle className="text-lg font-semibold">Period comparison</CardTitle>
+        </div>
+        <CardDescription>
+          {periodLabel(currentPeriod)} compared with {periodLabel(comparePeriod)}
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-6">
-          {/* Total Cost */}
+      <CardContent className="space-y-6">
+        <ChartSummaryStats stats={headlineStats} layout="inline" />
+
+        <div className="space-y-5 rounded-md border border-slate-200 bg-white p-4">
           <ComparisonRow
-            label="Total Cost"
+            label="Total cost"
             current={formatCurrency(currentData.totalCost)}
             previous={formatCurrency(compareData.totalCost)}
             change={totalCostChange}
+            formatDelta={formatCurrency}
           />
 
-          {/* Lambda vs AI Split */}
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+          <div className="grid grid-cols-1 gap-5 border-t border-slate-100 pt-5 sm:grid-cols-2">
             <ComparisonRow
-              label="Lambda Cost"
+              label="Lambda"
               current={formatCurrency(currentData.totalLambdaCost)}
               previous={formatCurrency(compareData.totalLambdaCost)}
               change={lambdaCostChange}
+              formatDelta={formatCurrency}
               compact
             />
             <ComparisonRow
-              label="AI Cost"
+              label="AI"
               current={formatCurrency(currentData.totalAiCost)}
               previous={formatCurrency(compareData.totalAiCost)}
               change={aiCostChange}
+              formatDelta={formatCurrency}
               compact
             />
           </div>
 
-          {/* Renders */}
-          <ComparisonRow
-            label="Total Renders"
-            current={formatNumber(currentData.totalRenders)}
-            previous={formatNumber(compareData.totalRenders)}
-            change={rendersChange}
-          />
-
-          {/* Averages */}
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-            <div>
-              <div className="text-sm text-muted-foreground mb-1">
-                Avg Cost per Render
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold">
-                  {formatCurrency(currentData.averageCostPerRender)}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  vs {formatCurrency(compareData.averageCostPerRender)}
-                </span>
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground mb-1">
-                Avg Cost per Account
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-semibold">
-                  {formatCurrency(currentData.averageCostPerAccount)}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  vs {formatCurrency(compareData.averageCostPerAccount)}
-                </span>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 gap-5 border-t border-slate-100 pt-5 sm:grid-cols-3">
+            <ComparisonRow
+              label="Renders"
+              current={formatNumber(currentData.totalRenders)}
+              previous={formatNumber(compareData.totalRenders)}
+              change={rendersChange}
+              formatDelta={(n) => formatNumber(n)}
+              compact
+            />
+            <ComparisonRow
+              label="Accounts"
+              current={formatNumber(currentData.totalAccounts)}
+              previous={formatNumber(compareData.totalAccounts)}
+              change={accountsChange}
+              formatDelta={(n) => formatNumber(n)}
+              compact
+            />
+            <ComparisonRow
+              label="Schedulers"
+              current={formatNumber(currentData.totalSchedulers)}
+              previous={formatNumber(compareData.totalSchedulers)}
+              change={schedulersChange}
+              formatDelta={(n) => formatNumber(n)}
+              compact
+            />
           </div>
         </div>
       </CardContent>
@@ -176,11 +238,8 @@ interface ComparisonRowProps {
   label: string;
   current: string;
   previous: string;
-  change: {
-    value: number;
-    percentage: number;
-    direction: "up" | "down" | "stable";
-  };
+  change: ChangeResult;
+  formatDelta: (value: number) => string;
   compact?: boolean;
 }
 
@@ -189,37 +248,40 @@ function ComparisonRow({
   current,
   previous,
   change,
+  formatDelta,
   compact = false,
 }: ComparisonRowProps) {
   const Icon =
     change.direction === "up"
       ? ArrowUp
       : change.direction === "down"
-      ? ArrowDown
-      : Minus;
+        ? ArrowDown
+        : Minus;
 
   const colorClass =
     change.direction === "up"
       ? "text-red-600"
       : change.direction === "down"
-      ? "text-green-600"
-      : "text-muted-foreground";
+        ? "text-green-600"
+        : "text-muted-foreground";
 
   if (compact) {
     return (
       <div>
-        <div className="text-sm text-muted-foreground mb-1">{label}</div>
-        <div className="flex items-center gap-2">
-          <span className="text-base font-semibold">{current}</span>
-          {change.percentage > 0 && (
-            <span className={`text-xs flex items-center gap-1 ${colorClass}`}>
-              <Icon className="h-3 w-3" />
-              {change.percentage.toFixed(1)}%
+        <div className="mb-1 text-sm text-muted-foreground">{label}</div>
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-base font-semibold tabular-nums">{current}</span>
+          {change.percentage > 0 ? (
+            <span
+              className={`flex items-center gap-1 text-xs tabular-nums ${colorClass}`}
+            >
+              <Icon className="h-3 w-3" aria-hidden />
+              {formatPercentage(change.percentage)}
             </span>
-          )}
+          ) : null}
         </div>
-        <div className="text-xs text-muted-foreground mt-0.5">
-          Previous: {previous}
+        <div className="mt-0.5 text-xs text-muted-foreground">
+          Prior: {previous}
         </div>
       </div>
     );
@@ -227,37 +289,39 @@ function ComparisonRow({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="text-sm font-medium">{label}</span>
-        {change.percentage > 0 && (
-          <span className={`text-sm flex items-center gap-1 ${colorClass}`}>
-            <Icon className="h-4 w-4" />
-            {change.percentage.toFixed(1)}%{" "}
+        {change.percentage > 0 ? (
+          <span
+            className={`flex items-center gap-1 text-sm tabular-nums ${colorClass}`}
+          >
+            <Icon className="h-4 w-4" aria-hidden />
+            {formatPercentage(change.percentage)}{" "}
             {change.direction === "up" ? "increase" : "decrease"}
           </span>
-        )}
+        ) : null}
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <div className="text-xs text-muted-foreground mb-1">Current</div>
-          <div className="text-lg font-semibold">{current}</div>
+          <div className="mb-1 text-xs text-muted-foreground">Current</div>
+          <div className="text-lg font-semibold tabular-nums">{current}</div>
         </div>
         <div>
-          <div className="text-xs text-muted-foreground mb-1">Previous</div>
-          <div className="text-lg font-semibold text-muted-foreground">
+          <div className="mb-1 text-xs text-muted-foreground">Prior</div>
+          <div className="text-lg font-semibold tabular-nums text-muted-foreground">
             {previous}
           </div>
         </div>
       </div>
-      {change.value !== 0 && (
+      {change.value !== 0 ? (
         <div className="text-xs text-muted-foreground">
-          Change:{" "}
+          Delta:{" "}
           <span className={colorClass}>
             {change.value > 0 ? "+" : ""}
-            {formatCurrency(change.value)}
+            {formatDelta(change.value)}
           </span>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

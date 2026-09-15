@@ -84,6 +84,8 @@ export function OrdersOverviewPaymentChannelChart({
     return chartData.reduce((sum, item) => sum + item.value, 0);
   }, [chartData]);
 
+  const leader = chartData[0];
+
   // Don't render if no data
   if (chartData.length === 0 || total === 0) {
     return null;
@@ -91,11 +93,31 @@ export function OrdersOverviewPaymentChannelChart({
 
   return (
     <ChartCard
-      title="Payment Channel Distribution"
-      description="Breakdown of orders by payment channel"
+      title="Payment channels"
+      description="Orders by Stripe vs invoice vs unset"
       icon={CreditCard}
       chartConfig={chartConfig}
-      chartClassName="h-[300px]"
+      summaryStatsLayout="inline"
+      summaryStats={[
+        {
+          icon: CreditCard,
+          label: "Orders",
+          value: formatNumber(total),
+        },
+        {
+          icon: CreditCard,
+          label: "Top channel",
+          value: leader?.name ?? "—",
+        },
+        {
+          icon: CreditCard,
+          label: "Share",
+          value: leader
+            ? formatPercentage((leader.value / total) * 100)
+            : "—",
+        },
+      ]}
+      chartClassName="h-[260px]"
     >
       <PieChart>
         <Pie

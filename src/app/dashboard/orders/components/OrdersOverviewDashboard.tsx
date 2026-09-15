@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { BarChart3, Gauge, Table2 } from "lucide-react";
 
 import { FetchOrderOverviewParams } from "@/types/orderOverview";
@@ -10,37 +10,36 @@ import ErrorState from "@/components/ui-library/states/ErrorState";
 import EmptyState from "@/components/ui-library/states/EmptyState";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { OrdersOverviewMetrics } from "./OrdersOverviewMetrics";
-import { OrdersOverviewTimeline } from "./OrdersOverviewTimeline";
-import { OrdersOverviewTable } from "./OrdersOverviewTable";
-import { OrdersOverviewPaymentChannelChart } from "./OrdersOverviewPaymentChannelChart";
+import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
 import { findCurrencyFromOrders } from "../utils/orderHelpers";
+import { OrdersSnapshotTab } from "./OrdersSnapshotTab";
+import { OrdersListTab } from "./OrdersListTab";
+import { OrdersAnalyticsTab } from "./OrdersAnalyticsTab";
 
 interface OrdersOverviewDashboardProps {
   filters: FetchOrderOverviewParams;
+  ordersTab?: string;
+  onOrdersTabChange?: (tab: string) => void;
 }
 
 const ordersOverviewTabs = [
-  {
-    value: "snapshot",
-    label: "Snapshot",
-    icon: Gauge,
-  },
-  {
-    value: "orders",
-    label: "Orders",
-    icon: Table2,
-  },
-  {
-    value: "analytics",
-    label: "Analytics",
-    icon: BarChart3,
-  },
-];
+  { value: "snapshot", label: "Snapshot", icon: Gauge },
+  { value: "orders", label: "Orders", icon: Table2 },
+  { value: "analytics", label: "Analytics", icon: BarChart3 },
+] as const;
 
 export function OrdersOverviewDashboard({
   filters,
+  ordersTab: controlledTab,
+  onOrdersTabChange,
 }: OrdersOverviewDashboardProps) {
+  const [internalTab, setInternalTab] = useState("snapshot");
+  const ordersTab = controlledTab ?? internalTab;
+  const setOrdersTab = onOrdersTabChange ?? setInternalTab;
+
   const { data, error, isLoading, isFetching, refetch } =
     useAdminOrderOverview(filters);
 
@@ -82,45 +81,49 @@ export function OrdersOverviewDashboard({
 
   return (
     <div className="space-y-4">
-      {isFetching && (
-        <LoadingState variant="minimal" message="Refreshing orders..." />
-      )}
-      <Tabs defaultValue="snapshot" className="w-full min-w-0 max-w-full">
-        <TabsList className="h-auto w-full flex-wrap justify-start rounded-md bg-slate-100 p-1 lg:w-auto">
-          {ordersOverviewTabs.map((tab) => {
-            const Icon = tab.icon;
+      {isFetching ? (
+        <LoadingState variant="minimal" message="Refreshing orders…" />
+      ) : null}
 
-            return (
+      <Tabs
+        value={ordersTab}
+        onValueChange={setOrdersTab}
+        className="w-full min-w-0 max-w-full"
+      >
+        <div className="pb-8">
+          <TabsList variant="primary" className={sectionTabListClass}>
+            {ordersOverviewTabs.map(({ value, label, icon: Icon }) => (
               <TabsTrigger
-                key={tab.value}
-                value={tab.value}
-                className="min-h-10 gap-2"
+                key={value}
+                value={value}
+                variant="section"
+                className={sectionTabTriggerClass}
               >
-                <Icon className="h-4 w-4" />
-                {tab.label}
+                <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden />
+                {label}
               </TabsTrigger>
-            );
-          })}
-        </TabsList>
+            ))}
+          </TabsList>
+        </div>
 
-        <TabsContent value="snapshot" className="mt-6 space-y-6">
-          <OrdersOverviewMetrics stats={data.stats} currency={currency} />
+        <TabsContent value="snapshot" className="mt-0">
+          <OrdersSnapshotTab
+            filters={filters}
+            stats={data.stats}
+            currency={currency}
+          />
         </TabsContent>
 
-        <TabsContent value="orders" className="mt-6">
-          <OrdersOverviewTable orders={data.orders} currency={currency} />
+        <TabsContent value="orders" className="mt-0">
+          <OrdersListTab orders={data.orders} currency={currency} />
         </TabsContent>
 
-        <TabsContent value="analytics" className="mt-6">
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <OrdersOverviewTimeline
-                timeline={data.timeline}
-                currency={currency}
-              />
-            </div>
-            <OrdersOverviewPaymentChannelChart stats={data.stats} />
-          </div>
+        <TabsContent value="analytics" className="mt-0">
+          <OrdersAnalyticsTab
+            timeline={data.timeline}
+            stats={data.stats}
+            currency={currency}
+          />
         </TabsContent>
       </Tabs>
     </div>

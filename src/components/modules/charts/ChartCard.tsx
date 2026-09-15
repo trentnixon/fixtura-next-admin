@@ -21,6 +21,7 @@ export interface ChartCardProps {
   icon?: LucideIcon;
   chartConfig: ChartConfig;
   summaryStats?: ChartSummaryStat[];
+  summaryStatsLayout?: "stack" | "inline";
   emptyState?: React.ReactNode;
   emptyStateMessage?: string;
   chartClassName?: string;
@@ -61,6 +62,7 @@ export default function ChartCard({
   icon: Icon,
   chartConfig,
   summaryStats = [],
+  summaryStatsLayout = "stack",
   emptyState,
   emptyStateMessage = "No data available",
   chartClassName,
@@ -98,7 +100,10 @@ export default function ChartCard({
           <>
             {/* Summary Stats */}
             {summaryStats.length > 0 && (
-              <ChartSummaryStats stats={summaryStats} />
+              <ChartSummaryStats
+                stats={summaryStats}
+                layout={summaryStatsLayout}
+              />
             )}
 
             {/* Chart */}

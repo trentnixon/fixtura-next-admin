@@ -15,6 +15,8 @@ export interface ChartSummaryStatsProps {
   stats: ChartSummaryStat[];
   columns?: 2 | 3 | 4;
   showBorder?: boolean;
+  /** stack: label above value (default). inline: single-row metrics. */
+  layout?: "stack" | "inline";
   className?: string;
 }
 
@@ -40,6 +42,7 @@ export default function ChartSummaryStats({
   stats,
   columns = 4,
   showBorder = true,
+  layout = "stack",
   className,
 }: ChartSummaryStatsProps) {
   if (stats.length === 0) return null;
@@ -49,6 +52,39 @@ export default function ChartSummaryStats({
     3: "grid-cols-2 md:grid-cols-3",
     4: "grid-cols-2 md:grid-cols-4",
   };
+
+  if (layout === "inline") {
+    return (
+      <div
+        className={cn(
+          "flex flex-wrap items-baseline gap-x-5 gap-y-2 text-sm",
+          showBorder && "border-b pb-3",
+          className,
+        )}
+      >
+        {stats.map((stat, index) => {
+          const StatIcon = stat.icon;
+          return (
+            <div
+              key={index}
+              className={cn("flex min-w-0 items-baseline gap-1.5", stat.className)}
+            >
+              {StatIcon ? (
+                <StatIcon
+                  className="h-3.5 w-3.5 shrink-0 text-muted-foreground"
+                  aria-hidden
+                />
+              ) : null}
+              <span className="shrink-0 text-muted-foreground">{stat.label}</span>
+              <span className="font-semibold tabular-nums text-slate-900">
+                {stat.value}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     <div

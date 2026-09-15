@@ -1,35 +1,44 @@
 "use client";
 
+import { useMemo, useState } from "react";
+import {
+  BarChart3,
+  LayoutDashboard,
+  LineChart,
+  Sparkles,
+} from "lucide-react";
+
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
-import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
-import {} from "@/components/ui/card";
-import PeriodTrendsChart from "./components/PeriodTrendsChart";
-import TopAccountsList from "./components/TopAccountsList";
-import GlobalCostSummaryCard from "./components/GlobalCostSummary";
-import CostBreakdownChart from "./components/CostBreakdownChart";
-import PeriodComparison from "./components/PeriodComparison";
-import PeriodTable from "./components/PeriodTable";
-import PeakPeriodsChart from "./components/PeakPeriodsChart";
-import AccountShareChart from "./components/AccountShareChart";
-import StackedCostTrendsChart from "./components/StackedCostTrendsChart";
-import AnomalyDetection from "./components/AnomalyDetection";
-import CostForecast from "./components/CostForecast";
-import AccountBreakdown from "./components/AccountBreakdown";
-import PeriodControls, {
-  SummaryPeriod,
-  TrendGranularity,
+import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+
+import BudgetOverviewTab from "./components/BudgetOverviewTab";
+import BudgetTrendsTab from "./components/BudgetTrendsTab";
+import BudgetAnalyticsTab from "./components/BudgetAnalyticsTab";
+import BudgetInsightsTab from "./components/BudgetInsightsTab";
+import BudgetWorkspaceHeader from "./components/BudgetWorkspaceHeader";
+import {
+  type SummaryPeriod,
+  type TrendGranularity,
 } from "./components/PeriodControls";
-import BreadcrumbNavigation from "./components/BreadcrumbNavigation";
-import { useMemo, useState } from "react";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+
+const budgetTabs = [
+  { value: "overview", label: "Overview", icon: LayoutDashboard },
+  { value: "trends", label: "Trends", icon: LineChart },
+  { value: "analytics", label: "Analytics", icon: BarChart3 },
+  { value: "insights", label: "Insights", icon: Sparkles },
+] as const;
 
 /**
- * Budget & Costings Page
- *
- * View global render costs and budget analysis.
+ * Budget & costings — global render cost analysis with dashboard-aligned shell.
  */
 export default function BudgetPage() {
+  const [budgetTab, setBudgetTab] = useState("overview");
   const [period, setPeriod] = useState<SummaryPeriod>("current-month");
   const [granularity, setGranularity] = useState<TrendGranularity>("daily");
 
@@ -51,107 +60,79 @@ export default function BudgetPage() {
     <>
       <CreatePageTitle
         title="Budget & Costings"
-        byLine="Global Render Cost Analysis"
-        byLineBottom="View global render costs and budget analysis"
-      />
+        byLine="Global render cost analysis"
+        byLineBottom="Lambda, AI, and render spend across the fleet"
+      >
+        <DashboardLinkButton href="/dashboard/budget/account" trailingIcon="arrow">
+          Account costs
+        </DashboardLinkButton>
+        <DashboardLinkButton
+          href="/dashboard/analytics"
+          trailingIcon="external"
+        >
+          Analytics
+        </DashboardLinkButton>
+      </CreatePageTitle>
 
-      <PageContainer padding="xs" spacing="lg">
-        <BreadcrumbNavigation />
-        <div className="my-4" />
-        <PeriodControls
-          period={period}
-          onChangePeriod={setPeriod}
-          granularity={granularity}
-          onChangeGranularity={setGranularity}
-        />
+      <PageContainer padding="xs" spacing="md">
+        <div className="space-y-6">
+          <BudgetWorkspaceHeader
+            period={period}
+            onChangePeriod={setPeriod}
+            granularity={granularity}
+            onChangeGranularity={setGranularity}
+          />
 
-        <Tabs defaultValue="overview" className="w-full mt-6">
-          <TabsList variant="primary" className="mb-6">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="trends">Trends</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="insights">Insights</TabsTrigger>
-          </TabsList>
+          <Tabs
+            value={budgetTab}
+            onValueChange={setBudgetTab}
+            className="w-full min-w-0 max-w-full"
+          >
+            <div className="pb-8">
+              <TabsList variant="primary" className={sectionTabListClass}>
+                {budgetTabs.map(({ value, label, icon: Icon }) => (
+                  <TabsTrigger
+                    key={value}
+                    value={value}
+                    variant="section"
+                    className={sectionTabTriggerClass}
+                  >
+                    <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden />
+                    {label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </div>
 
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            <SectionContainer
-              title="Global Summary"
-              description="Overview of global costs and period comparisons"
-            >
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <GlobalCostSummaryCard period={period} />
-                <PeriodComparison
-                  currentPeriod={period}
-                  comparePeriod={
-                    period === "current-month" ? "last-month" : "current-month"
-                  }
-                />
-              </div>
-            </SectionContainer>
-          </TabsContent>
+            <TabsContent value="overview" className="mt-0">
+              <BudgetOverviewTab period={period} />
+            </TabsContent>
 
-          {/* Trends Tab */}
-          <TabsContent value="trends" className="space-y-6">
-            <SectionContainer
-              title="Cost Trends"
-              description="Historical cost trends and breakdowns over time"
-            >
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 space-y-6">
-                  <PeriodTrendsChart
-                    granularity={granularity}
-                    startDate={startDate}
-                    endDate={endDate}
-                  />
-                  <StackedCostTrendsChart
-                    granularity={granularity}
-                    startDate={startDate}
-                    endDate={endDate}
-                  />
-                </div>
-                <div className="lg:col-span-1 space-y-6">
-                  <CostBreakdownChart period={period} />
-                  <AccountShareChart period={period} />
-                  <TopAccountsList period={period} />
-                </div>
-              </div>
-            </SectionContainer>
+            <TabsContent value="trends" className="mt-0">
+              <BudgetTrendsTab
+                period={period}
+                granularity={granularity}
+                startDate={startDate}
+                endDate={endDate}
+                onOpenInsights={() => setBudgetTab("insights")}
+              />
+            </TabsContent>
 
-            <SectionContainer
-              title="Peak Periods"
-              description="Top periods by cost across different timeframes"
-            >
-              <PeakPeriodsChart />
-            </SectionContainer>
-          </TabsContent>
+            <TabsContent value="analytics" className="mt-0">
+              <BudgetAnalyticsTab period={period} granularity={granularity} />
+            </TabsContent>
 
-          {/* Analytics Tab */}
-          <TabsContent value="analytics" className="space-y-6">
-            <SectionContainer
-              title="Period Analytics"
-              description="Daily, weekly, and monthly rollup data with account breakdowns"
-            >
-              <div className="space-y-6">
-                <PeriodTable />
-                <AccountBreakdown />
-              </div>
-            </SectionContainer>
-          </TabsContent>
-
-          {/* Insights Tab */}
-          <TabsContent value="insights" className="space-y-6">
-            <SectionContainer
-              title="Advanced Insights"
-              description="Anomaly detection and cost forecasting"
-            >
-              <div className="space-y-6">
-                <AnomalyDetection />
-                <CostForecast />
-              </div>
-            </SectionContainer>
-          </TabsContent>
-        </Tabs>
+            <TabsContent value="insights" className="mt-0">
+              <BudgetInsightsTab
+                period={period}
+                granularity={granularity}
+                startDate={startDate}
+                endDate={endDate}
+                onOpenTrends={() => setBudgetTab("trends")}
+              />
+            </TabsContent>
+          </Tabs>
+        </div>
       </PageContainer>
     </>
   );

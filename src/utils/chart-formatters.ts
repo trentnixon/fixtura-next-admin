@@ -128,7 +128,13 @@ export function formatMemory(
  * formatPercentage(42.123, 2) // "42.12%"
  * ```
  */
-export function formatPercentage(value: number, decimals: number = 1): string {
+export function formatPercentage(
+  value: number | null | undefined,
+  decimals: number = 1,
+): string {
+  if (value == null || !Number.isFinite(value)) {
+    return "—";
+  }
   return `${value.toFixed(decimals)}%`;
 }
 
@@ -147,9 +153,12 @@ export function formatPercentage(value: number, decimals: number = 1): string {
  * ```
  */
 export function formatNumber(
-  value: number,
-  options?: Intl.NumberFormatOptions
+  value: number | null | undefined,
+  options?: Intl.NumberFormatOptions,
 ): string {
+  if (value == null || !Number.isFinite(value)) {
+    return "—";
+  }
   return value.toLocaleString("en-US", options);
 }
 
@@ -295,10 +304,13 @@ export function formatDateISO(dateString: string | Date): string {
  * ```
  */
 export function formatCurrency(
-  value: number,
+  value: number | null | undefined,
   currency: string = "USD",
-  options?: Intl.NumberFormatOptions
+  options?: Intl.NumberFormatOptions,
 ): string {
+  if (value == null || !Number.isFinite(value)) {
+    return "—";
+  }
   return new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,

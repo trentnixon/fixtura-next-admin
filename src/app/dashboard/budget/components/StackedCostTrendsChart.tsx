@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { useGlobalCostTrends } from "@/hooks/rollups/useGlobalCostTrends";
+import { AlertTriangle, Brain, DollarSign, Layers, Zap } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import ChartCard, {
   ChartSummaryStat,
 } from "@/components/modules/charts/ChartCard";
@@ -12,30 +13,18 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import { TrendGranularity } from "./PeriodControls";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
-import { formatCurrency } from "@/utils/chart-formatters";
+import { useGlobalCostTrends } from "@/hooks/rollups/useGlobalCostTrends";
+import {
+  formatCurrency,
+  formatNumber,
+  formatPercentage,
+} from "@/utils/chart-formatters";
 import { detectAnomalies } from "./_utils/calculateAnomalies";
+import { formatPeriodDate } from "./_utils/budgetChartHelpers";
+import { TrendGranularity } from "./PeriodControls";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from "recharts";
-import { AlertTriangle, DollarSign, Zap, Brain } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-
-// Helper to format period dates for X-axis (e.g., "Nov 3 2025")
-const formatPeriodDate = (period: string): string => {
-  try {
-    const date = new Date(period);
-    const formatted = date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-    // Remove comma if present (e.g., "Nov 3, 2025" -> "Nov 3 2025")
-    return formatted.replace(",", "");
-  } catch {
-    return period;
-  }
-};
 
 interface StackedCostTrendsChartProps {
   granularity?: TrendGranularity;
@@ -54,19 +43,17 @@ export default function StackedCostTrendsChart({
     endDate,
   });
 
-  // Chart configuration
   const chartConfig = {
     lambda: {
-      label: "Lambda Cost",
-      color: "#3b82f6",
+      label: "Lambda",
+      color: "hsl(var(--chart-1))",
     },
     ai: {
-      label: "AI Cost",
-      color: "#10b981",
+      label: "AI",
+      color: "hsl(var(--chart-2))",
     },
   } satisfies ChartConfig;
 
-  // Transform data for stacked bar chart and detect anomalies
   const chartData = useMemo(() => {
     if (!data?.dataPoints) return [];
 
@@ -85,6 +72,7 @@ export default function StackedCostTrendsChart({
         lambda: point.totalLambdaCost ?? 0,
         ai: point.totalAiCost ?? 0,
         total: point.totalCost ?? 0,
+        renders: point.totalRenders ?? 0,
         isAnomaly: anomalyIndices.has(index),
         anomalyType: anomaly?.type,
         zScore: anomaly?.zScore,
@@ -94,71 +82,73 @@ export default function StackedCostTrendsChart({
 
   const anomalyCount = chartData.filter((d) => d.isAnomaly).length;
 
-  // Summary stats for ChartCard
   const summaryStats: ChartSummaryStat[] = useMemo(() => {
     if (chartData.length === 0) return [];
     const totalLambda = chartData.reduce((sum, d) => sum + d.lambda, 0);
     const totalAi = chartData.reduce((sum, d) => sum + d.ai, 0);
     const totalCost = chartData.reduce((sum, d) => sum + d.total, 0);
+    const aiShare = totalCost > 0 ? (totalAi / totalCost) * 100 : 0;
 
-    return [
+    const stats: ChartSummaryStat[] = [
       {
         icon: Zap,
-        label: "Total Lambda Cost",
+        label: "Lambda",
         value: formatCurrency(totalLambda),
       },
       {
         icon: Brain,
-        label: "Total AI Cost",
+        label: "AI",
         value: formatCurrency(totalAi),
       },
       {
         icon: DollarSign,
-        label: "Total Cost",
+        label: "Combined",
         value: formatCurrency(totalCost),
       },
+      {
+        icon: Layers,
+        label: "AI share",
+        value: formatPercentage(aiShare),
+      },
     ];
-  }, [chartData]);
 
-  // Add anomaly count to summary stats if anomalies exist
-  const enhancedSummaryStats = useMemo(() => {
     if (anomalyCount > 0) {
-      return [
-        ...summaryStats,
-        {
-          icon: AlertTriangle,
-          label: "Anomalies",
-          value: `${anomalyCount} detected`,
-        },
-      ];
+      stats.push({
+        icon: AlertTriangle,
+        label: "Anomalies",
+        value: formatNumber(anomalyCount),
+      });
     }
-    return summaryStats;
-  }, [summaryStats, anomalyCount]);
 
-  if (isLoading)
-    return <LoadingState message="Loading cost breakdown trends..." />;
-  if (isError)
+    return stats;
+  }, [chartData, anomalyCount]);
+
+  if (isLoading) {
+    return (
+      <LoadingState variant="minimal" message="Loading cost breakdown trends…" />
+    );
+  }
+  if (isError) {
     return (
       <ErrorState
-        variant="card"
+        variant="minimal"
         title="Unable to load cost breakdown trends"
         error={error as Error}
       />
     );
+  }
   if (!data) return null;
 
   return (
     <ChartCard
-      title="Cost Breakdown Over Time (Lambda vs AI)"
-      description={
-        chartData.length > 0
-          ? `${data.dataPoints.length} data points from ${data.period.start} to ${data.period.end}`
-          : "No cost breakdown data available"
-      }
+      title="Lambda vs AI over time"
+      description={`Stacked ${granularity} infrastructure spend`}
+      icon={Layers}
       chartConfig={chartConfig}
-      summaryStats={enhancedSummaryStats}
-      chartClassName="h-[350px]"
-      emptyStateMessage="No cost breakdown data available"
+      summaryStats={summaryStats}
+      summaryStatsLayout="inline"
+      chartClassName="h-[320px]"
+      emptyStateMessage="No cost breakdown in this window"
     >
       {chartData.length > 0 ? (
         <BarChart data={chartData}>
@@ -181,53 +171,51 @@ export default function StackedCostTrendsChart({
             content={({ active, payload, label }) => {
               if (!active || !payload || payload.length === 0) return null;
 
-              const data = payload[0].payload as {
+              const row = payload[0].payload as {
                 lambda: number;
                 ai: number;
                 total: number;
+                renders: number;
                 period: string;
                 isAnomaly?: boolean;
                 anomalyType?: "spike" | "drop";
                 zScore?: number;
               };
 
-              const tooltipLabel = data.isAnomaly
-                ? `${label || data.period} • ${
-                    data.anomalyType === "spike" ? "Spike" : "Drop"
-                  } (Z: ${data.zScore?.toFixed(2)})`
-                : label || data.period;
+              const tooltipLabel = row.isAnomaly
+                ? `${label || row.period} · ${row.anomalyType === "spike" ? "Spike" : "Drop"}`
+                : label || row.period;
 
               return (
-                <div className="relative">
+                <div className="space-y-1">
                   <ChartTooltipContent
                     active={active}
                     payload={payload}
                     label={tooltipLabel}
                     formatter={(value, name) => {
-                      const label =
+                      const seriesLabel =
                         name === "lambda"
-                          ? "Lambda Cost"
+                          ? "Lambda"
                           : name === "ai"
-                          ? "AI Cost"
-                          : "Total";
-                      return [formatCurrency(value as number), label];
+                            ? "AI"
+                            : String(name);
+                      return [formatCurrency(value as number), seriesLabel];
                     }}
                   />
-                  {data.isAnomaly && (
-                    <div className="absolute -bottom-6 left-0 right-0 flex justify-center">
-                      <Badge
-                        variant={
-                          data.anomalyType === "spike"
-                            ? "destructive"
-                            : "default"
-                        }
-                        className="text-xs"
-                      >
-                        {data.anomalyType === "spike" ? "Spike" : "Drop"} (Z:{" "}
-                        {data.zScore?.toFixed(2)})
-                      </Badge>
-                    </div>
-                  )}
+                  <div className="text-xs text-muted-foreground">
+                    Total {formatCurrency(row.total)} ·{" "}
+                    {formatNumber(row.renders)} renders
+                  </div>
+                  {row.isAnomaly ? (
+                    <Badge
+                      variant={
+                        row.anomalyType === "spike" ? "destructive" : "secondary"
+                      }
+                      className="text-xs"
+                    >
+                      z {row.zScore?.toFixed(2)}
+                    </Badge>
+                  ) : null}
                 </div>
               );
             }}

@@ -1,21 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
 
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
+import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
 import { Button } from "@/components/ui/button";
-import { OrdersOverviewDashboard } from "./components/OrdersOverviewDashboard";
-import { OrdersOverviewFilters } from "./components/OrdersOverviewFilters";
+import { siteNavigationCtaAltClass } from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
+import Link from "next/link";
 import { FetchOrderOverviewParams } from "@/types/orderOverview";
+import { useAdminOrderOverview } from "@/hooks/orders/useAdminOrderOverview";
+import { OrdersOverviewDashboard } from "./components/OrdersOverviewDashboard";
+import OrdersWorkspaceHeader from "./components/OrdersWorkspaceHeader";
+import { findCurrencyFromOrders } from "./utils/orderHelpers";
 
 const INITIAL_FILTERS: FetchOrderOverviewParams = {};
 
 export default function Orders() {
   const [filters, setFilters] =
     useState<FetchOrderOverviewParams>(INITIAL_FILTERS);
+  const [ordersTab, setOrdersTab] = useState("snapshot");
+
+  const { data, isLoading, isFetching } = useAdminOrderOverview(filters);
+
+  const currency = useMemo(() => {
+    if (!data) return null;
+    return findCurrencyFromOrders(data.orders);
+  }, [data]);
 
   const handleResetFilters = () => {
     setFilters(INITIAL_FILTERS);
@@ -26,33 +39,44 @@ export default function Orders() {
       <CreatePageTitle
         title="Orders"
         byLine="Billing activity and order operations"
-        byLineBottom="Filter by date or checkout status"
-      />
-      <PageContainer padding="xs" spacing="md">
-        <div className="rounded-lg border border-slate-200 bg-white px-3 py-3">
-          <div className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
-            <div className="min-w-0 flex-1">
-              <OrdersOverviewFilters
-                value={filters}
-                onChange={setFilters}
-                onReset={handleResetFilters}
-              />
-            </div>
-            <Button
-              asChild
-              size="sm"
-              variant="primary"
-              className="w-full sm:w-auto"
-            >
-              <Link href="/dashboard/orders/create">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Order
-              </Link>
-            </Button>
-          </div>
-        </div>
+        byLineBottom="Filter by date or checkout status in the workspace"
+      >
+        <DashboardLinkButton
+          href="/dashboard/orders/invoices"
+          trailingIcon="arrow"
+        >
+          Invoice queue
+        </DashboardLinkButton>
+        <Button
+          asChild
+          size="sm"
+          variant="primary"
+          className={cn(siteNavigationCtaAltClass, "h-9")}
+        >
+          <Link href="/dashboard/orders/create">
+            <Plus className="mr-2 h-4 w-4" aria-hidden />
+            Create order
+          </Link>
+        </Button>
+      </CreatePageTitle>
 
-        <OrdersOverviewDashboard filters={filters} />
+      <PageContainer padding="xs" spacing="md">
+        <div className="space-y-6">
+          <OrdersWorkspaceHeader
+            filters={filters}
+            onChangeFilters={setFilters}
+            onResetFilters={handleResetFilters}
+            stats={data?.stats}
+            currency={currency}
+            isLoading={isLoading || (isFetching && !data)}
+          />
+
+          <OrdersOverviewDashboard
+            filters={filters}
+            ordersTab={ordersTab}
+            onOrdersTabChange={setOrdersTab}
+          />
+        </div>
       </PageContainer>
     </>
   );

@@ -1,7 +1,14 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useGlobalCostTrends } from "@/hooks/rollups/useGlobalCostTrends";
+import { useMemo } from "react";
+import {
+  AlertCircle,
+  DollarSign,
+  LineChart,
+  Minus,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
 import ChartCard, {
   ChartSummaryStat,
 } from "@/components/modules/charts/ChartCard";
@@ -12,15 +19,9 @@ import {
   ChartLegendContent,
   type ChartConfig,
 } from "@/components/ui/chart";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
+import { useGlobalCostTrends } from "@/hooks/rollups/useGlobalCostTrends";
 import { formatCurrency } from "@/utils/chart-formatters";
 import {
   forecastSMA,
@@ -28,10 +29,10 @@ import {
   forecastHybrid,
   type ForecastResult,
 } from "./_utils/forecasting";
-import { TrendGranularity } from "./PeriodControls";
-import { TrendingUp, TrendingDown, Minus, AlertCircle, DollarSign } from "lucide-react";
+import { formatPeriodDate } from "./_utils/budgetChartHelpers";
+import type { TrendGranularity } from "./PeriodControls";
 import {
-  LineChart,
+  LineChart as RechartsLineChart,
   Line,
   XAxis,
   YAxis,
@@ -39,51 +40,40 @@ import {
   ReferenceLine,
 } from "recharts";
 
-// Helper to format period dates for X-axis (e.g., "Nov 3 2025")
-const formatPeriodDate = (period: string): string => {
-  try {
-    const date = new Date(period);
-    const formatted = date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-    // Remove comma if present (e.g., "Nov 3, 2025" -> "Nov 3 2025")
-    return formatted.replace(",", "");
-  } catch {
-    return period;
-  }
+export type ForecastMethod = "sma" | "linear" | "hybrid";
+
+export interface CostForecastProps {
+  granularity: TrendGranularity;
+  startDate: string;
+  endDate: string;
+  method?: ForecastMethod;
+  forecastPeriods?: number;
+  showHeader?: boolean;
+}
+
+type ChartRow = {
+  period: string;
+  periodLabel: string;
+  historicalCost: number | null;
+  forecastCost: number | null;
+  confidenceUpper: number | null;
+  confidenceLower: number | null;
 };
 
-type ForecastMethod = "sma" | "linear" | "hybrid";
-
-export default function CostForecast() {
-  const [granularity, setGranularity] = useState<TrendGranularity>("daily");
-  const [method, setMethod] = useState<ForecastMethod>("hybrid");
-  const [forecastPeriods, setForecastPeriods] = useState(4);
-
-  // Calculate date range based on granularity (get more historical data for better forecasts)
-  const { startDate, endDate } = useMemo(() => {
-    const end = new Date();
-    const start = new Date(end);
-    if (granularity === "daily") {
-      start.setDate(end.getDate() - 59); // Last 60 days
-    } else if (granularity === "weekly") {
-      start.setDate(end.getDate() - 7 * 24); // Last 24 weeks
-    } else {
-      start.setMonth(end.getMonth() - 23); // Last 24 months
-    }
-    const toYmd = (d: Date) => d.toISOString().slice(0, 10);
-    return { startDate: toYmd(start), endDate: toYmd(end) };
-  }, [granularity]);
-
+export default function CostForecast({
+  granularity,
+  startDate,
+  endDate,
+  method = "hybrid",
+  forecastPeriods = 4,
+  showHeader = true,
+}: CostForecastProps) {
   const { data, isLoading, isError, error } = useGlobalCostTrends({
     granularity,
     startDate,
     endDate,
   });
 
-  // Generate forecast
   const forecast = useMemo<ForecastResult | null>(() => {
     if (!data?.dataPoints || data.dataPoints.length < 3) return null;
 
@@ -103,184 +93,144 @@ export default function CostForecast() {
     }
   }, [data, method, forecastPeriods]);
 
-  // Combine historical and projected data for chart
-  const chartData = useMemo(() => {
+  const chartDataWithLabels = useMemo((): ChartRow[] => {
     if (!forecast) return [];
-    return [...forecast.historical, ...forecast.projected];
+
+    const historicalRows: ChartRow[] = forecast.historical.map((point) => ({
+      period: point.period,
+      periodLabel: formatPeriodDate(point.period),
+      historicalCost: point.forecast,
+      forecastCost: null,
+      confidenceUpper: point.confidenceUpper,
+      confidenceLower: point.confidenceLower,
+    }));
+
+    const lastHistorical = historicalRows[historicalRows.length - 1];
+    const projectedRows: ChartRow[] = forecast.projected.map((point, index) => ({
+      period: point.period,
+      periodLabel: point.period.startsWith("Period")
+        ? point.period
+        : formatPeriodDate(point.period),
+      historicalCost: index === 0 && lastHistorical ? lastHistorical.historicalCost : null,
+      forecastCost: point.forecast,
+      confidenceUpper: point.confidenceUpper,
+      confidenceLower: point.confidenceLower,
+    }));
+
+    return [...historicalRows, ...projectedRows];
   }, [forecast]);
 
-  // Chart configuration
+  const projectedTotal = useMemo(() => {
+    if (!forecast) return 0;
+    return forecast.projected.reduce((sum, p) => sum + p.forecast, 0);
+  }, [forecast]);
+
   const chartConfig = {
     historical: {
-      label: "Historical Cost",
+      label: "Historical",
       color: "hsl(var(--chart-1))",
     },
     forecast: {
       label: "Forecast",
       color: "hsl(var(--chart-2))",
     },
-    confidenceUpper: {
-      label: "Upper Bound (95%)",
-      color: "hsl(var(--muted-foreground))",
-    },
-    confidenceLower: {
-      label: "Lower Bound (95%)",
-      color: "hsl(var(--muted-foreground))",
-    },
   } satisfies ChartConfig;
 
-  // Summary stats for ChartCard
   const summaryStats: ChartSummaryStat[] = useMemo(() => {
     if (!forecast) return [];
+    const TrendIcon =
+      forecast.trend === "increasing"
+        ? TrendingUp
+        : forecast.trend === "decreasing"
+          ? TrendingDown
+          : Minus;
+
     return [
       {
         icon: DollarSign,
-        label: "Next Period Estimate",
+        label: "Next bucket",
         value: formatCurrency(forecast.nextPeriodEstimate),
       },
       {
         icon: AlertCircle,
-        label: "Confidence (±95%)",
-        value: `±${formatCurrency(forecast.confidenceInterval)}`,
+        label: "95% band (±)",
+        value: formatCurrency(forecast.confidenceInterval),
       },
       {
-        icon:
-          forecast.trend === "increasing"
-            ? TrendingUp
-            : forecast.trend === "decreasing"
-            ? TrendingDown
-            : Minus,
-        label: "Trend",
+        icon: TrendIcon,
+        label: "Direction",
         value:
           forecast.trend === "increasing"
             ? "Increasing"
             : forecast.trend === "decreasing"
-            ? "Decreasing"
-            : "Stable",
-        variant:
-          forecast.trend === "increasing"
-            ? "destructive"
-            : forecast.trend === "decreasing"
-            ? "success"
-            : "secondary",
+              ? "Decreasing"
+              : "Stable",
+      },
+      {
+        icon: LineChart,
+        label: `${forecastPeriods} ahead sum`,
+        value: formatCurrency(projectedTotal),
       },
     ];
-  }, [forecast]);
+  }, [forecast, forecastPeriods, projectedTotal]);
 
-  // Prepare chart data with formatted labels
-  const chartDataWithLabels = useMemo(() => {
-    if (!forecast) return [];
-    return chartData.map((point) => ({
-      ...point,
-      periodLabel: formatPeriodDate(point.period),
-    }));
-  }, [chartData, forecast]);
-
-  if (isLoading)
-    return <LoadingState message="Loading forecast data..." />;
-  if (isError && error)
+  if (isLoading) {
+    return <LoadingState variant="minimal" message="Loading forecast…" />;
+  }
+  if (isError && error) {
     return (
       <ErrorState
-        variant="card"
-        title="Unable to load forecast data"
+        variant="minimal"
+        title="Unable to load forecast"
         error={error as Error}
       />
     );
+  }
+
+  const methodLabel =
+    method === "sma"
+      ? "Moving average"
+      : method === "linear"
+        ? "Linear regression"
+        : "Hybrid";
+
+  const pivotLabel =
+    forecast && chartDataWithLabels.length > 0
+      ? chartDataWithLabels[forecast.historical.length - 1]?.periodLabel
+      : undefined;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-4">
+      {showHeader ? (
         <div>
-          <h3 className="text-lg font-semibold">Cost Forecast</h3>
+          <h3 className="text-lg font-semibold">Cost forecast</h3>
           <p className="text-sm text-muted-foreground">
-            Historical cost trends and projected forecasts using{" "}
-            {method === "sma"
-              ? "Moving Average"
-              : method === "linear"
-              ? "Linear Regression"
-              : "Hybrid"}{" "}
-            method ({granularity})
+            {methodLabel} · {granularity}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Select
-            value={granularity}
-            onValueChange={(v) => setGranularity(v as TrendGranularity)}
-          >
-            <SelectTrigger className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="daily">Daily</SelectItem>
-              <SelectItem value="weekly">Weekly</SelectItem>
-              <SelectItem value="monthly">Monthly</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={method}
-            onValueChange={(v) => setMethod(v as ForecastMethod)}
-          >
-            <SelectTrigger className="w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="sma">Moving Avg</SelectItem>
-              <SelectItem value="linear">Linear</SelectItem>
-              <SelectItem value="hybrid">Hybrid</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select
-            value={forecastPeriods.toString()}
-            onValueChange={(v) => setForecastPeriods(parseInt(v, 10))}
-          >
-            <SelectTrigger className="w-24">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2">2 periods</SelectItem>
-              <SelectItem value="4">4 periods</SelectItem>
-              <SelectItem value="6">6 periods</SelectItem>
-              <SelectItem value="8">8 periods</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
+      ) : null}
+
       <ChartCard
-        title=""
-        description=""
+        title="Historical vs projected"
+        description={`${methodLabel} · history from ${startDate}`}
+        icon={LineChart}
         chartConfig={chartConfig}
         summaryStats={summaryStats}
-        chartClassName="h-[400px]"
-        emptyStateMessage="Insufficient data for forecasting (need at least 3 data points)"
+        summaryStatsLayout="inline"
+        chartClassName="h-[360px]"
+        emptyStateMessage="Need at least 3 buckets to forecast"
       >
         {forecast && chartDataWithLabels.length > 0 ? (
-          <LineChart data={chartDataWithLabels}>
-            <defs>
-              <linearGradient
-                id="colorConfidence"
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
-              >
-                <stop
-                  offset="5%"
-                  stopColor="hsl(var(--muted-foreground))"
-                  stopOpacity={0.2}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="hsl(var(--muted-foreground))"
-                  stopOpacity={0}
-                />
-              </linearGradient>
-            </defs>
+          <RechartsLineChart data={chartDataWithLabels}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis
               dataKey="periodLabel"
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 12 }}
+              tick={{ fontSize: 11 }}
+              angle={-35}
+              textAnchor="end"
+              height={70}
             />
             <YAxis
               tickLine={false}
@@ -289,51 +239,48 @@ export default function CostForecast() {
             />
             <ChartTooltip
               content={({ active, payload }) => {
-                if (!active || !payload || !payload.length) return null;
+                if (!active || !payload?.length) return null;
                 return (
                   <ChartTooltipContent
                     active={active}
                     payload={payload}
                     label={payload[0]?.payload?.periodLabel}
                     formatter={(value, name) => {
-                      if (value == null) return [null, name];
-                      return [formatCurrency(value as number), name];
+                      if (value == null) return [null, String(name)];
+                      return [formatCurrency(value as number), String(name)];
                     }}
                   />
                 );
               }}
             />
-            <ChartLegend
-              content={<ChartLegendContent />}
-            />
-            <ReferenceLine
-              x={chartDataWithLabels[forecast.historical.length - 1]?.periodLabel}
-              stroke="hsl(var(--destructive))"
-              strokeDasharray="5 5"
-              label={{ value: "Now", position: "top" }}
-            />
-            {/* Historical data - solid line */}
+            <ChartLegend content={<ChartLegendContent />} />
+            {pivotLabel ? (
+              <ReferenceLine
+                x={pivotLabel}
+                stroke="hsl(var(--destructive))"
+                strokeDasharray="5 5"
+                label={{ value: "Now", position: "top" }}
+              />
+            ) : null}
             <Line
               type="monotone"
               dataKey="historicalCost"
-              stroke="hsl(var(--chart-1))"
+              stroke="var(--color-historical)"
               strokeWidth={2}
-              dot={{ fill: "hsl(var(--chart-1))", r: 4 }}
+              dot={{ fill: "hsl(var(--chart-1))", r: 3 }}
               connectNulls={false}
-              name="Historical Cost"
+              name="Historical"
             />
-            {/* Forecasted data - dashed line */}
             <Line
               type="monotone"
               dataKey="forecastCost"
-              stroke="hsl(var(--chart-2))"
+              stroke="var(--color-forecast)"
               strokeWidth={2}
-              strokeDasharray="5 5"
-              dot={false}
-              connectNulls={false}
+              strokeDasharray="6 4"
+              dot={{ fill: "hsl(var(--chart-2))", r: 3 }}
+              connectNulls
               name="Forecast"
             />
-            {/* Confidence bounds */}
             <Line
               type="monotone"
               dataKey="confidenceUpper"
@@ -341,7 +288,8 @@ export default function CostForecast() {
               strokeDasharray="3 3"
               strokeWidth={1}
               dot={false}
-              name="Upper Bound (95%)"
+              connectNulls
+              name="Upper 95%"
             />
             <Line
               type="monotone"
@@ -350,56 +298,53 @@ export default function CostForecast() {
               strokeDasharray="3 3"
               strokeWidth={1}
               dot={false}
-              name="Lower Bound (95%)"
+              connectNulls
+              name="Lower 95%"
             />
-          </LineChart>
+          </RechartsLineChart>
         ) : null}
       </ChartCard>
 
-      {/* Forecast Details */}
-      {forecast && forecast.projected.length > 0 && (
-        <div className="rounded-lg border bg-card p-4">
-          <h3 className="text-sm font-medium mb-3">Projected Periods</h3>
-          <div className="space-y-2 max-h-48 overflow-y-auto">
-            {forecast.projected.map((point, idx) => (
-              <div
-                key={idx}
-                className="flex items-center justify-between p-3 bg-muted rounded-lg"
+      {forecast && forecast.projected.length > 0 ? (
+        <div className="rounded-md border border-slate-200 bg-white p-4">
+          <h4 className="mb-3 text-sm font-medium">Projected buckets</h4>
+          <ul className="max-h-48 space-y-2 overflow-y-auto">
+            {forecast.projected.map((point) => (
+              <li
+                key={point.period}
+                className="flex items-center justify-between rounded-lg border border-slate-100 p-3"
               >
                 <div>
-                  <div className="font-medium">{formatPeriodDate(point.period)}</div>
-                  <div className="text-xs text-muted-foreground">
-                    Forecast: {formatCurrency(point.forecast)}
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-semibold">
-                    {formatCurrency(point.confidenceLower)} -{" "}
-                    {formatCurrency(point.confidenceUpper)}
+                  <div className="font-medium">
+                    {point.period.startsWith("Period")
+                      ? point.period
+                      : formatPeriodDate(point.period)}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    95% confidence
+                    Point estimate {formatCurrency(point.forecast)}
                   </div>
                 </div>
-              </div>
+                <div className="text-right text-sm tabular-nums">
+                  {formatCurrency(point.confidenceLower)} –{" "}
+                  {formatCurrency(point.confidenceUpper)}
+                  <div className="text-xs text-muted-foreground">95% band</div>
+                </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
-      )}
+      ) : null}
 
-      {/* Forecast Disclaimer */}
-      {forecast && (
-        <div className="flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-          <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
-          <div className="text-xs text-yellow-800 dark:text-yellow-200">
-            <strong>Note:</strong> Forecasts are based on historical trends
-            and statistical models. Actual costs may vary significantly due to
-            external factors, usage patterns, and system changes. Use forecasts
-            as guidance, not guarantees.
-          </div>
+      {forecast ? (
+        <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-950">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          <p>
+            Forecasts follow historical spend only. Usage changes, releases, and
+            seasonality can diverge from these projections — use as planning
+            signal, not a budget commitment.
+          </p>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }
-

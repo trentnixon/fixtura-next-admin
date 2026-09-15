@@ -9,7 +9,7 @@ import {
   YAxis,
   Legend,
 } from "recharts";
-import { CalendarClock, TrendingUp, Wallet } from "lucide-react";
+import { CalendarClock, LineChart, TrendingUp, Wallet } from "lucide-react";
 
 import { OrderOverviewTimeline } from "@/types/orderOverview";
 import ChartCard, {
@@ -109,9 +109,11 @@ export function OrdersOverviewTimeline({
           ? "Monthly creation, payment, and revenue trends"
           : "Creation, payment, and revenue trends"
       }
+      icon={LineChart}
       chartConfig={chartConfig}
       summaryStats={summaryStats}
-      variant="elevated"
+      summaryStatsLayout="inline"
+      chartClassName="h-[340px]"
     >
       <ComposedChart data={data}>
         <CartesianGrid strokeDasharray="3 3" vertical={false} />

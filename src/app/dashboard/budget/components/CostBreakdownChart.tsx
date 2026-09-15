@@ -1,37 +1,55 @@
 "use client";
 
-import { useGlobalCostSummary } from "@/hooks/rollups/useGlobalCostSummary";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer } from "@/components/ui/chart";
+import { Cell, Legend, Pie, PieChart } from "recharts";
+import { Cpu, PieChart as PieChartIcon } from "lucide-react";
+import ChartCard from "@/components/modules/charts/ChartCard";
+import { ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
-import { formatCurrency, formatPercentage } from "@/utils/chart-formatters";
-import { PieChart, Pie, Cell, Legend, Tooltip } from "recharts";
-
-type SummaryPeriod =
-  | "current-month"
-  | "last-month"
-  | "current-year"
-  | "all-time";
+import { useGlobalCostSummary } from "@/hooks/rollups/useGlobalCostSummary";
+import {
+  formatCurrency,
+  formatPercentage,
+} from "@/utils/chart-formatters";
+import type { SummaryPeriod } from "./PeriodControls";
 
 interface CostBreakdownChartProps {
   period?: SummaryPeriod;
+  /** Shorter chart for overview layout */
+  compact?: boolean;
 }
+
+const chartConfig = {
+  lambda: {
+    label: "Lambda",
+    color: "hsl(var(--chart-1))",
+  },
+  ai: {
+    label: "AI",
+    color: "hsl(var(--chart-2))",
+  },
+};
 
 export default function CostBreakdownChart({
   period = "current-month",
+  compact = false,
 }: CostBreakdownChartProps) {
   const { data, isLoading, isError, error } = useGlobalCostSummary(period);
 
-  if (isLoading) return <LoadingState message="Loading cost breakdown..." />;
-  if (isError && error)
+  if (isLoading) {
+    return (
+      <LoadingState variant="minimal" message="Loading cost breakdown…" />
+    );
+  }
+  if (isError && error) {
     return (
       <ErrorState
-        variant="card"
+        variant="minimal"
         title="Unable to load cost breakdown"
         error={error as Error}
       />
     );
+  }
   if (!data) return null;
 
   const lambdaCost = data.totalLambdaCost ?? 0;
@@ -40,99 +58,84 @@ export default function CostBreakdownChart({
 
   const chartData = [
     {
-      name: "Lambda Cost",
+      name: "Lambda",
       value: lambdaCost,
       percentage: total > 0 ? (lambdaCost / total) * 100 : 0,
-      color: "hsl(var(--chart-1))",
+      fill: "hsl(var(--chart-1))",
     },
     {
-      name: "AI Cost",
+      name: "AI",
       value: aiCost,
       percentage: total > 0 ? (aiCost / total) * 100 : 0,
-      color: "hsl(var(--chart-2))",
+      fill: "hsl(var(--chart-2))",
     },
-  ].filter((item) => item.value > 0); // Only show segments with data
+  ].filter((item) => item.value > 0);
+
+  const summaryStats = [
+    {
+      icon: PieChartIcon,
+      label: "Infra total",
+      value: formatCurrency(total),
+    },
+    {
+      icon: Cpu,
+      label: "Lambda",
+      value:
+        total > 0
+          ? `${formatCurrency(lambdaCost)} (${formatPercentage((lambdaCost / total) * 100)})`
+          : formatCurrency(lambdaCost),
+    },
+    {
+      icon: Cpu,
+      label: "AI",
+      value:
+        total > 0
+          ? `${formatCurrency(aiCost)} (${formatPercentage((aiCost / total) * 100)})`
+          : formatCurrency(aiCost),
+    },
+  ];
 
   return (
-    <Card className="bg-white border shadow-none">
-      <CardHeader>
-        <CardTitle>Cost Breakdown (Lambda vs AI)</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {chartData.length > 0 ? (
-          <div className="space-y-4">
-            <ChartContainer
-              config={{
-                lambda: {
-                  label: "Lambda Cost",
-                  color: "hsl(var(--chart-1))",
-                },
-                ai: {
-                  label: "AI Cost",
-                  color: "hsl(var(--chart-2))",
-                },
-              }}
-              className="h-[300px]"
-            >
-              <PieChart>
-                <Pie
-                  data={chartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, percentage }) =>
-                    `${name}: ${percentage.toFixed(1)}%`
-                  }
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                <Legend />
-              </PieChart>
-            </ChartContainer>
-
-            <div className="grid grid-cols-3 gap-4 pt-4 border-t">
-              <div>
-                <div className="text-sm text-muted-foreground">Total Cost</div>
-                <div className="text-lg font-semibold">
-                  {formatCurrency(total)}
-                </div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">Lambda Cost</div>
-                <div className="text-lg font-semibold">
-                  {formatCurrency(lambdaCost)}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {total > 0
-                    ? formatPercentage((lambdaCost / total) * 100)
-                    : "0%"}{" "}
-                  of total
-                </div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">AI Cost</div>
-                <div className="text-lg font-semibold">
-                  {formatCurrency(aiCost)}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {total > 0 ? formatPercentage((aiCost / total) * 100) : "0%"}{" "}
-                  of total
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="text-sm text-muted-foreground text-center py-8">
-            No cost data available for this period
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    <ChartCard
+      title="Lambda vs AI"
+      description="Infrastructure spend split for the selected period"
+      icon={PieChartIcon}
+      chartConfig={chartConfig}
+      summaryStats={summaryStats}
+      summaryStatsLayout="inline"
+      chartClassName={compact ? "h-[220px]" : "h-[280px]"}
+      cardClassName={compact ? "bg-white" : undefined}
+      emptyStateMessage="No Lambda or AI cost in this period"
+    >
+      {chartData.length > 0 ? (
+        <PieChart>
+          <Pie
+            data={chartData}
+            cx="50%"
+            cy="50%"
+            innerRadius={compact ? 48 : 56}
+            outerRadius={compact ? 72 : 84}
+            paddingAngle={2}
+            dataKey="value"
+            nameKey="name"
+            label={({ name, percentage }) =>
+              `${name}: ${percentage.toFixed(1)}%`
+            }
+          >
+            {chartData.map((entry) => (
+              <Cell key={entry.name} fill={entry.fill} />
+            ))}
+          </Pie>
+          <ChartTooltip
+            content={
+              <ChartTooltipContent
+                formatter={(value) => formatCurrency(Number(value))}
+              />
+            }
+          />
+          <Legend />
+        </PieChart>
+      ) : null}
+    </ChartCard>
   );
 }
