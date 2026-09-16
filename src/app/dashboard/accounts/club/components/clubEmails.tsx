@@ -43,23 +43,39 @@ import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import EmptyState from "@/components/ui-library/states/EmptyState";
 import { OrgContactScrapeTableCells } from "@/app/dashboard/accounts/components/OrgContactScrapeTableCells";
+import { OrgContactMetricGrid } from "@/app/dashboard/accounts/components/OrgContactMetricGrid";
 import {
   formatOrgContactsForCsv,
   orgContactSearchTokens,
 } from "@/lib/utils/orgContactListingDisplay";
-
-import type { ClubScrapeSportSlug } from "@/constants/clubScrapeSportSlugs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  CLUB_SCRAPE_SPORTS,
+  type ClubScrapeSportSlug,
+} from "@/constants/clubScrapeSportSlugs";
 
 interface ClubEmailsProps {
   initialFilter?: "all" | "active" | "inactive";
   hideAllFilter?: boolean;
   sportSlug?: ClubScrapeSportSlug;
+  showSportFilter?: boolean;
+  onSportSlugChange?: (slug: ClubScrapeSportSlug) => void;
+  embedded?: boolean;
 }
 
 export default function ClubEmails({
   initialFilter = "active",
   hideAllFilter = false,
   sportSlug,
+  showSportFilter = false,
+  onSportSlugChange,
+  embedded = false,
 }: ClubEmailsProps) {
   const { data, isLoading, error, refetch } = useGetClubEmails(sportSlug);
   const { data: accountsData, isLoading: accountsLoading } = useAccountsQuery();
@@ -266,59 +282,31 @@ export default function ClubEmails({
     {
       icon: Users,
       label: "Total Clubs",
-      value: totalClubs,
+      value: totalClubs.toLocaleString(),
       detail: "Contacts in the system",
     },
     {
       icon: CreditCard,
       label: "Active",
-      value: activeSubscribedClubs,
+      value: activeSubscribedClubs.toLocaleString(),
       detail: "Linked to active orders",
     },
     {
       icon: AlertCircle,
       label: "Inactive",
-      value: inactiveSubscribedClubs,
+      value: inactiveSubscribedClubs.toLocaleString(),
       detail: "No active order",
     },
   ];
 
   return (
-    <div className="mt-4 space-y-4">
+    <div className={cn(!embedded && "mt-4", "space-y-4")}>
       <SectionContainer
         title="Club Contact Information"
         description="Manage and export contact details for club accounts"
         variant="default"
       >
-        <div className="mb-4 grid overflow-hidden rounded-md border border-slate-200 bg-white md:grid-cols-3">
-        {contactMetrics.map((metric) => {
-          const Icon = metric.icon;
-
-          return (
-            <div
-              key={metric.label}
-              className="flex items-center gap-3 border-b border-slate-200 px-4 py-3 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0"
-            >
-              <div className="flex h-8 w-8 items-center justify-center rounded-md bg-slate-100 text-slate-600">
-                <Icon className="h-4 w-4" />
-              </div>
-              <div>
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  {metric.label}
-                </div>
-                <div className="mt-0.5 flex items-baseline gap-2">
-                  <span className="text-lg font-semibold text-slate-950">
-                    {metric.value}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {metric.detail}
-                  </span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-        </div>
+        <OrgContactMetricGrid metrics={contactMetrics} />
 
         <div className="space-y-4">
           <div className="flex flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 md:flex-row md:items-center">
@@ -331,6 +319,29 @@ export default function ClubEmails({
                 className="rounded-full border-transparent bg-white pl-9 shadow-none"
               />
             </div>
+
+            {showSportFilter && onSportSlugChange && sportSlug ? (
+              <Select
+                value={sportSlug}
+                onValueChange={(value) =>
+                  onSportSlugChange(value as ClubScrapeSportSlug)
+                }
+              >
+                <SelectTrigger
+                  id="club-emails-sport"
+                  className="w-full shrink-0 rounded-full bg-white md:w-[180px]"
+                >
+                  <SelectValue placeholder="Sport" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CLUB_SCRAPE_SPORTS.map((row) => (
+                    <SelectItem key={row.slug} value={row.slug}>
+                      {row.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : null}
 
             <LabeledSegmentedControl
               label="Status"

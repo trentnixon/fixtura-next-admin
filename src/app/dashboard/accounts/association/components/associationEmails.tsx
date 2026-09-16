@@ -22,7 +22,6 @@ import {
   AlertCircle,
   Search,
   ImageIcon,
-  type LucideIcon,
 } from "lucide-react";
 import Image from "next/image";
 import {
@@ -44,50 +43,39 @@ import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import EmptyState from "@/components/ui-library/states/EmptyState";
 import { OrgContactScrapeTableCells } from "@/app/dashboard/accounts/components/OrgContactScrapeTableCells";
+import { OrgContactMetricGrid } from "@/app/dashboard/accounts/components/OrgContactMetricGrid";
 import {
   formatOrgContactsForCsv,
   orgContactSearchTokens,
 } from "@/lib/utils/orgContactListingDisplay";
-
-import type { ClubScrapeSportSlug } from "@/constants/clubScrapeSportSlugs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  CLUB_SCRAPE_SPORTS,
+  type ClubScrapeSportSlug,
+} from "@/constants/clubScrapeSportSlugs";
 
 interface AssociationEmailsProps {
   initialFilter?: "all" | "active" | "inactive";
   hideAllFilter?: boolean;
   sportSlug?: ClubScrapeSportSlug;
-}
-
-function ContactMetric({
-  icon: Icon,
-  label,
-  value,
-  detail,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-  detail: string;
-}) {
-  return (
-    <div className="flex items-center gap-3 border-b border-slate-200 p-4 last:border-b-0 md:border-b-0 md:border-l md:first:border-l-0">
-      <div className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-100 text-slate-600">
-        <Icon className="h-4 w-4" />
-      </div>
-      <div className="min-w-0">
-        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
-        <p className="text-lg font-semibold text-slate-900">{value}</p>
-        <p className="truncate text-xs text-muted-foreground">{detail}</p>
-      </div>
-    </div>
-  );
+  showSportFilter?: boolean;
+  onSportSlugChange?: (slug: ClubScrapeSportSlug) => void;
+  embedded?: boolean;
 }
 
 export default function AssociationEmails({
   initialFilter = "active",
   hideAllFilter = false,
   sportSlug,
+  showSportFilter = false,
+  onSportSlugChange,
+  embedded = false,
 }: AssociationEmailsProps) {
   const { data, isLoading, error, refetch } = useGetAssociationEmails(sportSlug);
   const { data: accountsData, isLoading: accountsLoading } = useAccountsQuery();
@@ -299,32 +287,34 @@ export default function AssociationEmails({
   };
 
   return (
-    <div className="mt-4 space-y-4">
+    <div className={cn(!embedded && "mt-4", "space-y-4")}>
       <SectionContainer
         title="Association Contact Information"
         description="Manage and export contact details for association accounts"
         variant="default"
       >
-        <div className="mb-4 grid overflow-hidden rounded-md border bg-white md:grid-cols-3">
-          <ContactMetric
-            icon={Users}
-            label="Total Associations"
-            value={totalAssociations.toLocaleString()}
-            detail="Contacts available"
-          />
-          <ContactMetric
-            icon={CreditCard}
-            label="Active Subscriptions"
-            value={activeSubscribedAssociations.toLocaleString()}
-            detail="Linked to active accounts"
-          />
-          <ContactMetric
-            icon={AlertCircle}
-            label="Inactive Subscriptions"
-            value={inactiveSubscribedAssociations.toLocaleString()}
-            detail="No active account order"
-          />
-        </div>
+        <OrgContactMetricGrid
+          metrics={[
+            {
+              icon: Users,
+              label: "Total Associations",
+              value: totalAssociations.toLocaleString(),
+              detail: "Contacts available",
+            },
+            {
+              icon: CreditCard,
+              label: "Active Subscriptions",
+              value: activeSubscribedAssociations.toLocaleString(),
+              detail: "Linked to active accounts",
+            },
+            {
+              icon: AlertCircle,
+              label: "Inactive Subscriptions",
+              value: inactiveSubscribedAssociations.toLocaleString(),
+              detail: "No active account order",
+            },
+          ]}
+        />
         <div className="space-y-4">
           {/* Controls: Search, Filters, Download */}
           <div className="flex flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 md:flex-row md:items-center">
@@ -337,6 +327,29 @@ export default function AssociationEmails({
                 className="rounded-full border-transparent bg-white pl-9 shadow-none"
               />
             </div>
+
+            {showSportFilter && onSportSlugChange && sportSlug ? (
+              <Select
+                value={sportSlug}
+                onValueChange={(value) =>
+                  onSportSlugChange(value as ClubScrapeSportSlug)
+                }
+              >
+                <SelectTrigger
+                  id="association-emails-sport"
+                  className="w-full shrink-0 rounded-full bg-white md:w-[180px]"
+                >
+                  <SelectValue placeholder="Sport" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CLUB_SCRAPE_SPORTS.map((row) => (
+                    <SelectItem key={row.slug} value={row.slug}>
+                      {row.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : null}
 
             <LabeledSegmentedControl
               label="Status"
