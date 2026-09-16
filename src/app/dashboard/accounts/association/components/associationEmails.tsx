@@ -43,10 +43,18 @@ import {
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import EmptyState from "@/components/ui-library/states/EmptyState";
+import { OrgContactScrapeTableCells } from "@/app/dashboard/accounts/components/OrgContactScrapeTableCells";
+import {
+  formatOrgContactsForCsv,
+  orgContactSearchTokens,
+} from "@/lib/utils/orgContactListingDisplay";
+
+import type { ClubScrapeSportSlug } from "@/constants/clubScrapeSportSlugs";
 
 interface AssociationEmailsProps {
   initialFilter?: "all" | "active" | "inactive";
   hideAllFilter?: boolean;
+  sportSlug?: ClubScrapeSportSlug;
 }
 
 function ContactMetric({
@@ -79,8 +87,9 @@ function ContactMetric({
 export default function AssociationEmails({
   initialFilter = "active",
   hideAllFilter = false,
+  sportSlug,
 }: AssociationEmailsProps) {
-  const { data, isLoading, error, refetch } = useGetAssociationEmails();
+  const { data, isLoading, error, refetch } = useGetAssociationEmails(sportSlug);
   const { data: accountsData, isLoading: accountsLoading } = useAccountsQuery();
   const [unsubscribedEmails, setUnsubscribedEmails] = useState<string[]>([]);
   const [unsubscribedLoading, setUnsubscribedLoading] = useState(true);
@@ -174,11 +183,14 @@ export default function AssociationEmails({
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch =
         searchQuery === "" ||
-        association.name.toLowerCase().includes(searchLower) ||
-        association.email.toLowerCase().includes(searchLower) ||
+        (association.name ?? "").toLowerCase().includes(searchLower) ||
+        (association.email ?? "").toLowerCase().includes(searchLower) ||
         association.id.toString().includes(searchLower) ||
         (association.address &&
-          association.address.toLowerCase().includes(searchLower));
+          association.address.toLowerCase().includes(searchLower)) ||
+        orgContactSearchTokens(association).some((token) =>
+          token.includes(searchLower),
+        );
 
       return matchesSearch;
     });
@@ -254,7 +266,7 @@ export default function AssociationEmails({
 
     const csvHeader = isAccountView
       ? "Association Name,Association ID,User Email,Delivery Email"
-      : "Association Name,Association ID,Contact Email";
+      : "Association Name,Association ID,Contact Email,Last Org Contact Scrape,Scraped Contacts";
 
     const csvRows = validAssociations.map((association) => {
       if (isAccountView) {
@@ -263,7 +275,9 @@ export default function AssociationEmails({
           accountInfo?.userEmail || ""
         }","${accountInfo?.deliveryEmail || ""}"`;
       }
-      return `"${association.name}","${association.id}","${association.email}"`;
+      return `"${association.name}","${association.id}","${association.email}","${
+        association.lastOrgContactScrapeAt ?? ""
+      }","${formatOrgContactsForCsv(association.contacts)}"`;
     });
 
     const csvContent = [csvHeader, ...csvRows].join("\n");
@@ -374,6 +388,12 @@ export default function AssociationEmails({
                       <TableHead>Delivery Email</TableHead>
                     </>
                   )}
+                  <TableHead className="hidden xl:table-cell">
+                    Scraped contacts
+                  </TableHead>
+                  <TableHead className="hidden xl:table-cell">
+                    Last scraped
+                  </TableHead>
                   <TableHead className="w-[100px] text-right">
                     Actions
                   </TableHead>
@@ -479,6 +499,13 @@ export default function AssociationEmails({
                           </>
                         )}
 
+                        <OrgContactScrapeTableCells
+                          contacts={association.contacts}
+                          lastOrgContactScrapeAt={
+                            association.lastOrgContactScrapeAt
+                          }
+                        />
+
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
                             {filter === "all" && (
@@ -548,7 +575,7 @@ export default function AssociationEmails({
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={filter === "all" ? 6 : 5}
+                      colSpan={filter === "all" ? 8 : 7}
                       className="h-32 text-center"
                     >
                       <div className="flex flex-col items-center justify-center text-muted-foreground">

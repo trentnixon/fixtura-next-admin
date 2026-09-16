@@ -1,12 +1,8 @@
-export interface AssociationContactInfo {
-  id: number;
-  name: string;
-  phone: string;
-  email: string;
-  address: string;
-  website: string;
-}
+import type { OrgContactListingRow } from "@/types/orgContactListing";
+
+export type AssociationContactInfo = OrgContactListingRow;
 
 export interface FetchAssociationContactInfoResponse {
   data: AssociationContactInfo[];
+  meta?: { total: number };
 }

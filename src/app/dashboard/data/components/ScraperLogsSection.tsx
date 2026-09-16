@@ -43,7 +43,8 @@ interface ScraperLogsSectionProps {
     | "club_to_competition"
     | "grades_comps"
     | "grades_lookup_teams"
-    | "club_active_check";
+    | "club_active_check"
+    | "org_contact_details";
   /** Overview in SectionContainer, job log as its own panel below */
   layout?: "default" | "split";
   splitOverviewTitle?: string;

@@ -19,6 +19,7 @@ const SCOPES = [
   "grades_comps",
   "grades_lookup_teams",
   "club_active_check",
+  "org_contact_details",
 ] as const;
 
 /**

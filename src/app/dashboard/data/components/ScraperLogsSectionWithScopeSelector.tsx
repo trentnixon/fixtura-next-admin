@@ -7,10 +7,12 @@ import {
   Database,
   Network,
   Search,
+  Contact,
   ShieldCheck,
   Trophy,
   Users,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,6 +37,7 @@ import {
   sectionTabTriggerClass,
 } from "@/lib/actions/siteNavigationButtonStyles";
 import { CLUB_SCRAPE_SPORTS } from "@/constants/clubScrapeSportSlugs";
+import { ORG_CONTACT_STALE_DAYS } from "@/types/triggerOrgContactDetailsScrape";
 import type { ClubScrapeSportSlug } from "@/constants/clubScrapeSportSlugs";
 import { triggerAssociationCompetitionRefresh } from "@/lib/services/data-collection/triggerAssociationCompetitionRefresh";
 import { triggerClientsListScrape } from "@/lib/services/data-collection/triggerClientsListScrape";
@@ -42,6 +45,7 @@ import { triggerClubActiveCheckScrape } from "@/lib/services/data-collection/tri
 import { triggerClubCompetitionRefresh } from "@/lib/services/data-collection/triggerClubCompetitionRefresh";
 import { triggerGradesCompsScrape } from "@/lib/services/data-collection/triggerGradesCompsScrape";
 import { triggerGradesLookupTeamsScrape } from "@/lib/services/data-collection/triggerGradesLookupTeamsScrape";
+import { triggerOrgContactDetailsScrape } from "@/lib/services/data-collection/triggerOrgContactDetailsScrape";
 import { formatGlobalDataWorkflowToast } from "@/lib/utils/formatGlobalDataWorkflowToast";
 import { OrgLinkSyncActions } from "./OrgLinkSyncActions";
 import { ScraperLogsSection } from "./ScraperLogsSection";
@@ -75,6 +79,11 @@ const SCOPES = [
     value: "club_active_check" as const,
     label: "Club Active Check",
     icon: ShieldCheck,
+  },
+  {
+    value: "org_contact_details" as const,
+    label: "Org Contact Details",
+    icon: Contact,
   },
 ] as const;
 
@@ -142,6 +151,16 @@ const SCOPE_CONFIG = {
       "This will enqueue a run that checks active clubs from recon data against PlayHQ inactive organisation messaging. The job runs asynchronously. Continue?",
     buttonLabel: "Trigger Club Active Check",
   },
+  org_contact_details: {
+    hasTrigger: true as const,
+    title: "Org contact details scraper",
+    description:
+      "Per-sport club + association PlayHQ footer scrape → organisation contact ingest",
+    dialogTitle: "Confirm org contact details scrape",
+    dialogDescription:
+      "Queues one job for the selected sport. Use max targets for smoke runs; leave empty for the full sport walk. Continue?",
+    buttonLabel: "Trigger org contact scrape",
+  },
 } as const;
 
 type ScraperScope =
@@ -151,12 +170,13 @@ type ScraperScope =
   | "club_to_competition"
   | "grades_comps"
   | "grades_lookup_teams"
-  | "club_active_check";
+  | "club_active_check"
+  | "org_contact_details";
 
 type TriggerableScope = Exclude<ScraperScope, typeof ALL_SCOPES_VALUE>;
 
 type LegacyScrapeResult = {
-  jobId: number;
+  jobId: string | number;
   queueName: string;
   message: string;
 };
@@ -165,6 +185,12 @@ function isClubActiveCheckSportScope(
   scope: TriggerableScope | null,
 ): scope is "club_active_check" {
   return scope === "club_active_check";
+}
+
+function isOrgContactDetailsScope(
+  scope: TriggerableScope | null,
+): scope is "org_contact_details" {
+  return scope === "org_contact_details";
 }
 
 function showGlobalWorkflowToast(
@@ -186,6 +212,7 @@ export function ScraperLogsSectionWithScopeSelector() {
   const [sportSlugForDialog, setSportSlugForDialog] = useState<string | null>(
     null,
   );
+  const [maxTargetsForDialog, setMaxTargetsForDialog] = useState("");
   const [loadingFor, setLoadingFor] = useState<TriggerableScope | null>(null);
   const queryClient = useQueryClient();
 
@@ -226,6 +253,29 @@ export function ScraperLogsSectionWithScopeSelector() {
                   },
             );
             break;
+          case "org_contact_details": {
+            if (!sportSlugForDialog) {
+              throw new Error("Sport is required");
+            }
+            const maxParsed = maxTargetsForDialog.trim()
+              ? Number(maxTargetsForDialog.trim())
+              : undefined;
+            if (
+              maxParsed !== undefined &&
+              (!Number.isInteger(maxParsed) || maxParsed < 1)
+            ) {
+              throw new Error("Max targets must be a positive integer");
+            }
+            result = await triggerOrgContactDetailsScrape({
+              targets: [],
+              options: {
+                sport: sportSlugForDialog as ClubScrapeSportSlug,
+                contactStaleDays: ORG_CONTACT_STALE_DAYS,
+                ...(maxParsed !== undefined ? { maxTargets: maxParsed } : {}),
+              },
+            });
+            break;
+          }
         }
 
         toast.success(`Job ${result.jobId} queued to ${result.queueName}`, {
@@ -235,6 +285,7 @@ export function ScraperLogsSectionWithScopeSelector() {
 
       setDialogOpenFor(null);
       setSportSlugForDialog(null);
+      setMaxTargetsForDialog("");
       queryClient.invalidateQueries({ queryKey: ["scraperLogs"] });
       queryClient.invalidateQueries({ queryKey: ["scraperLog"] });
     } catch (error) {
@@ -302,6 +353,7 @@ export function ScraperLogsSectionWithScopeSelector() {
                       className="shrink-0"
                       onClick={() => {
                         setSportSlugForDialog(null);
+                        setMaxTargetsForDialog("");
                         setDialogOpenFor(item.value as TriggerableScope);
                       }}
                       disabled={!!loadingFor}
@@ -329,6 +381,7 @@ export function ScraperLogsSectionWithScopeSelector() {
           if (!open) {
             setDialogOpenFor(null);
             setSportSlugForDialog(null);
+            setMaxTargetsForDialog("");
           }
         }}
       >
@@ -363,12 +416,51 @@ export function ScraperLogsSectionWithScopeSelector() {
             </div>
           )}
 
+          {dialogOpenFor && isOrgContactDetailsScope(dialogOpenFor) && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="org-contact-sport">Sport (required)</Label>
+                <Select
+                  value={sportSlugForDialog ?? undefined}
+                  onValueChange={(value) => setSportSlugForDialog(value)}
+                >
+                  <SelectTrigger id="org-contact-sport" className="w-full">
+                    <SelectValue placeholder="Select sport" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CLUB_SCRAPE_SPORTS.map((row) => (
+                      <SelectItem key={row.slug} value={row.slug}>
+                        {row.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="org-contact-max-targets">
+                  Max targets (optional)
+                </Label>
+                <Input
+                  id="org-contact-max-targets"
+                  type="number"
+                  min={1}
+                  placeholder="Empty = full sport walk"
+                  value={maxTargetsForDialog}
+                  onChange={(event) =>
+                    setMaxTargetsForDialog(event.target.value)
+                  }
+                />
+              </div>
+            </div>
+          )}
+
           <DialogFooter>
             <Button
               variant="destructive"
               onClick={() => {
                 setDialogOpenFor(null);
                 setSportSlugForDialog(null);
+                setMaxTargetsForDialog("");
               }}
               disabled={!!loadingFor}
             >
@@ -377,7 +469,11 @@ export function ScraperLogsSectionWithScopeSelector() {
             <Button
               variant="primary"
               onClick={handleConfirm}
-              disabled={!!loadingFor}
+              disabled={
+                !!loadingFor ||
+                (isOrgContactDetailsScope(dialogOpenFor) &&
+                  !sportSlugForDialog)
+              }
             >
               {loadingFor ? "Queuing..." : "Confirm"}
             </Button>

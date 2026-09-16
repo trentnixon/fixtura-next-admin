@@ -42,17 +42,26 @@ import {
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import EmptyState from "@/components/ui-library/states/EmptyState";
+import { OrgContactScrapeTableCells } from "@/app/dashboard/accounts/components/OrgContactScrapeTableCells";
+import {
+  formatOrgContactsForCsv,
+  orgContactSearchTokens,
+} from "@/lib/utils/orgContactListingDisplay";
+
+import type { ClubScrapeSportSlug } from "@/constants/clubScrapeSportSlugs";
 
 interface ClubEmailsProps {
   initialFilter?: "all" | "active" | "inactive";
   hideAllFilter?: boolean;
+  sportSlug?: ClubScrapeSportSlug;
 }
 
 export default function ClubEmails({
   initialFilter = "active",
   hideAllFilter = false,
+  sportSlug,
 }: ClubEmailsProps) {
-  const { data, isLoading, error, refetch } = useGetClubEmails();
+  const { data, isLoading, error, refetch } = useGetClubEmails(sportSlug);
   const { data: accountsData, isLoading: accountsLoading } = useAccountsQuery();
   const [unsubscribedEmails, setUnsubscribedEmails] = useState<string[]>([]);
   const [unsubscribedLoading, setUnsubscribedLoading] = useState(true);
@@ -144,10 +153,13 @@ export default function ClubEmails({
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch =
         searchQuery === "" ||
-        club.name.toLowerCase().includes(searchLower) ||
-        club.email.toLowerCase().includes(searchLower) ||
+        (club.name ?? "").toLowerCase().includes(searchLower) ||
+        (club.email ?? "").toLowerCase().includes(searchLower) ||
         club.id.toString().includes(searchLower) ||
-        (club.address && club.address.toLowerCase().includes(searchLower));
+        (club.address && club.address.toLowerCase().includes(searchLower)) ||
+        orgContactSearchTokens(club).some((token) =>
+          token.includes(searchLower),
+        );
 
       return matchesSearch;
     });
@@ -220,7 +232,7 @@ export default function ClubEmails({
 
     const csvHeader = isAccountView
       ? "Club Name,Club ID,User Email,Delivery Email"
-      : "Club Name,Club ID,Contact Email";
+      : "Club Name,Club ID,Contact Email,Last Org Contact Scrape,Scraped Contacts";
 
     const csvRows = validClubs.map((club) => {
       if (isAccountView) {
@@ -229,7 +241,9 @@ export default function ClubEmails({
           accountInfo?.deliveryEmail || ""
         }"`;
       }
-      return `"${club.name}","${club.id}","${club.email}"`;
+      return `"${club.name}","${club.id}","${club.email}","${
+        club.lastOrgContactScrapeAt ?? ""
+      }","${formatOrgContactsForCsv(club.contacts)}"`;
     });
 
     const csvContent = [csvHeader, ...csvRows].join("\n");
@@ -365,6 +379,12 @@ export default function ClubEmails({
                     <TableHead>Delivery Email</TableHead>
                   </>
                 )}
+                <TableHead className="hidden xl:table-cell">
+                  Scraped contacts
+                </TableHead>
+                <TableHead className="hidden xl:table-cell">
+                  Last scraped
+                </TableHead>
                 <TableHead className="w-[100px] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -462,6 +482,11 @@ export default function ClubEmails({
                         </>
                       )}
 
+                      <OrgContactScrapeTableCells
+                        contacts={club.contacts}
+                        lastOrgContactScrapeAt={club.lastOrgContactScrapeAt}
+                      />
+
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
                           {filter === "all" && (
@@ -531,7 +556,7 @@ export default function ClubEmails({
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={filter === "all" ? 6 : 5}
+                    colSpan={filter === "all" ? 8 : 7}
                     className="h-32 text-center"
                   >
                     <div className="flex flex-col items-center justify-center text-muted-foreground">
