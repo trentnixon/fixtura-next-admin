@@ -21,15 +21,16 @@ import {
   CreditCard,
   AlertCircle,
   Search,
-  ImageIcon,
+  FileCheck,
+  Clock,
+  UserX,
 } from "lucide-react";
-import Image from "next/image";
-import {
-  getUnsubscribedEmails,
-  isEmailUnsubscribed,
-} from "@/lib/utils/unsubscribedEmails";
-import { useEffect, useState, useMemo } from "react";
+import { getUnsubscribedEmails } from "@/lib/utils/unsubscribedEmails";
+import { useEffect, useState, useMemo, Fragment } from "react";
 import { useAccountsQuery } from "@/hooks/accounts/useAccountsQuery";
+import { useGlobalContext } from "@/components/providers/GlobalContext";
+import { resolveStrapiMediaUrl } from "@/lib/utils/strapiMediaUrl";
+import { OrgContactListingLogo } from "@/app/dashboard/accounts/components/OrgContactListingLogo";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { Input } from "@/components/ui/input";
 import {
@@ -48,6 +49,19 @@ import {
   formatOrgContactsForCsv,
   orgContactSearchTokens,
 } from "@/lib/utils/orgContactListingDisplay";
+import {
+  countOrgContactInsights,
+  isExportReadyOrgContact,
+  matchesOrgContactQualityFilter,
+  type OrgContactQualityFilter,
+} from "@/lib/utils/orgContactListingFilters";
+import { OrgContactListingQualitySelect } from "@/app/dashboard/accounts/components/OrgContactListingQualitySelect";
+import { OrgContactListingStatusBadges } from "@/app/dashboard/accounts/components/OrgContactListingStatusBadges";
+import {
+  OrgContactExpandToggle,
+  OrgContactScrapedPeoplePanel,
+} from "@/app/dashboard/accounts/components/OrgContactScrapedPeoplePanel";
+import Link from "next/link";
 import {
   Select,
   SelectContent,
@@ -77,6 +91,7 @@ export default function AssociationEmails({
   onSportSlugChange,
   embedded = false,
 }: AssociationEmailsProps) {
+  const { Domain } = useGlobalContext();
   const { data, isLoading, error, refetch } = useGetAssociationEmails(sportSlug);
   const { data: accountsData, isLoading: accountsLoading } = useAccountsQuery();
   const [unsubscribedEmails, setUnsubscribedEmails] = useState<string[]>([]);
@@ -85,6 +100,11 @@ export default function AssociationEmails({
     initialFilter,
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [qualityFilter, setQualityFilter] =
+    useState<OrgContactQualityFilter>("all");
+  const [expandedRowIds, setExpandedRowIds] = useState<Set<number>>(
+    () => new Set(),
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -127,6 +147,7 @@ export default function AssociationEmails({
     deliveryEmail: string | null;
     id: number;
     logo?: string | null;
+    hasActiveOrder: boolean;
   }
 
   const associationIdToAccountMap = useMemo(() => {
@@ -142,12 +163,18 @@ export default function AssociationEmails({
           userEmail: account.email,
           deliveryEmail: account.DeliveryAddress,
           id: account.id,
-          logo: account.logo?.url,
+          logo: resolveStrapiMediaUrl(account.logo?.url, Domain.strapi),
+          hasActiveOrder: account.hasActiveOrder,
         });
       });
     });
     return map;
-  }, [accountsData]);
+  }, [accountsData, Domain.strapi]);
+
+  const linkedAssociationAccountIds = useMemo(
+    () => new Set(associationIdToAccountMap.keys()),
+    [associationIdToAccountMap],
+  );
 
   const filterOptions = useMemo(
     () => buildSubscriptionFilterOptions(hideAllFilter),
@@ -167,6 +194,15 @@ export default function AssociationEmails({
 
       if (!matchesSubscription) return false;
 
+      if (
+        !matchesOrgContactQualityFilter(association, qualityFilter, {
+          unsubscribedEmails,
+          hasLinkedAccount: linkedAssociationAccountIds.has(association.id),
+        })
+      ) {
+        return false;
+      }
+
       // 2. Filter by search query
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch =
@@ -182,7 +218,16 @@ export default function AssociationEmails({
 
       return matchesSearch;
     });
-  }, [data, filter, searchQuery, activeAssociationIds, inactiveAssociationIds]);
+  }, [
+    data,
+    filter,
+    qualityFilter,
+    searchQuery,
+    activeAssociationIds,
+    inactiveAssociationIds,
+    unsubscribedEmails,
+    linkedAssociationAccountIds,
+  ]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredAssociations.length / itemsPerPage);
@@ -194,7 +239,7 @@ export default function AssociationEmails({
   // Reset to page 1 when filter or search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [filter, searchQuery]);
+  }, [filter, searchQuery, qualityFilter]);
 
   if (isLoading || unsubscribedLoading || accountsLoading) {
     return (
@@ -235,19 +280,15 @@ export default function AssociationEmails({
     inactiveAssociationIds.has(association.id),
   ).length;
 
-  // Function to download CSV for SendGrid
-  const downloadCSV = () => {
-    const isValidEmail = (email: string) => {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return emailRegex.test(email);
-    };
+  const insightCounts = countOrgContactInsights(
+    data.data,
+    unsubscribedEmails,
+    linkedAssociationAccountIds,
+  );
 
-    const validAssociations = filteredAssociations.filter(
-      (association) =>
-        association.email &&
-        association.email.trim() !== "" &&
-        isValidEmail(association.email.trim()) &&
-        !isEmailUnsubscribed(association.email, unsubscribedEmails),
+  const downloadCSV = () => {
+    const validAssociations = filteredAssociations.filter((association) =>
+      isExportReadyOrgContact(association, unsubscribedEmails),
     );
 
     const isAccountView = filter !== "all";
@@ -286,6 +327,17 @@ export default function AssociationEmails({
     document.body.removeChild(link);
   };
 
+  const tableColSpan = filter === "all" ? 9 : 8;
+
+  const toggleExpanded = (id: number) => {
+    setExpandedRowIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
   return (
     <div className={cn(!embedded && "mt-4", "space-y-4")}>
       <SectionContainer
@@ -312,6 +364,24 @@ export default function AssociationEmails({
               label: "Inactive Subscriptions",
               value: inactiveSubscribedAssociations.toLocaleString(),
               detail: "No active account order",
+            },
+            {
+              icon: FileCheck,
+              label: "Export ready",
+              value: insightCounts.exportReady.toLocaleString(),
+              detail: "Valid email, not unsubscribed",
+            },
+            {
+              icon: Clock,
+              label: "Never scraped",
+              value: insightCounts.neverScraped.toLocaleString(),
+              detail: "No org contact scrape yet",
+            },
+            {
+              icon: UserX,
+              label: "No account",
+              value: insightCounts.noAccount.toLocaleString(),
+              detail: "Not linked in account lookup",
             },
           ]}
         />
@@ -351,6 +421,12 @@ export default function AssociationEmails({
               </Select>
             ) : null}
 
+            <OrgContactListingQualitySelect
+              value={qualityFilter}
+              onValueChange={setQualityFilter}
+              id="association-emails-quality"
+            />
+
             <LabeledSegmentedControl
               label="Status"
               value={filter}
@@ -385,6 +461,7 @@ export default function AssociationEmails({
           <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50 hover:bg-slate-50">
+                  <TableHead className="w-[44px]" aria-label="Expand scraped contacts" />
                   <TableHead className="w-[60px]">Logo</TableHead>
                   <TableHead>Association Name</TableHead>
                   {filter === "all" ? (
@@ -418,32 +495,24 @@ export default function AssociationEmails({
                     const accountInfo = associationIdToAccountMap.get(
                       association.id,
                     );
+                    const isExpanded = expandedRowIds.has(association.id);
+                    const scrapedCount = association.contacts?.length ?? 0;
+
                     return (
-                      <TableRow
-                        key={association.id}
-                        className="hover:bg-muted/30"
-                      >
+                      <Fragment key={association.id}>
+                      <TableRow className="hover:bg-muted/30">
                         <TableCell>
-                          {accountInfo?.logo ? (
-                            <div className="flex items-center justify-center">
-                              <Image
-                                src={accountInfo.logo}
-                                alt={`${association.name} logo`}
-                                width={40}
-                                height={40}
-                                className="rounded object-contain"
-                                style={{
-                                  maxWidth: "40px",
-                                  maxHeight: "40px",
-                                }}
-                                unoptimized
-                              />
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-center">
-                              <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                            </div>
-                          )}
+                          <OrgContactExpandToggle
+                            expanded={isExpanded}
+                            onToggle={() => toggleExpanded(association.id)}
+                            contactCount={scrapedCount}
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <OrgContactListingLogo
+                            logoUrl={accountInfo?.logo}
+                            orgName={association.name}
+                          />
                         </TableCell>
                         <TableCell>
                           <p className="text-sm font-medium text-slate-900">
@@ -452,6 +521,14 @@ export default function AssociationEmails({
                           <p className="mt-0.5 text-xs text-muted-foreground">
                             Association ID {association.id}
                           </p>
+                          <OrgContactListingStatusBadges
+                            row={association}
+                            accountId={accountInfo?.id}
+                            isActiveSubscription={activeAssociationIds.has(
+                              association.id,
+                            )}
+                            unsubscribedEmails={unsubscribedEmails}
+                          />
                         </TableCell>
 
                         {filter === "all" ? (
@@ -520,7 +597,21 @@ export default function AssociationEmails({
                         />
 
                         <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
+                          <div className="flex flex-wrap justify-end gap-2">
+                            {accountInfo?.id ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={siteNavigationCtaClass}
+                                asChild
+                              >
+                                <Link
+                                  href={`/dashboard/accounts/association/${accountInfo.id}`}
+                                >
+                                  Account
+                                </Link>
+                              </Button>
+                            ) : null}
                             {filter === "all" && (
                               <>
                                 {association.address &&
@@ -573,7 +664,7 @@ export default function AssociationEmails({
                               asChild
                             >
                               <a
-                                href={`http://localhost:1337/admin/content-manager/collection-types/api::association.association/${association.id}`}
+                                href={`${Domain.strapi}/admin/content-manager/collection-types/api::association.association/${association.id}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
@@ -583,12 +674,22 @@ export default function AssociationEmails({
                           </div>
                         </TableCell>
                       </TableRow>
+                      {isExpanded ? (
+                        <OrgContactScrapedPeoplePanel
+                          contacts={association.contacts}
+                          lastOrgContactScrapeAt={
+                            association.lastOrgContactScrapeAt
+                          }
+                          colSpan={tableColSpan}
+                        />
+                      ) : null}
+                      </Fragment>
                     );
                   })
                 ) : (
                   <TableRow>
                     <TableCell
-                      colSpan={filter === "all" ? 8 : 7}
+                      colSpan={tableColSpan}
                       className="h-32 text-center"
                     >
                       <div className="flex flex-col items-center justify-center text-muted-foreground">

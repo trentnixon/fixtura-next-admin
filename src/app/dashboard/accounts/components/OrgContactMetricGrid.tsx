@@ -13,7 +13,7 @@ type OrgContactMetricGridProps = {
 
 export function OrgContactMetricGrid({ metrics }: OrgContactMetricGridProps) {
   return (
-    <div className="mb-4 grid overflow-hidden rounded-md border border-slate-200 bg-white md:grid-cols-3">
+    <div className="mb-4 grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-3">
       {metrics.map((metric) => {
         const Icon = metric.icon;
 

@@ -22,15 +22,18 @@ import {
   CreditCard,
   AlertCircle,
   Search,
-  ImageIcon,
+  FileCheck,
+  Clock,
+  UserX,
 } from "lucide-react";
-import Image from "next/image";
 import {
   getUnsubscribedEmails,
-  isEmailUnsubscribed,
 } from "@/lib/utils/unsubscribedEmails";
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Fragment } from "react";
 import { useAccountsQuery } from "@/hooks/accounts/useAccountsQuery";
+import { useGlobalContext } from "@/components/providers/GlobalContext";
+import { resolveStrapiMediaUrl } from "@/lib/utils/strapiMediaUrl";
+import { OrgContactListingLogo } from "@/app/dashboard/accounts/components/OrgContactListingLogo";
 import { Input } from "@/components/ui/input";
 import {
   Pagination,
@@ -48,6 +51,19 @@ import {
   formatOrgContactsForCsv,
   orgContactSearchTokens,
 } from "@/lib/utils/orgContactListingDisplay";
+import {
+  countOrgContactInsights,
+  isExportReadyOrgContact,
+  matchesOrgContactQualityFilter,
+  type OrgContactQualityFilter,
+} from "@/lib/utils/orgContactListingFilters";
+import { OrgContactListingQualitySelect } from "@/app/dashboard/accounts/components/OrgContactListingQualitySelect";
+import { OrgContactListingStatusBadges } from "@/app/dashboard/accounts/components/OrgContactListingStatusBadges";
+import {
+  OrgContactExpandToggle,
+  OrgContactScrapedPeoplePanel,
+} from "@/app/dashboard/accounts/components/OrgContactScrapedPeoplePanel";
+import Link from "next/link";
 import {
   Select,
   SelectContent,
@@ -77,6 +93,7 @@ export default function ClubEmails({
   onSportSlugChange,
   embedded = false,
 }: ClubEmailsProps) {
+  const { Domain } = useGlobalContext();
   const { data, isLoading, error, refetch } = useGetClubEmails(sportSlug);
   const { data: accountsData, isLoading: accountsLoading } = useAccountsQuery();
   const [unsubscribedEmails, setUnsubscribedEmails] = useState<string[]>([]);
@@ -85,6 +102,11 @@ export default function ClubEmails({
     initialFilter,
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [qualityFilter, setQualityFilter] =
+    useState<OrgContactQualityFilter>("all");
+  const [expandedRowIds, setExpandedRowIds] = useState<Set<number>>(
+    () => new Set(),
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -126,6 +148,7 @@ export default function ClubEmails({
     deliveryEmail: string | null;
     id: number;
     logo?: string | null;
+    hasActiveOrder: boolean;
   }
 
   const clubIdToAccountMap = useMemo(() => {
@@ -139,13 +162,19 @@ export default function ClubEmails({
             userEmail: account.email,
             deliveryEmail: account.DeliveryAddress,
             id: account.id,
-            logo: account.logo?.url,
+            logo: resolveStrapiMediaUrl(account.logo?.url, Domain.strapi),
+            hasActiveOrder: account.hasActiveOrder,
           });
         });
       },
     );
     return map;
-  }, [accountsData]);
+  }, [accountsData, Domain.strapi]);
+
+  const linkedClubAccountIds = useMemo(
+    () => new Set(clubIdToAccountMap.keys()),
+    [clubIdToAccountMap],
+  );
 
   const filterOptions = useMemo(
     () => buildSubscriptionFilterOptions(hideAllFilter),
@@ -165,6 +194,15 @@ export default function ClubEmails({
 
       if (!matchesSubscription) return false;
 
+      if (
+        !matchesOrgContactQualityFilter(club, qualityFilter, {
+          unsubscribedEmails,
+          hasLinkedAccount: linkedClubAccountIds.has(club.id),
+        })
+      ) {
+        return false;
+      }
+
       // 2. Filter by search query
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch =
@@ -179,7 +217,16 @@ export default function ClubEmails({
 
       return matchesSearch;
     });
-  }, [data, filter, searchQuery, activeClubIds, inactiveClubIds]);
+  }, [
+    data,
+    filter,
+    qualityFilter,
+    searchQuery,
+    activeClubIds,
+    inactiveClubIds,
+    unsubscribedEmails,
+    linkedClubAccountIds,
+  ]);
 
   // Pagination logic
   const totalPages = Math.ceil(filteredClubs.length / itemsPerPage);
@@ -191,7 +238,7 @@ export default function ClubEmails({
   // Reset to page 1 when filter or search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [filter, searchQuery]);
+  }, [filter, searchQuery, qualityFilter]);
 
   if (isLoading || unsubscribedLoading || accountsLoading) {
     return (
@@ -229,19 +276,15 @@ export default function ClubEmails({
     inactiveClubIds.has(club.id),
   ).length;
 
-  // Function to download CSV for SendGrid
-  const downloadCSV = () => {
-    const isValidEmail = (email: string) => {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      return emailRegex.test(email);
-    };
+  const insightCounts = countOrgContactInsights(
+    data.data,
+    unsubscribedEmails,
+    linkedClubAccountIds,
+  );
 
-    const validClubs = filteredClubs.filter(
-      (club) =>
-        club.email &&
-        club.email.trim() !== "" &&
-        isValidEmail(club.email.trim()) &&
-        !isEmailUnsubscribed(club.email, unsubscribedEmails),
+  const downloadCSV = () => {
+    const validClubs = filteredClubs.filter((club) =>
+      isExportReadyOrgContact(club, unsubscribedEmails),
     );
 
     const isAccountView = filter !== "all";
@@ -297,7 +340,36 @@ export default function ClubEmails({
       value: inactiveSubscribedClubs.toLocaleString(),
       detail: "No active order",
     },
+    {
+      icon: FileCheck,
+      label: "Export ready",
+      value: insightCounts.exportReady.toLocaleString(),
+      detail: "Valid email, not unsubscribed",
+    },
+    {
+      icon: Clock,
+      label: "Never scraped",
+      value: insightCounts.neverScraped.toLocaleString(),
+      detail: "No org contact scrape yet",
+    },
+    {
+      icon: UserX,
+      label: "No account",
+      value: insightCounts.noAccount.toLocaleString(),
+      detail: "Not linked in account lookup",
+    },
   ];
+
+  const tableColSpan = filter === "all" ? 9 : 8;
+
+  const toggleExpanded = (id: number) => {
+    setExpandedRowIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   return (
     <div className={cn(!embedded && "mt-4", "space-y-4")}>
@@ -343,6 +415,12 @@ export default function ClubEmails({
               </Select>
             ) : null}
 
+            <OrgContactListingQualitySelect
+              value={qualityFilter}
+              onValueChange={setQualityFilter}
+              id="club-emails-quality"
+            />
+
             <LabeledSegmentedControl
               label="Status"
               value={filter}
@@ -374,6 +452,7 @@ export default function ClubEmails({
           <Table>
             <TableHeader>
               <TableRow className="bg-slate-50 hover:bg-slate-50">
+                <TableHead className="w-[44px]" aria-label="Expand scraped contacts" />
                 <TableHead className="w-[60px]">Logo</TableHead>
                 <TableHead>Club</TableHead>
                 {filter === "all" ? (
@@ -403,29 +482,24 @@ export default function ClubEmails({
               {paginatedClubs.length > 0 ? (
                 paginatedClubs.map((club) => {
                   const accountInfo = clubIdToAccountMap.get(club.id);
+                  const isExpanded = expandedRowIds.has(club.id);
+                  const scrapedCount = club.contacts?.length ?? 0;
+
                   return (
-                    <TableRow key={club.id} className="hover:bg-muted/30">
+                    <Fragment key={club.id}>
+                    <TableRow className="hover:bg-muted/30">
                       <TableCell>
-                        {accountInfo?.logo ? (
-                          <div className="flex items-center justify-center">
-                            <Image
-                              src={accountInfo.logo}
-                              alt={`${club.name} logo`}
-                              width={40}
-                              height={40}
-                              className="rounded object-contain"
-                              style={{
-                                maxWidth: "40px",
-                                maxHeight: "40px",
-                              }}
-                              unoptimized
-                            />
-                          </div>
-                        ) : (
-                          <div className="flex items-center justify-center">
-                            <ImageIcon className="h-5 w-5 text-muted-foreground" />
-                          </div>
-                        )}
+                        <OrgContactExpandToggle
+                          expanded={isExpanded}
+                          onToggle={() => toggleExpanded(club.id)}
+                          contactCount={scrapedCount}
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <OrgContactListingLogo
+                          logoUrl={accountInfo?.logo}
+                          orgName={club.name}
+                        />
                       </TableCell>
                       <TableCell>
                         <div className="text-sm font-medium text-slate-900">
@@ -434,6 +508,12 @@ export default function ClubEmails({
                         <div className="mt-0.5 text-xs text-muted-foreground">
                           ID: {club.id}
                         </div>
+                        <OrgContactListingStatusBadges
+                          row={club}
+                          accountId={accountInfo?.id}
+                          isActiveSubscription={activeClubIds.has(club.id)}
+                          unsubscribedEmails={unsubscribedEmails}
+                        />
                       </TableCell>
 
                       {filter === "all" ? (
@@ -499,7 +579,21 @@ export default function ClubEmails({
                       />
 
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex flex-wrap justify-end gap-2">
+                          {accountInfo?.id ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={siteNavigationCtaClass}
+                              asChild
+                            >
+                              <Link
+                                href={`/dashboard/accounts/club/${accountInfo.id}`}
+                              >
+                                Account
+                              </Link>
+                            </Button>
+                          ) : null}
                           {filter === "all" && (
                             <>
                               {club.address &&
@@ -552,7 +646,7 @@ export default function ClubEmails({
                             asChild
                           >
                             <a
-                              href={`http://localhost:1337/admin/content-manager/collection-types/api::club.club/${club.id}`}
+                              href={`${Domain.strapi}/admin/content-manager/collection-types/api::club.club/${club.id}`}
                               target="_blank"
                               rel="noopener noreferrer"
                             >
@@ -562,12 +656,20 @@ export default function ClubEmails({
                         </div>
                       </TableCell>
                     </TableRow>
+                    {isExpanded ? (
+                      <OrgContactScrapedPeoplePanel
+                        contacts={club.contacts}
+                        lastOrgContactScrapeAt={club.lastOrgContactScrapeAt}
+                        colSpan={tableColSpan}
+                      />
+                    ) : null}
+                    </Fragment>
                   );
                 })
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={filter === "all" ? 8 : 7}
+                    colSpan={tableColSpan}
                     className="h-32 text-center"
                   >
                     <div className="flex flex-col items-center justify-center text-muted-foreground">

@@ -48,6 +48,14 @@ const nextConfig: NextConfig = {
       {
         hostname: "res.cloudinary.com",
       },
+      {
+        protocol: "http",
+        hostname: "localhost",
+        port: "1337",
+      },
+      {
+        hostname: "fixtura-backend.herokuapp.com",
+      },
     ],
   },
 };
