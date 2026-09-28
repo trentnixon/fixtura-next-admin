@@ -5,6 +5,10 @@ Single-club admin detail page for viewing a comprehensive review of one club by 
 ## Files
 
 - `page.tsx`: Entry point for the club admin detail page powered by the Club Admin Detail endpoint.
+- `components/ClubHeader.tsx`: Club identity, contact, location, and the location pin map.
+- `components/ClubLocationMap.tsx`: Loads one OpenStreetMap pin from stored coordinates or a geocoded address.
+- `components/ClubLocationMapCanvas.tsx`: Leaflet canvas for that pin.
+- `components/clubLocationMap.ts`: Coordinate and geocode-response checks for the pin.
 - `SingleClubNotes.md`: Handover notes and API documentation from the CMS team.
 - `DevelopmentRoadMap.md`: Roadmap for implementing the single-club review experience.
 - `Tickets.md`: Ticket backlog and phased tasks for integrating the club admin detail route.

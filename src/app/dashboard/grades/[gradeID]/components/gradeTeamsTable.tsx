@@ -10,17 +10,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Input } from "@/components/ui/input";
 
 import {
   ArrowRight,
+  Calendar,
   ChevronDown,
-  DatabaseIcon,
-  ExternalLinkIcon,
-  SearchIcon,
-  XIcon,
+  ExternalLink,
+  ShieldCheck,
   Users,
 } from "lucide-react";
+import { SearchInput } from "@/app/dashboard/fixtures/_components/_utils/SearchInput";
+import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState, useMemo } from "react";
@@ -58,34 +58,23 @@ export const GradeTeamsTable = () => {
 
   return (
     <SectionContainer
-      title="Teams in Grade"
-      description={`Review and manage the ${teams.length} teams associated with this grade.`}
+      title="Teams"
+      description={`${teams.length} team${teams.length === 1 ? "" : "s"} linked to this grade.`}
       icon={<Users className="h-5 w-5 text-slate-500" />}
-      action={
-        <div className="flex items-center gap-2 max-w-sm">
-          <div className="relative">
-            <SearchIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-500" />
-            <Input
-              type="text"
-              placeholder="Search teams..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-8 h-9 w-[200px] lg:w-[300px]"
-            />
-            {searchQuery && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSearchQuery("")}
-                className="absolute right-0 top-0 h-9 w-9 text-slate-500"
-              >
-                <XIcon className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        </div>
-      }
     >
+      <div
+        className={cn(
+          "mb-4 flex min-w-0 flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 md:flex-row md:items-center",
+        )}
+      >
+        <SearchInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search teams..."
+          className="min-w-0 flex-1"
+        />
+      </div>
+
       <div className="rounded-md border overflow-hidden">
         <ScrollArea className="w-full">
           <Table className="min-w-[760px]">
@@ -170,32 +159,16 @@ export const GradeTeamsTable = () => {
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button variant="primary" size="sm">
+                                <ExternalLink className="h-4 w-4" />
                                 Open
                                 <ChevronDown className="h-3.5 w-3.5" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-44">
+                            <DropdownMenuContent align="end" className="w-48">
                               <DropdownMenuLabel>
                                 Destinations
                               </DropdownMenuLabel>
                               <DropdownMenuSeparator />
-                              {cmsUrl ? (
-                                <DropdownMenuItem asChild>
-                                  <Link
-                                    href={cmsUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                  >
-                                    <DatabaseIcon className="h-4 w-4" />
-                                    Open in CMS
-                                  </Link>
-                                </DropdownMenuItem>
-                              ) : (
-                                <DropdownMenuItem disabled>
-                                  <DatabaseIcon className="h-4 w-4" />
-                                  Open in CMS
-                                </DropdownMenuItem>
-                              )}
                               {playHqUrl ? (
                                 <DropdownMenuItem asChild>
                                   <Link
@@ -203,14 +176,31 @@ export const GradeTeamsTable = () => {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                   >
-                                    <ExternalLinkIcon className="h-4 w-4" />
+                                    <Calendar className="h-4 w-4" />
                                     View on PlayHQ
                                   </Link>
                                 </DropdownMenuItem>
                               ) : (
                                 <DropdownMenuItem disabled>
-                                  <ExternalLinkIcon className="h-4 w-4" />
+                                  <Calendar className="h-4 w-4" />
                                   View on PlayHQ
+                                </DropdownMenuItem>
+                              )}
+                              {cmsUrl ? (
+                                <DropdownMenuItem asChild>
+                                  <Link
+                                    href={cmsUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    <ShieldCheck className="h-4 w-4" />
+                                    Open in CMS
+                                  </Link>
+                                </DropdownMenuItem>
+                              ) : (
+                                <DropdownMenuItem disabled>
+                                  <ShieldCheck className="h-4 w-4" />
+                                  Open in CMS
                                 </DropdownMenuItem>
                               )}
                             </DropdownMenuContent>

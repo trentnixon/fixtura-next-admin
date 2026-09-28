@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronUp, FileText, Image as ImageIcon, Download, Clock } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronUp,
+  FileText,
+  Image as ImageIcon,
+  Download,
+  Clock,
+  Info,
+} from "lucide-react";
 import { SingleFixtureDetailResponse } from "@/types/fixtureDetail";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,8 +48,9 @@ export default function FixtureAdditional({ data }: FixtureAdditionalProps) {
 
     return (
         <SectionContainer
-            title="Additional Information"
-            description="Content, downloads, renders, and admin data"
+            title="Additional information"
+            description="Content, downloads, renders, and admin metadata."
+            icon={<Info className="h-5 w-5 text-slate-500" aria-hidden />}
         >
             <div className="space-y-4">
                 {/* Content Section */}

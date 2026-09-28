@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { toFixtureDisplayText } from "@/app/dashboard/fixtures/_components/_utils/fixtureDisplayText";
 import { SingleFixtureDetailResponse } from "@/types/fixtureDetail";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";
@@ -38,7 +39,8 @@ export default function FixtureDetailHeader({
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="space-y-2">
             <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {fixture.round || "Fixture"} - {fixture.type}
+              {toFixtureDisplayText(fixture.round, "Fixture")} -{" "}
+              {toFixtureDisplayText(fixture.type)}
             </h2>
             <div className="flex items-center gap-2">
               <Badge
@@ -122,13 +124,13 @@ export default function FixtureDetailHeader({
                 </TableRow>
               )}
 
-              {fixture.venue.ground && (
+              {toFixtureDisplayText(fixture.venue.ground, "") && (
                 <TableRow>
                   <TableCell className="font-medium text-gray-700 dark:text-gray-300 w-1/3">
                     Venue
                   </TableCell>
                   <TableCell className="text-gray-900 dark:text-gray-100">
-                    {fixture.venue.ground}
+                    {toFixtureDisplayText(fixture.venue.ground)}
                   </TableCell>
                 </TableRow>
               )}

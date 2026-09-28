@@ -13,6 +13,10 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { ClubCore, ClubStatistics } from "@/types/clubAdminDetail";
+import {
+  toFixtureDisplayText,
+  toFixtureMapsQuery,
+} from "@/app/dashboard/fixtures/_components/_utils/fixtureDisplayText";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/ui-library/badges/StatusBadge";
 import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
@@ -34,6 +38,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ClientOnly } from "@/components/util/ClientOnly";
+import { ClubLocationMap } from "./ClubLocationMap";
+import {
+  isPlottableCoordinate,
+  pickClubGeocodeQuery,
+} from "./clubLocationMap";
 
 interface ClubHeaderProps {
   club: ClubCore;
@@ -52,25 +61,47 @@ export default function ClubHeader({ club, statistics }: ClubHeaderProps) {
     href,
   } = club;
 
-  const locationParts: string[] = [];
-  if (location?.address) locationParts.push(location.address);
-  if (location?.city) locationParts.push(location.city);
-  if (location?.state) locationParts.push(location.state);
-  if (location?.country) locationParts.push(location.country);
+  const phone = toFixtureDisplayText(contactDetails?.phone, "");
+  const email = toFixtureDisplayText(contactDetails?.email, "");
+  const contactAddress = toFixtureDisplayText(contactDetails?.address, "");
+
+  const locationParts = [
+    toFixtureDisplayText(location?.address, ""),
+    toFixtureDisplayText(location?.city, ""),
+    toFixtureDisplayText(location?.state, ""),
+    toFixtureDisplayText(location?.country, ""),
+  ].filter((part) => part.length > 0);
   const locationString =
     locationParts.length > 0 ? locationParts.join(", ") : null;
 
+  const mapsQuery =
+    toFixtureMapsQuery(location?.address) ??
+    toFixtureMapsQuery(contactDetails?.address);
+
   const googleMapsUrl = location?.coordinates
     ? `https://www.google.com/maps/search/?api=1&query=${location.coordinates.lat},${location.coordinates.lng}`
-    : locationString
-      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-        locationString,
-      )}`
-      : null;
+    : mapsQuery
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`
+      : locationString
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            locationString,
+          )}`
+        : null;
 
-  const hasContactDetails =
-    contactDetails?.phone || contactDetails?.email || contactDetails?.address;
-  const hasLocation = location && (locationString || location.coordinates);
+  const hasContactDetails = Boolean(phone || email || contactAddress);
+  const hasLocation = Boolean(
+    location && (locationString || location.coordinates || mapsQuery),
+  );
+  const hasCoordinates = isPlottableCoordinate(location?.coordinates);
+  const geocodeQuery = hasCoordinates
+    ? null
+    : pickClubGeocodeQuery([
+        mapsQuery,
+        locationString,
+        contactAddress || null,
+      ]);
+  const canPlot = hasCoordinates || geocodeQuery !== null;
+  const pinAddress = locationString ?? (contactAddress || null);
 
   return (
     <div className="space-y-6">
@@ -145,7 +176,8 @@ export default function ClubHeader({ club, statistics }: ClubHeaderProps) {
         </div>
       </div>
 
-      {(hasContactDetails || hasLocation) && (
+      {(hasContactDetails || hasLocation || canPlot) && (
+        <div className="space-y-6">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           {hasContactDetails && (
             <ElementContainer
@@ -156,12 +188,12 @@ export default function ClubHeader({ club, statistics }: ClubHeaderProps) {
             >
               <div className="divide-y divide-slate-200">
                 <DetailRow icon={<Phone className="h-4 w-4" />} label="Phone">
-                  {contactDetails?.phone ? (
+                  {phone ? (
                     <a
-                      href={`tel:${contactDetails.phone}`}
+                      href={`tel:${phone}`}
                       className="truncate text-sm font-medium text-slate-900 hover:text-brandPrimary-700"
                     >
-                      {contactDetails.phone}
+                      {phone}
                     </a>
                   ) : (
                     <span className="text-sm text-muted-foreground">
@@ -170,13 +202,13 @@ export default function ClubHeader({ club, statistics }: ClubHeaderProps) {
                   )}
                 </DetailRow>
                 <DetailRow icon={<Mail className="h-4 w-4" />} label="Email">
-                  {contactDetails?.email ? (
+                  {email ? (
                     <a
-                      href={`mailto:${contactDetails.email}`}
+                      href={`mailto:${email}`}
                       className="truncate text-sm font-medium text-slate-900 hover:text-brandPrimary-700"
-                      title={contactDetails.email}
+                      title={email}
                     >
-                      {contactDetails.email}
+                      {email}
                     </a>
                   ) : (
                     <span className="text-sm text-muted-foreground">
@@ -189,7 +221,7 @@ export default function ClubHeader({ club, statistics }: ClubHeaderProps) {
                   label="Address"
                 >
                   <span className="text-sm font-medium text-slate-900">
-                    {contactDetails?.address ?? "Not provided"}
+                    {contactAddress || "Not provided"}
                   </span>
                 </DetailRow>
               </div>
@@ -229,6 +261,15 @@ export default function ClubHeader({ club, statistics }: ClubHeaderProps) {
               </div>
             </ElementContainer>
           )}
+        </div>
+        {canPlot ? (
+          <ClubLocationMap
+            name={name}
+            addressLabel={pinAddress}
+            geocodeQuery={geocodeQuery}
+            coordinates={location?.coordinates ?? null}
+          />
+        ) : null}
         </div>
       )}
     </div>

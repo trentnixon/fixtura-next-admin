@@ -30,6 +30,15 @@ export interface ClubAdminDetailPayload {
 // CORE CLUB DATA
 // ============================================================================
 
+/** CMS may return a plain string or a PlayHQ label `{ text, mapsQuery }`. */
+export type CmsDisplayField =
+  | string
+  | null
+  | {
+      text?: string | null;
+      mapsQuery?: string | null;
+    };
+
 export interface ClubCore {
   id: number;
   name: string;
@@ -41,10 +50,10 @@ export interface ClubCore {
   contactDetails: {
     phone: string | null;
     email: string | null;
-    address: string | null;
+    address: CmsDisplayField;
   } | null;
   location: {
-    address: string | null;
+    address: CmsDisplayField;
     city: string | null;
     state: string | null;
     country: string | null;

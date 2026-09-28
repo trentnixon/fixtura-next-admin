@@ -35,6 +35,7 @@ import { useSorting } from "./_utils/useSorting";
 import { SearchInput } from "./_utils/SearchInput";
 import { formatDate } from "./_utils/dateUtils";
 import { getStatusBadge, getRowColorClass } from "./_utils/statusUtils";
+import { toFixtureDisplayText } from "./_utils/fixtureDisplayText";
 import { groupByGrade, getTeamsDisplay } from "./_utils/fixtureUtils";
 
 interface AssociationFixturesTableProps {
@@ -81,8 +82,8 @@ export function AssociationFixturesTable({
     // Apply team name search filter
     if (teamSearchQuery) {
       filtered = filtered.filter((fixture) => {
-        const home = fixture.teams?.home?.toLowerCase() || "";
-        const away = fixture.teams?.away?.toLowerCase() || "";
+        const home = toFixtureDisplayText(fixture.teams?.home, "").toLowerCase();
+        const away = toFixtureDisplayText(fixture.teams?.away, "").toLowerCase();
         const query = teamSearchQuery.toLowerCase();
         return home.includes(query) || away.includes(query);
       });
@@ -123,16 +124,16 @@ export function AssociationFixturesTable({
             bValue = b.date;
             break;
           case "round":
-            aValue = a.round?.toLowerCase() || "";
-            bValue = b.round?.toLowerCase() || "";
+            aValue = toFixtureDisplayText(a.round, "").toLowerCase();
+            bValue = toFixtureDisplayText(b.round, "").toLowerCase();
             break;
           case "grade":
             aValue = a.grade?.name?.toLowerCase() || "";
             bValue = b.grade?.name?.toLowerCase() || "";
             break;
           case "status":
-            aValue = a.status?.toLowerCase() || "";
-            bValue = b.status?.toLowerCase() || "";
+            aValue = toFixtureDisplayText(a.status, "").toLowerCase();
+            bValue = toFixtureDisplayText(b.status, "").toLowerCase();
             break;
           default:
             return 0;
@@ -485,10 +486,12 @@ export function AssociationFixturesTable({
                       </div>
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-sm">
-                      {fixture.round || "N/A"}
+                      {toFixtureDisplayText(fixture.round)}
                     </TableCell>
                     <TableCell>
-                      <Badge variant="outline">{fixture.type || "N/A"}</Badge>
+                      <Badge variant="outline">
+                        {toFixtureDisplayText(fixture.type)}
+                      </Badge>
                     </TableCell>
                     <TableCell>{getStatusBadge(fixture.status)}</TableCell>
                     <TableCell className="text-right">

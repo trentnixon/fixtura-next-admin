@@ -2,37 +2,42 @@
 
 import { useParams } from "next/navigation";
 import { useMemo } from "react";
-import {
-  ClipboardCheck,
-  Gauge,
-  Link2,
-  Trophy,
-} from "lucide-react";
+import { ClipboardCheck, Gauge, RefreshCcw } from "lucide-react";
 
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
+import { Button } from "@/components/ui/button";
+import { siteNavigationCtaClass } from "@/lib/actions/siteNavigationButtonStyles";
+import { cn } from "@/lib/utils";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
-import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   sectionTabListClass,
   sectionTabTriggerClass,
 } from "@/lib/actions/siteNavigationButtonStyles";
 import { ErrorState, LoadingState } from "@/components/ui-library";
+import { toFixtureDisplayText } from "@/app/dashboard/fixtures/_components/_utils/fixtureDisplayText";
 import { useSingleFixtureDetail } from "@/hooks/fixtures/useSingleFixtureDetail";
 
-import FixtureActionsBar from "./_components/FixtureActionsBar";
-import FixtureAdditional from "./_components/FixtureAdditional";
-import FixtureMatch from "./_components/FixtureMatch";
-import FixtureRelatedEntities from "./_components/FixtureRelatedEntities";
+import FixtureScorecardSection from "./_components/FixtureScorecardSection";
 import FixtureSnapshot from "./_components/FixtureSnapshot";
 import FixtureValidation from "./_components/FixtureValidation";
 
 const fixtureDetailTabs = [
-  { value: "snapshot", label: "Snapshot", icon: Gauge },
-  { value: "scorecard", label: "Scorecard", icon: Trophy },
+  { value: "match", label: "Match", icon: Gauge },
   { value: "validation", label: "Validation", icon: ClipboardCheck },
-  { value: "related", label: "Related", icon: Link2 },
 ] as const;
+
+function formatTitleDate(value: string | null | undefined): string {
+  if (!value) return "—";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("en-AU", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "Australia/Sydney",
+  }).format(date);
+}
 
 export default function FixturePage() {
   const params = useParams<{ id: string }>();
@@ -43,93 +48,89 @@ export default function FixturePage() {
     return isNaN(id) ? null : id;
   }, [params?.id]);
 
-  const { data, isLoading, error, refetch } = useSingleFixtureDetail(fixtureId);
+  const { data, isLoading, isFetching, error, refetch } =
+    useSingleFixtureDetail(fixtureId);
 
   if (isLoading && !data) {
-    return (
-      <>
-        <CreatePageTitle
-          title="Fixture detail"
-          byLine={`Fixture ID: ${fixtureId || "Loading…"}`}
-        />
-        <PageContainer padding="xs" spacing="lg">
-          <SectionContainer title="Loading">
-            <LoadingState message="Loading fixture detail..." />
-          </SectionContainer>
-        </PageContainer>
-      </>
-    );
+    return <LoadingState message="Loading fixture detail..." />;
   }
 
   if (error) {
     return (
-      <>
-        <CreatePageTitle
-          title="Fixture detail"
-          byLine={`Fixture ID: ${fixtureId || "Invalid"}`}
-        />
-        <PageContainer padding="xs" spacing="lg">
-          <SectionContainer title="Error">
-            <ErrorState
-              error={
-                error instanceof Error
-                  ? error
-                  : new Error("Failed to load fixture detail")
-              }
-              title="Failed to load fixture detail"
-              onRetry={() => refetch()}
-            />
-          </SectionContainer>
-        </PageContainer>
-      </>
+      <ErrorState
+        title="Failed to load fixture detail"
+        error={
+          error instanceof Error
+            ? error
+            : new Error("Failed to load fixture detail")
+        }
+        onRetry={() => refetch()}
+      />
     );
   }
 
   if (!fixtureId || !data) {
     return (
-      <>
-        <CreatePageTitle title="Fixture detail" byLine="Invalid fixture ID" />
-        <PageContainer padding="xs" spacing="lg">
-          <SectionContainer title="Error">
-            <ErrorState
-              error={
-                new Error(
-                  "Invalid fixture ID. Please provide a valid numeric ID.",
-                )
-              }
-              onRetry={() => window.location.reload()}
-            />
-          </SectionContainer>
-        </PageContainer>
-      </>
+      <ErrorState
+        error={
+          new Error(
+            "Invalid fixture ID. Please provide a valid numeric ID.",
+          )
+        }
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
-  const renderIds = data.renderStatus
-    ? [
-        ...data.renderStatus.upcomingGamesRenders.map((render) => render.id),
-        ...data.renderStatus.gameResultsRenders.map((render) => render.id),
-      ]
-    : [];
-  const titleContext = data.grade
-    ? [
-        data.grade.gradeName,
-        data.grade.association ? data.grade.association.name : null,
-      ]
-        .filter(Boolean)
-        .join(" · ")
+  const { fixture, grade, club, context } = data;
+  const homeName =
+    club[0]?.name ?? toFixtureDisplayText(fixture.teams.home.name, "Home");
+  const awayName =
+    club[1]?.name ?? toFixtureDisplayText(fixture.teams.away.name, "Away");
+
+  const titleContext = grade
+    ? [grade.gradeName, grade.association?.name].filter(Boolean).join(" · ")
     : "Fixture details";
 
   return (
     <>
       <CreatePageTitle
-        title={`Fixture #${fixtureId}`}
-        byLine={`${data.fixture.round || "Fixture"} · ${data.fixture.type}`}
-        byLineBottom={titleContext}
-      />
-      <PageContainer padding="xs" spacing="lg">
-        <Tabs defaultValue="snapshot" className="w-full min-w-0 max-w-full">
-          <div className="flex flex-col gap-4 pb-8 lg:flex-row lg:items-end lg:justify-between">
+        title={`${homeName} vs ${awayName}`}
+        byLine={`${toFixtureDisplayText(fixture.round, "Fixture")} · ${toFixtureDisplayText(fixture.type)}`}
+        byLineBottom={
+          isFetching
+            ? "Refreshing fixture data…"
+            : `${titleContext} · Last updated ${formatTitleDate(
+                context.admin.updatedAt,
+              )}`
+        }
+      >
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={() => refetch()}
+          disabled={isFetching}
+          className={cn(siteNavigationCtaClass, "shrink-0")}
+        >
+          <RefreshCcw
+            className={cn(
+              "h-4 w-4 shrink-0 text-current",
+              isFetching && "animate-spin",
+            )}
+            aria-hidden
+          />
+          Refresh
+        </Button>
+      </CreatePageTitle>
+      <PageContainer
+        padding="xs"
+        spacing="lg"
+        className={cn(isFetching && "opacity-95 transition-opacity")}
+        aria-busy={isFetching}
+      >
+        <Tabs defaultValue="match" className="w-full min-w-0 max-w-full">
+          <div className="pb-8">
             <TabsList variant="primary" className={sectionTabListClass}>
               {fixtureDetailTabs.map((tab) => {
                 const Icon = tab.icon;
@@ -150,33 +151,15 @@ export default function FixturePage() {
                 );
               })}
             </TabsList>
-
-            <FixtureActionsBar
-              fixtureId={fixtureId}
-              scorecardUrl={data.fixture.matchDetails.urlToScoreCard}
-              clubs={data.club.map((club) => ({
-                id: club.id,
-                name: club.name,
-              }))}
-              renderIds={renderIds}
-            />
           </div>
 
-          <TabsContent value="snapshot" className="mt-0">
-            <FixtureSnapshot data={data} />
+          <TabsContent value="match" className="mt-0 space-y-6">
+            <FixtureSnapshot data={data} fixtureId={fixtureId} />
+            <FixtureScorecardSection data={data} />
           </TabsContent>
 
-          <TabsContent value="scorecard" className="mt-0">
-            <FixtureMatch data={data} />
-          </TabsContent>
-
-          <TabsContent value="validation" className="mt-0">
+          <TabsContent value="validation" className="mt-0 space-y-6">
             <FixtureValidation data={data} />
-          </TabsContent>
-
-          <TabsContent value="related" className="mt-0 space-y-6">
-            <FixtureRelatedEntities data={data} />
-            <FixtureAdditional data={data} />
           </TabsContent>
         </Tabs>
       </PageContainer>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Search } from "lucide-react";
+import { Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -50,7 +50,7 @@ export default function TriggerFixtureDiscoveryButton({
           disabled={triggerDisabled}
           onSelect={openDialogAfterMenuCloses}
         >
-          <Search className="h-4 w-4" />
+          <RefreshCw className="h-4 w-4" />
           Discover fixtures
         </DropdownMenuItem>
       ) : (
@@ -60,7 +60,7 @@ export default function TriggerFixtureDiscoveryButton({
           variant="accent"
           size="sm"
         >
-          <Search className="h-4 w-4 mr-2" />
+          <RefreshCw className="h-4 w-4 mr-2" />
           Discover fixtures
         </Button>
       )}
@@ -69,7 +69,7 @@ export default function TriggerFixtureDiscoveryButton({
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Search className="h-5 w-5 text-brandAccent-600" />
+              <RefreshCw className="h-5 w-5 text-brandAccent-600" />
               Confirm Fixture Discovery
             </DialogTitle>
             <DialogDescription>
@@ -106,7 +106,7 @@ export default function TriggerFixtureDiscoveryButton({
                 </>
               ) : (
                 <>
-                  <Search className="h-4 w-4 mr-2" />
+                  <RefreshCw className="h-4 w-4 mr-2" />
                   Confirm Discovery
                 </>
               )}

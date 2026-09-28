@@ -119,7 +119,7 @@ export function matchesCampaignPreset(
 ): boolean {
   if (!hasValidAssociationTimeline(association)) return false;
 
-  if (!isAssociationInActiveSeason(association)) {
+  if (preset !== "marketing" && !isAssociationInActiveSeason(association)) {
     return false;
   }
 
@@ -239,10 +239,7 @@ export function computeTimelineDiscoveryStats(
   );
   const marketingIds = new Set<number>();
   withValid.forEach((a) => {
-    if (
-      isAssociationInActiveSeason(a) &&
-      (isAssociationStartingSoon(a) || isAssociationHighValue(a, thresholds))
-    ) {
+    if (isAssociationStartingSoon(a) || isAssociationHighValue(a, thresholds)) {
       marketingIds.add(a.id);
     }
   });

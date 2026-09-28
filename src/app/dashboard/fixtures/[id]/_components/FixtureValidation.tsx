@@ -1,163 +1,352 @@
 "use client";
 
-import { AlertCircle, CheckCircle2 } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  ClipboardCheck,
+  Gauge,
+  ListChecks,
+  Sparkles,
+} from "lucide-react";
+import { format } from "date-fns";
 import { SingleFixtureDetailResponse } from "@/types/fixtureDetail";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { SnapshotMetric } from "@/app/dashboard/fixtures/_components/_utils/snapshotMetric";
+import {
+  breakdownCategoriesBelow,
+  findWeakestBreakdown,
+  formatValidationStatus,
+  VALIDATION_BREAKDOWN_LABELS,
+  validationProgressIndicatorClass,
+} from "@/app/dashboard/fixtures/_components/_utils/fixtureValidationDisplay";
 import { cn } from "@/lib/utils";
 
 interface FixtureValidationProps {
   data: SingleFixtureDetailResponse;
 }
 
+function validationStatusBadgeVariant(
+  status: string,
+): "default" | "secondary" | "destructive" | "outline" {
+  switch (status) {
+    case "excellent":
+    case "good":
+      return "default";
+    case "fair":
+      return "secondary";
+    case "poor":
+      return "outline";
+    case "critical":
+      return "destructive";
+    default:
+      return "secondary";
+  }
+}
+
+function formatGeneratedAt(iso: string): string {
+  try {
+    return format(new Date(iso), "PPp");
+  } catch {
+    return iso;
+  }
+}
+
 export default function FixtureValidation({ data }: FixtureValidationProps) {
-  const { validation } = data.meta;
+  const { validation, performance, generatedAt, fixtureId } = data.meta;
+  const weakest = findWeakestBreakdown(validation.breakdown);
 
-  const getStatusVariant = (
-    status: string
-  ): "default" | "secondary" | "destructive" | "outline" => {
-    switch (status) {
-      case "excellent":
-      case "good":
-        return "default";
-      case "fair":
-        return "secondary";
-      case "poor":
-        return "outline";
-      case "critical":
-        return "destructive";
-      default:
-        return "secondary";
-    }
-  };
+  const hasExplicitIssues =
+    validation.missingFields.length > 0 ||
+    validation.recommendations.length > 0;
 
-  // Get color class based on percentage
-  const getProgressColor = (value: number): string => {
-    if (value >= 80) return "bg-green-500"; // Excellent
-    if (value >= 60) return "bg-blue-500"; // Good
-    if (value >= 40) return "bg-yellow-500"; // Fair
-    if (value >= 20) return "bg-orange-500"; // Poor
-    return "bg-red-500"; // Critical
-  };
+  const categoryGaps = breakdownCategoriesBelow(validation.breakdown);
 
-  const breakdownItems = [
-    { label: "Basic Info", value: validation.breakdown.basicInfo },
-    { label: "Scheduling", value: validation.breakdown.scheduling },
-    { label: "Match Details", value: validation.breakdown.matchDetails },
-    { label: "Content", value: validation.breakdown.content },
-    { label: "Relations", value: validation.breakdown.relations },
-    { label: "Results", value: validation.breakdown.results },
-  ];
+  const isComplete =
+    !hasExplicitIssues &&
+    categoryGaps.length === 0 &&
+    validation.overallScore >= 80 &&
+    (validation.status === "excellent" || validation.status === "good");
 
   return (
     <SectionContainer
-      title="Data Quality"
-      description="Fixture data completeness validation"
+      title="Validation"
+      description="CMS completeness score, category breakdown, and remediation hints."
+      icon={<ClipboardCheck className="h-5 w-5 text-slate-500" aria-hidden />}
+      variant="compact"
+      contentClassName="p-0"
     >
-      <div className="space-y-6">
-        {/* Overall Score */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="text-4xl font-bold text-gray-900 dark:text-gray-100">
-              {validation.overallScore}%
-            </div>
-            <Badge variant={getStatusVariant(validation.status)} className="text-sm">
-              {validation.status}
-            </Badge>
-          </div>
-          {validation.missingFields.length === 0 &&
-            validation.recommendations.length === 0 && (
-              <div className="flex items-center gap-2 text-green-600 dark:text-green-400">
-                <CheckCircle2 className="w-5 h-5" />
-                <span className="text-sm font-medium">Complete</span>
-              </div>
-            )}
-        </div>
-
-        {/* Overall Progress Bar with Color */}
-        <div className="relative">
-          <Progress
-            value={validation.overallScore}
-            className={cn("h-3", "[&>div]:transition-all")}
-            indicatorClassName={getProgressColor(validation.overallScore)}
+      <div className="overflow-hidden bg-white">
+        <div className="grid overflow-hidden border-b border-slate-200 sm:grid-cols-2 lg:grid-cols-4">
+          <SnapshotMetric
+            title="Overall"
+            value={`${validation.overallScore}%`}
+            detail={formatValidationStatus(validation.status)}
+            icon={<Gauge className="h-4 w-4" />}
+          />
+          <SnapshotMetric
+            title="Focus area"
+            value={`${weakest.value}%`}
+            detail={weakest.label}
+            icon={<AlertCircle className="h-4 w-4" />}
+          />
+          <SnapshotMetric
+            title="Missing"
+            value={String(validation.missingFields.length)}
+            detail={
+              validation.missingFields.length === 1
+                ? "field flagged"
+                : "fields flagged"
+            }
+            icon={<ListChecks className="h-4 w-4" />}
+          />
+          <SnapshotMetric
+            title="Tips"
+            value={String(validation.recommendations.length)}
+            detail={
+              validation.recommendations.length === 1
+                ? "recommendation"
+                : "recommendations"
+            }
+            icon={<Sparkles className="h-4 w-4" />}
           />
         </div>
 
-        {/* Breakdown - Progress Bars Only */}
-        <div className="space-y-3">
-          <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Breakdown by Category
-          </div>
-          <div className="space-y-3">
-            {breakdownItems.map((item) => (
-              <div key={item.label}>
-                <div className="flex items-center justify-between text-sm mb-1">
-                  <span className="text-gray-600 dark:text-gray-400">
-                    {item.label}
-                  </span>
-                  <span className="font-medium text-gray-900 dark:text-gray-100">
-                    {item.value}%
-                  </span>
-                </div>
-                <Progress
-                  value={item.value}
-                  className="h-2"
-                  indicatorClassName={getProgressColor(item.value)}
-                />
+        <div className="border-b border-slate-200 px-4 py-4 sm:px-5">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-slate-900">
+                Overall completeness
+              </span>
+              <Badge
+                variant={validationStatusBadgeVariant(validation.status)}
+                className="capitalize"
+              >
+                {validation.status}
+              </Badge>
+              {validation.statusBased ? (
+                <Badge variant="outline" className="bg-slate-50 text-slate-600">
+                  Status-weighted
+                </Badge>
+              ) : null}
+            </div>
+            {isComplete ? (
+              <div className="flex items-center gap-2 text-emerald-700">
+                <CheckCircle2 className="h-4 w-4" aria-hidden />
+                <span className="text-sm font-medium">No open issues</span>
               </div>
-            ))}
+            ) : null}
           </div>
+          <Progress
+            value={validation.overallScore}
+            className="h-2.5"
+            indicatorClassName={validationProgressIndicatorClass(
+              validation.overallScore,
+            )}
+          />
+          {validation.statusBased ? (
+            <p className="mt-2 text-xs text-muted-foreground">
+              Categories are weighted for this fixture&apos;s match status (e.g.
+              results vs upcoming).
+            </p>
+          ) : null}
         </div>
 
-        {/* Issues */}
-        {(validation.missingFields.length > 0 ||
-          validation.recommendations.length > 0) && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {validation.missingFields.length > 0 && (
-                <div className="p-4 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-                    <span className="font-semibold text-sm text-yellow-900 dark:text-yellow-100">
-                      Missing Fields ({validation.missingFields.length})
+        <div className="border-b border-slate-200">
+          <p
+            className="border-b border-slate-200 bg-slate-50/80 px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-600 sm:px-5"
+          >
+            By category
+          </p>
+          <ul className="divide-y divide-slate-200">
+            {VALIDATION_BREAKDOWN_LABELS.map(({ key, label }) => {
+              const value = validation.breakdown[key];
+              return (
+                <li
+                  key={key}
+                  className="px-4 py-3 sm:px-5"
+                >
+                  <div className="mb-1.5 flex items-center justify-between gap-3 text-sm">
+                    <span className="font-medium text-slate-800">{label}</span>
+                    <span className="tabular-nums font-semibold text-slate-900">
+                      {value}%
                     </span>
                   </div>
-                  <ul className="list-disc list-inside space-y-1 text-xs text-yellow-800 dark:text-yellow-200">
-                    {validation.missingFields.slice(0, 3).map((field, index) => (
-                      <li key={index}>{field}</li>
-                    ))}
-                    {validation.missingFields.length > 3 && (
-                      <li className="text-yellow-600 dark:text-yellow-400">
-                        +{validation.missingFields.length - 3} more
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              )}
+                  <Progress
+                    value={value}
+                    className="h-1.5"
+                    indicatorClassName={validationProgressIndicatorClass(value)}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        </div>
 
-              {validation.recommendations.length > 0 && (
-                <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertCircle className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                    <span className="font-semibold text-sm text-blue-900 dark:text-blue-100">
-                      Recommendations ({validation.recommendations.length})
-                    </span>
-                  </div>
-                  <ul className="list-disc list-inside space-y-1 text-xs text-blue-800 dark:text-blue-200">
-                    {validation.recommendations.slice(0, 3).map((rec, index) => (
-                      <li key={index}>{rec}</li>
-                    ))}
-                    {validation.recommendations.length > 3 && (
-                      <li className="text-blue-600 dark:text-blue-400">
-                        +{validation.recommendations.length - 3} more
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              )}
-            </div>
-          )}
+        <ValidationRemediationSection
+          missingFields={validation.missingFields}
+          recommendations={validation.recommendations}
+          categoryGaps={categoryGaps}
+          isComplete={isComplete}
+        />
+
+        <div
+          className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 bg-slate-50/80 px-4 py-2.5 text-xs text-muted-foreground sm:px-5"
+        >
+          <span>
+            Fixture #{fixtureId} · Generated {formatGeneratedAt(generatedAt)}
+          </span>
+          <span className="tabular-nums">
+            API {performance.totalTimeMs}ms (fetch {performance.fetchTimeMs}ms
+            · process {performance.processingTimeMs}ms)
+          </span>
+        </div>
       </div>
     </SectionContainer>
+  );
+}
+
+function ValidationRemediationSection({
+  missingFields,
+  recommendations,
+  categoryGaps,
+  isComplete,
+}: {
+  missingFields: string[];
+  recommendations: string[];
+  categoryGaps: ReturnType<typeof breakdownCategoriesBelow>;
+  isComplete: boolean;
+}) {
+  const showMissing = missingFields.length > 0;
+  const showRecommendations = recommendations.length > 0;
+  const showGaps = !showMissing && !showRecommendations && categoryGaps.length > 0;
+
+  if (showMissing || showRecommendations) {
+    return (
+      <div
+        className={cn(
+          "grid border-t border-slate-200",
+          showMissing && showRecommendations
+            ? "md:grid-cols-2 md:divide-x md:divide-slate-200"
+            : "grid-cols-1",
+        )}
+      >
+        {showMissing ? (
+          <ValidationIssueList
+            title="Missing fields"
+            items={missingFields}
+            tone="amber"
+          />
+        ) : null}
+        {showRecommendations ? (
+          <ValidationIssueList
+            title="Recommendations"
+            items={recommendations}
+            tone="sky"
+          />
+        ) : null}
+      </div>
+    );
+  }
+
+  if (showGaps) {
+    return (
+      <div className="border-t border-slate-200">
+        <div
+          className="flex items-center gap-2 border-b border-slate-200 bg-slate-50/80 px-4 py-2.5 sm:px-5"
+        >
+          <Sparkles className="h-4 w-4 shrink-0 text-sky-600" aria-hidden />
+          <span className="text-sm font-semibold text-slate-900">
+            Category gaps
+          </span>
+          <span className="text-xs text-muted-foreground">
+            CMS listed no fields or tips — scores below 80% are shown here
+          </span>
+        </div>
+        <ul className="divide-y divide-slate-200">
+          {categoryGaps.map((gap) => (
+            <li key={gap.key} className="px-4 py-3 sm:px-5">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <span className="text-sm font-medium text-slate-900">
+                  {gap.label}
+                </span>
+                <span className="text-sm font-semibold tabular-nums text-slate-800">
+                  {gap.value}%
+                </span>
+              </div>
+              <p className="mt-1 text-sm leading-snug text-muted-foreground">
+                {gap.hint}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "flex items-start gap-3 border-t border-slate-200 px-4 py-4 sm:px-5",
+        isComplete ? "bg-emerald-50/60" : "bg-slate-50/80",
+      )}
+    >
+      <CheckCircle2
+        className={cn(
+          "mt-0.5 h-5 w-5 shrink-0",
+          isComplete ? "text-emerald-600" : "text-slate-500",
+        )}
+        aria-hidden
+      />
+      <div>
+        <p className="text-sm font-medium text-slate-900">
+          {isComplete
+            ? "No remediation needed"
+            : "No explicit issues from CMS"}
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {isComplete
+            ? "Missing fields and recommendations are empty, and every category is at least 80%."
+            : "Missing fields and recommendations are empty. Use the category breakdown above if you still want to improve completeness."}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function ValidationIssueList({
+  title,
+  items,
+  tone,
+}: {
+  title: string;
+  items: string[];
+  tone: "amber" | "sky";
+}) {
+  const headerTone = tone === "amber" ? "text-amber-900" : "text-sky-900";
+  const iconTone = tone === "amber" ? "text-amber-600" : "text-sky-600";
+
+  return (
+    <div>
+      <div
+        className="flex items-center gap-2 border-b border-slate-200 bg-slate-50/80 px-4 py-2.5 sm:px-5"
+      >
+        <AlertCircle className={cn("h-4 w-4 shrink-0", iconTone)} aria-hidden />
+        <span className={cn("text-sm font-semibold", headerTone)}>
+          {title} ({items.length})
+        </span>
+      </div>
+      <ul className="max-h-64 space-y-2 overflow-y-auto px-4 py-3 sm:px-5">
+        {items.map((item, index) => (
+          <li
+            key={`${item}-${index}`}
+            className="rounded-md border border-slate-200 bg-white px-3 py-2 text-sm leading-snug text-slate-700"
+          >
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

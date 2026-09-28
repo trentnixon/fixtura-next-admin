@@ -1,4 +1,5 @@
 import type { FixtureSummary } from "@/types/fixtureInsights";
+import { toFixtureDisplayText } from "./fixtureDisplayText";
 
 /**
  * Group fixtures by grade name
@@ -20,8 +21,8 @@ export function groupByGrade(
  * Format teams display string
  */
 export function getTeamsDisplay(fixture: FixtureSummary): string {
-  const home = fixture.teams?.home || "TBD";
-  const away = fixture.teams?.away || "TBD";
+  const home = toFixtureDisplayText(fixture.teams?.home, "TBD");
+  const away = toFixtureDisplayText(fixture.teams?.away, "TBD");
   return `${home} vs ${away}`;
 }
 

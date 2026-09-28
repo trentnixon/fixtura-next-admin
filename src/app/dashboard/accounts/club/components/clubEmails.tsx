@@ -1,5 +1,6 @@
 "use client";
 import { useGetClubEmails } from "@/hooks/accounts/useGetClubEmails";
+import { useClubInsights } from "@/hooks/club/useClubInsights";
 import {
   Table,
   TableBody,
@@ -25,6 +26,8 @@ import {
   FileCheck,
   Clock,
   UserX,
+  CalendarRange,
+  Target,
 } from "lucide-react";
 import {
   getUnsubscribedEmails,
@@ -48,8 +51,10 @@ import EmptyState from "@/components/ui-library/states/EmptyState";
 import { OrgContactScrapeTableCells } from "@/app/dashboard/accounts/components/OrgContactScrapeTableCells";
 import { OrgContactMetricGrid } from "@/app/dashboard/accounts/components/OrgContactMetricGrid";
 import {
-  formatOrgContactsForCsv,
+  buildSendGridContactCsv,
+  collectOrgContactExportRows,
   orgContactSearchTokens,
+  type SendGridContactRow,
 } from "@/lib/utils/orgContactListingDisplay";
 import {
   countOrgContactInsights,
@@ -71,6 +76,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { OrgContactTimelineFilterSelect } from "@/app/dashboard/accounts/components/OrgContactTimelineFilterSelect";
+import { OrgContactListingsMap } from "@/app/dashboard/accounts/components/OrgContactListingsMap";
+import type { OrgContactTimelineFilter } from "@/lib/constants/timelineCampaignPresets";
+import {
+  scrapeSlugToInsightsSport,
+  insightsSportSupportedForTimeline,
+} from "@/lib/utils/scrapeSlugToInsightsSport";
+import {
+  buildClubTimelineIndex,
+  clubContactMatchesTimelineFilter,
+  getClubTimelineDisplay,
+} from "@/lib/utils/orgContactTimelineJoin";
+import {
+  computeTimelineDiscoveryStats,
+  matchesCampaignPreset,
+} from "@/app/dashboard/club/components/clubTimelineUtils";
 import {
   CLUB_SCRAPE_SPORTS,
   type ClubScrapeSportSlug,
@@ -94,6 +115,9 @@ export default function ClubEmails({
   embedded = false,
 }: ClubEmailsProps) {
   const { Domain } = useGlobalContext();
+  const insightsSport = scrapeSlugToInsightsSport(sportSlug);
+  const timelineInsightsEnabled = insightsSportSupportedForTimeline(sportSlug);
+  const { data: clubInsightsData } = useClubInsights(insightsSport);
   const { data, isLoading, error, refetch } = useGetClubEmails(sportSlug);
   const { data: accountsData, isLoading: accountsLoading } = useAccountsQuery();
   const [unsubscribedEmails, setUnsubscribedEmails] = useState<string[]>([]);
@@ -104,6 +128,8 @@ export default function ClubEmails({
   const [searchQuery, setSearchQuery] = useState("");
   const [qualityFilter, setQualityFilter] =
     useState<OrgContactQualityFilter>("all");
+  const [timelineFilter, setTimelineFilter] =
+    useState<OrgContactTimelineFilter>("none");
   const [expandedRowIds, setExpandedRowIds] = useState<Set<number>>(
     () => new Set(),
   );
@@ -145,6 +171,7 @@ export default function ClubEmails({
   // Create a map of club ID to account info for email lookups
   interface MappedAccountInfo {
     userEmail: string | null;
+    firstName: string | null;
     deliveryEmail: string | null;
     id: number;
     logo?: string | null;
@@ -160,6 +187,7 @@ export default function ClubEmails({
         account.clubs.forEach((club) => {
           map.set(club.id, {
             userEmail: account.email,
+            firstName: account.FirstName,
             deliveryEmail: account.DeliveryAddress,
             id: account.id,
             logo: resolveStrapiMediaUrl(account.logo?.url, Domain.strapi),
@@ -175,6 +203,16 @@ export default function ClubEmails({
     () => new Set(clubIdToAccountMap.keys()),
     [clubIdToAccountMap],
   );
+
+  const timelineIndex = useMemo(() => {
+    const clubs = clubInsightsData?.data.clubs ?? [];
+    return buildClubTimelineIndex(clubs);
+  }, [clubInsightsData]);
+
+  const timelineStats = useMemo(() => {
+    const clubs = clubInsightsData?.data.clubs ?? [];
+    return computeTimelineDiscoveryStats(clubs, timelineIndex.thresholds);
+  }, [clubInsightsData, timelineIndex.thresholds]);
 
   const filterOptions = useMemo(
     () => buildSubscriptionFilterOptions(hideAllFilter),
@@ -203,6 +241,12 @@ export default function ClubEmails({
         return false;
       }
 
+      if (
+        !clubContactMatchesTimelineFilter(club.id, timelineFilter, timelineIndex)
+      ) {
+        return false;
+      }
+
       // 2. Filter by search query
       const searchLower = searchQuery.toLowerCase();
       const matchesSearch =
@@ -226,6 +270,8 @@ export default function ClubEmails({
     inactiveClubIds,
     unsubscribedEmails,
     linkedClubAccountIds,
+    timelineFilter,
+    timelineIndex,
   ]);
 
   // Pagination logic
@@ -238,7 +284,7 @@ export default function ClubEmails({
   // Reset to page 1 when filter or search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [filter, searchQuery, qualityFilter]);
+  }, [filter, searchQuery, qualityFilter, timelineFilter]);
 
   if (isLoading || unsubscribedLoading || accountsLoading) {
     return (
@@ -287,25 +333,32 @@ export default function ClubEmails({
       isExportReadyOrgContact(club, unsubscribedEmails),
     );
 
-    const isAccountView = filter !== "all";
+    const contacts: SendGridContactRow[] =
+      filter === "all"
+        ? validClubs.flatMap((club) => collectOrgContactExportRows(club))
+        : validClubs.flatMap((club) => {
+            const accountInfo = clubIdToAccountMap.get(club.id);
+            return [
+              {
+                email: accountInfo?.userEmail,
+                firstName: accountInfo?.firstName,
+                organization: club.name,
+                organizationId: club.id,
+              },
+              {
+                email: accountInfo?.deliveryEmail,
+                organization: club.name,
+                organizationId: club.id,
+              },
+            ];
+          });
 
-    const csvHeader = isAccountView
-      ? "Club Name,Club ID,User Email,Delivery Email"
-      : "Club Name,Club ID,Contact Email,Last Org Contact Scrape,Scraped Contacts";
-
-    const csvRows = validClubs.map((club) => {
-      if (isAccountView) {
-        const accountInfo = clubIdToAccountMap.get(club.id);
-        return `"${club.name}","${club.id}","${accountInfo?.userEmail || ""}","${
-          accountInfo?.deliveryEmail || ""
-        }"`;
-      }
-      return `"${club.name}","${club.id}","${club.email}","${
-        club.lastOrgContactScrapeAt ?? ""
-      }","${formatOrgContactsForCsv(club.contacts)}"`;
+    const csvContent = buildSendGridContactCsv({
+      contacts,
+      unsubscribedEmails,
+      organizationHeader: "club_name",
+      organizationIdHeader: "club_id",
     });
-
-    const csvContent = [csvHeader, ...csvRows].join("\n");
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
@@ -358,9 +411,21 @@ export default function ClubEmails({
       value: insightCounts.noAccount.toLocaleString(),
       detail: "Not linked in account lookup",
     },
+    {
+      icon: Target,
+      label: "Marketing picks",
+      value: timelineStats.marketingPicks.toLocaleString(),
+      detail: "Same rules as Clubs → Timeline tab",
+    },
+    {
+      icon: CalendarRange,
+      label: "Starting soon",
+      value: timelineStats.startingSoon.toLocaleString(),
+      detail: "Season start within 60 days",
+    },
   ];
 
-  const tableColSpan = filter === "all" ? 9 : 8;
+  const tableColSpan = 9;
 
   const toggleExpanded = (id: number) => {
     setExpandedRowIds((prev) => {
@@ -373,13 +438,13 @@ export default function ClubEmails({
 
   return (
     <div className={cn(!embedded && "mt-4", "space-y-4")}>
+      <OrgContactMetricGrid metrics={contactMetrics} />
+
       <SectionContainer
         title="Club Contact Information"
         description="Manage and export contact details for club accounts"
         variant="default"
       >
-        <OrgContactMetricGrid metrics={contactMetrics} />
-
         <div className="space-y-4">
           <div className="flex flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 md:flex-row md:items-center">
             <div className="relative min-w-0 flex-1">
@@ -421,6 +486,13 @@ export default function ClubEmails({
               id="club-emails-quality"
             />
 
+            <OrgContactTimelineFilterSelect
+              value={timelineFilter}
+              onValueChange={setTimelineFilter}
+              disabled={!timelineInsightsEnabled}
+              id="club-emails-timeline"
+            />
+
             <LabeledSegmentedControl
               label="Status"
               value={filter}
@@ -447,6 +519,12 @@ export default function ClubEmails({
           Showing {paginatedClubs.length} of {filteredClubs.length} contacts
           {filteredClubs.length !== totalClubs &&
             ` (filtered from ${totalClubs})`}
+          {!timelineInsightsEnabled ? (
+            <span className="block text-xs">
+              Timeline filters use Clubs insights sport mapping; football/rugby
+              slugs are contact-only until insights API supports them.
+            </span>
+          ) : null}
           </div>
 
           <Table>
@@ -458,9 +536,6 @@ export default function ClubEmails({
                 {filter === "all" ? (
                   <>
                     <TableHead>Contact Email</TableHead>
-                    <TableHead className="hidden lg:table-cell">
-                      Phone
-                    </TableHead>
                     <TableHead>Address</TableHead>
                   </>
                 ) : (
@@ -470,11 +545,10 @@ export default function ClubEmails({
                   </>
                 )}
                 <TableHead className="hidden xl:table-cell">
-                  Scraped contacts
-                </TableHead>
-                <TableHead className="hidden xl:table-cell">
                   Last scraped
                 </TableHead>
+                <TableHead className="hidden lg:table-cell">Teams</TableHead>
+                <TableHead className="hidden lg:table-cell">Priority</TableHead>
                 <TableHead className="w-[100px] text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -484,6 +558,18 @@ export default function ClubEmails({
                   const accountInfo = clubIdToAccountMap.get(club.id);
                   const isExpanded = expandedRowIds.has(club.id);
                   const scrapedCount = club.contacts?.length ?? 0;
+                  const clubInsight = timelineIndex.byId.get(club.id);
+                  const timelineDisplay = getClubTimelineDisplay(
+                    clubInsight,
+                    timelineIndex.thresholds,
+                  );
+                  const isMarketingPick = clubInsight
+                    ? matchesCampaignPreset(
+                        clubInsight,
+                        "marketing",
+                        timelineIndex.thresholds,
+                      )
+                    : false;
 
                   return (
                     <Fragment key={club.id}>
@@ -497,7 +583,10 @@ export default function ClubEmails({
                       </TableCell>
                       <TableCell>
                         <OrgContactListingLogo
-                          logoUrl={accountInfo?.logo}
+                          logoUrl={
+                            resolveStrapiMediaUrl(club.logo, Domain.strapi) ??
+                            accountInfo?.logo
+                          }
                           orgName={club.name}
                         />
                       </TableCell>
@@ -513,6 +602,7 @@ export default function ClubEmails({
                           accountId={accountInfo?.id}
                           isActiveSubscription={activeClubIds.has(club.id)}
                           unsubscribedEmails={unsubscribedEmails}
+                          isMarketingPick={isMarketingPick}
                         />
                       </TableCell>
 
@@ -525,9 +615,6 @@ export default function ClubEmails({
                             >
                               {club.email}
                             </a>
-                          </TableCell>
-                          <TableCell className="hidden lg:table-cell text-muted-foreground">
-                            {club.phone || "-"}
                           </TableCell>
                           <TableCell>
                             {club.address && club.address !== "No address" ? (
@@ -574,9 +661,15 @@ export default function ClubEmails({
                       )}
 
                       <OrgContactScrapeTableCells
-                        contacts={club.contacts}
                         lastOrgContactScrapeAt={club.lastOrgContactScrapeAt}
                       />
+
+                      <TableCell className="hidden text-sm text-muted-foreground lg:table-cell">
+                        {timelineDisplay.sizeMetric}
+                      </TableCell>
+                      <TableCell className="hidden text-sm text-muted-foreground lg:table-cell">
+                        {timelineDisplay.priorityBand}
+                      </TableCell>
 
                       <TableCell className="text-right">
                         <div className="flex flex-wrap justify-end gap-2">
@@ -639,20 +732,6 @@ export default function ClubEmails({
                                 )}
                             </>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className={siteNavigationCtaClass}
-                            asChild
-                          >
-                            <a
-                              href={`${Domain.strapi}/admin/content-manager/collection-types/api::club.club/${club.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              Manage
-                            </a>
-                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>
@@ -705,6 +784,11 @@ export default function ClubEmails({
             </Pagination>
             </div>
           )}
+
+          <OrgContactListingsMap
+            filteredRows={filteredClubs}
+            entityLabel="clubs"
+          />
         </div>
       </SectionContainer>
     </div>

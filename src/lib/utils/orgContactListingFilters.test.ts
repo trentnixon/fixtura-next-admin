@@ -15,6 +15,7 @@ const baseRow: OrgContactListingRow = {
   email: "valid@example.com",
   address: null,
   website: null,
+  logo: null,
   contacts: [{ name: "Secretary", email: "sec@example.com" }],
   lastOrgContactScrapeAt: null,
 };

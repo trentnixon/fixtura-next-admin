@@ -37,17 +37,21 @@ interface OrgContactListingRow {
   email: string | null;
   address: string | null; // from contactDetails.address when scraped
   website: string | null;
+  logo: string | null; // Logo.url, else PlayHQLogo.url (Strapi path)
   contacts: OrgContactPerson[]; // contactDetails.contacts
   lastOrgContactScrapeAt: string | null; // ISO from contactDetails
 }
 ```
+
+CMS resolves **`logo`** on each row: primary org **`Logo`**, else **`PlayHQLogo`**. Value is a Strapi media path (or absolute URL); admin resolves with `Domain.strapi` via `resolveStrapiMediaUrl`.
 
 ### UI expectations
 
 - **Communications → Email Listings:** sport dropdown using `CLUB_SCRAPE_SPORTS` (default **Cricket** → `cricket-australia`); pass slug to both Club and Association tabs; refetch on change.
 - React Query keys must include sport, e.g. `["clubContactInfo", sportSlug]`, `["associationContactInfo", sportSlug]`.
 - Fetch: `params: { "filters[sport][$eq]": sportSlug }` when a sport is selected.
-- **Unchanged:** `/account/admin/lookup` for Active/Inactive, user/delivery email, logos.
+- **Unchanged:** `/account/admin/lookup` for Active/Inactive, user/delivery email.
+- **Logos:** prefer row **`logo`** from this API (`resolveStrapiMediaUrl(row.logo, Domain.strapi)`); fall back to account logo from lookup when the org is linked and row logo is missing.
 - **Optional follow-up:** table columns for `contacts[]` summary and `lastOrgContactScrapeAt`; CSV export if useful.
 
 ---
@@ -95,4 +99,5 @@ CMS always enqueues with **`contactStaleDays: 30`** (skip orgs scraped in the la
 | Types + fetch + hooks with sport param | Done |
 | Email Listings sport selector + both tabs | Done |
 | Data tab org contact trigger | Done |
+| Row `logo` + account fallback in listings UI | Done |
 | Optional contacts / last-scraped columns | Done |

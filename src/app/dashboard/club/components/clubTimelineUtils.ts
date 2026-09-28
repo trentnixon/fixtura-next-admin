@@ -113,7 +113,7 @@ export function matchesCampaignPreset(
 ): boolean {
   if (!hasValidClubTimeline(club)) return false;
 
-  if (!isClubInActiveSeason(club)) {
+  if (preset !== "marketing" && !isClubInActiveSeason(club)) {
     return false;
   }
 
@@ -230,10 +230,7 @@ export function computeTimelineDiscoveryStats(
   const highValue = withValid.filter((c) => isClubHighValue(c, thresholds));
   const marketingIds = new Set<number>();
   withValid.forEach((c) => {
-    if (
-      isClubInActiveSeason(c) &&
-      (isClubStartingSoon(c) || isClubHighValue(c, thresholds))
-    ) {
+    if (isClubStartingSoon(c) || isClubHighValue(c, thresholds)) {
       marketingIds.add(c.id);
     }
   });

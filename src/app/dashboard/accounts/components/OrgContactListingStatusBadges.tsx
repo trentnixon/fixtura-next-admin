@@ -13,6 +13,7 @@ type OrgContactListingStatusBadgesProps = {
   accountId: number | undefined;
   isActiveSubscription: boolean;
   unsubscribedEmails: string[];
+  isMarketingPick?: boolean;
 };
 
 export function OrgContactListingStatusBadges({
@@ -20,6 +21,7 @@ export function OrgContactListingStatusBadges({
   accountId,
   isActiveSubscription,
   unsubscribedEmails,
+  isMarketingPick = false,
 }: OrgContactListingStatusBadgesProps) {
   const badges: { key: string; label: string; className: string }[] = [];
 
@@ -63,6 +65,14 @@ export function OrgContactListingStatusBadges({
       key: "unsub",
       label: "Unsubscribed",
       className: "border-red-300 bg-red-50 text-red-900",
+    });
+  }
+
+  if (isMarketingPick) {
+    badges.push({
+      key: "marketing",
+      label: "Marketing pick",
+      className: "border-violet-300 bg-violet-50 text-violet-900",
     });
   }
 

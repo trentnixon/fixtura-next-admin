@@ -1,12 +1,15 @@
 import { Badge } from "@/components/ui/badge";
+import type { FixtureDisplayField } from "@/types/fixtureInsights";
+import { toFixtureDisplayText } from "./fixtureDisplayText";
 
 /**
  * Get status badge component based on fixture status
  */
-export function getStatusBadge(status: string | null) {
-  if (!status) return <Badge variant="outline">Unknown</Badge>;
+export function getStatusBadge(status: FixtureDisplayField) {
+  const statusText = toFixtureDisplayText(status, "");
+  if (!statusText) return <Badge variant="outline">Unknown</Badge>;
 
-  switch (status.toLowerCase()) {
+  switch (statusText.toLowerCase()) {
     case "upcoming":
     case "scheduled":
       return <Badge variant="outline">Scheduled</Badge>;
@@ -19,21 +22,27 @@ export function getStatusBadge(status: string | null) {
       );
     case "finished":
     case "completed":
+    case "final":
       return <Badge variant="secondary">Completed</Badge>;
     case "cancelled":
       return <Badge variant="destructive">Cancelled</Badge>;
     default:
-      return <Badge variant="outline">{status}</Badge>;
+      return <Badge variant="outline">{statusText}</Badge>;
   }
 }
 
 /**
  * Get row background color class based on fixture status
  */
-export function getRowColorClass(status: string | null): string {
-  if (!status) return "";
-  const statusLower = status.toLowerCase();
-  if (statusLower === "finished" || statusLower === "completed") {
+export function getRowColorClass(status: FixtureDisplayField): string {
+  const statusText = toFixtureDisplayText(status, "");
+  if (!statusText) return "";
+  const statusLower = statusText.toLowerCase();
+  if (
+    statusLower === "finished" ||
+    statusLower === "completed" ||
+    statusLower === "final"
+  ) {
     return "bg-success-50/50 hover:bg-success-50";
   }
   if (statusLower === "upcoming" || statusLower === "scheduled") {

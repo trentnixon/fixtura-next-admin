@@ -13,6 +13,8 @@ export interface OrgContactListingRow {
   email: string | null;
   address: string | null;
   website: string | null;
+  /** Logo.url, else PlayHQLogo.url from CMS (Strapi media path). */
+  logo: string | null;
   contacts: OrgContactPerson[];
   lastOrgContactScrapeAt: string | null;
 }

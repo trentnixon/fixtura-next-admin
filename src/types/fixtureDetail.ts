@@ -72,7 +72,13 @@ export interface FixtureDates {
  * Venue information
  */
 export interface Venue {
-  ground: string | null;
+  ground:
+    | string
+    | null
+    | {
+        text?: string | null;
+        mapsQuery?: string | null;
+      };
 }
 
 /**
@@ -152,7 +158,8 @@ export interface MatchDetails {
   tossWinner: string | null;
   tossResult: string | null;
   urlToScoreCard: string | null;
-  scorecards: Record<string, TeamScorecardData> | null;
+  /** Team-keyed legacy shape and/or PlayHQ innings keys (innings1, innings2, …). */
+  scorecards: Record<string, TeamScorecardData | Record<string, unknown>> | null;
   resultStatement: string | null;
 }
 

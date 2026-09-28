@@ -131,7 +131,7 @@ export function matchesCampaignPreset(
 ): boolean {
   if (!hasValidCompetitionTimeline(competition)) return false;
 
-  if (!isCompetitionInActiveSeason(competition)) {
+  if (preset !== "marketing" && !isCompetitionInActiveSeason(competition)) {
     return false;
   }
 
@@ -250,10 +250,7 @@ export function computeTimelineDiscoveryStats(
   );
   const marketingIds = new Set<number>();
   withValid.forEach((c) => {
-    if (
-      isCompetitionInActiveSeason(c) &&
-      (isCompetitionStartingSoon(c) || isCompetitionHighValue(c, thresholds))
-    ) {
+    if (isCompetitionStartingSoon(c) || isCompetitionHighValue(c, thresholds)) {
       marketingIds.add(c.id);
     }
   });

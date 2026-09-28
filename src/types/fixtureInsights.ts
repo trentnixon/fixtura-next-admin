@@ -245,18 +245,27 @@ export interface DayOfWeekDistribution {
 // Fixture Summary Types
 // ============================================================================
 
+/** CMS may return plain strings or PlayHQ label objects for display fields. */
+export type FixtureDisplayField =
+  | string
+  | null
+  | {
+      text?: string | null;
+      mapsQuery?: string | null;
+    };
+
 /**
  * Simplified fixture data for table display (from detailed fixtures endpoint)
  */
 export interface FixtureSummary {
   id: number;
   date: string | null; // YYYY-MM-DD
-  round: string | null;
-  status: string | null;
-  type: string | null;
+  round: FixtureDisplayField;
+  status: FixtureDisplayField;
+  type: FixtureDisplayField;
   teams: {
-    home: string | null;
-    away: string | null;
+    home: FixtureDisplayField;
+    away: FixtureDisplayField;
   };
   grade: {
     id: number;
