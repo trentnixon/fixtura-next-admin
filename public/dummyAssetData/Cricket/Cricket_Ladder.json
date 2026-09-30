@@ -18,8 +18,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/lk.svg",
-          "playHQLogo": "/dummyAssetData/flags/lk.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/lk.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/lk.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -49,8 +49,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/zw.svg",
-          "playHQLogo": "/dummyAssetData/flags/zw.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/zw.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/zw.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -80,8 +80,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/au.svg",
-          "playHQLogo": "/dummyAssetData/flags/au.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -111,8 +111,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/in.svg",
-          "playHQLogo": "/dummyAssetData/flags/in.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/in.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/in.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -142,8 +142,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/wi.svg",
-          "playHQLogo": "/dummyAssetData/flags/wi.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/wi.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/wi.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -173,8 +173,8 @@
           "N/R": "1",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/ke.svg",
-          "playHQLogo": "/dummyAssetData/flags/ke.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/ke.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/ke.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -272,10 +272,52 @@
       },
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "ID": 0,
@@ -295,8 +337,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/za.svg",
-          "playHQLogo": "/dummyAssetData/flags/za.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/za.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/za.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -326,8 +368,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/pk.svg",
-          "playHQLogo": "/dummyAssetData/flags/pk.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/pk.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/pk.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -357,8 +399,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/nz.svg",
-          "playHQLogo": "/dummyAssetData/flags/nz.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/nz.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/nz.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -388,8 +430,8 @@
           "N/R": "1",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/ae.svg",
-          "playHQLogo": "/dummyAssetData/flags/ae.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/ae.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/ae.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -419,8 +461,8 @@
           "N/R": "1",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/gb-eng.svg",
-          "playHQLogo": "/dummyAssetData/flags/gb-eng.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/gb-eng.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/gb-eng.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -450,8 +492,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/nl.svg",
-          "playHQLogo": "/dummyAssetData/flags/nl.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/nl.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/nl.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -549,10 +591,52 @@
       },
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "ID": 0,
@@ -572,8 +656,8 @@
           "N/R": "1",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/in.svg",
-          "playHQLogo": "/dummyAssetData/flags/in.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/in.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/in.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -603,8 +687,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/za.svg",
-          "playHQLogo": "/dummyAssetData/flags/za.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/za.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/za.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -634,8 +718,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/lk.svg",
-          "playHQLogo": "/dummyAssetData/flags/lk.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/lk.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/lk.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -665,8 +749,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/ke.svg",
-          "playHQLogo": "/dummyAssetData/flags/ke.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/ke.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/ke.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -696,8 +780,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/zw.svg",
-          "playHQLogo": "/dummyAssetData/flags/zw.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/zw.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/zw.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -727,8 +811,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/gb-eng.svg",
-          "playHQLogo": "/dummyAssetData/flags/gb-eng.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/gb-eng.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/gb-eng.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -826,10 +910,52 @@
       },
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "ID": 0,
@@ -849,8 +975,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/pk.svg",
-          "playHQLogo": "/dummyAssetData/flags/pk.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/pk.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/pk.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -880,8 +1006,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/au.svg",
-          "playHQLogo": "/dummyAssetData/flags/au.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -911,8 +1037,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/nz.svg",
-          "playHQLogo": "/dummyAssetData/flags/nz.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/nz.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/nz.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -942,8 +1068,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/wi.svg",
-          "playHQLogo": "/dummyAssetData/flags/wi.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/wi.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/wi.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -973,8 +1099,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/gb-sct.svg",
-          "playHQLogo": "/dummyAssetData/flags/gb-sct.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/gb-sct.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/gb-sct.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1004,8 +1130,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/bd.svg",
-          "playHQLogo": "/dummyAssetData/flags/bd.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/bd.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/bd.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1103,10 +1229,52 @@
       },
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "ID": 0,
@@ -1126,8 +1294,8 @@
           "N/R": "1",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/nz.svg",
-          "playHQLogo": "/dummyAssetData/flags/nz.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/nz.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/nz.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1157,8 +1325,8 @@
           "N/R": "1",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/wi.svg",
-          "playHQLogo": "/dummyAssetData/flags/wi.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/wi.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/wi.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1188,8 +1356,8 @@
           "N/R": "1",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/lk.svg",
-          "playHQLogo": "/dummyAssetData/flags/lk.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/lk.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/lk.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1219,8 +1387,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/au.svg",
-          "playHQLogo": "/dummyAssetData/flags/au.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1250,8 +1418,8 @@
           "N/R": "1",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/za.svg",
-          "playHQLogo": "/dummyAssetData/flags/za.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/za.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/za.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1281,8 +1449,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/gb-eng.svg",
-          "playHQLogo": "/dummyAssetData/flags/gb-eng.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/gb-eng.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/gb-eng.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1312,8 +1480,8 @@
           "N/R": "1",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/bd.svg",
-          "playHQLogo": "/dummyAssetData/flags/bd.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/bd.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/bd.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1343,8 +1511,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/ie.svg",
-          "playHQLogo": "/dummyAssetData/flags/ie.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/ie.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/ie.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1466,10 +1634,52 @@
       },
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9009,
+            "name": "Sponsor 9",
+            "logo": {
+              "id": 9109,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "ID": 0,
@@ -1489,8 +1699,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/au.svg",
-          "playHQLogo": "/dummyAssetData/flags/au.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1520,8 +1730,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/gb-eng.svg",
-          "playHQLogo": "/dummyAssetData/flags/gb-eng.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/gb-eng.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/gb-eng.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1551,8 +1761,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/bd.svg",
-          "playHQLogo": "/dummyAssetData/flags/bd.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/bd.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/bd.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1582,8 +1792,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/nz.svg",
-          "playHQLogo": "/dummyAssetData/flags/nz.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/nz.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/nz.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1657,10 +1867,60 @@
       },
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          },
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "ID": 0,
@@ -1680,8 +1940,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/au.svg",
-          "playHQLogo": "/dummyAssetData/flags/au.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1711,8 +1971,8 @@
           "N/R": "1",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/lk.svg",
-          "playHQLogo": "/dummyAssetData/flags/lk.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/lk.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/lk.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1742,8 +2002,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/nz.svg",
-          "playHQLogo": "/dummyAssetData/flags/nz.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/nz.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/nz.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1773,8 +2033,8 @@
           "N/R": "1",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/gb-eng.svg",
-          "playHQLogo": "/dummyAssetData/flags/gb-eng.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/gb-eng.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/gb-eng.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1804,8 +2064,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/af.svg",
-          "playHQLogo": "/dummyAssetData/flags/af.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/af.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/af.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1835,8 +2095,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/ie.svg",
-          "playHQLogo": "/dummyAssetData/flags/ie.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/ie.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/ie.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1934,10 +2194,60 @@
       },
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          },
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "ID": 0,
@@ -1957,8 +2267,8 @@
           "N/R": "1",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/in.svg",
-          "playHQLogo": "/dummyAssetData/flags/in.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/in.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/in.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -1988,8 +2298,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/pk.svg",
-          "playHQLogo": "/dummyAssetData/flags/pk.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/pk.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/pk.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -2019,8 +2329,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/nl.svg",
-          "playHQLogo": "/dummyAssetData/flags/nl.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/nl.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/nl.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -2050,8 +2360,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/za.svg",
-          "playHQLogo": "/dummyAssetData/flags/za.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/za.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/za.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -2081,8 +2391,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/bd.svg",
-          "playHQLogo": "/dummyAssetData/flags/bd.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/bd.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/bd.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -2112,8 +2422,8 @@
           "N/R": "0",
           "BYE": "0",
           "clubId": null,
-          "clubLogo": "/dummyAssetData/flags/zw.svg",
-          "playHQLogo": "/dummyAssetData/flags/zw.svg",
+          "clubLogo": "https://application.fixtura.com.au/dummyAssetData/flags/zw.svg",
+          "playHQLogo": "https://application.fixtura.com.au/dummyAssetData/flags/zw.svg",
           "clubName": null,
           "teamLogo": null,
           "prompt": {
@@ -2211,10 +2521,61 @@
       },
       "assignSponsors": {
         "competition": [],
-        "grade": [],
-        "team": []
+        "grade": [
+          {
+            "id": 9009,
+            "name": "Sponsor 9",
+            "logo": {
+              "id": 9109,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+            }
+          }
+        ],
+        "team": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          }
+        ]
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     }
   ],
   "asset": {
@@ -2242,17 +2603,91 @@
   "videoMeta": {
     "club": {
       "logo": {
-        "hasLogo": false,
-        "url": "",
-        "width": 500,
-        "height": 500
+        "hasLogo": true,
+        "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/android_chrome_512x512_0823a84f31.png",
+        "width": 512,
+        "height": 512
       },
       "name": "International Cricket Demo Preview",
       "sport": "Cricket",
       "sponsors": {
-        "primary": [],
-        "general": [],
-        "sponsorNum": 0
+        "primary": [
+          {
+            "id": 9001,
+            "name": "Sponsor 1",
+            "logo": {
+              "id": 9101,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+            }
+          },
+          {
+            "id": 9002,
+            "name": "Sponsor 2",
+            "logo": {
+              "id": 9102,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+            }
+          },
+          {
+            "id": 9003,
+            "name": "Sponsor 3",
+            "logo": {
+              "id": 9103,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+            }
+          },
+          {
+            "id": 9004,
+            "name": "Sponsor 4",
+            "logo": {
+              "id": 9104,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+            }
+          }
+        ],
+        "general": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          },
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          },
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          },
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          },
+          {
+            "id": 9009,
+            "name": "Sponsor 9",
+            "logo": {
+              "id": 9109,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+            }
+          }
+        ],
+        "sponsorNum": 9
       },
       "IsAccountClub": false
     },
@@ -2267,7 +2702,7 @@
         "assetId": 12,
         "assetTypeId": 3,
         "frames": [],
-        "includeSponsors": false
+        "includeSponsors": true
       },
       "appearance": {
         "theme": {
@@ -2307,7 +2742,7 @@
       },
       "templateVariation": {
         "useBackground": "Texture",
-        "mode": "lightAlt",
+        "mode": "light",
         "category": {
           "slug": "TwoColumnClassic",
           "name": "Classic Two Column ",
@@ -2452,13 +2887,26 @@
         },
         "texture": {
           "name": "Print Texture",
-          "url": "",
+          "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/Geometric_Halftone_Print_Texture_cb888287e4.png",
           "repeat": "cover",
           "scale": "100%",
           "overlay": {
             "opacity": 0.8,
             "blendMode": "multiply"
           }
+        },
+        "luminance": {
+          "name": "Geometric Halftone",
+          "url": null,
+          "asset": "plates/light-motion-streaks.png",
+          "map": {
+            "kind": "theme",
+            "preset": "brand"
+          },
+          "protection": "none",
+          "position": "center",
+          "size": "cover",
+          "opacity": 1
         }
       }
     }

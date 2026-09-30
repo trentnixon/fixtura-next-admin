@@ -11,10 +11,11 @@ export function AccountsOperationsTabBadge() {
   const { data: healthGlobal } = useAccountHealthGlobalStatus();
   const { data: todaysRenders } = useGetTodaysRenders();
   const activeSyncCount = healthGlobal?.data?.activeCount ?? 0;
-  const { policyRuns, hiddenActiveCount } = useDataRefreshAttentionState(
-    healthGlobal?.data?.latestRuns,
-    activeSyncCount
-  );
+  const { policyRuns, hiddenActiveCount } = useDataRefreshAttentionState({
+    activeRuns: healthGlobal?.data?.activeRuns,
+    latestRuns: healthGlobal?.data?.latestRuns,
+    activeCount: activeSyncCount,
+  });
 
   const count = useMemo(() => {
     const stuck = getStuckRenderingAttention(todaysRenders ?? []).length;

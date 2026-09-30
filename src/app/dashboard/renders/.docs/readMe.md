@@ -14,7 +14,8 @@ The Global Render Monitor is designed for system administrators to track heavy r
 ## Page Infrastructure
 
 - **Path**: `/dashboard/renders/page.tsx`
-- **Tabs**: Render Snapshot | Analytics | Operational Audit (Accounts tab removed — leaderboard lives on Snapshot only)
+- **Tabs**: Overview | Render activity | Analytics | Audit
+- **Route**: `/dashboard/renders/download-quality-control` — fleet download QC (CMS quality-queue when deployed)
 - **Main Components**:
     - `GlobalRenderRollup`: Live headline render metrics. `useRenderTelemetry` → `GET /renders/telemetry`
     - `AssetRunSnapshotSection`: Rollup (last 25 runs) + table. `useAccountAssetRunGlobalStatus` → `GET /account-asset-runs/status`
@@ -22,7 +23,7 @@ The Global Render Monitor is designed for system administrators to track heavy r
     - `RenderAnalyticsDashboard`: Time-series charts. `useRenderAnalytics` — empty `data: []` shows EmptyState
     - `GlobalRenderTable`: One row per render, ghost badge. `useRenderAudit` → `GET /renders/audit`
 - **Shared**: `GlobalAccountAssetRunTable` (also used on home dashboard Renders tab)
-- **CMS comms**: `.comms/admin-renders-page-cms-responses-2026-05-29.md`
+- **CMS comms**: `.comms/admin-renders-page-cms-responses-2026-05-29.md`, download QC: `.comms/Strapi/response/download-quality-control-cms-response.md`
 
 ## API & Data Infrastructure
 The dashboard utilizes a specialized multi-route architecture to balance real-time performance with deep analytical insights:

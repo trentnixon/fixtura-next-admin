@@ -112,8 +112,12 @@ export type AccountHealthGlobalStatusResponse = {
   data: {
     runCounts: StatusCounts;
     activeCount: number;
+    /** Omitted on older CMS payloads; treat as false. */
+    activeRunsTruncated?: boolean;
     failedCount: number;
     completedEmptyCount: number;
+    /** Full lock list; omitted on older CMS payloads — attention falls back to latestRuns. */
+    activeRuns?: AccountHealthGlobalLatestRunRow[];
     latestRuns: AccountHealthGlobalLatestRunRow[];
   };
 };

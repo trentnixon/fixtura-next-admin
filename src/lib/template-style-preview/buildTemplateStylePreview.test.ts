@@ -1,4 +1,4 @@
-import { buildTemplateStylePreview } from "./buildTemplateStylePreview";
+import { buildTemplateStylePreview, thumbnailFrames } from "./buildTemplateStylePreview";
 
 const style = {
   useBackground: "Animated" as const,
@@ -60,13 +60,13 @@ function fixture(timings: { FPS_INTRO: number; FPS_MAIN: number; FPS_OUTRO: numb
 }
 
 describe("buildTemplateStylePreview", () => {
-  it("uses intro plus main and ignores the file outro", () => {
+  it("uses intro, main, and the file outro", () => {
     const result = buildTemplateStylePreview(
       fixture({ FPS_INTRO: 40, FPS_MAIN: 100, FPS_OUTRO: 30 }),
       style,
     );
 
-    expect(result.durationInFrames).toBe(140);
+    expect(result.durationInFrames).toBe(170);
     expect(result.mount).toBe(true);
   });
 
@@ -77,7 +77,7 @@ describe("buildTemplateStylePreview", () => {
     );
     const video = (result.data.videoMeta as { video: { templateVariation: Record<string, unknown>; appearance: { theme: { primary: string } } } }).video;
 
-    expect(result.durationInFrames).toBe(2385);
+    expect(result.durationInFrames).toBe(2415);
     expect((result.data.data as unknown[])[0]).toEqual({ team: "A" });
     expect(video.appearance.theme.primary).toBe("#352466");
     expect(video.templateVariation.useBackground).toBe("Animated");
@@ -156,8 +156,8 @@ describe("buildTemplateStylePreview", () => {
     const ladderLook = (ladder.data.videoMeta as { video: { templateVariation: { useBackground: string }; appearance: { theme: { primary: string } } } }).video;
     const upcomingLook = (upcoming.data.videoMeta as { video: { templateVariation: { useBackground: string }; appearance: { theme: { primary: string } } } }).video;
 
-    expect(ladder.durationInFrames).toBe(2385);
-    expect(upcoming.durationInFrames).toBe(140);
+    expect(ladder.durationInFrames).toBe(2415);
+    expect(upcoming.durationInFrames).toBe(170);
     expect(ladderLook.templateVariation.useBackground).toBe(upcomingLook.templateVariation.useBackground);
     expect(ladderLook.appearance.theme.primary).toBe(upcomingLook.appearance.theme.primary);
   });
@@ -183,5 +183,10 @@ describe("buildTemplateStylePreview", () => {
       luminanceUrl: null,
     });
     expect(blank.mount).toBe(false);
+  });
+
+  it("keeps numeric frames that sit inside the preview", () => {
+    expect(thumbnailFrames({ frames: [45, 240, -1, "x", 2415] }, 2415)).toEqual([45, 240]);
+    expect(thumbnailFrames({}, 2415)).toEqual([]);
   });
 });

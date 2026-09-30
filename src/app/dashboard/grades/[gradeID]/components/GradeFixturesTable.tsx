@@ -138,7 +138,10 @@ export function GradeFixturesTable({ gradeId }: GradeFixturesTableProps) {
   const [listGroup, setListGroup] =
     useState<GradeFixtureListGroup>("scheduled");
 
-  const allFixtures = data?.data?.fixtures ?? [];
+  const allFixtures = useMemo(
+    () => data?.data?.fixtures ?? [],
+    [data?.data?.fixtures],
+  );
 
   const overviewCounts = useMemo(() => {
     const today = startOfDay(new Date());

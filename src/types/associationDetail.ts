@@ -61,14 +61,16 @@ export interface AssociationDetail {
 export interface ContactDetails {
   phone: string | null;
   email: string | null;
-  address: string | null;
+  /** CMS may return a plain string or a PlayHQ label `{ text, mapsQuery }`. */
+  address: string | { text?: string | null; mapsQuery?: string | null } | null;
 }
 
 /**
  * Location information for the association
  */
 export interface Location {
-  address: string | null;
+  /** CMS may return a plain string or a PlayHQ label `{ text, mapsQuery }`. */
+  address: string | { text?: string | null; mapsQuery?: string | null } | null;
   city: string | null;
   state: string | null;
   country: string | null;

@@ -1,8 +1,7 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState } from "react";
-import { useAssets } from "@/hooks/assets/useAssets";
+import React, { useMemo, useState } from "react";
+import { useAllAssets } from "@/hooks/assets/useAssets";
 import { useCreateAsset } from "@/hooks/assets/useCreateAsset";
 import { useUpdateAsset } from "@/hooks/assets/useUpdateAsset";
 import { useDeleteAsset } from "@/hooks/assets/useDeleteAsset";
@@ -30,9 +29,12 @@ import { AssetTableContent } from "./AssetTableContent";
 import { Asset } from "@/types/asset";
 import { AssetFormValues } from "../schemas/assetFormSchema";
 import { toast } from "sonner";
+import {
+  filterAssetsBySearch,
+  groupAssetsByType,
+} from "./groupAssetsByType";
 
 export function AssetTable() {
-  const [page, setPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedSport, setSelectedSport] = useState<string>("Cricket");
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -44,24 +46,14 @@ export function AssetTable() {
     undefined,
   );
 
-  const buildFilters = () => {
-    const filters: any = { Sport: selectedSport };
-    if (searchTerm) {
-      filters.Name = { $contains: searchTerm };
-    }
-    return filters;
-  };
-
   const {
     data: assetsData,
     isLoading,
     isError,
     error,
     refetch,
-  } = useAssets({
-    page,
-    pageSize: 20,
-    filters: buildFilters(),
+  } = useAllAssets({
+    filters: { Sport: selectedSport },
   });
 
   const createMutation = useCreateAsset();
@@ -115,6 +107,17 @@ export function AssetTable() {
     }
   };
 
+  const assets = useMemo(() => assetsData?.data ?? [], [assetsData]);
+  const total = assetsData?.meta?.pagination?.total ?? assets.length;
+  const filteredAssets = useMemo(
+    () => filterAssetsBySearch(assets, searchTerm),
+    [assets, searchTerm],
+  );
+  const groups = useMemo(
+    () => groupAssetsByType(filteredAssets),
+    [filteredAssets],
+  );
+
   if (isLoading) {
     return <LoadingState message="Loading assets..." />;
   }
@@ -129,44 +132,28 @@ export function AssetTable() {
     );
   }
 
-  const assets = assetsData?.data || [];
-  const meta = assetsData?.meta?.pagination;
-
-  const sortedAssets = [...assets].sort((a, b) => {
-    const compositionIDA = a.attributes.CompositionID || "";
-    const compositionIDB = b.attributes.CompositionID || "";
-    return compositionIDA.localeCompare(compositionIDB);
-  });
-
   return (
     <>
       <div className="space-y-4">
         <AssetTableFilters
           searchTerm={searchTerm}
-          setSearchTerm={(val) => {
-            setSearchTerm(val);
-            setPage(1);
-          }}
+          setSearchTerm={setSearchTerm}
           selectedSport={selectedSport}
-          onSportChange={(sport) => {
-            setSelectedSport(sport);
-            setPage(1);
-          }}
-          onClearSearch={() => {
-            setSearchTerm("");
-            setPage(1);
-          }}
+          onSportChange={setSelectedSport}
+          onClearSearch={() => setSearchTerm("")}
           onCreateClick={handleCreateClick}
-          assetCount={sortedAssets.length}
+          assetCount={filteredAssets.length}
+          typeCount={groups.length}
+          loadedCount={assets.length}
+          totalCount={total}
         />
 
         <AssetTableContent
-          assets={sortedAssets}
-          pagination={meta}
-          onPageChange={setPage}
+          groups={groups}
           onEdit={handleEditClick}
           onDelete={handleDeleteClick}
           selectedSport={selectedSport}
+          hasSearch={searchTerm.trim().length > 0}
         />
       </div>
 

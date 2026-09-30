@@ -18,10 +18,11 @@ export function useFleetOpsAccountIndex(): Map<number, FleetOpsAccountFlags> {
   const { data: todaysRenders } = useGetTodaysRenders();
 
   const activeSyncCount = healthGlobal?.data?.activeCount ?? 0;
-  const { policyRuns } = useDataRefreshAttentionState(
-    healthGlobal?.data?.latestRuns,
-    activeSyncCount
-  );
+  const { policyRuns } = useDataRefreshAttentionState({
+    activeRuns: healthGlobal?.data?.activeRuns,
+    latestRuns: healthGlobal?.data?.latestRuns,
+    activeCount: activeSyncCount,
+  });
 
   return useMemo(() => {
     const map = new Map<number, FleetOpsAccountFlags>();

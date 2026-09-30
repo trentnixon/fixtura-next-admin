@@ -15,7 +15,11 @@
 
 ## ⏳ To Do (easy → hard)
 
-1. [ ] **Styling Alignment** – Update render overview component to match dashboard design patterns
+1. [ ] **Download attention (TKT-2026-002)** – Render-detail QC, three-signal Overview, fleet queue after CMS Option A
+
+   - (see `.comms/Strapi/response/download-quality-control-admin-decisions.md`)
+
+2. [ ] **Styling Alignment** – Update render overview component to match dashboard design patterns
 
    - (see TKT-2025-001 for details)
 

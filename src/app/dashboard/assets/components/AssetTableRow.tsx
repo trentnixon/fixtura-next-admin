@@ -35,13 +35,10 @@ export function AssetTableRow({ asset, onEdit, onDelete }: AssetTableRowProps) {
                 </span>
             </TableCell>
             <TableCell>
-                <Badge variant="secondary">{asset.attributes.Sport}</Badge>
+                <Badge variant="secondary">{asset.attributes.ContentType}</Badge>
             </TableCell>
             <TableCell>
                 {asset.attributes.asset_category?.data?.attributes?.Name || "-"}
-            </TableCell>
-            <TableCell>
-                {asset.attributes.asset_type?.data?.attributes?.Name || "-"}
             </TableCell>
             <TableCell className="text-right">
                 <DropdownMenu>

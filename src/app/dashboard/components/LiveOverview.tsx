@@ -136,13 +136,16 @@ export default function LiveOverview() {
   } = useRenderTelemetry();
 
   const activeSyncCount = healthGlobal?.data?.activeCount ?? 0;
+  const activeRunsTruncated =
+    healthGlobal?.data?.activeRunsTruncated ?? false;
   const {
     policyRuns: attentionRuns,
     hiddenActiveCount: hiddenActiveSyncCount,
-  } = useDataRefreshAttentionState(
-    healthGlobal?.data?.latestRuns,
-    activeSyncCount
-  );
+  } = useDataRefreshAttentionState({
+    activeRuns: healthGlobal?.data?.activeRuns,
+    latestRuns: healthGlobal?.data?.latestRuns,
+    activeCount: activeSyncCount,
+  });
 
   const stuckRenderingItems = useMemo(
     () => getStuckRenderingAttention(todaysRenders ?? []),
@@ -340,7 +343,8 @@ export default function LiveOverview() {
     healthLoading ||
     healthError ||
     attentionRuns.length > 0 ||
-    hiddenActiveSyncCount > 0;
+    hiddenActiveSyncCount > 0 ||
+    activeRunsTruncated;
 
   const showRerenderSection =
     rerenderLoading ||
@@ -483,6 +487,7 @@ export default function LiveOverview() {
                 runs={attentionRuns}
                 activeCount={activeSyncCount}
                 hiddenActiveCount={hiddenActiveSyncCount}
+                activeRunsTruncated={activeRunsTruncated}
                 isLoading={healthLoading}
                 error={
                   healthError

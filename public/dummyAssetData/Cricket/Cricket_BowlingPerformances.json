@@ -7,17 +7,59 @@
       "prompt": "Shapoor Zadran played for Afghanistan, taking 2 wickets from 5 overs, conceding 22 runs (economy 4.40). Competition: 2015 Cricket World Cup. Grade: ODI / Pool Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 2,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/af.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/af.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Afghanistan",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "name": "Mitchell Starc",
@@ -26,17 +68,59 @@
       "prompt": "Mitchell Starc played for Australia, taking 3 wickets from 8.4 overs, conceding 53 runs (economy 6.12). Competition: 2015 Cricket World Cup. Grade: ODI / Pool Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 3,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/au.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Australia",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "name": "Rubel Hossain",
@@ -45,17 +129,59 @@
       "prompt": "Rubel Hossain played for Bangladesh, taking 6 wickets from 7 overs, conceding 38 runs (economy 5.43). Competition: 2015 Cricket World Cup. Grade: ODI / Pool Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 6,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/bd.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/bd.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Bangladesh",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "name": "Steven Finn",
@@ -64,17 +190,59 @@
       "prompt": "Steven Finn played for England, taking 5 wickets from 10 overs, conceding 35 runs (economy 3.50). Competition: 2015 Cricket World Cup. Grade: ODI / Pool Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 5,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/gb-eng.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/gb-eng.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "England",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "name": "Mohammed Shami",
@@ -83,17 +251,59 @@
       "prompt": "Mohammed Shami played for India, taking 4 wickets from 8.2 overs, conceding 28 runs (economy 3.36). Competition: 2015 Cricket World Cup. Grade: ODI / Pool Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 4,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/in.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/in.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "India",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "name": "John Mooney",
@@ -102,17 +312,59 @@
       "prompt": "John Mooney played for Ireland, taking 2 wickets from 10 overs, conceding 43 runs (economy 4.30). Competition: 2015 Cricket World Cup. Grade: ODI / Pool Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 2,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/ie.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/ie.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Ireland",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "name": "Trent Boult",
@@ -121,17 +373,59 @@
       "prompt": "Trent Boult played for New Zealand, taking 3 wickets from 4 overs, conceding 48 runs (economy 12.00). Competition: 2015 Cricket World Cup. Grade: ODI / Pool Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 3,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/nz.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/nz.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "New Zealand",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "name": "Wahab Riaz",
@@ -140,17 +434,59 @@
       "prompt": "Wahab Riaz played for Pakistan, taking 3 wickets from 7 overs, conceding 31 runs (economy 4.43). Competition: 2015 Cricket World Cup. Grade: ODI / Pool Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 3,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/pk.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/pk.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Pakistan",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "name": "Morne Morkel",
@@ -159,17 +495,59 @@
       "prompt": "Morne Morkel played for South Africa, taking 6 wickets from 8 overs, conceding 37 runs (economy 4.63). Competition: 2015 Cricket World Cup. Grade: ODI / Pool Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 6,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/za.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/za.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "South Africa",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "name": "Lasith Malinga",
@@ -178,17 +556,59 @@
       "prompt": "Lasith Malinga played for Sri Lanka, taking 6 wickets from 7 overs, conceding 39 runs (economy 5.57). Competition: 2015 Cricket World Cup. Grade: ODI / Pool Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 6,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/lk.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/lk.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Sri Lanka",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "name": "Jerome Taylor",
@@ -197,17 +617,59 @@
       "prompt": "Jerome Taylor played for West Indies, taking 3 wickets from 8.3 overs, conceding 20 runs (economy 2.35). Competition: 2015 Cricket World Cup. Grade: ODI / Pool Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 3,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/wi.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/wi.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "West Indies",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "name": "Tinashe Panyangara",
@@ -216,17 +678,59 @@
       "prompt": "Tinashe Panyangara played for Zimbabwe, taking 3 wickets from 7 overs, conceding 47 runs (economy 6.71). Competition: 2015 Cricket World Cup. Grade: ODI / Pool Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 3,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/zw.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/zw.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Zimbabwe",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     }
   ],
   "asset": {
@@ -254,17 +758,91 @@
   "videoMeta": {
     "club": {
       "logo": {
-        "hasLogo": false,
-        "url": "",
-        "width": 500,
-        "height": 500
+        "hasLogo": true,
+        "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/android_chrome_512x512_0823a84f31.png",
+        "width": 512,
+        "height": 512
       },
       "name": "International Cricket Demo Preview",
       "sport": "Cricket",
       "sponsors": {
-        "primary": [],
-        "general": [],
-        "sponsorNum": 0
+        "primary": [
+          {
+            "id": 9001,
+            "name": "Sponsor 1",
+            "logo": {
+              "id": 9101,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+            }
+          },
+          {
+            "id": 9002,
+            "name": "Sponsor 2",
+            "logo": {
+              "id": 9102,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+            }
+          },
+          {
+            "id": 9003,
+            "name": "Sponsor 3",
+            "logo": {
+              "id": 9103,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+            }
+          },
+          {
+            "id": 9004,
+            "name": "Sponsor 4",
+            "logo": {
+              "id": 9104,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+            }
+          }
+        ],
+        "general": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          },
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          },
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          },
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          },
+          {
+            "id": 9009,
+            "name": "Sponsor 9",
+            "logo": {
+              "id": 9109,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+            }
+          }
+        ],
+        "sponsorNum": 9
       },
       "IsAccountClub": false
     },
@@ -279,7 +857,7 @@
         "assetId": 66,
         "assetTypeId": 3,
         "frames": [],
-        "includeSponsors": false
+        "includeSponsors": true
       },
       "appearance": {
         "theme": {
@@ -464,13 +1042,26 @@
         },
         "texture": {
           "name": "Print Texture",
-          "url": "",
+          "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/Geometric_Halftone_Print_Texture_cb888287e4.png",
           "repeat": "cover",
           "scale": "100%",
           "overlay": {
             "opacity": 0.8,
             "blendMode": "multiply"
           }
+        },
+        "luminance": {
+          "name": "Brush Slash Halftone",
+          "url": null,
+          "asset": "plates/brush-slash-halftone.png",
+          "map": {
+            "kind": "theme",
+            "preset": "brand"
+          },
+          "protection": "none",
+          "position": "center",
+          "size": "cover",
+          "opacity": 1
         }
       }
     }

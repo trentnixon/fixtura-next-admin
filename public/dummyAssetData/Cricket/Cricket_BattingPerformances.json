@@ -8,17 +8,59 @@
       "notOut": false,
       "prompt": "Matthew Hayden played for Australia, scoring 139 runs from 108 balls with a strike rate of 128.70 (dismissed). Venue context: Kensington Oval. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/au.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Australia",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 169.14,
@@ -28,17 +70,59 @@
       "notOut": false,
       "prompt": "Adam Gilchrist played for Australia, scoring 137 runs from 81 balls with a strike rate of 169.14 (dismissed). Venue context: Sabina Park. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/au.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Australia",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 133.66,
@@ -48,17 +132,59 @@
       "notOut": false,
       "prompt": "Ricky Ponting played for Australia, scoring 135 runs from 101 balls with a strike rate of 133.66 (dismissed). Venue context: Sir Vivian Richards Stadium. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/au.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Australia",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 90.91,
@@ -68,17 +194,59 @@
       "notOut": false,
       "prompt": "Mahela Jayawardene played for Sri Lanka, scoring 90 runs from 99 balls with a strike rate of 90.91 (dismissed). Venue context: Providence Stadium. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/lk.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/lk.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Sri Lanka",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 108.55,
@@ -88,17 +256,59 @@
       "notOut": false,
       "prompt": "Kumar Sangakkara played for Sri Lanka, scoring 127 runs from 117 balls with a strike rate of 108.55 (dismissed). Venue context: Queen's Park Oval. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/lk.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/lk.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Sri Lanka",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 67.05,
@@ -108,17 +318,59 @@
       "notOut": true,
       "prompt": "Sanath Jayasuriya played for Sri Lanka, scoring 59 runs from 88 balls with a strike rate of 67.05 (not out). Venue context: Beausejour Cricket Ground. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/lk.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/lk.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Sri Lanka",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 101.75,
@@ -128,17 +380,59 @@
       "notOut": false,
       "prompt": "Jacques Kallis played for South Africa, scoring 116 runs from 114 balls with a strike rate of 101.75 (dismissed). Venue context: Kensington Oval. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/za.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/za.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "South Africa",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 84.29,
@@ -148,17 +442,59 @@
       "notOut": false,
       "prompt": "Graeme Smith played for South Africa, scoring 59 runs from 70 balls with a strike rate of 84.29 (dismissed). Venue context: Sabina Park. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/za.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/za.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "South Africa",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 113.21,
@@ -168,17 +504,59 @@
       "notOut": true,
       "prompt": "AB de Villiers played for South Africa, scoring 60 runs from 53 balls with a strike rate of 113.21 (not out). Venue context: Sir Vivian Richards Stadium. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/za.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/za.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "South Africa",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 144.93,
@@ -188,17 +566,59 @@
       "notOut": false,
       "prompt": "Scott Styris played for New Zealand, scoring 100 runs from 69 balls with a strike rate of 144.93 (dismissed). Venue context: Providence Stadium. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/nz.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/nz.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "New Zealand",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 72.44,
@@ -208,17 +628,59 @@
       "notOut": false,
       "prompt": "Stephen Fleming played for New Zealand, scoring 92 runs from 127 balls with a strike rate of 72.44 (dismissed). Venue context: Queen's Park Oval. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/nz.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/nz.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "New Zealand",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 112.26,
@@ -228,17 +690,59 @@
       "notOut": true,
       "prompt": "Kevin Pietersen played for England, scoring 119 runs from 106 balls with a strike rate of 112.26 (not out). Venue context: Beausejour Cricket Ground. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/gb-eng.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/gb-eng.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "England",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 127.27,
@@ -248,17 +752,59 @@
       "notOut": false,
       "prompt": "Brian Lara played for West Indies, scoring 112 runs from 88 balls with a strike rate of 127.27 (dismissed). Venue context: Kensington Oval. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/wi.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/wi.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "West Indies",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 75.95,
@@ -268,17 +814,59 @@
       "notOut": false,
       "prompt": "Shivnarine Chanderpaul played for West Indies, scoring 60 runs from 79 balls with a strike rate of 75.95 (dismissed). Venue context: Sabina Park. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/wi.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/wi.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "West Indies",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 161.11,
@@ -288,17 +876,59 @@
       "notOut": false,
       "prompt": "Yuvraj Singh played for India, scoring 58 runs from 36 balls with a strike rate of 161.11 (dismissed). Venue context: Sir Vivian Richards Stadium. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/in.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/in.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "India",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 94.12,
@@ -308,17 +938,59 @@
       "notOut": false,
       "prompt": "Rahul Dravid played for India, scoring 96 runs from 102 balls with a strike rate of 94.12 (dismissed). Venue context: Providence Stadium. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/in.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/in.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "India",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 98.15,
@@ -328,17 +1000,59 @@
       "notOut": false,
       "prompt": "Mohammad Yousuf played for Pakistan, scoring 106 runs from 108 balls with a strike rate of 98.15 (dismissed). Venue context: Queen's Park Oval. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/pk.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/pk.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Pakistan",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 133.03,
@@ -348,17 +1062,59 @@
       "notOut": false,
       "prompt": "Tamim Iqbal played for Bangladesh, scoring 145 runs from 109 balls with a strike rate of 133.03 (dismissed). Venue context: Beausejour Cricket Ground. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/bd.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/bd.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Bangladesh",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "SR": 123.53,
@@ -368,17 +1124,59 @@
       "notOut": false,
       "prompt": "Kevin O'Brien played for Ireland, scoring 63 runs from 51 balls with a strike rate of 123.53 (dismissed). Venue context: Kensington Oval. Competition: 2007 Cricket World Cup. Grade: ODI / Super Eight. This is a fictional demonstration performance for archive preview only.",
       "teamLogo": {
-        "url": "/dummyAssetData/flags/ie.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/ie.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Ireland",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     }
   ],
   "asset": {
@@ -406,17 +1204,91 @@
   "videoMeta": {
     "club": {
       "logo": {
-        "hasLogo": false,
-        "url": "",
-        "width": 1031,
-        "height": 1330
+        "hasLogo": true,
+        "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/android_chrome_512x512_0823a84f31.png",
+        "width": 512,
+        "height": 512
       },
       "name": "International Cricket Demo Preview",
       "sport": "Cricket",
       "sponsors": {
-        "primary": [],
-        "general": [],
-        "sponsorNum": 0
+        "primary": [
+          {
+            "id": 9001,
+            "name": "Sponsor 1",
+            "logo": {
+              "id": 9101,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+            }
+          },
+          {
+            "id": 9002,
+            "name": "Sponsor 2",
+            "logo": {
+              "id": 9102,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+            }
+          },
+          {
+            "id": 9003,
+            "name": "Sponsor 3",
+            "logo": {
+              "id": 9103,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+            }
+          },
+          {
+            "id": 9004,
+            "name": "Sponsor 4",
+            "logo": {
+              "id": 9104,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+            }
+          }
+        ],
+        "general": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          },
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          },
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          },
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          },
+          {
+            "id": 9009,
+            "name": "Sponsor 9",
+            "logo": {
+              "id": 9109,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+            }
+          }
+        ],
+        "sponsorNum": 9
       },
       "IsAccountClub": false
     },
@@ -444,7 +1316,7 @@
         "videoTitle": "Batting Performances",
         "assetTypeId": 3,
         "compositionId": "CricketBattingPerformances",
-        "includeSponsors": false
+        "includeSponsors": true
       },
       "appearance": {
         "theme": {
@@ -510,12 +1382,12 @@
           "animationDuration": null
         },
         "texture": {
-          "url": "",
-          "name": "Stone 2",
-          "scale": "100%",
+          "name": "Stadium 004",
+          "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/Chat_GPT_Image_Aug_12_2026_12_25_17_PM_68e4d8018e.png",
           "repeat": "cover",
+          "scale": "100%",
           "overlay": {
-            "opacity": 0.7,
+            "opacity": 0.5,
             "blendMode": "multiply"
           }
         },
@@ -612,7 +1484,20 @@
           "direction": "up",
           "particleCount": "300"
         },
-        "useBackground": "Texture"
+        "useBackground": "Texture",
+        "luminance": {
+          "name": "Brush Sweep Gray",
+          "url": null,
+          "asset": "plates/brush-sweep-gray.png",
+          "map": {
+            "kind": "theme",
+            "preset": "brand"
+          },
+          "protection": "none",
+          "position": "center",
+          "size": "cover",
+          "opacity": 1
+        }
       }
     }
   },

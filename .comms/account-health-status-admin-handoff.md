@@ -59,6 +59,20 @@ Content-Type: application/json
 
 Use for admin/support testing. `force: true` bypasses the 5-day freshness window, but does not bypass invalid account, inactive account, or non-billable account checks.
 
+### On-Demand Account Update Trigger
+
+```http
+POST /api/account/:accountId/health/run-on-demand
+```
+
+Use for the Admin "run account update now" action. This is equivalent to `POST /api/account/:accountId/health/run` with `{ "force": true }`.
+
+It bypasses the 5-day freshness window only. It still:
+
+- blocks invalid, inactive, not setup, updating, and non-billable accounts
+- returns an existing active run instead of creating a duplicate
+- uses the same response shape as the manual run trigger
+
 ### Run Reconcile
 
 ```http
@@ -87,7 +101,7 @@ Content-Type: application/json
 }
 ```
 
-Support tool. Marks an active run as failed, fails non-terminal step items, clears the account active-health lock, and unblocks new on-demand runs. See `.comms/account-health-run-abort-handoff.md`.
+Support tool. Marks an active run as failed, fails non-terminal step items, clears the account active-health lock, and unblocks new on-demand runs. Returns the same payload as run status. See fixtura-admin `.comms/account-health-run-abort-handoff.md`.
 
 ## Auth
 
@@ -98,9 +112,10 @@ api::account.account.getAccountHealthGlobalStatus
 api::account.account.getAccountHealthAccountStatus
 api::account.account.getAccountHealthRunStatus
 api::account.account.postAccountHealthRun
+api::account.account.postAccountHealthRunOnDemand
 api::account.account.postAccountHealthRunReconcile
-api::account.account.postAccountHealthRunResume
 api::account.account.postAccountHealthRunAbort
+api::account.account.postAccountHealthRunResume
 ```
 
 ## Types
@@ -232,8 +247,23 @@ type AccountHealthGlobalStatusResponse = {
   data: {
     runCounts: StatusCounts;
     activeCount: number;
+    activeRunsTruncated: boolean;
     failedCount: number;
     completedEmptyCount: number;
+    activeRuns: Array<{
+      id: number;
+      accountId: number;
+      accountName: string | null;
+      primaryOrgLabel: string | null;
+      status: AccountHealthRunStatus;
+      accountType: "association" | "club";
+      startedAt: string | null;
+      completedAt: string | null;
+      failedAt: string | null;
+      finalizedAt: string | null;
+      failureReason: string | null;
+      summary: AccountHealthRunSummary | null;
+    }>;
     latestRuns: Array<{
       id: number;
       accountId: number;
@@ -263,8 +293,25 @@ Example:
       "failed": 1
     },
     "activeCount": 2,
+    "activeRunsTruncated": false,
     "failedCount": 1,
     "completedEmptyCount": 4,
+    "activeRuns": [
+      {
+        "id": 18,
+        "accountId": 575,
+        "accountName": "Darwin And Districts Cricket Competition",
+        "primaryOrgLabel": "Darwin And Districts Cricket Competition",
+        "status": "running",
+        "accountType": "association",
+        "startedAt": "2026-05-25T00:15:10.000Z",
+        "completedAt": null,
+        "failedAt": null,
+        "finalizedAt": null,
+        "failureReason": null,
+        "summary": null
+      }
+    ],
     "latestRuns": [
       {
         "id": 18,
@@ -519,9 +566,13 @@ Current v1 behaviour:
 
 - `latestRuns` returns the newest 20 rows from the newest 100 health runs.
 - There is no pagination or filter query support yet.
-- `activeCount` is the count of runs with status `pending`, `queued`, or `running`.
-- `completedEmptyCount` is the count of terminal runs with status `completed` or `finalized` and `summary.emptyResult === true`.
-- `failedCount` is the count of runs with status `failed`.
+- `activeRuns` is every run with status `pending`, `queued`, or `running`, including `running` rows whose `completedAt` is set. It is sorted by `startedAt` ascending, null `startedAt` last, then `createdAt` ascending, then `id` ascending. The list is capped at 10,000.
+- `activeCount` is `activeRuns.length`.
+- `activeRunsTruncated` is true only when that cap dropped rows.
+- `activeBySource` stays a separate count of `queued` and `running` runs. It is not equal to `activeCount`.
+- `runCounts`, `pendingCount`, `failedCount`, and `completedEmptyCount` still come from the newest 100 runs.
+- `completedEmptyCount` is the count of terminal runs in that window with status `completed` or `finalized` and `summary.emptyResult === true`.
+- `failedCount` is the count of `failed` runs in that window.
 
 Recommended widgets:
 
@@ -608,13 +659,25 @@ If `nonTerminalRows` exists, show grade IDs and processing status.
 
 ## Workflow Semantics
 
-Health sequence:
+Health sequence (complete prod scope — no hidden later steps):
 
 1. `scrape:association-single` or `scrape:club-single`
 2. `scrape:grades-batch`
 3. internal org-link sync
 4. `scrape:grades-lookup-teams-batch`
 5. `scrape:fixture-discovery-batch`
+
+### Out of scope
+
+Account-health does **not** include `scrape:result-batch` or
+`remove-fixtures`. A finalized run with only the scopes above is successful.
+
+For Results and remove-fixtures work, use account-asset-runs (`mode: "full"`) or
+`POST /api/game-meta-data/trigger-result-batch-scrape`. See
+`account-asset-run-on-demand-trigger-handoff.md`.
+
+`GET /api/account/health/runs/:runId/status` → `items[].scope` lists created
+steps. Absence of `scrape:result-batch` is expected for account-health runs.
 
 Daily cron:
 
@@ -666,19 +729,29 @@ show a short "Health run already active" message and open or link to that run de
 
 ## Auth And Rollout
 
-These routes currently use Strapi authenticated Account permissions, not the `APP_API_KEY` bearer pattern:
+Admin routes accept `Authorization: Bearer ${APP_API_KEY}` using the same pattern as other fixtura-admin CMS calls (for example `GET /api/account-asset-runs/render-activity`).
+
+Bearer auth is validated in-controller via `assertAdminBearerAuth`:
+
+- `INTERNAL_CMS_TOKEN` (constant-time compare; set this on CMS Heroku to the same value Admin uses as `APP_API_KEY`)
+- Strapi API tokens (`admin::api-token`, including full-access tokens)
+
+Routes use `auth: false` at the Strapi route layer; the handler enforces bearer auth.
+
+`GET /api/account/:accountId/health/status` also supports member/support JWT access (owner or `isSupportSuperUser`) for the consumer app Support View.
 
 ```text
-api::account.account.getAccountHealthGlobalStatus
-api::account.account.getAccountHealthAccountStatus
-api::account.account.getAccountHealthRunStatus
-api::account.account.postAccountHealthRun
-api::account.account.postAccountHealthRunReconcile
-api::account.account.postAccountHealthRunResume
-api::account.account.postAccountHealthRunAbort
+GET  /api/account/health/status
+GET  /api/account/:accountId/health/status
+GET  /api/account/health/runs/:runId/status
+POST /api/account/:accountId/health/run-on-demand
+POST /api/account/health/runs/:runId/reconcile
+POST /api/account/health/runs/:runId/resume
 ```
 
-If the admin frontend can only call backend custom routes with `APP_API_KEY`, backend auth middleware will need a small follow-up change before staging/production rollout.
+Implementation: `src/api/account/controllers/services/security/assertAdminBearerAuth.js`
+
+`POST /api/account/:accountId/health/run` still uses Strapi scoped JWT/API-token permissions (manual trigger with optional `force`).
 
 Current availability is local/dev branch. Staging should roll out after the backend deploy/migration and a smoke test of manual trigger, cron due selection, and one completed run. Production should follow after staging confirms worker correlation fields and fixture-discovery reconciliation.
 

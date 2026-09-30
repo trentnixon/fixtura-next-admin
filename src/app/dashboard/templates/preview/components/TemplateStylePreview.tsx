@@ -1,9 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -11,6 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Text from "@/components/ui-library/foundation/Text";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import { useTemplateAnimations } from "@/hooks/template-animation/useTemplateAnimation";
@@ -30,6 +34,8 @@ import {
   PREVIEW_BACKGROUNDS,
   PreviewBackground,
 } from "@/lib/template-style-preview/buildTemplateStylePreview";
+import { sectionTabListClass, sectionTabTriggerClass } from "@/lib/actions/siteNavigationButtonStyles";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { useGlobalContext } from "@/components/providers/GlobalContext";
 import { resolveStrapiMediaUrl } from "@/lib/utils/strapiMediaUrl";
 
@@ -97,6 +103,7 @@ export function TemplateStylePreview() {
   const [theme, setTheme] = useState({ ...LADDER_THEME });
   const [imagePasteUrl, setImagePasteUrl] = useState("");
   const [videoPasteUrl, setVideoPasteUrl] = useState("");
+  const [group, setGroup] = useState("color");
 
   const fixturePath = CRICKET_SAMPLE_FIXTURES.find((item) => item.id === fixtureId)?.path;
 
@@ -199,163 +206,217 @@ export function TemplateStylePreview() {
     return <ErrorState title="Failed to load the cricket sample fixture" error={new Error(fixtureError)} />;
   }
 
+  const categoryChoices = (categories.data?.data ?? []).map((row) => ({
+    id: row.id,
+    label: rowLabel(row.name, row.id, row.publishedAt, row.isPrivate ? "Private" : undefined),
+  }));
+  const modeChoices = (modes.data?.data ?? []).map((row) => ({
+    id: row.id,
+    label: rowLabel(row.name, row.id, row.publishedAt, row.slug || "light"),
+  }));
+  const paletteChoices = (palettes.data?.data ?? []).map((row) => ({
+    id: row.id,
+    label: row.name || "Untitled",
+  }));
+
   return (
-    <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)]">
-      <div className="space-y-4">
-        <Field label="Sample fixture">
-          <Select value={fixtureId} onValueChange={(value) => setFixtureId(value as CricketSampleFixtureId)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {CRICKET_SAMPLE_FIXTURES.map((item) => (
-                <SelectItem key={item.id} value={item.id}>{item.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-        <Field label="Background">
-          <Select value={useBackground} onValueChange={(value) => setUseBackground(value as PreviewBackground)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {PREVIEW_BACKGROUNDS.map((item) => (
-                <SelectItem key={item} value={item}>{item}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-        <RowSelect
-          label="Category"
-          value={resolvedCategoryId}
-          rows={(categories.data?.data ?? []).map((row) => ({
-            id: row.id,
-            label: rowLabel(row.name, row.id, row.publishedAt, row.isPrivate ? "Private" : undefined),
-          }))}
-          onChange={setCategoryId}
-        />
-        <RowSelect
-          label="Mode"
-          value={resolvedModeId}
-          rows={(modes.data?.data ?? []).map((row) => ({
-            id: row.id,
-            label: rowLabel(row.name, row.id, row.publishedAt, row.slug || "light"),
-          }))}
-          onChange={setModeId}
-        />
-        <RowSelect
-          label="Palette"
-          value={resolvedPaletteId}
-          rows={(palettes.data?.data ?? []).map((row) => ({
-            id: row.id,
-            label: rowLabel(row.name, row.id, row.publishedAt, row.value),
-          }))}
-          onChange={setPaletteId}
-        />
-        {(["primary", "secondary", "dark", "white"] as const).map((key) => (
-          <Field key={key} label={key}>
-            <Input value={theme[key]} onChange={(event) => setTheme((current) => ({ ...current, [key]: event.target.value }))} />
-          </Field>
-        ))}
-        {useBackground === "Gradient" ? (
-          <RowSelect
-            label="Gradient"
-            value={resolvedGradientId}
-            rows={(gradients.data?.data ?? []).map((row) => ({
-              id: row.id,
-              label: rowLabel(row.name, row.id, row.publishedAt),
-            }))}
-            onChange={setGradientId}
-          />
-        ) : null}
-        {useBackground === "Animated" ? (
-          <RowSelect
-            label="Animation"
-            value={resolvedAnimationId}
-            rows={(animations.data?.data ?? []).map((row) => ({
-              id: row.id,
-              label: rowLabel(row.name, row.id, row.publishedAt, row.isActive ? undefined : "Inactive"),
-            }))}
-            onChange={setAnimationId}
-          />
-        ) : null}
-        {useBackground === "Texture" ? (
-          <RowSelect
-            label="Texture"
-            value={textureId}
-            rows={(textures.data?.data ?? []).map((row) => ({
-              id: row.id,
-              label: rowLabel(row.name, row.id, row.publishedAt),
-            }))}
-            onChange={setTextureId}
-          />
-        ) : null}
-        {useBackground === "Luminance" ? (
-          <RowSelect
-            label="Luminance"
-            value={luminanceId}
-            rows={(luminances.data?.data ?? []).map((row) => ({
-              id: row.id,
-              label: rowLabel(row.name, row.id, row.publishedAt),
-            }))}
-            onChange={setLuminanceId}
-          />
-        ) : null}
-        {useBackground === "Image" ? (
-          <>
-            <RowSelect
-              label="Image motion"
-              value={resolvedImageId}
-              rows={(images.data?.data ?? []).map((row) => ({
-                id: row.id,
-                label: rowLabel(row.name, row.id, row.publishedAt),
-              }))}
-              onChange={setImageId}
-            />
-            <Field label="Image URL">
-              <Input value={imagePasteUrl} onChange={(event) => setImagePasteUrl(event.target.value)} />
-            </Field>
-          </>
-        ) : null}
-        {useBackground === "Video" ? (
-          <>
-            <RowSelect
-              label="Video"
-              value={resolvedVideoId}
-              rows={(videos.data?.data ?? []).map((row) => ({
-                id: row.id,
-                label: rowLabel(row.name, row.id, row.publishedAt),
-              }))}
-              onChange={setVideoId}
-            />
-            <Field label="Video URL">
-              <Input value={videoPasteUrl} onChange={(event) => setVideoPasteUrl(event.target.value)} />
-            </Field>
-          </>
-        ) : null}
-      </div>
-      <div>
-        {!fixture || startPending || !preview ? (
-          <LoadingState message="Loading the cricket sample fixture and the starting Template style..." />
-        ) : preview.mount ? (
-          <RemotionPreviewPlayer data={preview.data} durationInFrames={preview.durationInFrames} />
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            This luminance plate has no absolute http or https URL, so the player stays off. The row remains in the list.
-          </p>
-        )}
+    <div className="space-y-6">
+      <SectionContainer
+        title="Template style preview"
+        description="Starts on the ladder with the new-account style and the ladder theme colours."
+      >
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="space-y-2">
+            <Label>Asset type</Label>
+            <Select value={fixtureId} onValueChange={(value) => setFixtureId(value as CricketSampleFixtureId)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {CRICKET_SAMPLE_FIXTURES.map((item) => (
+                  <SelectItem key={item.id} value={item.id}>{item.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label>Template type</Label>
+            <Select
+              value={resolvedCategoryId === null ? undefined : String(resolvedCategoryId)}
+              onValueChange={(value) => setCategoryId(Number(value))}
+            >
+              <SelectTrigger><SelectValue placeholder="Choose a category" /></SelectTrigger>
+              <SelectContent>
+                {categoryChoices.map((row) => (
+                  <SelectItem key={row.id} value={String(row.id)}>{row.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            {(["primary", "secondary", "dark", "white"] as const).map((key) => (
+              <div key={key} className="space-y-2">
+                <Label>{key}</Label>
+                <Input
+                  value={theme[key]}
+                  onChange={(event) => setTheme((current) => ({ ...current, [key]: event.target.value }))}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </SectionContainer>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,7fr)] lg:items-start">
+        <SectionContainer title="Style" description="Colour, contrast, and the background parent.">
+          <Tabs value={group} onValueChange={setGroup}>
+            <TabsList variant="primary" className={sectionTabListClass}>
+              <TabsTrigger value="color" variant="section" className={sectionTabTriggerClass}>Color</TabsTrigger>
+              <TabsTrigger value="contrast" variant="section" className={sectionTabTriggerClass}>Contrast</TabsTrigger>
+              <TabsTrigger value="background" variant="section" className={sectionTabTriggerClass}>Background</TabsTrigger>
+            </TabsList>
+            <div className="min-w-0">
+            <TabsContent value="color" className="mt-4 space-y-4">
+              <Text variant="muted">Palette is the pairing.</Text>
+              <OptionButtons value={resolvedPaletteId} rows={paletteChoices} onChange={setPaletteId} />
+            </TabsContent>
+            <TabsContent value="contrast" className="mt-4 space-y-3">
+              <Text variant="muted">Contrast mode sits beside the category. It is not a background.</Text>
+              <OptionButtons value={resolvedModeId} rows={modeChoices} onChange={setModeId} />
+            </TabsContent>
+            <TabsContent value="background" className="mt-4 space-y-4">
+              <Text variant="muted">One background parent. Only the catalogue for that parent is listed.</Text>
+              <OptionButtons
+                value={useBackground}
+                rows={PREVIEW_BACKGROUNDS.map((item) => ({ id: item, label: item }))}
+                onChange={setUseBackground}
+              />
+              {useBackground === "Solid" ? (
+                <Text variant="small">Solid uses the theme colours. It has no catalogue row.</Text>
+              ) : null}
+              {useBackground === "Gradient" ? (
+                <ChoiceList
+                  label="Gradient"
+                  value={resolvedGradientId}
+                  rows={(gradients.data?.data ?? []).map((row) => ({
+                    id: row.id,
+                    label: rowLabel(row.name, row.id, row.publishedAt),
+                  }))}
+                  onChange={setGradientId}
+                />
+              ) : null}
+              {useBackground === "Animated" ? (
+                <ChoiceList
+                  label="Animation"
+                  value={resolvedAnimationId}
+                  rows={(animations.data?.data ?? []).map((row) => ({
+                    id: row.id,
+                    label: rowLabel(row.name, row.id, row.publishedAt, row.isActive ? undefined : "Inactive"),
+                  }))}
+                  onChange={setAnimationId}
+                />
+              ) : null}
+              {useBackground === "Texture" ? (
+                <ChoiceList
+                  label="Texture"
+                  value={textureId}
+                  rows={(textures.data?.data ?? []).map((row) => ({
+                    id: row.id,
+                    label: rowLabel(row.name, row.id, row.publishedAt),
+                  }))}
+                  onChange={setTextureId}
+                />
+              ) : null}
+              {useBackground === "Luminance" ? (
+                <ChoiceList
+                  label="Luminance"
+                  value={luminanceId}
+                  rows={(luminances.data?.data ?? []).map((row) => ({
+                    id: row.id,
+                    label: rowLabel(row.name, row.id, row.publishedAt),
+                  }))}
+                  onChange={setLuminanceId}
+                />
+              ) : null}
+              {useBackground === "Image" ? (
+                <>
+                  <ChoiceList
+                    label="Image motion"
+                    value={resolvedImageId}
+                    rows={(images.data?.data ?? []).map((row) => ({
+                      id: row.id,
+                      label: rowLabel(row.name, row.id, row.publishedAt),
+                    }))}
+                    onChange={setImageId}
+                  />
+                  <div className="space-y-2">
+                    <Label>Image URL</Label>
+                    <Input value={imagePasteUrl} onChange={(event) => setImagePasteUrl(event.target.value)} />
+                  </div>
+                </>
+              ) : null}
+              {useBackground === "Video" ? (
+                <>
+                  <ChoiceList
+                    label="Video"
+                    value={resolvedVideoId}
+                    rows={(videos.data?.data ?? []).map((row) => ({
+                      id: row.id,
+                      label: rowLabel(row.name, row.id, row.publishedAt),
+                    }))}
+                    onChange={setVideoId}
+                  />
+                  <div className="space-y-2">
+                    <Label>Video URL</Label>
+                    <Input value={videoPasteUrl} onChange={(event) => setVideoPasteUrl(event.target.value)} />
+                  </div>
+                </>
+              ) : null}
+            </TabsContent>
+            </div>
+          </Tabs>
+        </SectionContainer>
+        <SectionContainer title="Player" description="The cricket sample with this session style.">
+          {!fixture || startPending || !preview ? (
+            <LoadingState message="Loading the cricket sample fixture and the starting Template style..." />
+          ) : preview.mount ? (
+            <RemotionPreviewPlayer data={preview.data} durationInFrames={preview.durationInFrames} />
+          ) : (
+            <Text variant="muted">
+              This luminance plate has no absolute http or https URL, so the player stays off. The row remains in the list.
+            </Text>
+          )}
+        </SectionContainer>
       </div>
     </div>
   );
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function OptionButtons<T extends string | number>({
+  value,
+  rows,
+  onChange,
+}: {
+  value: T | null;
+  rows: { id: T; label: string }[];
+  onChange: (id: T) => void;
+}) {
   return (
-    <div className="space-y-2">
-      <Label>{label}</Label>
-      {children}
+    <div className="grid grid-cols-2 gap-1">
+      {rows.map((row) => (
+        <Button
+          key={String(row.id)}
+          type="button"
+          size="sm"
+          variant={value === row.id ? "default" : "outline"}
+          className="h-auto whitespace-normal px-2 py-1.5"
+          onClick={() => onChange(row.id)}
+        >
+          {row.label}
+        </Button>
+      ))}
     </div>
   );
 }
 
-function RowSelect({
+function ChoiceList({
   label,
   value,
   rows,
@@ -367,18 +428,28 @@ function RowSelect({
   onChange: (id: number) => void;
 }) {
   return (
-    <Field label={label}>
-      <Select
-        value={value === null ? undefined : String(value)}
-        onValueChange={(next) => onChange(Number(next))}
-      >
-        <SelectTrigger><SelectValue placeholder="Choose a row" /></SelectTrigger>
-        <SelectContent>
-          {rows.map((row) => (
-            <SelectItem key={row.id} value={String(row.id)}>{row.label}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </Field>
+    <div className="space-y-2">
+      <Label>{label}</Label>
+      {rows.length === 0 ? (
+        <Text variant="small">No rows yet.</Text>
+      ) : (
+        <ScrollArea className="h-64 rounded-md border">
+          <div className="flex flex-col gap-1 p-1">
+            {rows.map((row) => (
+              <Button
+                key={row.id}
+                type="button"
+                size="sm"
+                variant={value === row.id ? "default" : "ghost"}
+                className="h-auto justify-start whitespace-normal px-2 py-1.5 text-left"
+                onClick={() => onChange(row.id)}
+              >
+                {row.label}
+              </Button>
+            ))}
+          </div>
+        </ScrollArea>
+      )}
+    </div>
   );
 }

@@ -27,6 +27,7 @@ export async function fetchDownloadByRenderId(
     // Build query parameters using qs
     const query = qs.stringify(
       {
+        publicationState: "preview",
         filters: {
           render: {
             id: {
@@ -44,6 +45,11 @@ export async function fetchDownloadByRenderId(
           "DisplayCost",
           "assetLinkID",
           "grouping_category",
+          "UserErrorMessage",
+          "errorHandler",
+          "errorEmailSentToAdmin",
+          "updatedAt",
+          "downloads",
         ],
       },
       { encodeValuesOnly: true } // Serialize parameters for Strapi

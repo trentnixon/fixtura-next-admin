@@ -13,7 +13,7 @@
       "ageGroup": "Senior",
       "awayTeam": {
         "logo": {
-          "url": "/dummyAssetData/flags/za.svg",
+          "url": "https://application.fixtura.com.au/dummyAssetData/flags/za.svg",
           "width": 640,
           "height": 480
         },
@@ -87,7 +87,7 @@
       },
       "homeTeam": {
         "logo": {
-          "url": "/dummyAssetData/flags/gb-eng.svg",
+          "url": "https://application.fixtura.com.au/dummyAssetData/flags/gb-eng.svg",
           "width": 640,
           "height": 480
         },
@@ -162,12 +162,12 @@
       "gradeName": "2019 World Cup — Group Stage",
       "resultShort": "England def South Africa",
       "teamAwayLogo": {
-        "url": "/dummyAssetData/flags/za.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/za.svg",
         "width": 640,
         "height": 480
       },
       "teamHomeLogo": {
-        "url": "/dummyAssetData/flags/gb-eng.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/gb-eng.svg",
         "width": 640,
         "height": 480
       },
@@ -179,11 +179,53 @@
       },
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          }
+        ],
         "team": []
       },
       "gradeSortOrder": 0,
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "date": "1 Jun 2019",
@@ -198,7 +240,7 @@
       "ageGroup": "Senior",
       "awayTeam": {
         "logo": {
-          "url": "/dummyAssetData/flags/au.svg",
+          "url": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg",
           "width": 640,
           "height": 480
         },
@@ -272,7 +314,7 @@
       },
       "homeTeam": {
         "logo": {
-          "url": "/dummyAssetData/flags/af.svg",
+          "url": "https://application.fixtura.com.au/dummyAssetData/flags/af.svg",
           "width": 640,
           "height": 480
         },
@@ -337,12 +379,12 @@
       "gradeName": "2019 World Cup — Group Stage",
       "resultShort": "Australia def Afghanistan",
       "teamAwayLogo": {
-        "url": "/dummyAssetData/flags/au.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg",
         "width": 640,
         "height": 480
       },
       "teamHomeLogo": {
-        "url": "/dummyAssetData/flags/af.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/af.svg",
         "width": 640,
         "height": 480
       },
@@ -354,11 +396,53 @@
       },
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          }
+        ],
         "team": []
       },
       "gradeSortOrder": 0,
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "date": "31 May 2019",
@@ -373,7 +457,7 @@
       "ageGroup": "Senior",
       "awayTeam": {
         "logo": {
-          "url": "/dummyAssetData/flags/pk.svg",
+          "url": "https://application.fixtura.com.au/dummyAssetData/flags/pk.svg",
           "width": 640,
           "height": 480
         },
@@ -447,7 +531,7 @@
       },
       "homeTeam": {
         "logo": {
-          "url": "/dummyAssetData/flags/wi.svg",
+          "url": "https://application.fixtura.com.au/dummyAssetData/flags/wi.svg",
           "width": 640,
           "height": 480
         },
@@ -522,12 +606,12 @@
       "gradeName": "2019 World Cup — Group Stage",
       "resultShort": "Pakistan def West Indies",
       "teamAwayLogo": {
-        "url": "/dummyAssetData/flags/pk.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/pk.svg",
         "width": 640,
         "height": 480
       },
       "teamHomeLogo": {
-        "url": "/dummyAssetData/flags/wi.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/wi.svg",
         "width": 640,
         "height": 480
       },
@@ -539,11 +623,53 @@
       },
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          }
+        ],
         "team": []
       },
       "gradeSortOrder": 0,
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "date": "16 Jun 2019",
@@ -558,7 +684,7 @@
       "ageGroup": "Senior",
       "awayTeam": {
         "logo": {
-          "url": "/dummyAssetData/flags/pk.svg",
+          "url": "https://application.fixtura.com.au/dummyAssetData/flags/pk.svg",
           "width": 640,
           "height": 480
         },
@@ -632,7 +758,7 @@
       },
       "homeTeam": {
         "logo": {
-          "url": "/dummyAssetData/flags/in.svg",
+          "url": "https://application.fixtura.com.au/dummyAssetData/flags/in.svg",
           "width": 640,
           "height": 480
         },
@@ -707,12 +833,12 @@
       "gradeName": "2019 World Cup — Group Stage",
       "resultShort": "India def Pakistan",
       "teamAwayLogo": {
-        "url": "/dummyAssetData/flags/pk.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/pk.svg",
         "width": 640,
         "height": 480
       },
       "teamHomeLogo": {
-        "url": "/dummyAssetData/flags/in.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/in.svg",
         "width": 640,
         "height": 480
       },
@@ -724,11 +850,53 @@
       },
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          }
+        ],
         "team": []
       },
       "gradeSortOrder": 0,
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     }
   ],
   "asset": {
@@ -757,17 +925,91 @@
   "videoMeta": {
     "club": {
       "logo": {
-        "hasLogo": false,
-        "url": "",
-        "width": 2375,
-        "height": 2375
+        "hasLogo": true,
+        "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/android_chrome_512x512_0823a84f31.png",
+        "width": 512,
+        "height": 512
       },
       "name": "International Cricket Demo Preview",
       "sport": "Cricket",
       "sponsors": {
-        "primary": [],
-        "general": [],
-        "sponsorNum": 0
+        "primary": [
+          {
+            "id": 9001,
+            "name": "Sponsor 1",
+            "logo": {
+              "id": 9101,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+            }
+          },
+          {
+            "id": 9002,
+            "name": "Sponsor 2",
+            "logo": {
+              "id": 9102,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+            }
+          },
+          {
+            "id": 9003,
+            "name": "Sponsor 3",
+            "logo": {
+              "id": 9103,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+            }
+          },
+          {
+            "id": 9004,
+            "name": "Sponsor 4",
+            "logo": {
+              "id": 9104,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+            }
+          }
+        ],
+        "general": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          },
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          },
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          },
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          },
+          {
+            "id": 9009,
+            "name": "Sponsor 9",
+            "logo": {
+              "id": 9109,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+            }
+          }
+        ],
+        "sponsorNum": 9
       },
       "IsAccountClub": false
     },
@@ -795,14 +1037,14 @@
         "videoTitle": "International Cricket Demo Preview CricketResults",
         "assetTypeId": 2,
         "compositionId": "CricketResults",
-        "includeSponsors": false
+        "includeSponsors": true
       },
       "appearance": {
         "theme": {
           "dark": "#111",
           "white": "#FFF",
           "primary": "#020202",
-          "secondary": "#ff0000"
+          "secondary": "#2bff00"
         },
         "template": "Basic"
       },
@@ -862,12 +1104,12 @@
           "animationDuration": null
         },
         "texture": {
-          "url": "",
-          "name": null,
-          "scale": "100%",
+          "name": "Print Texture",
+          "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/Geometric_Halftone_Print_Texture_cb888287e4.png",
           "repeat": "cover",
+          "scale": "100%",
           "overlay": {
-            "opacity": 0.5,
+            "opacity": 0.8,
             "blendMode": "multiply"
           }
         },
@@ -954,7 +1196,21 @@
           "direction": "up",
           "particleCount": "300"
         },
-        "useBackground": "Gradient"
+        "useBackground": "Gradient",
+        "luminance": {
+          "name": "Dark Circle Mesh",
+          "url": null,
+          "asset": "plates/brush-sweep-gray.png",
+          "map": {
+            "kind": "theme",
+            "preset": "brand"
+          },
+          "protection": "none",
+          "position": "center",
+          "size": "cover",
+          "opacity": 1,
+          "supersampleScale": 1
+        }
       }
     }
   }

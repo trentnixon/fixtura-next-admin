@@ -16,6 +16,10 @@ import {
   Users,
 } from "lucide-react";
 import { AssociationDetail } from "@/types/associationDetail";
+import {
+  toFixtureDisplayText,
+  toFixtureMapsQuery,
+} from "@/app/dashboard/fixtures/_components/_utils/fixtureDisplayText";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/ui-library/badges/StatusBadge";
 import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
@@ -70,27 +74,37 @@ export default function AssociationHeader({
     href,
   } = association;
 
-  // Build location string
-  const locationParts = [];
-  if (location?.address) locationParts.push(location.address);
-  if (location?.city) locationParts.push(location.city);
-  if (location?.state) locationParts.push(location.state);
-  if (location?.country) locationParts.push(location.country);
+  const phone = toFixtureDisplayText(contactDetails?.phone, "");
+  const email = toFixtureDisplayText(contactDetails?.email, "");
+  const contactAddress = toFixtureDisplayText(contactDetails?.address, "");
+
+  const locationParts = [
+    toFixtureDisplayText(location?.address, ""),
+    toFixtureDisplayText(location?.city, ""),
+    toFixtureDisplayText(location?.state, ""),
+    toFixtureDisplayText(location?.country, ""),
+  ].filter((part) => part.length > 0);
   const locationString =
     locationParts.length > 0 ? locationParts.join(", ") : null;
 
-  // Google Maps URL if coordinates exist
+  const mapsQuery =
+    toFixtureMapsQuery(location?.address) ??
+    toFixtureMapsQuery(contactDetails?.address);
+
   const googleMapsUrl = location?.coordinates
     ? `https://www.google.com/maps/search/?api=1&query=${location.coordinates.lat},${location.coordinates.lng}`
-    : locationString
-      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-          locationString,
-        )}`
-      : null;
+    : mapsQuery
+      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapsQuery)}`
+      : locationString
+        ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+            locationString,
+          )}`
+        : null;
 
-  const hasContactDetails =
-    contactDetails?.phone || contactDetails?.email || contactDetails?.address;
-  const hasLocation = location && (locationString || location.coordinates);
+  const hasContactDetails = Boolean(phone || email || contactAddress);
+  const hasLocation = Boolean(
+    location && (locationString || location.coordinates || mapsQuery),
+  );
 
   return (
     <div className="space-y-8">
@@ -146,12 +160,12 @@ export default function AssociationHeader({
             >
               <div className="divide-y divide-slate-200">
                 <DetailRow icon={<Phone className="h-4 w-4" />} label="Phone">
-                  {contactDetails.phone ? (
+                  {phone ? (
                     <a
-                      href={`tel:${contactDetails.phone}`}
+                      href={`tel:${phone}`}
                       className="truncate text-sm font-medium text-slate-900 hover:text-brandPrimary-700"
                     >
-                      {contactDetails.phone}
+                      {phone}
                     </a>
                   ) : (
                     <span className="text-sm text-muted-foreground">
@@ -161,13 +175,13 @@ export default function AssociationHeader({
                 </DetailRow>
 
                 <DetailRow icon={<Mail className="h-4 w-4" />} label="Email">
-                  {contactDetails.email ? (
+                  {email ? (
                     <a
-                      href={`mailto:${contactDetails.email}`}
+                      href={`mailto:${email}`}
                       className="truncate text-sm font-medium text-slate-900 hover:text-brandPrimary-700"
-                      title={contactDetails.email}
+                      title={email}
                     >
-                      {contactDetails.email}
+                      {email}
                     </a>
                   ) : (
                     <span className="text-sm text-muted-foreground">
@@ -176,13 +190,13 @@ export default function AssociationHeader({
                   )}
                 </DetailRow>
 
-                {contactDetails.address && (
+                {contactAddress && (
                   <DetailRow
                     icon={<MapPin className="h-4 w-4" />}
                     label="Address"
                   >
                     <span className="text-sm font-medium text-slate-900">
-                      {contactDetails.address}
+                      {contactAddress}
                     </span>
                   </DetailRow>
                 )}

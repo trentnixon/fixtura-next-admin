@@ -60,3 +60,54 @@ export async function fetchAssets(
     }
   }
 }
+
+const ALL_ASSETS_PAGE_SIZE = 100;
+const ALL_ASSETS_MAX_PAGES = 20;
+
+export async function fetchAllAssets(
+  params: Omit<FetchAssetsParams, "page" | "pageSize"> = {},
+): Promise<AssetsResponse> {
+  const first = await fetchAssets({
+    ...params,
+    page: 1,
+    pageSize: ALL_ASSETS_PAGE_SIZE,
+  });
+  const reportedPages = first.meta?.pagination?.pageCount ?? 1;
+  const pageCount = Math.min(Math.max(reportedPages, 1), ALL_ASSETS_MAX_PAGES);
+  const pages = [first];
+
+  if (pageCount > 1) {
+    const rest = await Promise.all(
+      Array.from({ length: pageCount - 1 }, (_, index) =>
+        fetchAssets({
+          ...params,
+          page: index + 2,
+          pageSize: ALL_ASSETS_PAGE_SIZE,
+        }),
+      ),
+    );
+    pages.push(...rest);
+  }
+
+  const seen = new Set<number>();
+  const data = pages
+    .flatMap((page) => page.data)
+    .filter((asset) => {
+      if (seen.has(asset.id)) return false;
+      seen.add(asset.id);
+      return true;
+    });
+  const total = first.meta?.pagination?.total ?? data.length;
+
+  return {
+    data,
+    meta: {
+      pagination: {
+        page: 1,
+        pageSize: data.length,
+        pageCount: 1,
+        total,
+      },
+    },
+  };
+}

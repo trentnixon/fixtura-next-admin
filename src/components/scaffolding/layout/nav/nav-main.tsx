@@ -40,6 +40,19 @@ export function NavMain({
 }) {
   const pathname = usePathname();
 
+  function isNavItemActive(item: { url: string }): boolean {
+    if (!pathname) {
+      return false;
+    }
+    if (pathname === item.url) {
+      return true;
+    }
+    if (item.url === "/dashboard/renders") {
+      return /^\/dashboard\/renders\/\d+/.test(pathname);
+    }
+    return pathname.startsWith(`${item.url}/`);
+  }
+
   function getActiveSubItemUrl(
     subItems: { url: string }[] | undefined
   ): string | null {
@@ -66,7 +79,7 @@ export function NavMain({
         {items.map((item) => {
           // Determine if this item or its children match the current path
           const isCurrent =
-            pathname === item.url ||
+            isNavItemActive(item) ||
             item.items?.some((subItem) => pathname?.startsWith(subItem.url));
 
           return (

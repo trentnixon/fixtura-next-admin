@@ -1,5 +1,9 @@
 /* Isolate Remotion Player subtree from host app global/preflight styles. */
 
+[data-remotion-preview-root] {
+  font-family: initial;
+}
+
 [data-remotion-preview-root],
 [data-remotion-preview-root] * {
   box-sizing: border-box;

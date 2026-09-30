@@ -1,11 +1,12 @@
 "use client";
 
-import { DatabaseIcon } from "lucide-react";
+import { DatabaseIcon, Loader2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useGlobalContext } from "@/components/providers/GlobalContext";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { Download } from "@/types/download";
+import { useForceDownloadDetailRerender } from "@/hooks/downloads/useForceDownloadAssetRerender";
 import CMSNavigationButtons from "./CMSNavigationButtons";
 
 interface DownloadHeaderProps {
@@ -18,20 +19,41 @@ export default function DownloadHeader({ download }: DownloadHeaderProps) {
 
   // Get render ID from download data if available
   const renderId = download?.attributes?.render?.data?.id;
+  const forceRerender = useForceDownloadDetailRerender(
+    String(download.id),
+    renderId,
+  );
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-4">
-      {/* Left Side: Back to Render Button */}
-      <div className="flex items-center">
+      <div className="flex flex-wrap items-center gap-2">
         {renderId && (
           <Button variant="accent" asChild>
             <Link href={`/dashboard/renders/${renderId}`}>Back to Render</Link>
           </Button>
         )}
+        <Button variant="outline" size="sm" asChild>
+          <Link href="/dashboard/renders/download-quality-control">
+            Fleet download QC
+          </Link>
+        </Button>
       </div>
 
-      {/* Right Side: Account, Scheduler, Render, Download CMS Link */}
-      <div className="flex gap-2 items-center">
+      <div className="flex flex-wrap gap-2 items-center">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          disabled={forceRerender.isPending}
+          onClick={() => forceRerender.mutate()}
+        >
+          {forceRerender.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <RotateCcw className="h-4 w-4" />
+          )}
+          Force rerender
+        </Button>
         {/* CMS Navigation Buttons (Account, Scheduler, Render) */}
         <CMSNavigationButtons download={download} />
 

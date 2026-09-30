@@ -6,6 +6,7 @@ import {
   filterDataRefreshPolicyRuns,
   formatDataSyncAttentionMeta,
   getDataRefreshAttentionRuns,
+  mergeAttentionRunSources,
   resolveDataRefreshAttentionSeverity,
   resolveRunDurationMs,
   STUCK_RUN_THRESHOLD_MS,
@@ -252,6 +253,41 @@ describe("getDataRefreshAttentionRuns", () => {
     expect(runs[0]?.severity).toBe("error");
     expect(runs[0]?.attentionLabel).toBe("Running · overdue");
   });
+
+  it("classifies old running row with completedAt as stuck error", () => {
+    const startedAt = "2026-08-18T05:00:00.000Z";
+    const runs = getDataRefreshAttentionRuns(
+      [
+        baseRun({
+          id: 436,
+          accountId: 80,
+          status: "running",
+          startedAt,
+          completedAt: "2026-08-18T05:01:00.000Z",
+          finalizedAt: null,
+        }),
+      ],
+      nowMs
+    );
+    expect(runs).toHaveLength(1);
+    expect(runs[0]?.attentionKind).toBe("stuck");
+    expect(runs[0]?.severity).toBe("error");
+  });
+
+  it("classifies pending with null startedAt as active error", () => {
+    const runs = getDataRefreshAttentionRuns(
+      [
+        baseRun({
+          status: "pending",
+          startedAt: null,
+        }),
+      ],
+      nowMs
+    );
+    expect(runs).toHaveLength(1);
+    expect(runs[0]?.attentionKind).toBe("active");
+    expect(runs[0]?.severity).toBe("error");
+  });
 });
 
 describe("filterDataRefreshPolicyRuns", () => {
@@ -315,6 +351,40 @@ describe("computeDataRefreshAttentionState", () => {
     expect(state.policyRuns).toHaveLength(1);
     expect(state.visibleActiveInWindow).toBe(1);
     expect(state.hiddenActiveCount).toBe(2);
+  });
+
+  it("sets hidden active count to zero when lock list is complete", () => {
+    const state = computeDataRefreshAttentionState(
+      [
+        baseRun({
+          status: "running",
+          startedAt: new Date(nowMs - 37 * 60_000).toISOString(),
+        }),
+      ],
+      3,
+      nowMs,
+      { lockListComplete: true }
+    );
+    expect(state.hiddenActiveCount).toBe(0);
+  });
+});
+
+describe("mergeAttentionRunSources", () => {
+  it("uses latestRuns when activeRuns is omitted", () => {
+    const latest = [baseRun({ id: 1 })];
+    expect(mergeAttentionRunSources(undefined, latest)).toEqual(latest);
+  });
+
+  it("merges completed limbo from latestRuns into activeRuns", () => {
+    const active = [baseRun({ id: 1, status: "running" })];
+    const limbo = baseRun({
+      id: 99,
+      status: "completed",
+      finalizedAt: null,
+    });
+    const merged = mergeAttentionRunSources(active, [limbo]);
+    expect(merged).toHaveLength(2);
+    expect(merged.map((r) => r.id).sort()).toEqual([1, 99]);
   });
 });
 

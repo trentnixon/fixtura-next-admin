@@ -48,6 +48,8 @@ interface DataRefreshAttentionPanelProps {
   onRetry?: () => void;
   /** Active runs reported by API but missing from latestRuns window. */
   hiddenActiveCount?: number;
+  /** Lock list hit the CMS 10,000-row cap. */
+  activeRunsTruncated?: boolean;
   /** When true, omit outer title — parent section provides the heading. */
   embedded?: boolean;
   /** Compact record rows for overview panels; default table for full views. */
@@ -239,6 +241,20 @@ function HiddenActiveRunsBanner({ count }: { count: number }) {
   );
 }
 
+function ActiveRunsTruncatedBanner() {
+  return (
+    <div className="rounded-md border border-red-300 bg-red-50/90 px-4 py-3 text-sm text-red-950">
+      <p className="font-medium">
+        Active sync list truncated at 10,000 rows
+      </p>
+      <p className="mt-1 text-xs text-red-900/85">
+        Some account locks may be missing from this list. Use Strapi
+        account-health runs for a full fleet audit.
+      </p>
+    </div>
+  );
+}
+
 export function DataRefreshAttentionPanel({
   runs,
   activeCount,
@@ -246,6 +262,7 @@ export function DataRefreshAttentionPanel({
   error,
   onRetry,
   hiddenActiveCount = 0,
+  activeRunsTruncated = false,
   embedded = false,
   layout = "table",
   showOperatorActions = false,
@@ -253,7 +270,13 @@ export function DataRefreshAttentionPanel({
   const hasLiveClock = runs.some((run) => run.attentionKind !== "completed_limbo");
   const nowMs = useLiveRunClock(hasLiveClock);
 
-  if (!isLoading && !error && runs.length === 0 && hiddenActiveCount === 0) {
+  if (
+    !isLoading &&
+    !error &&
+    runs.length === 0 &&
+    hiddenActiveCount === 0 &&
+    !activeRunsTruncated
+  ) {
     return null;
   }
 
@@ -326,15 +349,26 @@ export function DataRefreshAttentionPanel({
     };
   });
 
-  if (!isLoading && !error && runs.length === 0 && hiddenActiveCount > 0) {
+  if (
+    !isLoading &&
+    !error &&
+    runs.length === 0 &&
+    (hiddenActiveCount > 0 || activeRunsTruncated)
+  ) {
     return (
-      <HiddenActiveRunsBanner count={hiddenActiveCount} />
+      <div className="space-y-3">
+        {activeRunsTruncated ? <ActiveRunsTruncatedBanner /> : null}
+        {hiddenActiveCount > 0 ? (
+          <HiddenActiveRunsBanner count={hiddenActiveCount} />
+        ) : null}
+      </div>
     );
   }
 
   if (embedded && layout === "rows") {
     return (
       <div className="space-y-3">
+        {activeRunsTruncated ? <ActiveRunsTruncatedBanner /> : null}
         {hiddenActiveCount > 0 ? (
           <HiddenActiveRunsBanner count={hiddenActiveCount} />
         ) : null}
@@ -458,9 +492,12 @@ export function DataRefreshAttentionPanel({
         </DashboardLinkButton>
       </div>
 
-      {hiddenActiveCount > 0 && runs.length > 0 ? (
-        <div className={cn(embedded ? "px-4 pt-3" : "mb-3")}>
-          <HiddenActiveRunsBanner count={hiddenActiveCount} />
+      {activeRunsTruncated || hiddenActiveCount > 0 ? (
+        <div className={cn(embedded ? "px-4 pt-3" : "mb-3", "space-y-3")}>
+          {activeRunsTruncated ? <ActiveRunsTruncatedBanner /> : null}
+          {hiddenActiveCount > 0 ? (
+            <HiddenActiveRunsBanner count={hiddenActiveCount} />
+          ) : null}
         </div>
       ) : null}
 

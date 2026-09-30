@@ -52,6 +52,7 @@ import { OrgContactScrapeTableCells } from "@/app/dashboard/accounts/components/
 import { OrgContactMetricGrid } from "@/app/dashboard/accounts/components/OrgContactMetricGrid";
 import {
   buildSendGridContactCsv,
+  CLUB_CONTACT_CSV_EXCLUDED_ROLES,
   collectOrgContactExportRows,
   orgContactSearchTokens,
   type SendGridContactRow,
@@ -335,7 +336,11 @@ export default function ClubEmails({
 
     const contacts: SendGridContactRow[] =
       filter === "all"
-        ? validClubs.flatMap((club) => collectOrgContactExportRows(club))
+        ? validClubs.flatMap((club) =>
+            collectOrgContactExportRows(club, {
+              excludedRoles: CLUB_CONTACT_CSV_EXCLUDED_ROLES,
+            }),
+          )
         : validClubs.flatMap((club) => {
             const accountInfo = clubIdToAccountMap.get(club.id);
             return [

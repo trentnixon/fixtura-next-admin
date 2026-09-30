@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildSendGridContactCsv,
+  CLUB_CONTACT_CSV_EXCLUDED_ROLES,
   collectOrgContactExportRows,
   formatOrgContactScrapeDate,
   orgContactSearchTokens,
@@ -56,13 +57,11 @@ describe("buildSendGridContactCsv", () => {
         id: 12,
         name: "Example Club",
         email: "club@example.com",
-        phone: "0400000000",
         contacts: [
           {
             name: "Alex Smith",
             role: "Secretary",
             email: "alex@example.com",
-            phone: "0411111111",
           },
           { name: "No inbox", role: "Coach" },
           { email: "club@example.com", name: "Inbox Owner" },
@@ -75,12 +74,73 @@ describe("buildSendGridContactCsv", () => {
 
     expect(csv).toBe(
       [
-        "email,first_name,last_name,phone_number,club_name,club_id,role",
-        "alex@example.com,Alex,Smith,0411111111,Example Club,12,Secretary",
-        "club@example.com,Inbox,Owner,0400000000,Example Club,12,",
+        "email,first_name,last_name,club_name,club_id,role",
+        "alex@example.com,Alex,Smith,Example Club,12,Secretary",
+        "club@example.com,Inbox,Owner,Example Club,12,",
       ].join("\n"),
     );
     expect(csv.toLowerCase()).not.toMatch(/scrape/);
+  });
+
+  it("omits excluded club roles and keeps the org inbox", () => {
+    const csv = buildSendGridContactCsv({
+      contacts: collectOrgContactExportRows(
+        {
+          id: 12,
+          name: "Example Club",
+          email: "coach@example.com",
+          contacts: [
+            {
+              name: "Alex Smith",
+              role: "Secretary",
+              email: "alex@example.com",
+            },
+            {
+              name: "Pat Coach",
+              role: "Senior Coach",
+              email: "coach@example.com",
+            },
+            {
+              name: "Typo Chair",
+              role: "CHHAIRPERSON",
+              email: "typo@example.com",
+            },
+            {
+              name: "Safety Coord",
+              role: "Child Safety Coordinator",
+              email: "safety@example.com",
+            },
+            {
+              name: "Covid Officer",
+              role: "COVID Officer",
+              email: "covid@example.com",
+            },
+            {
+              name: "Real Chair",
+              role: "Chairperson",
+              email: "chair@example.com",
+            },
+            {
+              name: "Blank Role",
+              email: "blank@example.com",
+            },
+          ],
+        },
+        { excludedRoles: CLUB_CONTACT_CSV_EXCLUDED_ROLES },
+      ),
+      organizationHeader: "club_name",
+      organizationIdHeader: "club_id",
+    });
+
+    expect(csv).toBe(
+      [
+        "email,first_name,last_name,club_name,club_id,role",
+        "coach@example.com,,,Example Club,12,",
+        "alex@example.com,Alex,Smith,Example Club,12,Secretary",
+        "chair@example.com,Real,Chair,Example Club,12,Chairperson",
+        "blank@example.com,Blank,Role,Example Club,12,",
+      ].join("\n"),
+    );
   });
 
   it("skips invalid and unsubscribed addresses", () => {
@@ -96,7 +156,7 @@ describe("buildSendGridContactCsv", () => {
         organizationIdHeader: "club_id",
       }),
     ).toBe(
-      "email,first_name,last_name,phone_number,club_name,club_id,role\nkeep@example.com,Keep,,,Keep Club,4,",
+      "email,first_name,last_name,club_name,club_id,role\nkeep@example.com,Keep,,Keep Club,4,",
     );
   });
 });

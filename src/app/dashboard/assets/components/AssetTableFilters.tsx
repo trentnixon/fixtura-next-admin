@@ -21,6 +21,9 @@ interface AssetTableFiltersProps {
   onClearSearch: () => void;
   onCreateClick: () => void;
   assetCount: number;
+  typeCount: number;
+  loadedCount: number;
+  totalCount: number;
 }
 
 export function AssetTableFilters({
@@ -31,7 +34,14 @@ export function AssetTableFilters({
   onClearSearch,
   onCreateClick,
   assetCount,
+  typeCount,
+  loadedCount,
+  totalCount,
 }: AssetTableFiltersProps) {
+  const assetLabel = `${assetCount} asset${assetCount === 1 ? "" : "s"}`;
+  const typeLabel =
+    typeCount > 0 ? ` in ${typeCount} type${typeCount === 1 ? "" : "s"}` : "";
+  const truncated = loadedCount < totalCount;
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -40,7 +50,9 @@ export function AssetTableFilters({
             {selectedSport} assets
           </h3>
           <p className="text-sm text-muted-foreground">
-            Showing {assetCount} asset{assetCount !== 1 ? "s" : ""}
+            {assetLabel}
+            {typeLabel}
+            {truncated ? `. Loaded ${loadedCount} of ${totalCount}` : ""}
           </p>
         </div>
 

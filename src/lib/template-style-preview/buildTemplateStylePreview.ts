@@ -121,13 +121,26 @@ export function isAbsoluteHttpUrl(value: string | null | undefined): boolean {
   return value.startsWith("http://") || value.startsWith("https://");
 }
 
+function isFrameNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isFinite(value);
+}
+
+export function thumbnailFrames(data: Record<string, unknown>, durationInFrames: number): number[] {
+  if (!Array.isArray(data.frames)) return [];
+  const last = Math.max(durationInFrames, 1) - 1;
+  return data.frames.filter(isFrameNumber).filter((frame) => frame >= 0 && frame <= last);
+}
+
 export function buildTemplateStylePreview(
   fixture: Record<string, unknown>,
   style: TemplateStylePreviewInput,
 ): TemplateStylePreview {
   const data = structuredClone(fixture);
   const timings = record(data.timings);
-  const durationInFrames = numberOrZero(timings?.FPS_INTRO) + numberOrZero(timings?.FPS_MAIN);
+  const durationInFrames =
+    numberOrZero(timings?.FPS_INTRO) +
+    numberOrZero(timings?.FPS_MAIN) +
+    numberOrZero(timings?.FPS_OUTRO);
 
   const videoMeta = ensure(data, "videoMeta");
   const video = ensure(videoMeta, "video");

@@ -14,9 +14,31 @@ export async function fetchDownloadByID(downloadId: string): Promise<Download> {
     // Build query parameters using qs
     const query = qs.stringify(
       {
+        publicationState: "preview",
         populate: ["asset_category", "asset", "render"],
+        fields: [
+          "Name",
+          "URL",
+          "grouping_category",
+          "isAccurate",
+          "hasBeenProcessed",
+          "forceRerender",
+          "DisplayCost",
+          "CompletionTime",
+          "OutputFileSize",
+          "UserErrorMessage",
+          "errorHandler",
+          "hasError",
+          "downloads",
+          "numDownloads",
+          "assetLinkID",
+          "gameID",
+          "errorEmailSentToAdmin",
+          "updatedAt",
+          "publishedAt",
+        ],
       },
-      { encodeValuesOnly: true } // Serialize parameters for Strapi
+      { encodeValuesOnly: true },
     );
 
     // Send GET request with query string

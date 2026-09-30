@@ -8,7 +8,7 @@ import {
   isPlottableCoordinate,
   readGeocodeResponse,
   type MapCoordinates,
-} from "./clubLocationMap";
+} from "./clubLocationMapModel";
 
 type ClubLocationMapProps = {
   name: string;

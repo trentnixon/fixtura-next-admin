@@ -99,10 +99,16 @@ export default function DashboardDataCollection() {
   const chartData = useMemo(() => runsByDay(latestRuns), [latestRuns]);
 
   const activeCount = healthGlobal?.data?.activeCount ?? 0;
+  const activeRunsTruncated =
+    healthGlobal?.data?.activeRunsTruncated ?? false;
   const {
     policyRuns: attentionRuns,
     hiddenActiveCount: hiddenActiveSyncCount,
-  } = useDataRefreshAttentionState(latestRuns, activeCount);
+  } = useDataRefreshAttentionState({
+    activeRuns: healthGlobal?.data?.activeRuns,
+    latestRuns,
+    activeCount,
+  });
   const failedCount = healthGlobal?.data?.failedCount ?? 0;
   const completedEmptyCount = healthGlobal?.data?.completedEmptyCount ?? 0;
 
@@ -233,7 +239,8 @@ export default function DashboardDataCollection() {
     healthLoading ||
     healthError ||
     attentionRuns.length > 0 ||
-    hiddenActiveSyncCount > 0;
+    hiddenActiveSyncCount > 0 ||
+    activeRunsTruncated;
 
   return (
     <div className="space-y-6">
@@ -322,6 +329,7 @@ export default function DashboardDataCollection() {
                 runs={attentionRuns}
                 activeCount={activeCount}
                 hiddenActiveCount={hiddenActiveSyncCount}
+                activeRunsTruncated={activeRunsTruncated}
                 isLoading={healthLoading}
                 error={
                   healthError

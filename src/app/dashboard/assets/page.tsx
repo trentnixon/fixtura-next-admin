@@ -139,7 +139,7 @@ export default function AssetsPage() {
           <TabsContent value="library" className="mt-6">
             <SectionContainer
               title="Asset Library"
-              description="Search, filter, create, edit, and remove render assets by sport."
+              description="Each sport is grouped by asset type. Search, create, edit, and remove assets inside the selected sport."
             >
               <AssetTable />
             </SectionContainer>

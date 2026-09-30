@@ -34,4 +34,4 @@ Quick actions for items on **Dashboard Overview**, **Data Collection**, **Asset 
 
 ## When lists look empty but counts are wrong
 
-Until CMS ships `activeRuns` and fleet in-progress renders, admin may show **hidden active** banners. Use Strapi account-health runs and render content manager for full fleet audit.
+**Needs attention** (account sync) lists every lock from `activeRuns` on `GET /api/account/health/status`, not the `latestRuns` recent window. If the API is older and omits `activeRuns`, admin falls back to `latestRuns` and may show **hidden active** banners. If `activeRunsTruncated` is true, the cap dropped rows — use Strapi for a full audit. Fleet in-progress renders may still use today-only data until CMS ships that endpoint.

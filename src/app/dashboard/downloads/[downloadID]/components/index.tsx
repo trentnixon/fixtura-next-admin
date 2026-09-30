@@ -28,10 +28,7 @@ import {
   ChevronUp,
   CheckCircle,
   XCircle,
-  AlertCircle,
   RefreshCw,
-  Mail,
-  CheckCircle2,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -40,6 +37,7 @@ import StyledLink from "@/components/ui-library/foundation/Link";
 import AssetDetailsViewer from "./AssetDetailsViewer";
 import MetadataTable from "./MetadataTable";
 import Settings from "./Settings";
+import { DownloadAttentionSection } from "./DownloadAttentionSection";
 import { getCommonAssetDetails } from "@/utils/downloadAsset";
 
 interface DisplayDownloadProps {
@@ -102,16 +100,15 @@ export default function DisplayDownload({ download }: DisplayDownloadProps) {
     asset,
     asset_category,
     hasBeenProcessed,
-    hasError,
     isAccurate,
     forceRerender,
     numDownloads,
-    errorEmailSentToAdmin,
   } = download.attributes;
 
   return (
     <div className="space-y-6">
-      {/* Cards Grid */}
+      <DownloadAttentionSection download={download} />
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Card 1: Download Details */}
         <Card className="shadow-none border">
@@ -211,23 +208,6 @@ export default function DisplayDownload({ download }: DisplayDownloadProps) {
                 Processed
               </Badge>
 
-              {/* Error Status */}
-              <Badge
-                variant="outline"
-                className={
-                  hasError
-                    ? "bg-red-50 text-red-700 border-red-200"
-                    : "bg-emerald-50 text-emerald-700 border-emerald-200"
-                }
-              >
-                {hasError ? (
-                  <AlertCircle className="h-3 w-3 mr-1" />
-                ) : (
-                  <CheckCircle2 className="h-3 w-3 mr-1" />
-                )}
-                {hasError ? "Has Error" : "No Errors"}
-              </Badge>
-
               {/* Accurate Status - Only show if accurate */}
               {isAccurate && (
                 <Badge
@@ -250,16 +230,6 @@ export default function DisplayDownload({ download }: DisplayDownloadProps) {
                 </Badge>
               )}
 
-              {/* Error Email Sent - Only show if true */}
-              {errorEmailSentToAdmin && (
-                <Badge
-                  variant="outline"
-                  className="bg-blue-50 text-blue-700 border-blue-200"
-                >
-                  <Mail className="h-3 w-3 mr-1" />
-                  Error Email Sent
-                </Badge>
-              )}
             </div>
           </CardContent>
         </Card>

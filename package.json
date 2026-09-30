@@ -57,6 +57,7 @@
     "leaflet": "^1.9.4",
     "lodash.groupby": "^4.6.0",
     "lodash.throttle": "^4.1.1",
+    "lottie-web": "5.13.0",
     "lucide-react": "^0.471.2",
     "next": "15.1.9",
     "qs": "^6.13.1",

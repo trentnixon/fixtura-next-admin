@@ -1,24 +1,30 @@
-export type CompositionID =
-  | "CricketUpcoming"
-  | "CricketResults"
-  | "CricketTop5Batting"
-  | "CricketTop5Bowling"
-  | "CricketLadder"
-  | "Top5AFLScorers"
-  | "WeekendResultsAFL"
-  | "UpComingAFLFixtures"
-  | "AFLLadder"
-  | "WeekendResultsNetball"
-  | "UpComingNetBallFixtures"
-  | "NetballLadder";
+export const COMPOSITION_IDS = [
+  "CricketUpcoming",
+  "CricketResults",
+  "CricketTop5Batting",
+  "CricketTop5Bowling",
+  "CricketLadder",
+  "Top5AFLScorers",
+  "WeekendResultsAFL",
+  "UpComingAFLFixtures",
+  "AFLLadder",
+  "WeekendResultsNetball",
+  "UpComingNetBallFixtures",
+  "NetballLadder",
+] as const;
 
-export type ComponentName =
-  | "CricketUpcoming"
-  | "CricketResults"
-  | "CricketResultSingle"
-  | "CricketTop5Batting"
-  | "CricketTop5Bowling"
-  | "CricketLadder";
+export type CompositionID = (typeof COMPOSITION_IDS)[number];
+
+export const COMPONENT_NAMES = [
+  "CricketUpcoming",
+  "CricketResults",
+  "CricketResultSingle",
+  "CricketTop5Batting",
+  "CricketTop5Bowling",
+  "CricketLadder",
+] as const;
+
+export type ComponentName = (typeof COMPONENT_NAMES)[number];
 
 export interface AudioOption {
   id: number;
@@ -79,9 +85,9 @@ export interface CreateAudioOptionRequest {
 export interface UpdateAudioOptionRequest {
   data: {
     Name?: string;
-    URL?: string;
-    CompositionID?: CompositionID;
-    ComponentName?: ComponentName;
+    URL?: string | null;
+    CompositionID?: CompositionID | null;
+    ComponentName?: ComponentName | null;
     bundle_audios?: number[];
   };
 }

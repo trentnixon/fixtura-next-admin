@@ -264,6 +264,32 @@ function buildAttentionLabel(
   }
 }
 
+/** Lock list from API plus completed-limbo rows still in the recent window. */
+export function mergeAttentionRunSources(
+  activeRuns: AccountHealthGlobalLatestRunRow[] | undefined,
+  latestRuns: AccountHealthGlobalLatestRunRow[] | undefined
+): AccountHealthGlobalLatestRunRow[] {
+  if (activeRuns == null) {
+    return latestRuns ?? [];
+  }
+
+  const byId = new Map<number, AccountHealthGlobalLatestRunRow>();
+  for (const run of activeRuns) {
+    byId.set(run.id, run);
+  }
+  for (const run of latestRuns ?? []) {
+    if (isHealthRunCompletedLimbo(run)) {
+      byId.set(run.id, run);
+    }
+  }
+  return [...byId.values()];
+}
+
+export type ComputeDataRefreshAttentionOptions = {
+  /** When true, activeCount already matches the input list (activeRuns from API). */
+  lockListComplete?: boolean;
+};
+
 /** Runs that need operator attention: stuck, in-flight, or completed limbo. */
 export function getDataRefreshAttentionRuns(
   latestRuns: AccountHealthGlobalLatestRunRow[],
@@ -337,7 +363,8 @@ export type DataRefreshAttentionState = {
 export function computeDataRefreshAttentionState(
   latestRuns: AccountHealthGlobalLatestRunRow[],
   activeCount: number,
-  nowMs: number = Date.now()
+  nowMs: number = Date.now(),
+  options?: ComputeDataRefreshAttentionOptions
 ): DataRefreshAttentionState {
   const allAttentionRuns = getDataRefreshAttentionRuns(latestRuns, nowMs);
   const policyRuns = filterDataRefreshPolicyRuns(allAttentionRuns);
@@ -345,8 +372,9 @@ export function computeDataRefreshAttentionState(
     (run) =>
       run.attentionKind === "active" || run.attentionKind === "stuck"
   ).length;
-  const hiddenActiveCount =
-    activeCount > visibleActiveInWindow
+  const hiddenActiveCount = options?.lockListComplete
+    ? 0
+    : activeCount > visibleActiveInWindow
       ? activeCount - visibleActiveInWindow
       : 0;
 

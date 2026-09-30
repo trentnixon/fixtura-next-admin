@@ -1,6 +1,6 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { AssetsResponse, FetchAssetsParams } from "@/types/asset";
-import { fetchAssets } from "@/lib/services/assets/fetchAssets";
+import { fetchAllAssets, fetchAssets } from "@/lib/services/assets/fetchAssets";
 
 export function useAssets(
   params: FetchAssetsParams = {}
@@ -9,5 +9,14 @@ export function useAssets(
     queryKey: ["assets", params],
     queryFn: () => fetchAssets(params),
     placeholderData: (previousData) => previousData,
+  });
+}
+
+export function useAllAssets(
+  params: Omit<FetchAssetsParams, "page" | "pageSize"> = {},
+): UseQueryResult<AssetsResponse, Error> {
+  return useQuery<AssetsResponse, Error>({
+    queryKey: ["assets", "all", params],
+    queryFn: () => fetchAllAssets(params),
   });
 }

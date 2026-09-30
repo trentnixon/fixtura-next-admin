@@ -1,5 +1,10 @@
 import type { DownloadOBJ } from "./downloadAsset";
 
+export type DownloadErrorHandlerEntry = {
+  Message?: string;
+  Type?: string;
+};
+
 /**
  * Download attributes interface
  * Contains all fields for a download entity
@@ -15,7 +20,8 @@ export interface DownloadAttributes {
   CompletionTime: string;
   OutputFileSize: string;
   UserErrorMessage: string | null;
-  hasError: boolean;
+  errorHandler?: DownloadErrorHandlerEntry[] | null;
+  hasError: boolean | null;
   downloads: object;
   numDownloads: number;
   assetLinkID: string;

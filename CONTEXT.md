@@ -51,16 +51,52 @@ One content-generation execution for a client, producing downloads and AI articl
 _Avoid_: Asset run, scheduler
 
 **Account Asset Run**:
-An on-demand orchestration pipeline: scrape results, validate fixtures, then produce downloads from templates. May precede or sit alongside a scheduled render; not synonymous with Render.
+An on-demand orchestration pipeline: scrape results, validate fixtures, then produce downloads from assets. May precede or sit alongside a scheduled render; not synonymous with Render.
 _Avoid_: Render
 
 **Download**:
 A render output file — video, image, ladder, scorecard, or other produced content.
 _Avoid_: Asset (when meaning render output)
 
+**Download attention**:
+Operational triage state for a download output row: failed Creator flags, structured errors, in-progress processing, or ambiguous legacy combinations. Used in the Renders workspace (not member Content Hub).
+_Avoid_: Quality control (prefer this term in product copy), failed render
+
+**Download output failure**:
+A download row marked failed by Creator (`hasError` true) or carrying non-empty structured `errorHandler` entries.
+_Avoid_: Render failure, pipeline failure
+
+**Render output integrity**:
+Completeness and fixture-gap findings for a render (for example ghost render, missing expected outputs), from lineage or integrity audit. Orthogonal to per-download Creator flags.
+_Avoid_: Download attention, download QC
+
+**Render pipeline failure**:
+Failure of an account asset run stage during orchestration; may exist with no download row and without `download.hasError`.
+_Avoid_: Download output failure, download error
+
 **Asset**:
-A CMS-managed template or content definition — the entities managed at `/dashboard/assets`. Not a render output.
-_Avoid_: Download, output
+A composition in `assets`: one sport, a name, and a CompositionID, plus free Metadata JSON. The rows managed at `/dashboard/assets`.
+_Avoid_: Download, output, output asset, template, template style
+
+**Template style**:
+How a render looks. One template option per account, pointing at shared catalogue rows. Not managed on the current asset screens.
+_Avoid_: Asset, template
+
+**Template style preview**:
+Template style applied to a cricket sample fixture so staff can see the look. It can show a draft or private catalogue row. It changes nothing on a template option or a catalogue row. Not a Download and not a Render.
+_Avoid_: Design, template preview
+
+**Theme**:
+The four brand colours on an account: primary, secondary, dark, and white.
+_Avoid_: Palette, template palette
+
+**Palette**:
+A token for how the theme colours are placed. Not the hex colours.
+_Avoid_: Theme, brand colours
+
+**Cricket sample fixture**:
+A public cricket fixture file the preview can play, chosen by CompositionID. Not an Asset and not an Asset type.
+_Avoid_: Asset type, asset
 
 ### Sports data
 

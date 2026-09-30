@@ -64,12 +64,18 @@ export function FleetAttentionSection({
   );
 
   const activeSyncCount = healthGlobal?.data?.activeCount ?? 0;
-  const { policyRuns, hiddenActiveCount } = useDataRefreshAttentionState(
-    healthGlobal?.data?.latestRuns,
-    activeSyncCount
-  );
+  const activeRunsTruncated =
+    healthGlobal?.data?.activeRunsTruncated ?? false;
+  const { policyRuns, hiddenActiveCount } = useDataRefreshAttentionState({
+    activeRuns: healthGlobal?.data?.activeRuns,
+    latestRuns: healthGlobal?.data?.latestRuns,
+    activeCount: activeSyncCount,
+  });
 
-  const hasSyncAttention = policyRuns.length > 0 || hiddenActiveCount > 0;
+  const hasSyncAttention =
+    policyRuns.length > 0 ||
+    hiddenActiveCount > 0 ||
+    activeRunsTruncated;
   const hasRenderAttention = stuckItems.length > 0;
   const hasAnyAttention = hasRenderAttention || hasSyncAttention;
 
@@ -103,6 +109,7 @@ export function FleetAttentionSection({
       runs={policyRuns}
       activeCount={activeSyncCount}
       hiddenActiveCount={hiddenActiveCount}
+      activeRunsTruncated={activeRunsTruncated}
       isLoading={healthLoading}
       error={
         healthError

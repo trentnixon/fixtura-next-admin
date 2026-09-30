@@ -7,17 +7,59 @@
       "prompt": "Zaheer Khan played for India, taking 4 wickets from 10 overs, conceding 36 runs. Competition: ICC KnockOut Kenya 2000. Grade: ODI / Knockout Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 4,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/in.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/in.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "India",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "name": "Muttiah Muralitharan",
@@ -26,17 +68,59 @@
       "prompt": "Muttiah Muralitharan played for Sri Lanka, taking 4 wickets from 10 overs, conceding 41 runs. Competition: ICC KnockOut Kenya 2000. Grade: ODI / Knockout Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 4,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/lk.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/lk.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "Sri Lanka",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "name": "Shaun Pollock",
@@ -45,17 +129,59 @@
       "prompt": "Shaun Pollock played for South Africa, taking 3 wickets from 10 overs, conceding 28 runs. Competition: ICC KnockOut Kenya 2000. Grade: ODI / Knockout Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 3,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/za.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/za.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "South Africa",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "name": "Venkatesh Prasad",
@@ -64,17 +190,59 @@
       "prompt": "Venkatesh Prasad played for India, taking 3 wickets from 9 overs, conceding 33 runs. Competition: ICC KnockOut Kenya 2000. Grade: ODI / Knockout Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 3,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/in.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/in.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "India",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     },
     {
       "name": "Shayne O'Connor",
@@ -83,17 +251,59 @@
       "prompt": "Shayne O'Connor played for New Zealand, taking 3 wickets from 10 overs, conceding 39 runs. Competition: ICC KnockOut Kenya 2000. Grade: ODI / Knockout Stage. This is a fictional demonstration performance for archive preview only.",
       "wickets": 3,
       "teamLogo": {
-        "url": "/dummyAssetData/flags/nz.svg",
+        "url": "https://application.fixtura.com.au/dummyAssetData/flags/nz.svg",
         "width": 640,
         "height": 480
       },
       "playedFor": "New Zealand",
       "assignSponsors": {
         "competition": [],
-        "grade": [],
+        "grade": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          }
+        ],
         "team": []
       },
-      "primaryForScreen": []
+      "primaryForScreen": [
+        {
+          "id": 9001,
+          "name": "Sponsor 1",
+          "logo": {
+            "id": 9101,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+          }
+        },
+        {
+          "id": 9002,
+          "name": "Sponsor 2",
+          "logo": {
+            "id": 9102,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+          }
+        },
+        {
+          "id": 9003,
+          "name": "Sponsor 3",
+          "logo": {
+            "id": 9103,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+          }
+        },
+        {
+          "id": 9004,
+          "name": "Sponsor 4",
+          "logo": {
+            "id": 9104,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+          }
+        }
+      ]
     }
   ],
   "asset": {
@@ -121,17 +331,91 @@
   "videoMeta": {
     "club": {
       "logo": {
-        "hasLogo": false,
-        "url": "",
-        "width": 1106,
-        "height": 1843
+        "hasLogo": true,
+        "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/android_chrome_512x512_0823a84f31.png",
+        "width": 512,
+        "height": 512
       },
       "name": "International Cricket Demo Preview",
       "sport": "Cricket",
       "sponsors": {
-        "primary": [],
-        "general": [],
-        "sponsorNum": 0
+        "primary": [
+          {
+            "id": 9001,
+            "name": "Sponsor 1",
+            "logo": {
+              "id": 9101,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+            }
+          },
+          {
+            "id": 9002,
+            "name": "Sponsor 2",
+            "logo": {
+              "id": 9102,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+            }
+          },
+          {
+            "id": 9003,
+            "name": "Sponsor 3",
+            "logo": {
+              "id": 9103,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+            }
+          },
+          {
+            "id": 9004,
+            "name": "Sponsor 4",
+            "logo": {
+              "id": 9104,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+            }
+          }
+        ],
+        "general": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          },
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          },
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          },
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          },
+          {
+            "id": 9009,
+            "name": "Sponsor 9",
+            "logo": {
+              "id": 9109,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+            }
+          }
+        ],
+        "sponsorNum": 9
       },
       "IsAccountClub": false
     },
@@ -146,7 +430,7 @@
         "assetId": 7,
         "assetTypeId": 3,
         "frames": [],
-        "includeSponsors": false
+        "includeSponsors": true
       },
       "appearance": {
         "theme": {
@@ -330,14 +614,27 @@
           "animation": "scale"
         },
         "texture": {
-          "name": "Stone 2",
-          "url": "",
+          "name": "Stadium 004",
+          "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/Chat_GPT_Image_Aug_12_2026_12_25_17_PM_68e4d8018e.png",
           "repeat": "cover",
           "scale": "100%",
           "overlay": {
-            "opacity": 0.8,
+            "opacity": 0.5,
             "blendMode": "multiply"
           }
+        },
+        "luminance": {
+          "name": "Halftone Fade",
+          "url": null,
+          "asset": "plates/halftone-fade.png",
+          "map": {
+            "kind": "theme",
+            "preset": "brand"
+          },
+          "protection": "none",
+          "position": "center",
+          "size": "cover",
+          "opacity": 1
         }
       }
     }

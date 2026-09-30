@@ -57,7 +57,6 @@ export interface SendGridContactRow {
   email?: string | null;
   firstName?: string | null;
   lastName?: string | null;
-  phone?: string | null;
   organization?: string | null;
   organizationId?: string | number | null;
   role?: string | null;
@@ -74,16 +73,50 @@ export function splitContactName(name: string | null | undefined): {
   return { firstName: parts[0], lastName: parts.slice(1).join(" ") };
 }
 
+/** Club CSV roles that are not mailing contacts. Match is trimmed and case-sensitive. */
+export const CLUB_CONTACT_CSV_EXCLUDED_ROLES: ReadonlySet<string> = new Set([
+  "Junior Cricket Coordinator",
+  "Child Safety Officer",
+  "Senior Coach",
+  "Female Cricket Coordinator",
+  "Veteran Cricket Coordinator",
+  "Junior Coach",
+  "Cricket Coordinator",
+  "Senior Coordinator",
+  "CHHAIRPERSON",
+  "Registrar",
+  "Other",
+  "Director of Coaching",
+  "COVID Officer",
+  "Child Safety Coordinator",
+]);
+
+function isExcludedExportRole(
+  role: string | null | undefined,
+  excludedRoles: ReadonlySet<string> | undefined,
+): boolean {
+  if (!excludedRoles) return false;
+  const trimmed = role?.trim();
+  return Boolean(trimmed && excludedRoles.has(trimmed));
+}
+
 /**
  * One SendGrid row per address: the org inbox, then each person who has an address.
  * A person with the same address as the org inbox replaces the nameless org row.
+ * People whose role is in `excludedRoles` are omitted. If that was the only copy of
+ * the org inbox, the nameless org row is still written.
  */
 export function collectOrgContactExportRows(
-  row: Pick<OrgContactListingRow, "id" | "name" | "email" | "phone" | "contacts">,
+  row: Pick<OrgContactListingRow, "id" | "name" | "email" | "contacts">,
+  options?: { excludedRoles?: ReadonlySet<string> },
 ): SendGridContactRow[] {
   const organization = row.name;
   const organizationId = row.id;
-  const people = (row.contacts ?? []).filter((person) => person.email?.trim());
+  const excludedRoles = options?.excludedRoles;
+  const people = (row.contacts ?? []).filter(
+    (person) =>
+      person.email?.trim() && !isExcludedExportRole(person.role, excludedRoles),
+  );
   const orgEmail = row.email?.trim().toLowerCase() ?? "";
   const orgEmailCoveredByPerson = people.some(
     (person) => person.email?.trim().toLowerCase() === orgEmail,
@@ -93,7 +126,6 @@ export function collectOrgContactExportRows(
   if (row.email?.trim() && !orgEmailCoveredByPerson) {
     rows.push({
       email: row.email,
-      phone: row.phone,
       organization,
       organizationId,
     });
@@ -105,7 +137,6 @@ export function collectOrgContactExportRows(
       email: person.email,
       firstName,
       lastName,
-      phone: person.phone?.trim() || row.phone,
       organization,
       organizationId,
       role: person.role,
@@ -140,7 +171,6 @@ export function buildSendGridContactCsv(input: {
       "email",
       "first_name",
       "last_name",
-      "phone_number",
       input.organizationHeader,
       input.organizationIdHeader,
       "role",
@@ -159,7 +189,6 @@ export function buildSendGridContactCsv(input: {
         csvCell(email),
         csvCell(contact.firstName),
         csvCell(contact.lastName),
-        csvCell(contact.phone),
         csvCell(contact.organization),
         csvCell(contact.organizationId),
         csvCell(contact.role),

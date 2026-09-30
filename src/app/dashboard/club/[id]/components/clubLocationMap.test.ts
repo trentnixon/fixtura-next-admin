@@ -3,7 +3,7 @@ import {
   isPlottableCoordinate,
   pickClubGeocodeQuery,
   readGeocodeResponse,
-} from "./clubLocationMap";
+} from "./clubLocationMapModel";
 
 describe("isPlottableCoordinate", () => {
   it("accepts finite lat/lng inside world bounds", () => {

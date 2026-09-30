@@ -42,7 +42,7 @@ import { ClubLocationMap } from "./ClubLocationMap";
 import {
   isPlottableCoordinate,
   pickClubGeocodeQuery,
-} from "./clubLocationMap";
+} from "./clubLocationMapModel";
 
 interface ClubHeaderProps {
   club: ClubCore;

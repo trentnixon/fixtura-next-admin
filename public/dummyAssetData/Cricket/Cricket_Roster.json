@@ -8,7 +8,23 @@
       "gender": "Men",
       "ground": "Kardinia Park",
       "ageGroup": "Senior",
-      "sponsors": [],
+      "sponsors": [
+        {
+          "id": 9005,
+          "url": "",
+          "logo": {
+            "id": 9105,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+          },
+          "name": "Sponsor 5",
+          "isVideo": true,
+          "tagline": null,
+          "isActive": true,
+          "isArticle": true,
+          "isPrimary": false,
+          "description": null
+        }
+      ],
       "teamAway": "Namibia",
       "teamHome": "Sri Lanka",
       "gradeName": "2022 T20 World Cup",
@@ -26,8 +42,8 @@
         "Lahiru Kumara",
         "Dilshan Madushanka"
       ],
-      "teamAwayLogo": "/dummyAssetData/flags/na.svg",
-      "teamHomeLogo": "/dummyAssetData/flags/lk.svg"
+      "teamAwayLogo": "https://application.fixtura.com.au/dummyAssetData/flags/na.svg",
+      "teamHomeLogo": "https://application.fixtura.com.au/dummyAssetData/flags/lk.svg"
     },
     {
       "date": "Friday, 21 October 2022",
@@ -37,7 +53,23 @@
       "gender": "Men",
       "ground": "Bellerive Oval",
       "ageGroup": "Senior",
-      "sponsors": [],
+      "sponsors": [
+        {
+          "id": 9006,
+          "url": "",
+          "logo": {
+            "id": 9106,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+          },
+          "name": "Sponsor 6",
+          "isVideo": true,
+          "tagline": null,
+          "isActive": true,
+          "isArticle": true,
+          "isPrimary": false,
+          "description": null
+        }
+      ],
       "teamAway": "Ireland",
       "teamHome": "West Indies",
       "gradeName": "2022 T20 World Cup",
@@ -55,8 +87,8 @@
         "Barry McCarthy",
         "Simi Singh"
       ],
-      "teamAwayLogo": "/dummyAssetData/flags/ie.svg",
-      "teamHomeLogo": "/dummyAssetData/flags/wi.svg"
+      "teamAwayLogo": "https://application.fixtura.com.au/dummyAssetData/flags/ie.svg",
+      "teamHomeLogo": "https://application.fixtura.com.au/dummyAssetData/flags/wi.svg"
     },
     {
       "date": "Saturday, 22 October 2022",
@@ -66,7 +98,23 @@
       "gender": "Men",
       "ground": "SCG",
       "ageGroup": "Senior",
-      "sponsors": [],
+      "sponsors": [
+        {
+          "id": 9007,
+          "url": "",
+          "logo": {
+            "id": 9107,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+          },
+          "name": "Sponsor 7",
+          "isVideo": true,
+          "tagline": null,
+          "isActive": true,
+          "isArticle": true,
+          "isPrimary": false,
+          "description": null
+        }
+      ],
       "teamAway": "New Zealand",
       "teamHome": "Australia",
       "gradeName": "2022 T20 World Cup",
@@ -84,8 +132,8 @@
         "Adam Zampa",
         "Josh Hazlewood"
       ],
-      "teamAwayLogo": "/dummyAssetData/flags/nz.svg",
-      "teamHomeLogo": "/dummyAssetData/flags/au.svg"
+      "teamAwayLogo": "https://application.fixtura.com.au/dummyAssetData/flags/nz.svg",
+      "teamHomeLogo": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg"
     },
     {
       "date": "Saturday, 22 October 2022",
@@ -95,7 +143,23 @@
       "gender": "Men",
       "ground": "Perth Stadium",
       "ageGroup": "Senior",
-      "sponsors": [],
+      "sponsors": [
+        {
+          "id": 9008,
+          "url": "",
+          "logo": {
+            "id": 9108,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+          },
+          "name": "Sponsor 8",
+          "isVideo": true,
+          "tagline": null,
+          "isActive": true,
+          "isArticle": true,
+          "isPrimary": false,
+          "description": null
+        }
+      ],
       "teamAway": "Afghanistan",
       "teamHome": "England",
       "gradeName": "2022 T20 World Cup",
@@ -113,8 +177,8 @@
         "Naveen-ul-Haq",
         "Fareed Ahmad"
       ],
-      "teamAwayLogo": "/dummyAssetData/flags/af.svg",
-      "teamHomeLogo": "/dummyAssetData/flags/gb-eng.svg"
+      "teamAwayLogo": "https://application.fixtura.com.au/dummyAssetData/flags/af.svg",
+      "teamHomeLogo": "https://application.fixtura.com.au/dummyAssetData/flags/gb-eng.svg"
     },
     {
       "date": "Sunday, 23 October 2022",
@@ -124,7 +188,23 @@
       "gender": "Men",
       "ground": "MCG",
       "ageGroup": "Senior",
-      "sponsors": [],
+      "sponsors": [
+        {
+          "id": 9005,
+          "url": "",
+          "logo": {
+            "id": 9105,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+          },
+          "name": "Sponsor 5",
+          "isVideo": true,
+          "tagline": null,
+          "isActive": true,
+          "isArticle": true,
+          "isPrimary": false,
+          "description": null
+        }
+      ],
       "teamAway": "Pakistan",
       "teamHome": "India",
       "gradeName": "2022 T20 World Cup",
@@ -142,8 +222,8 @@
         "Mohammed Shami",
         "Arshdeep Singh"
       ],
-      "teamAwayLogo": "/dummyAssetData/flags/pk.svg",
-      "teamHomeLogo": "/dummyAssetData/flags/in.svg"
+      "teamAwayLogo": "https://application.fixtura.com.au/dummyAssetData/flags/pk.svg",
+      "teamHomeLogo": "https://application.fixtura.com.au/dummyAssetData/flags/in.svg"
     },
     {
       "date": "Thursday, 27 October 2022",
@@ -153,7 +233,23 @@
       "gender": "Men",
       "ground": "SCG",
       "ageGroup": "Senior",
-      "sponsors": [],
+      "sponsors": [
+        {
+          "id": 9006,
+          "url": "",
+          "logo": {
+            "id": 9106,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+          },
+          "name": "Sponsor 6",
+          "isVideo": true,
+          "tagline": null,
+          "isActive": true,
+          "isArticle": true,
+          "isPrimary": false,
+          "description": null
+        }
+      ],
       "teamAway": "Bangladesh",
       "teamHome": "South Africa",
       "gradeName": "2022 T20 World Cup",
@@ -171,8 +267,8 @@
         "Mustafizur Rahman",
         "Hasan Mahmud"
       ],
-      "teamAwayLogo": "/dummyAssetData/flags/bd.svg",
-      "teamHomeLogo": "/dummyAssetData/flags/za.svg"
+      "teamAwayLogo": "https://application.fixtura.com.au/dummyAssetData/flags/bd.svg",
+      "teamHomeLogo": "https://application.fixtura.com.au/dummyAssetData/flags/za.svg"
     },
     {
       "date": "Wednesday, 26 October 2022",
@@ -182,7 +278,23 @@
       "gender": "Men",
       "ground": "MCG",
       "ageGroup": "Senior",
-      "sponsors": [],
+      "sponsors": [
+        {
+          "id": 9007,
+          "url": "",
+          "logo": {
+            "id": 9107,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+          },
+          "name": "Sponsor 7",
+          "isVideo": true,
+          "tagline": null,
+          "isActive": true,
+          "isArticle": true,
+          "isPrimary": false,
+          "description": null
+        }
+      ],
       "teamAway": "England",
       "teamHome": "Ireland",
       "gradeName": "2022 T20 World Cup",
@@ -200,8 +312,8 @@
         "Mark Wood",
         "Chris Jordan"
       ],
-      "teamAwayLogo": "/dummyAssetData/flags/gb-eng.svg",
-      "teamHomeLogo": "/dummyAssetData/flags/ie.svg"
+      "teamAwayLogo": "https://application.fixtura.com.au/dummyAssetData/flags/gb-eng.svg",
+      "teamHomeLogo": "https://application.fixtura.com.au/dummyAssetData/flags/ie.svg"
     },
     {
       "date": "Saturday, 29 October 2022",
@@ -211,7 +323,23 @@
       "gender": "Men",
       "ground": "SCG",
       "ageGroup": "Senior",
-      "sponsors": [],
+      "sponsors": [
+        {
+          "id": 9008,
+          "url": "",
+          "logo": {
+            "id": 9108,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+          },
+          "name": "Sponsor 8",
+          "isVideo": true,
+          "tagline": null,
+          "isActive": true,
+          "isArticle": true,
+          "isPrimary": false,
+          "description": null
+        }
+      ],
       "teamAway": "Sri Lanka",
       "teamHome": "New Zealand",
       "gradeName": "2022 T20 World Cup",
@@ -229,8 +357,8 @@
         "Lockie Ferguson",
         "Trent Boult"
       ],
-      "teamAwayLogo": "/dummyAssetData/flags/lk.svg",
-      "teamHomeLogo": "/dummyAssetData/flags/nz.svg"
+      "teamAwayLogo": "https://application.fixtura.com.au/dummyAssetData/flags/lk.svg",
+      "teamHomeLogo": "https://application.fixtura.com.au/dummyAssetData/flags/nz.svg"
     },
     {
       "date": "Thursday, 27 October 2022",
@@ -240,7 +368,23 @@
       "gender": "Men",
       "ground": "Perth Stadium",
       "ageGroup": "Senior",
-      "sponsors": [],
+      "sponsors": [
+        {
+          "id": 9005,
+          "url": "",
+          "logo": {
+            "id": 9105,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+          },
+          "name": "Sponsor 5",
+          "isVideo": true,
+          "tagline": null,
+          "isActive": true,
+          "isArticle": true,
+          "isPrimary": false,
+          "description": null
+        }
+      ],
       "teamAway": "Pakistan",
       "teamHome": "Zimbabwe",
       "gradeName": "2022 T20 World Cup",
@@ -258,8 +402,8 @@
         "Mohammad Wasim",
         "Asif Ali"
       ],
-      "teamAwayLogo": "/dummyAssetData/flags/pk.svg",
-      "teamHomeLogo": "/dummyAssetData/flags/zw.svg"
+      "teamAwayLogo": "https://application.fixtura.com.au/dummyAssetData/flags/pk.svg",
+      "teamHomeLogo": "https://application.fixtura.com.au/dummyAssetData/flags/zw.svg"
     },
     {
       "date": "Wednesday, 2 November 2022",
@@ -269,7 +413,23 @@
       "gender": "Men",
       "ground": "Adelaide Oval",
       "ageGroup": "Senior",
-      "sponsors": [],
+      "sponsors": [
+        {
+          "id": 9006,
+          "url": "",
+          "logo": {
+            "id": 9106,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+          },
+          "name": "Sponsor 6",
+          "isVideo": true,
+          "tagline": null,
+          "isActive": true,
+          "isArticle": true,
+          "isPrimary": false,
+          "description": null
+        }
+      ],
       "teamAway": "India",
       "teamHome": "Bangladesh",
       "gradeName": "2022 T20 World Cup",
@@ -287,8 +447,8 @@
         "Mustafizur Rahman",
         "Hasan Mahmud"
       ],
-      "teamAwayLogo": "/dummyAssetData/flags/in.svg",
-      "teamHomeLogo": "/dummyAssetData/flags/bd.svg"
+      "teamAwayLogo": "https://application.fixtura.com.au/dummyAssetData/flags/in.svg",
+      "teamHomeLogo": "https://application.fixtura.com.au/dummyAssetData/flags/bd.svg"
     },
     {
       "date": "Friday, 4 November 2022",
@@ -298,7 +458,23 @@
       "gender": "Men",
       "ground": "Adelaide Oval",
       "ageGroup": "Senior",
-      "sponsors": [],
+      "sponsors": [
+        {
+          "id": 9007,
+          "url": "",
+          "logo": {
+            "id": 9107,
+            "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+          },
+          "name": "Sponsor 7",
+          "isVideo": true,
+          "tagline": null,
+          "isActive": true,
+          "isArticle": true,
+          "isPrimary": false,
+          "description": null
+        }
+      ],
       "teamAway": "Afghanistan",
       "teamHome": "Australia",
       "gradeName": "2022 T20 World Cup",
@@ -316,8 +492,8 @@
         "Naveen-ul-Haq",
         "Fareed Ahmad"
       ],
-      "teamAwayLogo": "/dummyAssetData/flags/af.svg",
-      "teamHomeLogo": "/dummyAssetData/flags/au.svg"
+      "teamAwayLogo": "https://application.fixtura.com.au/dummyAssetData/flags/af.svg",
+      "teamHomeLogo": "https://application.fixtura.com.au/dummyAssetData/flags/au.svg"
     }
   ],
   "asset": {
@@ -345,18 +521,92 @@
   "videoMeta": {
     "club": {
       "logo": {
-        "hasLogo": false,
-        "url": "",
-        "width": 338,
-        "height": 354
+        "hasLogo": true,
+        "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/android_chrome_512x512_0823a84f31.png",
+        "width": 512,
+        "height": 512
       },
       "name": "International Cricket Demo Preview",
       "sport": "Cricket",
       "IsAccountClub": false,
       "sponsors": {
-        "primary": [],
-        "general": [],
-        "sponsorNum": 0
+        "primary": [
+          {
+            "id": 9001,
+            "name": "Sponsor 1",
+            "logo": {
+              "id": 9101,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+            }
+          },
+          {
+            "id": 9002,
+            "name": "Sponsor 2",
+            "logo": {
+              "id": 9102,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_439_504027c022.png"
+            }
+          },
+          {
+            "id": 9003,
+            "name": "Sponsor 3",
+            "logo": {
+              "id": 9103,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_434_5e7c3b7e5f.png"
+            }
+          },
+          {
+            "id": 9004,
+            "name": "Sponsor 4",
+            "logo": {
+              "id": 9104,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_435_50252786f7.png"
+            }
+          }
+        ],
+        "general": [
+          {
+            "id": 9005,
+            "name": "Sponsor 5",
+            "logo": {
+              "id": 9105,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_404_95ea1e5a4d.png"
+            }
+          },
+          {
+            "id": 9006,
+            "name": "Sponsor 6",
+            "logo": {
+              "id": 9106,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_372_5c8c5a7583.png"
+            }
+          },
+          {
+            "id": 9007,
+            "name": "Sponsor 7",
+            "logo": {
+              "id": 9107,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_388_e9e11314ed.png"
+            }
+          },
+          {
+            "id": 9008,
+            "name": "Sponsor 8",
+            "logo": {
+              "id": 9108,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_361_60c7a270d2.png"
+            }
+          },
+          {
+            "id": 9009,
+            "name": "Sponsor 9",
+            "logo": {
+              "id": 9109,
+              "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/logoipsum_440_65c61bb5e6.png"
+            }
+          }
+        ],
+        "sponsorNum": 9
       }
     },
     "video": {
@@ -382,7 +632,7 @@
         "videoTitle": "International Cricket Demo Preview CricketRoster",
         "assetTypeId": 1,
         "compositionId": "CricketRoster",
-        "includeSponsors": false
+        "includeSponsors": true
       },
       "appearance": {
         "theme": {
@@ -446,12 +696,12 @@
           "animationDuration": null
         },
         "texture": {
-          "url": "",
-          "name": null,
-          "scale": "100%",
+          "name": "Print Texture",
+          "url": "https://fixtura.s3.ap-southeast-2.amazonaws.com/Geometric_Halftone_Print_Texture_cb888287e4.png",
           "repeat": "cover",
+          "scale": "100%",
           "overlay": {
-            "opacity": 0.5,
+            "opacity": 0.8,
             "blendMode": "multiply"
           }
         },
@@ -536,7 +786,20 @@
           "direction": "up",
           "particleCount": "300"
         },
-        "useBackground": "Graphics"
+        "useBackground": "Graphics",
+        "luminance": {
+          "name": "Grunge Diagonal Panels",
+          "url": null,
+          "asset": "plates/grunge-diagonal-panels.png",
+          "map": {
+            "kind": "theme",
+            "preset": "brand"
+          },
+          "protection": "none",
+          "position": "center",
+          "size": "cover",
+          "opacity": 1
+        }
       }
     }
   }
