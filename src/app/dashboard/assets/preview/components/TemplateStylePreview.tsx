@@ -6,13 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Text from "@/components/ui-library/foundation/Text";
 import ErrorState from "@/components/ui-library/states/ErrorState";
@@ -26,6 +19,7 @@ import { useTemplateModes } from "@/hooks/template-mode/useTemplateMode";
 import { useTemplatePalettes } from "@/hooks/template-palette/useTemplatePalette";
 import { useTemplateTextures } from "@/hooks/template-texture/useTemplateTexture";
 import { usePreviewVideos } from "@/hooks/template-video/usePreviewVideos";
+import { useBrandThemes } from "@/hooks/brand-theme/useBrandTheme";
 import {
   buildTemplateStylePreview,
   CRICKET_SAMPLE_FIXTURES,
@@ -33,6 +27,7 @@ import {
   LADDER_THEME,
   PREVIEW_BACKGROUNDS,
   PreviewBackground,
+  PreviewTheme,
 } from "@/lib/template-style-preview/buildTemplateStylePreview";
 import { sectionTabListClass, sectionTabTriggerClass } from "@/lib/actions/siteNavigationButtonStyles";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
@@ -85,6 +80,7 @@ export function TemplateStylePreview() {
   const luminances = useTemplateLuminances();
   const animations = useTemplateAnimations();
   const videos = usePreviewVideos();
+  const themes = useBrandThemes();
   const { Domain } = useGlobalContext();
 
   const [fixtureId, setFixtureId] = useState<CricketSampleFixtureId>("CricketLadder");
@@ -100,7 +96,8 @@ export function TemplateStylePreview() {
   const [animationId, setAnimationId] = useState<number | null>(null);
   const [textureId, setTextureId] = useState<number | null>(null);
   const [luminanceId, setLuminanceId] = useState<number | null>(null);
-  const [theme, setTheme] = useState({ ...LADDER_THEME });
+  const [theme, setTheme] = useState<PreviewTheme>({ ...LADDER_THEME });
+  const [selectedThemeId, setSelectedThemeId] = useState<number | null>(null);
   const [imagePasteUrl, setImagePasteUrl] = useState("");
   const [videoPasteUrl, setVideoPasteUrl] = useState("");
   const [group, setGroup] = useState("color");
@@ -208,11 +205,11 @@ export function TemplateStylePreview() {
 
   const categoryChoices = (categories.data?.data ?? []).map((row) => ({
     id: row.id,
-    label: rowLabel(row.name, row.id, row.publishedAt, row.isPrivate ? "Private" : undefined),
+    label: row.name || "Untitled",
   }));
   const modeChoices = (modes.data?.data ?? []).map((row) => ({
     id: row.id,
-    label: rowLabel(row.name, row.id, row.publishedAt, row.slug || "light"),
+    label: row.name || "Untitled",
   }));
   const paletteChoices = (palettes.data?.data ?? []).map((row) => ({
     id: row.id,
@@ -221,50 +218,7 @@ export function TemplateStylePreview() {
 
   return (
     <div className="space-y-6">
-      <SectionContainer
-        title="Template style preview"
-        description="Starts on the ladder with the new-account style and the ladder theme colours."
-      >
-        <div className="grid gap-4 lg:grid-cols-3">
-          <div className="space-y-2">
-            <Label>Asset type</Label>
-            <Select value={fixtureId} onValueChange={(value) => setFixtureId(value as CricketSampleFixtureId)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {CRICKET_SAMPLE_FIXTURES.map((item) => (
-                  <SelectItem key={item.id} value={item.id}>{item.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <Label>Template type</Label>
-            <Select
-              value={resolvedCategoryId === null ? undefined : String(resolvedCategoryId)}
-              onValueChange={(value) => setCategoryId(Number(value))}
-            >
-              <SelectTrigger><SelectValue placeholder="Choose a category" /></SelectTrigger>
-              <SelectContent>
-                {categoryChoices.map((row) => (
-                  <SelectItem key={row.id} value={String(row.id)}>{row.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            {(["primary", "secondary", "dark", "white"] as const).map((key) => (
-              <div key={key} className="space-y-2">
-                <Label>{key}</Label>
-                <Input
-                  value={theme[key]}
-                  onChange={(event) => setTheme((current) => ({ ...current, [key]: event.target.value }))}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-      </SectionContainer>
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,7fr)] lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start">
         <SectionContainer title="Style" description="Colour, contrast, and the background parent.">
           <Tabs value={group} onValueChange={setGroup}>
             <TabsList variant="primary" className={sectionTabListClass}>
@@ -297,7 +251,7 @@ export function TemplateStylePreview() {
                   value={resolvedGradientId}
                   rows={(gradients.data?.data ?? []).map((row) => ({
                     id: row.id,
-                    label: rowLabel(row.name, row.id, row.publishedAt),
+                    label: row.name || "Untitled",
                   }))}
                   onChange={setGradientId}
                 />
@@ -308,7 +262,7 @@ export function TemplateStylePreview() {
                   value={resolvedAnimationId}
                   rows={(animations.data?.data ?? []).map((row) => ({
                     id: row.id,
-                    label: rowLabel(row.name, row.id, row.publishedAt, row.isActive ? undefined : "Inactive"),
+                    label: row.name || "Untitled",
                   }))}
                   onChange={setAnimationId}
                 />
@@ -319,7 +273,7 @@ export function TemplateStylePreview() {
                   value={textureId}
                   rows={(textures.data?.data ?? []).map((row) => ({
                     id: row.id,
-                    label: rowLabel(row.name, row.id, row.publishedAt),
+                    label: row.name || "Untitled",
                   }))}
                   onChange={setTextureId}
                 />
@@ -330,7 +284,7 @@ export function TemplateStylePreview() {
                   value={luminanceId}
                   rows={(luminances.data?.data ?? []).map((row) => ({
                     id: row.id,
-                    label: rowLabel(row.name, row.id, row.publishedAt),
+                    label: row.name || "Untitled",
                   }))}
                   onChange={setLuminanceId}
                 />
@@ -342,7 +296,7 @@ export function TemplateStylePreview() {
                     value={resolvedImageId}
                     rows={(images.data?.data ?? []).map((row) => ({
                       id: row.id,
-                      label: rowLabel(row.name, row.id, row.publishedAt),
+                      label: row.name || "Untitled",
                     }))}
                     onChange={setImageId}
                   />
@@ -385,6 +339,65 @@ export function TemplateStylePreview() {
           )}
         </SectionContainer>
       </div>
+      <SectionContainer
+        title="Template style preview"
+        description="Starts on the ladder with the new-account style and the ladder theme colours."
+      >
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="space-y-2">
+            <Label>Asset type</Label>
+            <OptionButtons
+              value={fixtureId}
+              rows={CRICKET_SAMPLE_FIXTURES.map((item) => ({ id: item.id, label: item.label }))}
+              onChange={setFixtureId}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label>Template type</Label>
+            <OptionButtons
+              value={resolvedCategoryId}
+              rows={categoryChoices}
+              onChange={setCategoryId}
+            />
+          </div>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              {(["primary", "secondary"] as const).map((key) => (
+                <div key={key} className="space-y-2">
+                  <Label>{key}</Label>
+                  <div className="flex items-center gap-2">
+                    <span
+                      aria-hidden
+                      className="size-9 shrink-0 rounded-full border border-input"
+                      style={{ backgroundColor: theme[key] }}
+                    />
+                    <Input
+                      value={theme[key]}
+                      onChange={(event) => {
+                        setSelectedThemeId(null);
+                        setTheme((current) => ({ ...current, [key]: event.target.value }));
+                      }}
+                      aria-label={key}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <ThemeList
+              rows={themes.data?.data ?? []}
+              value={selectedThemeId}
+              pending={themes.isPending}
+              failed={themes.isError}
+              onChange={(id) => {
+                const row = themes.data?.data.find((item) => item.id === id);
+                if (!row) return;
+                setSelectedThemeId(id);
+                setTheme({ ...row.theme });
+              }}
+            />
+          </div>
+        </div>
+      </SectionContainer>
     </div>
   );
 }
@@ -412,6 +425,62 @@ function OptionButtons<T extends string | number>({
           {row.label}
         </Button>
       ))}
+    </div>
+  );
+}
+
+const THEME_COLOUR_KEYS = ["primary", "secondary", "dark", "white"] as const;
+
+function ThemeList({
+  rows,
+  value,
+  pending,
+  failed,
+  onChange,
+}: {
+  rows: { id: number; name: string; theme: Record<(typeof THEME_COLOUR_KEYS)[number], string> }[];
+  value: number | null;
+  pending: boolean;
+  failed: boolean;
+  onChange: (id: number) => void;
+}) {
+  return (
+    <div className="space-y-2">
+      <Label>Theme</Label>
+      {pending ? (
+        <Text variant="small">Loading themes...</Text>
+      ) : failed ? (
+        <Text variant="small">Themes did not load.</Text>
+      ) : rows.length === 0 ? (
+        <Text variant="small">No themes yet.</Text>
+      ) : (
+        <ScrollArea className="h-64 rounded-md border">
+          <div className="flex flex-col gap-1 p-1">
+            {rows.map((row) => (
+              <Button
+                key={row.id}
+                type="button"
+                size="sm"
+                variant={value === row.id ? "default" : "ghost"}
+                className="h-auto justify-start gap-2 whitespace-normal px-2 py-1.5 text-left"
+                onClick={() => onChange(row.id)}
+              >
+                <span className="flex shrink-0 gap-1">
+                  {THEME_COLOUR_KEYS.map((key) => (
+                    <span
+                      key={key}
+                      aria-hidden
+                      className="size-3 rounded-full border border-input"
+                      style={{ backgroundColor: row.theme[key] }}
+                    />
+                  ))}
+                </span>
+                <span>{row.name || "Untitled"}</span>
+              </Button>
+            ))}
+          </div>
+        </ScrollArea>
+      )}
     </div>
   );
 }

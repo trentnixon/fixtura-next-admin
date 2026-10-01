@@ -2,13 +2,13 @@
 
 import { useMemo } from "react";
 import { useGetYesterdaysRenders } from "@/hooks/scheduler/useGetYesterdaysRenders";
-import { useGetTodaysRenders } from "@/hooks/scheduler/useGetTodaysRenders";
+import { useRenderInProgress } from "@/hooks/renders/useRenderInProgress";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { AlertCircle, Clock, History, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getStuckRenderingAttention } from "@/lib/scheduler/renderAttention";
+import { getStuckRenderingAttentionFromInProgress } from "@/lib/scheduler/renderAttention";
 
 export function QuickInterventionSidebar() {
   const {
@@ -17,17 +17,18 @@ export function QuickInterventionSidebar() {
     isLoading: isYesterdayLoading,
   } = useGetYesterdaysRenders();
   const {
-    data: todayData,
-    isError: isTodayError,
-    isLoading: isTodayLoading,
-  } = useGetTodaysRenders();
+    data: inProgressData,
+    isError: isInProgressError,
+    isLoading: isInProgressLoading,
+  } = useRenderInProgress();
 
-  const isLoading = isYesterdayLoading || isTodayLoading;
-  const isError = isYesterdayError || isTodayError;
+  const isLoading = isYesterdayLoading || isInProgressLoading;
+  const isError = isYesterdayError || isInProgressError;
 
   const interventions = useMemo(() => {
     const list: Array<{
       id: number;
+      href: string;
       name: string;
       reason: string;
       type: "failure" | "stalled";
@@ -37,25 +38,34 @@ export function QuickInterventionSidebar() {
     // 1. Yesterday's Failures
     yesterdayData?.forEach((item) => {
       if (!item.render.complete) {
-        list.push({
-          id: item.schedulerId,
-          name: item.accountName || item.schedulerName,
-          reason: "Failed Yesterday",
-          type: "failure",
-        });
+      list.push({
+        id: item.schedulerId,
+        href: `/dashboard/schedulers/${item.schedulerId}`,
+        name: item.accountName || item.schedulerName,
+        reason: "Failed Yesterday",
+        type: "failure",
+      });
       }
     });
 
-    // 2. Today's stalled renders (> 30 mins)
-    const stuckToday = getStuckRenderingAttention(todayData ?? []);
-    stuckToday.forEach((item) => {
+    const stuck = getStuckRenderingAttentionFromInProgress(inProgressData ?? []);
+    stuck.forEach((item) => {
+      const href =
+        item.schedulerId != null
+          ? `/dashboard/schedulers/${item.schedulerId}`
+          : item.renderId != null
+            ? `/dashboard/renders/${item.renderId}`
+            : null;
+      if (href == null) return;
+
       const elapsedMins =
         item.elapsedMs != null
           ? Math.floor(item.elapsedMs / (1000 * 60))
           : null;
 
       list.push({
-        id: item.schedulerId,
+        id: item.renderId ?? item.schedulerId ?? 0,
+        href,
         name: item.accountName,
         reason:
           elapsedMins != null
@@ -67,7 +77,7 @@ export function QuickInterventionSidebar() {
     });
 
     return list;
-  }, [yesterdayData, todayData]);
+  }, [inProgressData, yesterdayData]);
 
   return (
     <SectionContainer
@@ -104,7 +114,7 @@ export function QuickInterventionSidebar() {
           interventions.map((item, idx) => (
             <Link
               key={`${item.id}-${idx}`}
-              href={`/dashboard/schedulers/${item.id}`}
+              href={item.href}
               className="group flex flex-col gap-2 p-3 rounded-lg border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-brandPrimary-200 hover:shadow-md transition-all"
             >
               <div className="flex items-center justify-between">

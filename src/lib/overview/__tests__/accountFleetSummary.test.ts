@@ -52,6 +52,13 @@ function lookup(
     associations: [],
     logo: null,
     email: "club@example.com",
+    accountHealthStatus: "not_started",
+    accountHealthLastStartedAt: null,
+    accountHealthLastCompletedAt: null,
+    accountHealthFailureReason: null,
+    isSchedulerRendering: false,
+    renderProcessingSince: null,
+    lastRenderCompletedAt: null,
     ...overrides,
   };
 }

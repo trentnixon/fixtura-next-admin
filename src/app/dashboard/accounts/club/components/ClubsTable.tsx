@@ -82,7 +82,7 @@ export default function DisplayClubsTable() {
       <TabsContent value="active">
         <SectionContainer
           title="Active Club Accounts"
-          description="Club accounts with current subscriptions"
+          description="Club accounts with current subscriptions, last data sync, and last render"
           variant="compact"
         >
           <AccountTable
@@ -96,7 +96,7 @@ export default function DisplayClubsTable() {
       <TabsContent value="inactive">
         <SectionContainer
           title="Inactive Club Accounts"
-          description="Club accounts without an active subscription"
+          description="Club accounts without an active subscription, with last data sync and last render"
           variant="compact"
         >
           <AccountTable

@@ -3,10 +3,10 @@
 import { useMemo } from "react";
 import { useAccountHealthGlobalStatus } from "@/hooks/account-health/useAccountHealthGlobalStatus";
 import { useDataRefreshAttentionState } from "@/hooks/account-health/useDataRefreshAttentionState";
-import { useGetTodaysRenders } from "@/hooks/scheduler/useGetTodaysRenders";
+import { useRenderInProgress } from "@/hooks/renders/useRenderInProgress";
 import type { DataRefreshAttentionRun } from "@/lib/account-health/globalRunAnalytics";
 import type { StuckRenderingAttentionItem } from "@/lib/scheduler/renderAttention";
-import { getStuckRenderingAttention } from "@/lib/scheduler/renderAttention";
+import { getStuckRenderingAttentionFromInProgress } from "@/lib/scheduler/renderAttention";
 
 export type FleetOpsAccountFlags = {
   renderStuck?: StuckRenderingAttentionItem;
@@ -15,7 +15,7 @@ export type FleetOpsAccountFlags = {
 
 export function useFleetOpsAccountIndex(): Map<number, FleetOpsAccountFlags> {
   const { data: healthGlobal } = useAccountHealthGlobalStatus();
-  const { data: todaysRenders } = useGetTodaysRenders();
+  const { data: inProgressRenders } = useRenderInProgress();
 
   const activeSyncCount = healthGlobal?.data?.activeCount ?? 0;
   const { policyRuns } = useDataRefreshAttentionState({
@@ -27,7 +27,10 @@ export function useFleetOpsAccountIndex(): Map<number, FleetOpsAccountFlags> {
   return useMemo(() => {
     const map = new Map<number, FleetOpsAccountFlags>();
 
-    for (const item of getStuckRenderingAttention(todaysRenders ?? [])) {
+    for (const item of getStuckRenderingAttentionFromInProgress(
+      inProgressRenders ?? []
+    )) {
+      if (item.accountId == null) continue;
       map.set(item.accountId, {
         ...map.get(item.accountId),
         renderStuck: item,
@@ -42,5 +45,5 @@ export function useFleetOpsAccountIndex(): Map<number, FleetOpsAccountFlags> {
     }
 
     return map;
-  }, [policyRuns, todaysRenders]);
+  }, [inProgressRenders, policyRuns]);
 }

@@ -208,6 +208,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         url: "/dashboard/assets",
         icon: Mail,
         isActive: true,
+        items: [{ title: "Preview", url: "/dashboard/assets/preview" }],
       },
       {
         title: "Template Options",
@@ -215,7 +216,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: Layers,
         isActive: true,
         items: [
-          { title: "Preview", url: "/dashboard/templates/preview" },
           { title: "Noise", url: "/dashboard/templates/noise" },
           { title: "Audio", url: "/dashboard/templates/audio" },
           { title: "Animation", url: "/dashboard/templates/animation" },

@@ -3,6 +3,7 @@
 **Audience:** Fixtura CMS / Strapi backend team  
 **Consumer:** Fixtura admin (`fixtura-admin`) — dashboard, `/dashboard/accounts`, account detail  
 **Date:** 2026-09-14  
+**Admin reply:** 2026-10-01 — `.comms/cms-fleet-operations-admin-reply.md`  
 **Related admin docs:** `.comms/account-health-status-admin-handoff.md`, `.comms/account-health-run-abort-handoff.md`
 
 ---
@@ -108,13 +109,16 @@ Add optional fields on each account row (denormalized from account + latest heal
 ```ts
 accountHealthStatus: AccountHealthAccountStatus;
 accountHealthLastStartedAt: string | null;
-accountHealthLastCompletedAt: string | null;
+accountHealthLastCompletedAt: string | null; // last season data sync
 accountHealthFailureReason: string | null;
 isSchedulerRendering: boolean;
-renderProcessingSince: string | null; // if a render is processing
+renderProcessingSince: string | null; // only while Processing === true; createdAt else publishedAt
+lastRenderCompletedAt: string | null; // newest Complete === true; same timestamp rule; null if never completed
 ```
 
-Admin will use these for **directory table columns** and filters without N+1 per-account health calls.
+`lastRenderCompletedAt` was added in the 2026-10-01 reply. `renderProcessingSince` is current processing only and stays null after a render finishes.
+
+Admin will use these for **directory table columns** and filters without N+1 per-account health calls. Fill the three render fields in one in-memory pass, from renders grouped by scheduler to account.
 
 Until shipped, admin derives flags client-side from global health + today’s renders only (incomplete).
 

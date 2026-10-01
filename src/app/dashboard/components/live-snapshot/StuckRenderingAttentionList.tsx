@@ -91,7 +91,7 @@ export function StuckRenderingAttentionList({
       {items.map((item) => {
         const accountType = normalizeAccountType(item.accountType);
         const accountHref =
-          accountType != null
+          item.accountId != null && accountType != null
             ? getAccountPagePath(item.accountId, accountType)
             : null;
         const startMs = item.startedAt ? Date.parse(item.startedAt) : NaN;
@@ -105,7 +105,7 @@ export function StuckRenderingAttentionList({
 
         return (
           <div
-            key={`${item.schedulerId}-${item.renderId ?? "none"}`}
+            key={`${item.renderId ?? "none"}-${item.schedulerId ?? "none"}`}
             className={cn(
               "grid grid-cols-1 gap-2 border-b border-amber-200/80 px-3 py-2.5 last:border-b-0 sm:grid-cols-[1fr_auto_auto] sm:items-center sm:gap-3",
               severityRowClass(item.severity)
@@ -153,12 +153,14 @@ export function StuckRenderingAttentionList({
                   </Link>
                 </Button>
               ) : null}
-              <Button variant="primary" size="sm" asChild>
-                <Link href={`/dashboard/schedulers/${item.schedulerId}`}>
-                  Scheduler
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </Button>
+              {item.schedulerId != null ? (
+                <Button variant="primary" size="sm" asChild>
+                  <Link href={`/dashboard/schedulers/${item.schedulerId}`}>
+                    Scheduler
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              ) : null}
             </div>
           </div>
         );

@@ -7,6 +7,7 @@ import LoadingState from "@/components/ui-library/states/LoadingState";
 import { useAccountSummaryQuery } from "@/hooks/accounts/useAccountSummaryQuery";
 import { useAccountsQuery } from "@/hooks/accounts/useAccountsQuery";
 import { useGetTodaysRenders } from "@/hooks/scheduler/useGetTodaysRenders";
+import { useRenderInProgress } from "@/hooks/renders/useRenderInProgress";
 import { useRerenderRequestsData } from "@/hooks/rerender-request/useRerenderRequests";
 import { useContactFormSubmissionsData } from "@/hooks/contact-form/useContactFormSubmissions";
 import { useNotificationHealth } from "@/hooks/data-collection/useNotificationHealth";
@@ -27,7 +28,7 @@ import { ContactFormAttentionList } from "./live-snapshot/ContactFormAttentionLi
 import { NotificationHealthAttentionSummary } from "./live-snapshot/NotificationHealthAttentionSummary";
 import { AccountFleetOverviewCards } from "./live-snapshot/AccountFleetOverviewCards";
 import {
-  getStuckRenderingAttention,
+  getStuckRenderingAttentionFromInProgress,
   STUCK_RENDERING_POLICY_DESCRIPTION,
 } from "@/lib/scheduler/renderAttention";
 import { buildAccountFleetOverview, buildAccountLookupMap } from "@/lib/overview/accountFleetSummary";
@@ -72,9 +73,16 @@ export default function LiveOverview() {
     isLoading: rendersLoading,
     isError: rendersError,
     isFetching: rendersFetching,
-    error: rendersQueryError,
-    refetch: refetchRenders,
   } = useGetTodaysRenders({ refetchInterval: LIVE_OVERVIEW_REFETCH_MS });
+
+  const {
+    data: inProgressRenders,
+    isLoading: inProgressLoading,
+    isError: inProgressError,
+    error: inProgressQueryError,
+    refetch: refetchInProgress,
+    isFetching: inProgressFetching,
+  } = useRenderInProgress({ refetchInterval: LIVE_OVERVIEW_REFETCH_MS });
 
   const {
     data: accountSummary,
@@ -148,8 +156,8 @@ export default function LiveOverview() {
   });
 
   const stuckRenderingItems = useMemo(
-    () => getStuckRenderingAttention(todaysRenders ?? []),
-    [todaysRenders]
+    () => getStuckRenderingAttentionFromInProgress(inProgressRenders ?? []),
+    [inProgressRenders]
   );
 
   const unhandledRerenderItems = useMemo(
@@ -204,6 +212,7 @@ export default function LiveOverview() {
 
   const isRefreshing =
     (rendersFetching && !rendersLoading) ||
+    (inProgressFetching && !inProgressLoading) ||
     (accountsFetching && !accountsLoading) ||
     (accountsLookupFetching && !accountsLoading) ||
     (healthFetching && !healthLoading) ||
@@ -229,7 +238,7 @@ export default function LiveOverview() {
         meta: rendersError
           ? UNAVAILABLE_META
           : stuckRenderingCount > 0
-            ? `${stuckRenderingCount} stuck · active today`
+            ? `${stuckRenderingCount} stuck`
             : "Active today",
         isLoading: rendersLoading,
       },
@@ -337,7 +346,7 @@ export default function LiveOverview() {
   }
 
   const showStuckRenderingSection =
-    rendersLoading || rendersError || stuckRenderingItems.length > 0;
+    inProgressLoading || inProgressError || stuckRenderingItems.length > 0;
 
   const showAttentionSection =
     healthLoading ||
@@ -446,15 +455,15 @@ export default function LiveOverview() {
             >
               <StuckRenderingAttentionList
                 items={stuckRenderingItems}
-                isLoading={rendersLoading}
+                isLoading={inProgressLoading}
                 error={
-                  rendersError
-                    ? rendersQueryError instanceof Error
-                      ? rendersQueryError
-                      : new Error(String(rendersQueryError))
+                  inProgressError
+                    ? inProgressQueryError instanceof Error
+                      ? inProgressQueryError
+                      : new Error(String(inProgressQueryError))
                     : null
                 }
-                onRetry={() => refetchRenders()}
+                onRetry={() => refetchInProgress()}
               />
             </OverviewRecordPanel>
           ) : null}

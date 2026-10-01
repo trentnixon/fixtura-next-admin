@@ -90,7 +90,7 @@ export default function DisplayAssociationsTable() {
       <TabsContent value="active">
         <SectionContainer
           title="Active Association Accounts"
-          description="Association accounts with current subscriptions."
+          description="Association accounts with current subscriptions, last data sync, and last render."
         >
           <AccountTable
             accounts={activeAssociations}
@@ -103,7 +103,7 @@ export default function DisplayAssociationsTable() {
       <TabsContent value="inactive">
         <SectionContainer
           title="Inactive Association Accounts"
-          description="Association accounts without an active subscription."
+          description="Association accounts without an active subscription, with last data sync and last render."
         >
           <AccountTable
             accounts={inactiveAssociations}

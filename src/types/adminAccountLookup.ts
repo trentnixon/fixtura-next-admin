@@ -3,6 +3,8 @@
  * Endpoint: GET /api/account/admin/lookup
  */
 
+import type { AccountHealthAccountStatus } from "./accountHealth";
+
 /**
  * Club item in the clubs array
  */
@@ -84,6 +86,27 @@ export interface AccountLookupItem {
 
   /** User email address (from user relation) */
   email: string | null;
+
+  /** Season data refresh status. Missing CMS values arrive as `not_started`. */
+  accountHealthStatus: AccountHealthAccountStatus;
+
+  /** When the latest season data refresh started. */
+  accountHealthLastStartedAt: string | null;
+
+  /** Last completed season data sync. */
+  accountHealthLastCompletedAt: string | null;
+
+  /** Failure reason from the latest season data refresh, when failed. */
+  accountHealthFailureReason: string | null;
+
+  /** Account scheduler `isRendering` flag. False when the account has no scheduler. */
+  isSchedulerRendering: boolean;
+
+  /** Set only while a render has Processing true. `createdAt`, else `publishedAt`. */
+  renderProcessingSince: string | null;
+
+  /** Newest render with Complete true. `createdAt`, else `publishedAt`. Null if none. */
+  lastRenderCompletedAt: string | null;
 }
 
 /**

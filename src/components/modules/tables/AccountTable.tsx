@@ -40,11 +40,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import EmptyState from "@/components/ui-library/states/EmptyState";
+import { formatHealthTimestampNoYear } from "@/lib/account-health/formatHealthTimestamp";
 import { SubscriptionBadge } from "./SubscriptionBadge";
-import {
-  useFleetOpsAccountIndex,
-  type FleetOpsAccountFlags,
-} from "@/hooks/fleet/useFleetOpsAccountIndex";
 
 interface AccountsTableProps {
   accounts: AccountLookupItem[];
@@ -52,39 +49,113 @@ interface AccountsTableProps {
   showFleetOpsColumn?: boolean;
 }
 
-function FleetOpsCell({
-  flags,
-}: {
-  flags: FleetOpsAccountFlags | undefined;
-}) {
+function formatDaysSince(iso: string, now = new Date()): string | null {
+  const then = new Date(iso);
+  if (Number.isNaN(then.getTime())) return null;
 
-  if (!flags?.renderStuck && !flags?.syncAttention) {
+  const startOfDay = (date: Date) =>
+    Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+  const days = Math.round((startOfDay(now) - startOfDay(then)) / 86_400_000);
+
+  if (days <= 0) return "Today";
+  if (days === 1) return "1 day";
+  return `${days} days`;
+}
+
+function ActivityDateCell({ iso }: { iso: string | null }) {
+  if (iso == null || iso.trim() === "") {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+
+  const label = formatDaysSince(iso);
+  if (label == null) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+
+  return (
+    <time
+      dateTime={iso}
+      title={formatHealthTimestampNoYear(iso)}
+      className="whitespace-nowrap text-xs text-slate-700"
+    >
+      {label}
+    </time>
+  );
+}
+
+function FleetOpsCell({ account }: { account: AccountLookupItem }) {
+  const health = account.accountHealthStatus;
+  const showSync =
+    health === "queued" || health === "running" || health === "failed";
+  const syncLabel =
+    health === "failed"
+      ? "Sync failed"
+      : health === "queued"
+        ? "Sync queued"
+        : "Sync running";
+
+  if (
+    !showSync &&
+    !account.isSchedulerRendering &&
+    account.renderProcessingSince == null
+  ) {
     return <span className="text-xs text-muted-foreground">—</span>;
   }
 
   return (
     <div className="flex flex-col gap-1">
-      {flags.renderStuck ? (
+      {account.isSchedulerRendering ? (
         <Badge
           variant="outline"
           className="w-fit border-amber-300 bg-amber-50 text-amber-900"
         >
-          Render
+          Scheduler
         </Badge>
       ) : null}
-      {flags.syncAttention ? (
+      {account.renderProcessingSince ? (
+        <Badge
+          variant="outline"
+          className="w-fit border-amber-300 bg-amber-50 text-amber-900"
+          title={formatHealthTimestampNoYear(account.renderProcessingSince)}
+        >
+          Processing
+        </Badge>
+      ) : null}
+      {showSync ? (
         <Badge
           variant="outline"
           className="w-fit border-orange-300 bg-orange-50 text-orange-900"
+          title={account.accountHealthFailureReason ?? undefined}
         >
-          Sync
+          {syncLabel}
         </Badge>
       ) : null}
     </div>
   );
 }
 
-type SortField = "firstName" | "sport" | "subscription" | null;
+function compareActivityDate(
+  aIso: string | null,
+  bIso: string | null,
+  direction: "asc" | "desc"
+): number {
+  const aMs = aIso ? Date.parse(aIso) : Number.NaN;
+  const bMs = bIso ? Date.parse(bIso) : Number.NaN;
+  const aOk = Number.isFinite(aMs);
+  const bOk = Number.isFinite(bMs);
+  if (!aOk && !bOk) return 0;
+  if (!aOk) return 1;
+  if (!bOk) return -1;
+  return direction === "asc" ? aMs - bMs : bMs - aMs;
+}
+
+type SortField =
+  | "firstName"
+  | "sport"
+  | "subscription"
+  | "lastSync"
+  | "lastRender"
+  | null;
 type SortDirection = "asc" | "desc" | null;
 
 export function AccountTable({
@@ -92,7 +163,6 @@ export function AccountTable({
   emptyMessage,
   showFleetOpsColumn = false,
 }: AccountsTableProps) {
-  const fleetOpsByAccount = useFleetOpsAccountIndex();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -190,6 +260,18 @@ export function AccountTable({
           aValue = (a.Sport || "").toLowerCase();
           bValue = (b.Sport || "").toLowerCase();
           break;
+        case "lastSync":
+          return compareActivityDate(
+            a.accountHealthLastCompletedAt,
+            b.accountHealthLastCompletedAt,
+            sortDirection
+          );
+        case "lastRender":
+          return compareActivityDate(
+            a.lastRenderCompletedAt,
+            b.lastRenderCompletedAt,
+            sortDirection
+          );
         case "subscription":
           if (a.hasActiveOrder !== b.hasActiveOrder) {
             return sortDirection === "asc"
@@ -422,7 +504,31 @@ export function AccountTable({
                     </Button>
                   </TableHead>
                   {showFleetOpsColumn ? (
-                    <TableHead className="hidden md:table-cell">Fleet</TableHead>
+                    <>
+                      <TableHead className="hidden lg:table-cell">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleSort("lastSync")}
+                          className="h-auto p-0 font-semibold hover:bg-transparent"
+                        >
+                          Last data sync
+                          {getSortIcon("lastSync")}
+                        </Button>
+                      </TableHead>
+                      <TableHead className="hidden lg:table-cell">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleSort("lastRender")}
+                          className="h-auto p-0 font-semibold hover:bg-transparent"
+                        >
+                          Last render
+                          {getSortIcon("lastRender")}
+                        </Button>
+                      </TableHead>
+                      <TableHead className="hidden md:table-cell">Fleet</TableHead>
+                    </>
                   ) : null}
                   <TableHead className="w-[110px] text-right">
                     Actions
@@ -525,9 +631,19 @@ export function AccountTable({
                         />
                       </TableCell>
                       {showFleetOpsColumn ? (
-                        <TableCell className="hidden md:table-cell">
-                          <FleetOpsCell flags={fleetOpsByAccount.get(account.id)} />
-                        </TableCell>
+                        <>
+                          <TableCell className="hidden lg:table-cell">
+                            <ActivityDateCell
+                              iso={account.accountHealthLastCompletedAt}
+                            />
+                          </TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            <ActivityDateCell iso={account.lastRenderCompletedAt} />
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">
+                            <FleetOpsCell account={account} />
+                          </TableCell>
+                        </>
                       ) : null}
                       <TableCell className="text-right">
                         <Button

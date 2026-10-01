@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
+import type { RenderInProgressRow } from "@/types/renderInProgress";
 import type { TodaysRenders } from "@/types/scheduler";
 import {
   getStuckRenderingAttention,
+  getStuckRenderingAttentionFromInProgress,
   RENDER_ATTENTION_ERROR_MS,
   RENDER_ATTENTION_ISSUE_MS,
   resolveStuckRenderingSeverity,
@@ -118,5 +120,64 @@ describe("getStuckRenderingAttention", () => {
     );
     expect(items[0]?.accountId).toBe(2);
     expect(items[0]?.severity).toBe("error");
+  });
+});
+
+function inProgressRow(
+  overrides: Partial<RenderInProgressRow> = {}
+): RenderInProgressRow {
+  return {
+    renderId: 10,
+    renderName: "render-abc",
+    processing: true,
+    complete: false,
+    startedAt: "2026-09-14T10:00:00.000Z",
+    schedulerId: 4,
+    schedulerName: "Morning",
+    accountId: 99,
+    accountName: "Metro",
+    accountType: "Association",
+    scheduledTime: "08:00:00",
+    ...overrides,
+  };
+}
+
+describe("getStuckRenderingAttentionFromInProgress", () => {
+  const nowMs = Date.parse("2026-09-14T12:00:00.000Z");
+
+  it("keeps a processing render older than today's slot", () => {
+    const items = getStuckRenderingAttentionFromInProgress(
+      [
+        inProgressRow({
+          startedAt: new Date(nowMs - 40 * 60 * 60 * 1000).toISOString(),
+        }),
+      ],
+      nowMs
+    );
+    expect(items).toHaveLength(1);
+    expect(items[0]?.severity).toBe("error");
+    expect(items[0]?.accountType).toBe("Association");
+  });
+
+  it("drops renders that have been processing for under 30 minutes", () => {
+    const items = getStuckRenderingAttentionFromInProgress(
+      [
+        inProgressRow({
+          startedAt: new Date(nowMs - 10 * 60_000).toISOString(),
+        }),
+      ],
+      nowMs
+    );
+    expect(items).toHaveLength(0);
+  });
+
+  it("keeps a processing render that has no start time", () => {
+    const items = getStuckRenderingAttentionFromInProgress(
+      [inProgressRow({ startedAt: null, schedulerId: null })],
+      nowMs
+    );
+    expect(items).toHaveLength(1);
+    expect(items[0]?.label).toBe("Processing · start time unknown");
+    expect(items[0]?.schedulerId).toBeNull();
   });
 });

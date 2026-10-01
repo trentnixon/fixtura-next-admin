@@ -10,9 +10,9 @@ import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/Da
 import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
 import { useAccountHealthGlobalStatus } from "@/hooks/account-health/useAccountHealthGlobalStatus";
 import { useDataRefreshAttentionState } from "@/hooks/account-health/useDataRefreshAttentionState";
-import { useGetTodaysRenders } from "@/hooks/scheduler/useGetTodaysRenders";
+import { useRenderInProgress } from "@/hooks/renders/useRenderInProgress";
 import {
-  getStuckRenderingAttention,
+  getStuckRenderingAttentionFromInProgress,
   STUCK_RENDERING_POLICY_DESCRIPTION,
 } from "@/lib/scheduler/renderAttention";
 
@@ -43,12 +43,12 @@ export function FleetAttentionSection({
   showSyncOperatorActions = false,
 }: FleetAttentionSectionProps) {
   const {
-    data: todaysRenders,
+    data: inProgressRenders,
     isLoading: rendersLoading,
     isError: rendersError,
     error: rendersQueryError,
     refetch: refetchRenders,
-  } = useGetTodaysRenders({ refetchInterval: LIVE_OVERVIEW_REFETCH_MS });
+  } = useRenderInProgress({ refetchInterval: LIVE_OVERVIEW_REFETCH_MS });
 
   const {
     data: healthGlobal,
@@ -59,8 +59,8 @@ export function FleetAttentionSection({
   } = useAccountHealthGlobalStatus();
 
   const stuckItems = useMemo(
-    () => getStuckRenderingAttention(todaysRenders ?? []),
-    [todaysRenders]
+    () => getStuckRenderingAttentionFromInProgress(inProgressRenders ?? []),
+    [inProgressRenders]
   );
 
   const activeSyncCount = healthGlobal?.data?.activeCount ?? 0;
@@ -173,7 +173,7 @@ export function FleetAttentionSection({
             <EmptyState
               variant="minimal"
               title="No stuck renders in scheduler window"
-              description="Nothing processing longer than 30 minutes in the current today-schedulers payload."
+              description="Nothing with Processing true for longer than 30 minutes."
               className="py-3"
             />
           )}

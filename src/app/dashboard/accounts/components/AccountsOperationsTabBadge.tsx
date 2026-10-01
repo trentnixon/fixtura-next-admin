@@ -4,12 +4,12 @@ import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useAccountHealthGlobalStatus } from "@/hooks/account-health/useAccountHealthGlobalStatus";
 import { useDataRefreshAttentionState } from "@/hooks/account-health/useDataRefreshAttentionState";
-import { useGetTodaysRenders } from "@/hooks/scheduler/useGetTodaysRenders";
-import { getStuckRenderingAttention } from "@/lib/scheduler/renderAttention";
+import { useRenderInProgress } from "@/hooks/renders/useRenderInProgress";
+import { getStuckRenderingAttentionFromInProgress } from "@/lib/scheduler/renderAttention";
 
 export function AccountsOperationsTabBadge() {
   const { data: healthGlobal } = useAccountHealthGlobalStatus();
-  const { data: todaysRenders } = useGetTodaysRenders();
+  const { data: inProgressRenders } = useRenderInProgress();
   const activeSyncCount = healthGlobal?.data?.activeCount ?? 0;
   const { policyRuns, hiddenActiveCount } = useDataRefreshAttentionState({
     activeRuns: healthGlobal?.data?.activeRuns,
@@ -18,11 +18,13 @@ export function AccountsOperationsTabBadge() {
   });
 
   const count = useMemo(() => {
-    const stuck = getStuckRenderingAttention(todaysRenders ?? []).length;
+    const stuck = getStuckRenderingAttentionFromInProgress(
+      inProgressRenders ?? []
+    ).length;
     const sync =
       policyRuns.length + (hiddenActiveCount > 0 ? hiddenActiveCount : 0);
     return stuck + sync;
-  }, [hiddenActiveCount, policyRuns.length, todaysRenders]);
+  }, [hiddenActiveCount, inProgressRenders, policyRuns.length]);
 
   if (count === 0) return null;
 

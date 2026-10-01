@@ -1,4 +1,5 @@
 import type { TodaysRenders } from "@/types/scheduler";
+import type { RenderInProgressRow } from "@/types/renderInProgress";
 import { formatHealthTimestampNoYear } from "@/lib/account-health/formatHealthTimestamp";
 
 /** Renders processing longer than this are flagged (matches schedulers sidebar). */
@@ -10,8 +11,8 @@ export const RENDER_ATTENTION_ERROR_MS = 24 * 60 * 60 * 1000;
 export type StuckRenderingSeverity = "warning" | "issue" | "error";
 
 export interface StuckRenderingAttentionItem {
-  schedulerId: number;
-  accountId: number;
+  schedulerId: number | null;
+  accountId: number | null;
   accountName: string;
   accountType: string;
   schedulerName: string;
@@ -68,9 +69,9 @@ function displayAccountName(item: TodaysRenders): string {
   );
 }
 
-/** Human copy for panel descriptions (not limited to calendar “today”). */
+/** Human copy for panel descriptions. Source is every Processing render, not today's slot. */
 export const STUCK_RENDERING_POLICY_DESCRIPTION =
-  "Schedulers in today's window still processing or rendering for 30m+ (warning 30m · issue 2h · critical 24h+).";
+  "Renders still processing for 30m+, including older scheduler slots (warning 30m · issue 2h · critical 24h+).";
 
 export function formatStuckRenderingElapsedLabel(
   elapsedMs: number | null,
@@ -170,4 +171,74 @@ export function getStuckRenderingAttention(
  */
 export function getActiveRenderingCount(items: TodaysRenders[]): number {
   return items.filter(isRenderInProgress).length;
+}
+
+function buildInProgressLabel(
+  complete: boolean,
+  severity: StuckRenderingSeverity,
+  startedAt: string | null
+): string {
+  if (!startedAt) return "Processing · start time unknown";
+  const base = complete ? "Processing and complete" : "Stuck processing";
+  if (severity === "error") return `${base} · critical`;
+  if (severity === "issue") return `${base} · delayed`;
+  return base;
+}
+
+function displayInProgressAccountName(row: RenderInProgressRow): string {
+  const name = row.accountName?.trim();
+  if (name) return name;
+  if (row.accountId != null) return `Account ${row.accountId}`;
+  return `Render ${row.renderId}`;
+}
+
+/**
+ * Processing renders from GET /api/render/admin/in-progress that have run 30m+.
+ * Rows with no start time stay on the list because elapsed time cannot be ruled out.
+ */
+export function getStuckRenderingAttentionFromInProgress(
+  rows: RenderInProgressRow[],
+  nowMs: number = Date.now()
+): StuckRenderingAttentionItem[] {
+  const results: StuckRenderingAttentionItem[] = [];
+
+  for (const row of rows) {
+    if (!row.processing) continue;
+
+    const startedAt = row.startedAt;
+    const elapsedMs = resolveElapsedMs(startedAt, nowMs);
+    const isUnderThreshold =
+      elapsedMs != null && elapsedMs < STUCK_RENDER_THRESHOLD_MS;
+    if (isUnderThreshold) continue;
+
+    const severity = resolveStuckRenderingSeverity(elapsedMs);
+    results.push({
+      schedulerId: row.schedulerId,
+      accountId: row.accountId,
+      accountName: displayInProgressAccountName(row),
+      accountType: row.accountType ?? "",
+      schedulerName: row.schedulerName ?? "",
+      renderId: row.renderId,
+      renderName: row.renderName,
+      startedAt,
+      elapsedMs,
+      severity,
+      label: buildInProgressLabel(row.complete, severity, startedAt),
+    });
+  }
+
+  const severityRank: Record<StuckRenderingSeverity, number> = {
+    error: 0,
+    issue: 1,
+    warning: 2,
+  };
+
+  results.sort((a, b) => {
+    const sa = severityRank[a.severity];
+    const sb = severityRank[b.severity];
+    if (sa !== sb) return sa - sb;
+    return (b.elapsedMs ?? 0) - (a.elapsedMs ?? 0);
+  });
+
+  return results;
 }
