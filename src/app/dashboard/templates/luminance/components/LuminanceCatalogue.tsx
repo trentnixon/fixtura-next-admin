@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Sheet,
   SheetContent,
@@ -22,16 +27,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import LoadingState from "@/components/ui-library/states/LoadingState";
+import { cn } from "@/lib/utils";
 import { resolveStrapiMediaUrl } from "@/lib/utils/strapiMediaUrl";
 import {
   useCreateTemplateLuminance,
@@ -40,10 +38,42 @@ import {
   useTemplateLuminances,
   useUpdateTemplateLuminance,
 } from "@/hooks/template-luminance/useTemplateLuminance";
+import { useBrandThemes } from "@/hooks/brand-theme/useBrandTheme";
+import { useUploadCmsImage } from "@/hooks/media/useUploadCmsImage";
 import { TemplateLuminance } from "@/types/template-luminance";
+import { isHexColor, resolveBrandPresetStops } from "./luminanceMap";
+import { CatalogueToolbar, matchesPublishFilter, PublishFilter } from "../../components/CatalogueToolbar";
+import { StyleCatalogueCard, StyleCatalogueEmpty } from "../../components/StyleCatalogueCard";
+import { BrandMapLegend, LuminanceMappedPlate } from "./LuminanceMappedPlate";
 
 function plateSrc(url: string | null): string | null {
   return resolveStrapiMediaUrl(url);
+}
+
+function hasPublicUrl(url: string | null): boolean {
+  return Boolean(url && /^https?:\/\//i.test(url.trim()));
+}
+
+function PlatePreview({ src }: { src: string | null }) {
+  if (!src) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-slate-100 text-xs text-muted-foreground">
+        No image
+      </div>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={src} alt="" className="h-full w-full object-cover grayscale" />
+  );
+}
+
+function PlateFlag({ children }: { children: string }) {
+  return (
+    <span className={cn("rounded-full border border-amber-300 px-2 py-0.5 text-[11px] text-amber-800")}>
+      {children}
+    </span>
+  );
 }
 
 export function LuminanceCatalogue() {
@@ -52,17 +82,51 @@ export function LuminanceCatalogue() {
   const updatePlate = useUpdateTemplateLuminance();
   const setPublished = useSetTemplateLuminancePublished();
   const deletePlate = useDeleteTemplateLuminance();
+  const uploadImage = useUploadCmsImage();
+  const themes = useBrandThemes();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<TemplateLuminance | undefined>();
   const [name, setName] = useState("");
   const [imageId, setImageId] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | undefined>();
+  const [localPreview, setLocalPreview] = useState<string | undefined>();
+  const [fileKey, setFileKey] = useState(0);
   const [deleteTarget, setDeleteTarget] = useState<TemplateLuminance | undefined>();
+  const [status, setStatus] = useState<PublishFilter>("all");
+  const [viewing, setViewing] = useState<TemplateLuminance | undefined>();
+  const [themeId, setThemeId] = useState<string>("");
+
+  useEffect(() => {
+    return () => {
+      if (localPreview) URL.revokeObjectURL(localPreview);
+    };
+  }, [localPreview]);
+
+  const clearFile = () => {
+    setSelectedFile(undefined);
+    setLocalPreview(undefined);
+    setFileKey((key) => key + 1);
+  };
+
+  const chooseFile = (file: File | undefined) => {
+    if (file && !file.type.startsWith("image/")) {
+      toast.error("The plate must be an image");
+      return;
+    }
+    if (file && file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be 10 MB or smaller");
+      return;
+    }
+    setSelectedFile(file);
+    setLocalPreview(file ? URL.createObjectURL(file) : undefined);
+  };
 
   const openCreate = () => {
     setEditing(undefined);
     setName("");
     setImageId("");
+    clearFile();
     setSheetOpen(true);
   };
 
@@ -70,18 +134,45 @@ export function LuminanceCatalogue() {
     setEditing(row);
     setName(row.name);
     setImageId(row.imageId === null ? "" : String(row.imageId));
+    clearFile();
     setSheetOpen(true);
   };
 
   const save = async () => {
     const trimmedName = name.trim();
-    const parsedId = Number(imageId);
     if (!trimmedName) {
       toast.error("Name is required");
       return;
     }
-    if (!Number.isInteger(parsedId) || parsedId <= 0) {
-      toast.error("Image must be an existing media library file id");
+    let parsedId: number | null = null;
+    if (selectedFile) {
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      formData.append("name", trimmedName);
+      try {
+        const uploaded = await uploadImage.mutateAsync(formData);
+        parsedId = uploaded.id;
+        setImageId(String(uploaded.id));
+        setSelectedFile(undefined);
+      } catch (err) {
+        toast.error(err instanceof Error ? err.message : "Upload failed");
+        return;
+      }
+    } else {
+      const trimmedId = imageId.trim();
+      if (trimmedId) {
+        const parsed = Number(trimmedId);
+        if (!Number.isInteger(parsed) || parsed <= 0) {
+          toast.error("Media library file id must be a number");
+          return;
+        }
+        parsedId = parsed;
+      } else if (editing?.imageId) {
+        parsedId = editing.imageId;
+      }
+    }
+    if (parsedId === null) {
+      toast.error("Upload an image or enter a media library file id");
       return;
     }
     const input = { name: trimmedName, imageId: parsedId };
@@ -119,6 +210,17 @@ export function LuminanceCatalogue() {
     }
   };
 
+  const themeRows = (themes.data?.data ?? []).filter(
+    (theme) => isHexColor(theme.theme.primary) && isHexColor(theme.theme.secondary),
+  );
+  const selectedTheme = themeRows.find((theme) => String(theme.id) === themeId) ?? themeRows[0];
+  const primary = selectedTheme?.theme.primary ?? "";
+  const secondary = selectedTheme?.theme.secondary ?? "";
+  const brandMap = useMemo(
+    () => (primary && secondary ? resolveBrandPresetStops(primary, secondary) : null),
+    [primary, secondary],
+  );
+
   if (isLoading) return <LoadingState message="Loading luminance plates..." />;
   if (isError) {
     return (
@@ -131,96 +233,92 @@ export function LuminanceCatalogue() {
   }
 
   const rows = data?.data ?? [];
-  const saving = createPlate.isPending || updatePlate.isPending;
+  const visible = rows.filter((row) => matchesPublishFilter(row.publishedAt, status));
+  const saving = createPlate.isPending || updatePlate.isPending || uploadImage.isPending;
   const previewUrl =
     editing && String(editing.imageId ?? "") === imageId.trim()
       ? plateSrc(editing.imageUrl)
       : null;
+  const sheetPreview = localPreview ?? previewUrl;
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          {rows.length} plate{rows.length === 1 ? "" : "s"}. The image is an existing media library file.
-        </p>
-        <Button variant="primary" onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add plate
-        </Button>
-      </div>
+      <CatalogueToolbar addLabel="Add plate" onAdd={openCreate} status={status} onStatusChange={setStatus}>
+        <div className="flex flex-wrap items-center gap-2">
+          <Label htmlFor="luminance-theme">Preview theme</Label>
+          <Select
+            value={selectedTheme ? String(selectedTheme.id) : undefined}
+            onValueChange={setThemeId}
+            disabled={themeRows.length === 0}
+          >
+            <SelectTrigger id="luminance-theme" className="w-56">
+              <SelectValue placeholder={themes.isLoading ? "Loading themes..." : "No themes"} />
+            </SelectTrigger>
+            <SelectContent>
+              {themeRows.map((theme) => (
+                <SelectItem key={theme.id} value={String(theme.id)}>
+                  {theme.name || `Theme #${theme.id}`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </CatalogueToolbar>
 
-      <div className="overflow-x-auto rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-slate-50 hover:bg-slate-50">
-              <TableHead>Plate</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>State</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
-                  No luminance plates yet.
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((row) => {
-                const src = plateSrc(row.imageUrl);
-                return (
-                  <TableRow key={row.id}>
-                    <TableCell>
-                      {src ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={src} alt="" className="h-12 w-20 rounded object-cover" />
-                      ) : (
-                        <span className="text-xs text-muted-foreground">
-                          {row.imageId ? `File #${row.imageId}` : "No image"}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {row.name || "Untitled"}
-                      <div className="text-xs text-muted-foreground">
-                        #{row.id}
-                        {row.imageName ? ` · ${row.imageName}` : ""}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {row.publishedAt ? "Published" : "Draft"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="space-x-2 text-right">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => togglePublished(row)}>
-                        {row.publishedAt ? "Unpublish" : "Publish"}
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(row)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {rows.length === 0 ? (
+        <StyleCatalogueEmpty message="No luminance plates yet." />
+      ) : visible.length === 0 ? (
+        <StyleCatalogueEmpty message="No luminance plates match these filters." />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {visible.map((row) => {
+            const published = Boolean(row.publishedAt);
+            const publishing = setPublished.isPending && setPublished.variables?.id === row.id;
+            const src = plateSrc(row.imageUrl);
+            const needsPublicUrl = row.imageId !== null && !hasPublicUrl(row.imageUrl);
+            return (
+              <StyleCatalogueCard
+                key={row.id}
+                name={row.name}
+                id={row.id}
+                typeLabel={row.imageName || (row.imageId ? `File #${row.imageId}` : "No image")}
+                published={published}
+                locked={false}
+                publishDisabled={publishing}
+                onEdit={() => openEdit(row)}
+                onPreview={src ? () => setViewing(row) : undefined}
+                onTogglePublished={() => togglePublished(row)}
+                onDelete={() => setDeleteTarget(row)}
+                preview={
+                  src && brandMap ? (
+                    <LuminanceMappedPlate src={src} fit="cover" stops={brandMap.stops} />
+                  ) : (
+                    <PlatePreview src={src} />
+                  )
+                }
+                badges={needsPublicUrl ? <PlateFlag>Needs a public URL</PlateFlag> : undefined}
+              />
+            );
+          })}
+        </div>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-full sm:max-w-md">
           <SheetHeader>
             <SheetTitle>{editing ? "Edit plate" : "Add plate"}</SheetTitle>
             <SheetDescription>
-              Link a grayscale file that is already in the media library. This form does not upload a new file.
+              Upload a grayscale plate into the CMS media library. It is linked on this row. You can also enter a file id that is already in the library. The stored URL must be absolute http or https before an account can select the plate.
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-4">
+            <div className="h-28 overflow-hidden rounded-md">
+              {sheetPreview && brandMap ? (
+                <LuminanceMappedPlate src={sheetPreview} fit="cover" stops={brandMap.stops} />
+              ) : (
+                <PlatePreview src={sheetPreview ?? null} />
+              )}
+            </div>
             <div className="space-y-2">
               <Label htmlFor="luminance-name">Name</Label>
               <Input
@@ -230,28 +328,58 @@ export function LuminanceCatalogue() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="luminance-image">Media library file id</Label>
+              <Label htmlFor="luminance-file">Image</Label>
+              <Input
+                id="luminance-file"
+                key={fileKey}
+                type="file"
+                accept="image/*"
+                onChange={(event) => chooseFile(event.target.files?.[0])}
+              />
+              {selectedFile ? (
+                <p className="text-xs text-muted-foreground">{selectedFile.name}</p>
+              ) : null}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="luminance-image">Existing media library file id</Label>
               <Input
                 id="luminance-image"
                 value={imageId}
                 onChange={(event) => setImageId(event.target.value)}
               />
             </div>
-            {previewUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={previewUrl} alt="" className="h-28 w-full rounded object-cover" />
-            ) : null}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setSheetOpen(false)}>
                 Cancel
               </Button>
               <Button onClick={save} disabled={saving}>
-                {saving ? "Saving..." : "Save"}
+                {uploadImage.isPending ? "Uploading..." : saving ? "Saving..." : "Save"}
               </Button>
             </div>
           </div>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={Boolean(viewing)} onOpenChange={(open) => !open && setViewing(undefined)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{viewing?.name || "Luminance plate"}</DialogTitle>
+            <DialogDescription>
+              {brandMap?.preset === "tonal-brand"
+                ? "This theme’s primary and secondary are too close in lightness, so the preview uses the tonal preset: a darker primary, the primary, then a lighter primary."
+                : "The brand preset recolours the plate from the selected theme. Shadows use a darker primary, midtones the primary, and highlights the secondary."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center overflow-hidden rounded-md bg-slate-950">
+            {viewing && plateSrc(viewing.imageUrl) && brandMap ? (
+              <LuminanceMappedPlate src={plateSrc(viewing.imageUrl) ?? ""} fit="contain" stops={brandMap.stops} />
+            ) : (
+              <PlatePreview src={viewing ? plateSrc(viewing.imageUrl) : null} />
+            )}
+          </div>
+          {brandMap ? <BrandMapLegend preset={brandMap.preset} stops={brandMap.stops} /> : null}
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={Boolean(deleteTarget)}

@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import {
   Sheet,
   SheetContent,
@@ -23,14 +23,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import {
@@ -45,6 +37,45 @@ import {
   jsonToEditorValue,
   parseRequiredJson,
 } from "@/lib/services/template-animation/templateAnimationRecord";
+import {
+  CatalogueToolbar,
+  FilterChip,
+  matchesPublishFilter,
+  PublishFilter,
+} from "../../components/CatalogueToolbar";
+import { StyleCatalogueCard, StyleCatalogueEmpty } from "../../components/StyleCatalogueCard";
+
+function Flag({ children, strong }: { children: string; strong?: boolean }) {
+  return (
+    <span
+      className={cn(
+        "rounded-full border px-2 py-0.5 text-[11px]",
+        strong ? "border-slate-900 text-slate-900" : "border-slate-200 text-slate-600",
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+function FlagSwitch({
+  id,
+  label,
+  checked,
+  onCheckedChange,
+}: {
+  id: string;
+  label: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <Label htmlFor={id}>{label}</Label>
+      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
+    </div>
+  );
+}
 
 interface FormState {
   presetId: string;
@@ -98,6 +129,10 @@ export function AnimationCatalogue() {
   const [editing, setEditing] = useState<TemplateAnimation | undefined>();
   const [form, setForm] = useState<FormState>(emptyForm);
   const [deleteTarget, setDeleteTarget] = useState<TemplateAnimation | undefined>();
+  const [status, setStatus] = useState<PublishFilter>("all");
+  const [activeOnly, setActiveOnly] = useState(false);
+  const [defaultOnly, setDefaultOnly] = useState(false);
+  const [visibleOnly, setVisibleOnly] = useState(false);
 
   const openCreate = () => {
     setEditing(undefined);
@@ -189,84 +224,75 @@ export function AnimationCatalogue() {
   }
 
   const rows = data?.data ?? [];
+  const visible = rows.filter((row) => {
+    if (!matchesPublishFilter(row.publishedAt, status)) return false;
+    if (activeOnly && !row.isActive) return false;
+    if (defaultOnly && !row.isDefault) return false;
+    if (visibleOnly && !row.operatorVisible) return false;
+    return true;
+  });
   const saving = createPreset.isPending || updatePreset.isPending;
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          {rows.length} preset{rows.length === 1 ? "" : "s"}. A later catalogue sync can overwrite configuration, visibility, and the default flag.
-        </p>
-        <Button variant="primary" onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add preset
-        </Button>
-      </div>
+      <CatalogueToolbar addLabel="Add preset" onAdd={openCreate} status={status} onStatusChange={setStatus}>
+        <div className="flex flex-wrap gap-2">
+          <FilterChip active={activeOnly} onClick={() => setActiveOnly((current) => !current)}>
+            Active
+          </FilterChip>
+          <FilterChip active={defaultOnly} onClick={() => setDefaultOnly((current) => !current)}>
+            Default
+          </FilterChip>
+          <FilterChip active={visibleOnly} onClick={() => setVisibleOnly((current) => !current)}>
+            Operator visible
+          </FilterChip>
+        </div>
+      </CatalogueToolbar>
 
-      <div className="overflow-x-auto rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-slate-50 hover:bg-slate-50">
-              <TableHead>Name</TableHead>
-              <TableHead>Preset</TableHead>
-              <TableHead>Flags</TableHead>
-              <TableHead>State</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
-                  No animation presets yet.
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="font-medium">
-                    {row.name || "Untitled"}
-                    <div className="text-xs text-muted-foreground">#{row.id}</div>
-                  </TableCell>
-                  <TableCell className="font-mono text-xs">{row.presetId}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">
-                    {[
-                      row.isDefault ? "Default" : null,
-                      row.isActive ? "Active" : "Inactive",
-                      row.operatorVisible ? "Visible" : "Hidden",
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">
-                      {row.publishedAt ? "Published" : "Draft"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="space-x-2 text-right">
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => togglePublished(row)}>
-                      {row.publishedAt ? "Unpublish" : "Publish"}
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(row)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {rows.length === 0 ? (
+        <StyleCatalogueEmpty message="No animation presets yet." />
+      ) : visible.length === 0 ? (
+        <StyleCatalogueEmpty message="No animation presets match these filters." />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {visible.map((row) => {
+            const published = Boolean(row.publishedAt);
+            const publishing = setPublished.isPending && setPublished.variables?.id === row.id;
+            const sortLabel = row.sortOrder === null ? "No sort" : `Sort ${row.sortOrder}`;
+            return (
+              <StyleCatalogueCard
+                key={row.id}
+                name={row.name}
+                id={row.id}
+                typeLabel={row.presetId || "No preset id"}
+                typeClassName="font-mono text-xs"
+                detail={row.description}
+                note={`${row.catalogueVersion ? `Version ${row.catalogueVersion}` : "No version"} · ${sortLabel}`}
+                published={published}
+                locked={false}
+                publishDisabled={publishing}
+                onEdit={() => openEdit(row)}
+                onTogglePublished={() => togglePublished(row)}
+                onDelete={() => setDeleteTarget(row)}
+                badges={
+                  <>
+                    {row.isDefault ? <Flag strong>Default</Flag> : null}
+                    <Flag>{row.isActive ? "Active" : "Inactive"}</Flag>
+                    <Flag>{row.operatorVisible ? "Visible" : "Hidden"}</Flag>
+                  </>
+                }
+              />
+            );
+          })}
+        </div>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+        <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
           <SheetHeader>
             <SheetTitle>{editing ? "Edit preset" : "Add preset"}</SheetTitle>
             <SheetDescription>
-              Only one preset can be the default. It must stay published, active, and operator visible, or new accounts cannot be created.
+              A catalogue sync can overwrite configuration, visibility, and the default flag. The default preset has to stay published, active, and operator visible, or new accounts cannot be created.
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-4">
@@ -302,6 +328,24 @@ export function AnimationCatalogue() {
                 onChange={(event) => setField("sortOrder", event.target.value)}
               />
             </div>
+            <FlagSwitch
+              id="preset-visible"
+              label="Operator visible"
+              checked={form.operatorVisible}
+              onCheckedChange={(checked) => setField("operatorVisible", checked)}
+            />
+            <FlagSwitch
+              id="preset-active"
+              label="Active"
+              checked={form.isActive}
+              onCheckedChange={(checked) => setField("isActive", checked)}
+            />
+            <FlagSwitch
+              id="preset-default"
+              label="Default"
+              checked={form.isDefault}
+              onCheckedChange={(checked) => setField("isDefault", checked)}
+            />
             <div className="space-y-2">
               <Label htmlFor="preset-description">Description</Label>
               <Textarea
@@ -315,7 +359,7 @@ export function AnimationCatalogue() {
               <Label htmlFor="preset-config">Default configuration</Label>
               <Textarea
                 id="preset-config"
-                rows={6}
+                rows={10}
                 className="font-mono text-xs"
                 value={form.defaultConfiguration}
                 onChange={(event) => setField("defaultConfiguration", event.target.value)}
@@ -325,36 +369,12 @@ export function AnimationCatalogue() {
               <Label htmlFor="preset-schema">Configuration schema</Label>
               <Textarea
                 id="preset-schema"
-                rows={6}
+                rows={10}
                 className="font-mono text-xs"
                 value={form.configurationSchema}
                 onChange={(event) => setField("configurationSchema", event.target.value)}
               />
             </div>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={form.operatorVisible}
-                onChange={(event) => setField("operatorVisible", event.target.checked)}
-              />
-              Operator visible
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={form.isActive}
-                onChange={(event) => setField("isActive", event.target.checked)}
-              />
-              Active
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={form.isDefault}
-                onChange={(event) => setField("isDefault", event.target.checked)}
-              />
-              Default
-            </label>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setSheetOpen(false)}>
                 Cancel

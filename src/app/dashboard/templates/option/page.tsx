@@ -14,7 +14,7 @@ export default function TemplateOptionPage() {
       <PageContainer padding="xs" spacing="lg">
         <SectionContainer
           title="Style options"
-          description="Review and retarget an account's existing row. Account creation makes the row. This screen does not add a second one."
+          description="Each account already has one row. This page only shows the active background and the catalogue ids it points at."
         >
           <OptionCatalogue />
         </SectionContainer>

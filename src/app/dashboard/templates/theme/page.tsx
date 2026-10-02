@@ -9,12 +9,12 @@ export default function BrandThemePage() {
       <CreatePageTitle
         title="Theme"
         byLine="Brand colours"
-        byLineBottom="Shared brand themes. The colour JSON is primary, secondary, dark, and white."
+        byLineBottom="Account brand themes. This page only shows them."
       />
       <PageContainer padding="xs" spacing="lg">
         <SectionContainer
           title="Themes"
-          description="Name, the four brand colours, and whether the theme is public. Palette tokens stay on a different catalogue."
+          description="Primary, secondary, dark, and white for each account theme. Palette tokens stay on a different catalogue."
         >
           <ThemeCatalogue />
         </SectionContainer>

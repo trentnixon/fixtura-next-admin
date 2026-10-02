@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -29,14 +27,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import {
@@ -56,6 +46,15 @@ import {
   PROTECTED_TEMPLATE_PARTICLE_ID,
   TemplateParticle,
 } from "@/types/template-particle";
+import {
+  CatalogueToolbar,
+  matchesPublishFilter,
+  PublishFilter,
+} from "../../components/CatalogueToolbar";
+import { StyleCatalogueCard, StyleCatalogueEmpty } from "../../components/StyleCatalogueCard";
+import { SwatchPicker } from "../../components/SwatchPicker";
+import { humanizeToken } from "../../components/humanizeToken";
+import { ParticleSwatch } from "../../components/swatches/ParticleSwatch";
 
 function pick<T extends string>(options: readonly T[], value: string, fallback: T): T {
   return options.find((option) => option === value) ?? fallback;
@@ -117,6 +116,8 @@ export function ParticleCatalogue() {
   const [direction, setDirection] = useState<ParticleDirection>("up");
   const [animationType, setAnimationType] = useState<ParticleAnimationType>("none");
   const [deleteTarget, setDeleteTarget] = useState<TemplateParticle | undefined>();
+  const [status, setStatus] = useState<PublishFilter>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
 
   const openCreate = () => {
     setEditing(undefined);
@@ -205,90 +206,57 @@ export function ParticleCatalogue() {
   }
 
   const rows = data?.data ?? [];
+  const visible = rows.filter(
+    (row) =>
+      matchesPublishFilter(row.publishedAt, status) &&
+      (typeFilter === "all" || row.particleType === typeFilter)
+  );
   const saving = createParticle.isPending || updateParticle.isPending;
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          {rows.length} particle{rows.length === 1 ? "" : "s"}. These settings are still projected. Particle is not a legal background mode.
-        </p>
-        <Button variant="primary" onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add particle
-        </Button>
-      </div>
+      <CatalogueToolbar
+        addLabel="Add particle"
+        onAdd={openCreate}
+        status={status}
+        onStatusChange={setStatus}
+        typeValue={typeFilter}
+        onTypeChange={setTypeFilter}
+        typeOptions={PARTICLE_TYPES.map((type) => ({ value: type, label: humanizeToken(type) }))}
+      />
 
-      <div className="overflow-x-auto rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-slate-50 hover:bg-slate-50">
-              <TableHead>Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Motion</TableHead>
-              <TableHead>State</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
-                  No particles yet.
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((row) => {
-                const locked = row.id === PROTECTED_TEMPLATE_PARTICLE_ID;
-                return (
-                  <TableRow key={row.id}>
-                    <TableCell className="font-medium">
-                      {row.name || "Untitled"}
-                      <div className="text-xs text-muted-foreground">#{row.id}</div>
-                    </TableCell>
-                    <TableCell>{row.particleType || "-"}</TableCell>
-                    <TableCell className="text-sm">
-                      {row.direction || "-"} · {row.animationType || "-"}
-                      <div className="text-xs text-muted-foreground">
-                        {row.particleCount ?? "-"} · speed {row.speed ?? "-"}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {row.publishedAt ? "Published" : "Draft"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="space-x-2 text-right">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={locked && Boolean(row.publishedAt)}
-                        onClick={() => togglePublished(row)}
-                      >
-                        {row.publishedAt ? "Unpublish" : "Publish"}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={locked}
-                        onClick={() => setDeleteTarget(row)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {rows.length === 0 ? (
+        <StyleCatalogueEmpty message="No particles yet." />
+      ) : visible.length === 0 ? (
+        <StyleCatalogueEmpty message="No particles match these filters." />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {visible.map((row) => {
+            const locked = row.id === PROTECTED_TEMPLATE_PARTICLE_ID;
+            const published = Boolean(row.publishedAt);
+            const publishing = setPublished.isPending && setPublished.variables?.id === row.id;
+            return (
+              <StyleCatalogueCard
+                key={row.id}
+                name={row.name}
+                id={row.id}
+                typeLabel={humanizeToken(row.particleType) || "No type"}
+                detail={`${humanizeToken(row.direction) || "No direction"} · ${humanizeToken(row.animationType) || "No animation"} · ${row.particleCount ?? "—"} · speed ${row.speed ?? "—"}`}
+                published={published}
+                locked={locked}
+                publishDisabled={(locked && published) || publishing}
+                onEdit={() => openEdit(row)}
+                onTogglePublished={() => togglePublished(row)}
+                onDelete={() => setDeleteTarget(row)}
+                preview={<ParticleSwatch type={row.particleType} />}
+              />
+            );
+          })}
+        </div>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-md">
+        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
           <SheetHeader>
             <SheetTitle>{editing ? "Edit particle" : "Add particle"}</SheetTitle>
             <SheetDescription>
@@ -304,11 +272,16 @@ export function ParticleCatalogue() {
                 onChange={(event) => setName(event.target.value)}
               />
             </div>
-            <EnumSelect
+            <div className="h-28 overflow-hidden rounded-md">
+              <ParticleSwatch type={particleType} />
+            </div>
+            <SwatchPicker
               label="Particle type"
               value={particleType}
               options={PARTICLE_TYPES}
               onChange={setParticleType}
+              swatch={(type) => <ParticleSwatch type={type} />}
+              optionLabel={humanizeToken}
             />
             <div className="space-y-2">
               <Label htmlFor="particle-count">Particle count</Label>

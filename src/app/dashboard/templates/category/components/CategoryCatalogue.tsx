@@ -1,13 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Sheet,
   SheetContent,
@@ -23,16 +22,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import LoadingState from "@/components/ui-library/states/LoadingState";
+import { cn } from "@/lib/utils";
 import {
   jsonToEditorValue,
   parseOptionalJson,
@@ -48,6 +40,30 @@ import {
   PROTECTED_TEMPLATE_CATEGORY_ID,
   TemplateCategory,
 } from "@/types/template-category";
+import { CatalogueToolbar, matchesPublishFilter, PublishFilter } from "../../components/CatalogueToolbar";
+import { StyleCatalogueCard, StyleCatalogueEmpty } from "../../components/StyleCatalogueCard";
+import { fixtureSplits } from "./fixtureSplits";
+
+type AccessFilter = "all" | "public" | "private";
+
+function Flag({ children, tone }: { children: string; tone?: "amber" }) {
+  return (
+    <span
+      className={cn(
+        "rounded-full border px-2 py-0.5 text-[11px]",
+        tone === "amber" ? "border-amber-300 text-amber-800" : "border-slate-200 text-slate-600",
+      )}
+    >
+      {children}
+    </span>
+  );
+}
+
+function audioLabel(row: TemplateCategory): string {
+  if (row.bundleAudioName) return row.bundleAudioName;
+  if (row.bundleAudioId) return `Bundle #${row.bundleAudioId}`;
+  return "No audio bundle";
+}
 
 export function CategoryCatalogue() {
   const { data, isLoading, isError, error, refetch } = useTemplateCategories();
@@ -64,6 +80,8 @@ export function CategoryCatalogue() {
   const [isPrivate, setIsPrivate] = useState(false);
   const [bundleAudioId, setBundleAudioId] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<TemplateCategory | undefined>();
+  const [status, setStatus] = useState<PublishFilter>("all");
+  const [access, setAccess] = useState<AccessFilter>("all");
 
   const locked = editing?.id === PROTECTED_TEMPLATE_CATEGORY_ID;
 
@@ -158,89 +176,74 @@ export function CategoryCatalogue() {
   }
 
   const rows = data?.data ?? [];
+  const visible = rows.filter((row) => {
+    if (!matchesPublishFilter(row.publishedAt, status)) return false;
+    if (access === "public") return !row.isPrivate;
+    if (access === "private") return row.isPrivate;
+    return true;
+  });
   const saving = createCategory.isPending || updateCategory.isPending;
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          {rows.length} categor{rows.length === 1 ? "y" : "ies"}. A private category cannot be selected by the member save. Row 1 stays public and published.
-        </p>
-        <Button variant="primary" onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add category
-        </Button>
-      </div>
+      <CatalogueToolbar
+        addLabel="Add category"
+        onAdd={openCreate}
+        status={status}
+        onStatusChange={setStatus}
+        typeAllLabel="All access"
+        typeValue={access}
+        onTypeChange={(value) => {
+          if (value === "public" || value === "private" || value === "all") setAccess(value);
+        }}
+        typeOptions={[
+          { value: "public", label: "Public" },
+          { value: "private", label: "Private" },
+        ]}
+      />
 
-      <div className="overflow-x-auto rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-slate-50 hover:bg-slate-50">
-              <TableHead>Name</TableHead>
-              <TableHead>Slug</TableHead>
-              <TableHead>Access</TableHead>
-              <TableHead>State</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
-                  No categories yet.
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((row) => {
-                const protectedRow = row.id === PROTECTED_TEMPLATE_CATEGORY_ID;
-                return (
-                  <TableRow key={row.id}>
-                    <TableCell className="font-medium">
-                      {row.name || "Untitled"}
-                      <div className="text-xs text-muted-foreground">
-                        #{row.id}
-                        {row.bundleAudioName
-                          ? ` · ${row.bundleAudioName}`
-                          : row.bundleAudioId
-                            ? ` · bundle #${row.bundleAudioId}`
-                            : ""}
-                      </div>
-                    </TableCell>
-                    <TableCell>{row.slug || "-"}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{row.isPrivate ? "Private" : "Public"}</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{row.publishedAt ? "Published" : "Draft"}</Badge>
-                    </TableCell>
-                    <TableCell className="space-x-2 text-right">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={protectedRow && Boolean(row.publishedAt)}
-                        onClick={() => togglePublished(row)}
-                      >
-                        {row.publishedAt ? "Unpublish" : "Publish"}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={protectedRow}
-                        onClick={() => setDeleteTarget(row)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {rows.length === 0 ? (
+        <StyleCatalogueEmpty message="No categories yet." />
+      ) : visible.length === 0 ? (
+        <StyleCatalogueEmpty message="No categories match these filters." />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {visible.map((row) => {
+            const protectedRow = row.id === PROTECTED_TEMPLATE_CATEGORY_ID;
+            const published = Boolean(row.publishedAt);
+            const publishing = setPublished.isPending && setPublished.variables?.id === row.id;
+            const splits = fixtureSplits(row.divideFixturesBy);
+            return (
+              <StyleCatalogueCard
+                key={row.id}
+                name={row.name}
+                id={row.id}
+                typeLabel={row.slug || "No slug"}
+                typeClassName="font-mono"
+                detail={audioLabel(row)}
+                published={published}
+                locked={protectedRow}
+                publishDisabled={(protectedRow && published) || publishing}
+                onEdit={() => openEdit(row)}
+                onTogglePublished={() => togglePublished(row)}
+                onDelete={() => setDeleteTarget(row)}
+                badges={
+                  <>
+                    <Flag>{row.isPrivate ? "Private" : "Public"}</Flag>
+                    {protectedRow ? <Flag tone="amber">Stays published</Flag> : null}
+                    {splits === null ? <Flag>Custom split</Flag> : null}
+                    {splits?.map((split) => (
+                      <Flag key={split.label}>
+                        {split.label} {split.count}
+                      </Flag>
+                    ))}
+                  </>
+                }
+              />
+            );
+          })}
+        </div>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-md">
@@ -248,6 +251,7 @@ export function CategoryCatalogue() {
             <SheetTitle>{editing ? "Edit category" : "Add category"}</SheetTitle>
             <SheetDescription>
               A layout family. Saving it changes every account that still points at this id. The audio bundle is an existing bundle id.
+              {locked ? " Row 1 stays public and published." : ""}
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-4">
@@ -265,18 +269,19 @@ export function CategoryCatalogue() {
                 id="category-split"
                 value={divideFixturesBy}
                 onChange={(event) => setDivideFixturesBy(event.target.value)}
-                className="min-h-32 font-mono text-xs"
+                rows={10}
+                className="font-mono text-xs"
               />
             </div>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="category-private">Private</Label>
+              <Switch
+                id="category-private"
                 checked={locked ? false : isPrivate}
                 disabled={locked}
-                onChange={(event) => setIsPrivate(event.target.checked)}
+                onCheckedChange={setIsPrivate}
               />
-              Private
-            </label>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="category-bundle">Audio bundle id</Label>
               <Input

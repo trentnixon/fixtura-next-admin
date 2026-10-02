@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -29,14 +27,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import {
@@ -58,6 +48,16 @@ import {
   PROTECTED_TEMPLATE_IMAGE_ID,
   TemplateImage,
 } from "@/types/template-image";
+import {
+  CatalogueToolbar,
+  matchesPublishFilter,
+  PublishFilter,
+} from "../../components/CatalogueToolbar";
+import { StyleCatalogueCard, StyleCatalogueEmpty } from "../../components/StyleCatalogueCard";
+import { SwatchPicker } from "../../components/SwatchPicker";
+import { humanizeToken } from "../../components/humanizeToken";
+import { ImageOverlaySwatch } from "../../components/swatches/ImageOverlaySwatch";
+import { imageMotionLabel, imageOverlayLabel } from "../../components/swatches/imagePresetLabels";
 
 function pick<T extends string>(options: readonly T[], value: string, fallback: T): T {
   const match = options.find((option) => option === value);
@@ -69,11 +69,13 @@ function EnumSelect<T extends string>({
   value,
   options,
   onChange,
+  optionLabel,
 }: {
   label: string;
   value: T;
   options: readonly T[];
   onChange: (value: T) => void;
+  optionLabel: (value: T) => string;
 }) {
   return (
     <div className="space-y-2">
@@ -85,7 +87,7 @@ function EnumSelect<T extends string>({
         <SelectContent>
           {options.map((option) => (
             <SelectItem key={option} value={option}>
-              {option}
+              {optionLabel(option)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -110,6 +112,8 @@ export function ImageCatalogue() {
   const [gradientType, setGradientType] = useState<ImageGradientType>("linear");
   const [overlayOpacity, setOverlayOpacity] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<TemplateImage | undefined>();
+  const [status, setStatus] = useState<PublishFilter>("all");
+  const [overlayFilter, setOverlayFilter] = useState<string>("all");
 
   const openCreate = () => {
     setEditing(undefined);
@@ -199,96 +203,70 @@ export function ImageCatalogue() {
   }
 
   const rows = data?.data ?? [];
+  const visible = rows.filter(
+    (row) =>
+      matchesPublishFilter(row.publishedAt, status) &&
+      (overlayFilter === "all" || row.overlayStyle === overlayFilter),
+  );
   const saving = createImage.isPending || updateImage.isPending;
+  const typedOpacity = overlayOpacity.trim() === "" ? null : Number(overlayOpacity);
+  const previewOpacity = typedOpacity !== null && Number.isNaN(typedOpacity) ? null : typedOpacity;
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          {rows.length} preset{rows.length === 1 ? "" : "s"}. The photo comes from the account media library, not this row.
-        </p>
-        <Button variant="primary" onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add preset
-        </Button>
-      </div>
+      <CatalogueToolbar
+        addLabel="Add preset"
+        onAdd={openCreate}
+        status={status}
+        onStatusChange={setStatus}
+        typeValue={overlayFilter}
+        onTypeChange={setOverlayFilter}
+        typeAllLabel="All overlays"
+        typeOptions={IMAGE_OVERLAY_STYLES.map((style) => ({
+          value: style,
+          label: imageOverlayLabel(style),
+        }))}
+      />
 
-      <div className="overflow-x-auto rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-slate-50 hover:bg-slate-50">
-              <TableHead>Name</TableHead>
-              <TableHead>Motion</TableHead>
-              <TableHead>Overlay</TableHead>
-              <TableHead>State</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
-                  No image presets yet.
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((row) => {
-                const locked = row.id === PROTECTED_TEMPLATE_IMAGE_ID;
-                return (
-                  <TableRow key={row.id}>
-                    <TableCell className="font-medium">
-                      {row.name || "Untitled"}
-                      <div className="text-xs text-muted-foreground">#{row.id}</div>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {row.animationType || "-"}
-                      <div className="text-xs text-muted-foreground">
-                        {row.animationDirection || "-"}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {row.overlayStyle || "-"}
-                      <div className="text-xs text-muted-foreground">
-                        {row.gradientType || "-"}
-                        {row.overlayOpacity === null ? "" : ` · ${row.overlayOpacity}`}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {row.publishedAt ? "Published" : "Draft"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="space-x-2 text-right">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={locked && Boolean(row.publishedAt)}
-                        onClick={() => togglePublished(row)}
-                      >
-                        {row.publishedAt ? "Unpublish" : "Publish"}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={locked}
-                        onClick={() => setDeleteTarget(row)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {rows.length === 0 ? (
+        <StyleCatalogueEmpty message="No image presets yet." />
+      ) : visible.length === 0 ? (
+        <StyleCatalogueEmpty message="No image presets match these filters." />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {visible.map((row) => {
+            const locked = row.id === PROTECTED_TEMPLATE_IMAGE_ID;
+            const published = Boolean(row.publishedAt);
+            const publishing = setPublished.isPending && setPublished.variables?.id === row.id;
+            const direction = humanizeToken(row.animationDirection);
+            return (
+              <StyleCatalogueCard
+                key={row.id}
+                name={row.name}
+                id={row.id}
+                typeLabel={imageOverlayLabel(row.overlayStyle)}
+                detail={`${imageMotionLabel(row.animationType)}${direction ? ` ${direction.toLowerCase()}` : ""} · ${humanizeToken(row.gradientType) || "No gradient"} · opacity ${row.overlayOpacity ?? "—"}`}
+                published={published}
+                locked={locked}
+                publishDisabled={(locked && published) || publishing}
+                onEdit={() => openEdit(row)}
+                onTogglePublished={() => togglePublished(row)}
+                onDelete={() => setDeleteTarget(row)}
+                preview={
+                  <ImageOverlaySwatch
+                    overlayStyle={row.overlayStyle}
+                    gradientType={row.gradientType}
+                    opacity={row.overlayOpacity}
+                  />
+                }
+              />
+            );
+          })}
+        </div>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-md">
+        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
           <SheetHeader>
             <SheetTitle>{editing ? "Edit image preset" : "Add image preset"}</SheetTitle>
             <SheetDescription>
@@ -296,6 +274,13 @@ export function ImageCatalogue() {
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-4">
+            <div className="h-28 overflow-hidden rounded-md">
+              <ImageOverlaySwatch
+                overlayStyle={overlayStyle}
+                gradientType={gradientType}
+                opacity={previewOpacity}
+              />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="image-name">Name</Label>
               <Input id="image-name" value={name} onChange={(event) => setName(event.target.value)} />
@@ -305,24 +290,31 @@ export function ImageCatalogue() {
               value={animationType}
               options={IMAGE_ANIMATION_TYPES}
               onChange={setAnimationType}
+              optionLabel={imageMotionLabel}
             />
             <EnumSelect
               label="Animation direction"
               value={animationDirection}
               options={IMAGE_ANIMATION_DIRECTIONS}
               onChange={setAnimationDirection}
+              optionLabel={humanizeToken}
             />
-            <EnumSelect
+            <SwatchPicker
               label="Overlay style"
               value={overlayStyle}
               options={IMAGE_OVERLAY_STYLES}
               onChange={setOverlayStyle}
+              swatch={(style) => (
+                <ImageOverlaySwatch overlayStyle={style} gradientType={gradientType} opacity={previewOpacity} />
+              )}
+              optionLabel={imageOverlayLabel}
             />
             <EnumSelect
               label="Gradient type"
               value={gradientType}
               options={IMAGE_GRADIENT_TYPES}
               onChange={setGradientType}
+              optionLabel={humanizeToken}
             />
             <div className="space-y-2">
               <Label htmlFor="image-opacity">Overlay opacity</Label>

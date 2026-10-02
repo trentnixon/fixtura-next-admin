@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Sheet,
   SheetContent,
@@ -22,14 +20,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import {
@@ -43,6 +33,14 @@ import {
   PROTECTED_TEMPLATE_GRADIENT_ID,
   TemplateGradient,
 } from "@/types/template-gradient";
+import {
+  CatalogueToolbar,
+  matchesPublishFilter,
+  PublishFilter,
+} from "../../components/CatalogueToolbar";
+import { StyleCatalogueCard, StyleCatalogueEmpty } from "../../components/StyleCatalogueCard";
+import { humanizeToken } from "../../components/humanizeToken";
+import { GradientSwatch } from "../../components/swatches/GradientSwatch";
 
 export function GradientCatalogue() {
   const { data, isLoading, isError, error, refetch } = useTemplateGradients();
@@ -57,6 +55,8 @@ export function GradientCatalogue() {
   const [type, setType] = useState("");
   const [direction, setDirection] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<TemplateGradient | undefined>();
+  const [status, setStatus] = useState<PublishFilter>("all");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
 
   const openCreate = () => {
     setEditing(undefined);
@@ -126,82 +126,55 @@ export function GradientCatalogue() {
   }
 
   const rows = data?.data ?? [];
+  const typeOptions = Array.from(new Set(rows.map((row) => row.type).filter((type) => type.length > 0)))
+    .sort((left, right) => left.localeCompare(right))
+    .map((type) => ({ value: type, label: humanizeToken(type) }));
+  const visible = rows.filter(
+    (row) => matchesPublishFilter(row.publishedAt, status) && (typeFilter === "all" || row.type === typeFilter)
+  );
   const saving = createGradient.isPending || updateGradient.isPending;
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          {rows.length} gradient{rows.length === 1 ? "" : "s"}
-        </p>
-        <Button variant="primary" onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add gradient
-        </Button>
-      </div>
+      <CatalogueToolbar
+        addLabel="Add gradient"
+        onAdd={openCreate}
+        status={status}
+        onStatusChange={setStatus}
+        typeValue={typeFilter}
+        onTypeChange={setTypeFilter}
+        typeOptions={typeOptions.length > 0 ? typeOptions : undefined}
+      />
 
-      <div className="overflow-x-auto rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-slate-50 hover:bg-slate-50">
-              <TableHead>Name</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Direction</TableHead>
-              <TableHead>State</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
-                  No gradients yet.
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((row) => {
-                const locked = row.id === PROTECTED_TEMPLATE_GRADIENT_ID;
-                return (
-                  <TableRow key={row.id}>
-                    <TableCell className="font-medium">
-                      {row.name || "Untitled"}
-                      <div className="text-xs text-muted-foreground">#{row.id}</div>
-                    </TableCell>
-                    <TableCell>{row.type || "-"}</TableCell>
-                    <TableCell>{row.direction || "-"}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">
-                        {row.publishedAt ? "Published" : "Draft"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="space-x-2 text-right">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={locked && Boolean(row.publishedAt)}
-                        onClick={() => togglePublished(row)}
-                      >
-                        {row.publishedAt ? "Unpublish" : "Publish"}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={locked}
-                        onClick={() => setDeleteTarget(row)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {rows.length === 0 ? (
+        <StyleCatalogueEmpty message="No gradients yet." />
+      ) : visible.length === 0 ? (
+        <StyleCatalogueEmpty message="No gradients match these filters." />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {visible.map((row) => {
+            const locked = row.id === PROTECTED_TEMPLATE_GRADIENT_ID;
+            const published = Boolean(row.publishedAt);
+            const publishing = setPublished.isPending && setPublished.variables?.id === row.id;
+            return (
+              <StyleCatalogueCard
+                key={row.id}
+                name={row.name}
+                id={row.id}
+                typeLabel={humanizeToken(row.type) || "No type"}
+                detail={humanizeToken(row.direction) || "No direction"}
+                published={published}
+                locked={locked}
+                publishDisabled={(locked && published) || publishing}
+                onEdit={() => openEdit(row)}
+                onTogglePublished={() => togglePublished(row)}
+                onDelete={() => setDeleteTarget(row)}
+                preview={<GradientSwatch type={row.type} direction={row.direction} />}
+              />
+            );
+          })}
+        </div>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-full sm:max-w-md">
@@ -212,6 +185,9 @@ export function GradientCatalogue() {
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-4">
+            <div className="h-28 overflow-hidden rounded-md">
+              <GradientSwatch type={type} direction={direction} />
+            </div>
             <div className="space-y-2">
               <Label htmlFor="gradient-name">Name</Label>
               <Input id="gradient-name" value={name} onChange={(event) => setName(event.target.value)} />

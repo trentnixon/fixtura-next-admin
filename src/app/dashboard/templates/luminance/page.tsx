@@ -14,7 +14,7 @@ export default function TemplateLuminancePage() {
       <PageContainer padding="xs" spacing="lg">
         <SectionContainer
           title="Luminance plates"
-          description="Name and one media library image. The image URL must be absolute http or https before an account can select the plate."
+          description="Upload a grayscale plate into the CMS media library, or link a file that is already there. The stored URL must be absolute http or https before an account can select the plate."
         >
           <LuminanceCatalogue />
         </SectionContainer>

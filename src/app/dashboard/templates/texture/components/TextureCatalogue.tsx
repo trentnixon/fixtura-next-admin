@@ -1,12 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -29,17 +27,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import LoadingState from "@/components/ui-library/states/LoadingState";
+import { cn } from "@/lib/utils";
 import { resolveStrapiMediaUrl } from "@/lib/utils/strapiMediaUrl";
+import { useBrandThemes } from "@/hooks/brand-theme/useBrandTheme";
 import {
   useCreateTemplateTexture,
   useDeleteTemplateTexture,
@@ -53,6 +45,15 @@ import {
   TextureCategory,
   TemplateTexture,
 } from "@/types/template-texture";
+import { isHexColor } from "../../luminance/components/luminanceMap";
+import {
+  CatalogueToolbar,
+  matchesPublishFilter,
+  PublishFilter,
+} from "../../components/CatalogueToolbar";
+import { StyleCatalogueCard, StyleCatalogueEmpty } from "../../components/StyleCatalogueCard";
+import { TextureInUse } from "./TextureInUse";
+import { textureOverlayOpacity } from "./texturePreview";
 
 function pickCategory(value: string): TextureCategory {
   return TEXTURE_CATEGORIES.find((option) => option === value) ?? "Paper";
@@ -62,12 +63,33 @@ function textureSrc(url: string | null): string | null {
   return resolveStrapiMediaUrl(url);
 }
 
+function hasPublicUrl(url: string | null): boolean {
+  return Boolean(url && /^https?:\/\//i.test(url.trim()));
+}
+
+function EmptyPlate() {
+  return (
+    <div className="flex h-full w-full items-center justify-center bg-slate-100 text-xs text-muted-foreground">
+      No image
+    </div>
+  );
+}
+
+function UrlFlag() {
+  return (
+    <span className={cn("rounded-full border border-amber-300 px-2 py-0.5 text-[11px] text-amber-800")}>
+      Needs a public URL
+    </span>
+  );
+}
+
 export function TextureCatalogue() {
   const { data, isLoading, isError, error, refetch } = useTemplateTextures();
   const createTexture = useCreateTemplateTexture();
   const updateTexture = useUpdateTemplateTexture();
   const setPublished = useSetTemplateTexturePublished();
   const deleteTexture = useDeleteTemplateTexture();
+  const themes = useBrandThemes();
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editing, setEditing] = useState<TemplateTexture | undefined>();
@@ -76,6 +98,16 @@ export function TextureCatalogue() {
   const [opacity, setOpacity] = useState("");
   const [textureId, setTextureId] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<TemplateTexture | undefined>();
+  const [viewing, setViewing] = useState<TemplateTexture | undefined>();
+  const [status, setStatus] = useState<PublishFilter>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [themeId, setThemeId] = useState<string>("");
+
+  const themeRows = (themes.data?.data ?? []).filter(
+    (theme) => isHexColor(theme.theme.primary) && isHexColor(theme.theme.secondary),
+  );
+  const selectedTheme = themeRows.find((theme) => String(theme.id) === themeId) ?? themeRows[0];
+  const primary = selectedTheme?.theme.primary;
 
   const openCreate = () => {
     setEditing(undefined);
@@ -161,91 +193,99 @@ export function TextureCatalogue() {
   }
 
   const rows = data?.data ?? [];
+  const visible = rows.filter(
+    (row) =>
+      matchesPublishFilter(row.publishedAt, status) &&
+      (categoryFilter === "all" || row.category === categoryFilter),
+  );
   const saving = createTexture.isPending || updateTexture.isPending;
   const previewUrl =
     editing && String(editing.textureId ?? "") === textureId.trim()
       ? textureSrc(editing.textureUrl)
       : null;
+  const typedOpacity = opacity.trim() === "" ? null : Number(opacity);
+  const sheetOpacity = textureOverlayOpacity(typedOpacity !== null && Number.isNaN(typedOpacity) ? null : typedOpacity);
+  const viewSrc = viewing ? textureSrc(viewing.textureUrl) : null;
 
   return (
     <>
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          {rows.length} texture{rows.length === 1 ? "" : "s"}. The image is an existing media library file. Blend mode stays multiply.
-        </p>
-        <Button variant="primary" onClick={openCreate}>
-          <Plus className="mr-2 h-4 w-4" />
-          Add texture
-        </Button>
-      </div>
+      <CatalogueToolbar
+        addLabel="Add texture"
+        onAdd={openCreate}
+        status={status}
+        onStatusChange={setStatus}
+        typeAllLabel="All categories"
+        typeValue={categoryFilter}
+        onTypeChange={setCategoryFilter}
+        typeOptions={TEXTURE_CATEGORIES.map((option) => ({ value: option, label: option }))}
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <Label htmlFor="texture-theme">Preview theme</Label>
+          <Select
+            value={selectedTheme ? String(selectedTheme.id) : undefined}
+            onValueChange={setThemeId}
+            disabled={themeRows.length === 0}
+          >
+            <SelectTrigger id="texture-theme" className="w-56">
+              <SelectValue placeholder={themes.isLoading ? "Loading themes..." : "No themes"} />
+            </SelectTrigger>
+            <SelectContent>
+              {themeRows.map((theme) => (
+                <SelectItem key={theme.id} value={String(theme.id)}>
+                  {theme.name || `Theme #${theme.id}`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </CatalogueToolbar>
 
-      <div className="overflow-x-auto rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow className="bg-slate-50 hover:bg-slate-50">
-              <TableHead>Image</TableHead>
-              <TableHead>Name</TableHead>
-              <TableHead>Category</TableHead>
-              <TableHead>State</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={5} className="py-8 text-center text-sm text-muted-foreground">
-                  No textures yet.
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((row) => {
-                const src = textureSrc(row.textureUrl);
-                return (
-                  <TableRow key={row.id}>
-                    <TableCell>
-                      {src ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={src} alt="" className="h-12 w-20 rounded object-cover" />
-                      ) : (
-                        <span className="text-xs text-muted-foreground">
-                          {row.textureId ? `File #${row.textureId}` : "No image"}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {row.name || "Untitled"}
-                      <div className="text-xs text-muted-foreground">
-                        #{row.id}
-                        {row.textureName ? ` · ${row.textureName}` : ""}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {row.category || "-"}
-                      <div className="text-xs text-muted-foreground">
-                        opacity {row.opacity ?? "-"} · {row.blendMode || TEXTURE_BLEND_MODE}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="secondary">{row.publishedAt ? "Published" : "Draft"}</Badge>
-                    </TableCell>
-                    <TableCell className="space-x-2 text-right">
-                      <Button variant="ghost" size="sm" onClick={() => openEdit(row)}>
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => togglePublished(row)}>
-                        {row.publishedAt ? "Unpublish" : "Publish"}
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => setDeleteTarget(row)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
+      {rows.length === 0 ? (
+        <StyleCatalogueEmpty message="No textures yet." />
+      ) : visible.length === 0 ? (
+        <StyleCatalogueEmpty message="No textures match these filters." />
+      ) : (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+          {visible.map((row) => {
+            const published = Boolean(row.publishedAt);
+            const publishing = setPublished.isPending && setPublished.variables?.id === row.id;
+            const src = textureSrc(row.textureUrl);
+            const needsPublicUrl = row.textureId !== null && !hasPublicUrl(row.textureUrl);
+            return (
+              <StyleCatalogueCard
+                key={row.id}
+                name={row.name}
+                id={row.id}
+                typeLabel={row.category || "No category"}
+                detail={`${row.textureName || (row.textureId ? `File #${row.textureId}` : "No image")} · opacity ${row.opacity ?? "0.8"} · ${row.blendMode || TEXTURE_BLEND_MODE}`}
+                published={published}
+                locked={false}
+                publishDisabled={publishing}
+                onEdit={() => openEdit(row)}
+                onPreview={src ? () => setViewing(row) : undefined}
+                onTogglePublished={() => togglePublished(row)}
+                onDelete={() => setDeleteTarget(row)}
+                preview={
+                  src && primary ? (
+                    <TextureInUse
+                      src={src}
+                      fit="cover"
+                      color={primary}
+                      opacity={textureOverlayOpacity(row.opacity)}
+                    />
+                  ) : src ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={src} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <EmptyPlate />
+                  )
+                }
+                badges={needsPublicUrl ? <UrlFlag /> : undefined}
+              />
+            );
+          })}
+        </div>
+      )}
 
       <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-md">
@@ -256,6 +296,16 @@ export function TextureCatalogue() {
             </SheetDescription>
           </SheetHeader>
           <div className="mt-6 space-y-4">
+            <div className="h-28 overflow-hidden rounded-md">
+              {previewUrl && primary ? (
+                <TextureInUse src={previewUrl} fit="cover" color={primary} opacity={sheetOpacity} />
+              ) : previewUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={previewUrl} alt="" className="h-full w-full object-cover" />
+              ) : (
+                <EmptyPlate />
+              )}
+            </div>
             <div className="space-y-2">
               <Label htmlFor="texture-name">Name</Label>
               <Input id="texture-name" value={name} onChange={(event) => setName(event.target.value)} />
@@ -291,10 +341,6 @@ export function TextureCatalogue() {
                 onChange={(event) => setTextureId(event.target.value)}
               />
             </div>
-            {previewUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={previewUrl} alt="" className="h-28 w-full rounded object-cover" />
-            ) : null}
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setSheetOpen(false)}>
                 Cancel
@@ -306,6 +352,38 @@ export function TextureCatalogue() {
           </div>
         </SheetContent>
       </Sheet>
+
+      <Dialog open={Boolean(viewing)} onOpenChange={(open) => !open && setViewing(undefined)}>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>{viewing?.name || "Texture"}</DialogTitle>
+            <DialogDescription>
+              The texture image stays visible. The theme primary is multiplied over it at this row’s opacity.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-center overflow-hidden rounded-md bg-slate-950">
+            {viewSrc && primary && viewing ? (
+              <TextureInUse
+                src={viewSrc}
+                fit="contain"
+                color={primary}
+                opacity={textureOverlayOpacity(viewing.opacity)}
+              />
+            ) : viewSrc ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={viewSrc} alt="" className="max-h-[70vh] max-w-full object-contain" />
+            ) : (
+              <EmptyPlate />
+            )}
+          </div>
+          {primary ? (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="h-3 w-3 rounded-sm border" style={{ backgroundColor: primary }} />
+              Primary · multiply · opacity {viewing ? (viewing.opacity ?? "0.8") : "0.8"}
+            </div>
+          ) : null}
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(undefined)}>
         <DialogContent>
