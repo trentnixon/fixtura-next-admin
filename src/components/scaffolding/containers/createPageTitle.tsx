@@ -7,12 +7,14 @@ const CreatePageTitle = ({
   byLine,
   byLineBottom,
   image,
+  details,
   children,
 }: {
   title: string;
   byLine: string;
   byLineBottom?: string;
   image?: string;
+  details?: React.ReactNode;
   children?: React.ReactNode;
 }) => {
   return (
@@ -30,9 +32,13 @@ const CreatePageTitle = ({
           </div>
         )}
         <div className="flex min-w-0 flex-col gap-0">
-          {byLine && <ByLine>{byLine}</ByLine>}
-          {title && <Title>{title}</Title>}
-          {byLineBottom && <ByLine>{byLineBottom}</ByLine>}
+          {details ?? (
+            <>
+              {byLine && <ByLine>{byLine}</ByLine>}
+              {title && <Title>{title}</Title>}
+              {byLineBottom && <ByLine>{byLineBottom}</ByLine>}
+            </>
+          )}
         </div>
       </div>
       {children && (
