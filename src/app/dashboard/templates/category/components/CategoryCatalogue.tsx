@@ -233,9 +233,7 @@ export function CategoryCatalogue() {
                     {protectedRow ? <Flag tone="amber">Stays published</Flag> : null}
                     {splits === null ? <Flag>Custom split</Flag> : null}
                     {splits?.map((split) => (
-                      <Flag key={split.label}>
-                        {split.label} {split.count}
-                      </Flag>
+                      <Flag key={split.label}>{`${split.label} ${split.count}`}</Flag>
                     ))}
                   </>
                 }
