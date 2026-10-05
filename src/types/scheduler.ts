@@ -87,6 +87,11 @@ export interface TodaysRenders {
   } | null;
 }
 
+/** One scheduler due on a Sydney date from GET /scheduler/getRendersForDate. */
+export interface SchedulerDueRender extends TodaysRenders {
+  dueAt: string;
+}
+
 // new type getYesterdaysRenders
 export interface YesterdaysRenders {
   schedulerId: number;

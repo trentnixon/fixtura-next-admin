@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import LiveOverview from "./LiveOverview";
 import DashboardFinancials from "./DashboardFinancials";
-import DashboardAssetCreation from "./DashboardAssetCreation";
+import DashboardContentProduction from "./content-production/DashboardContentProduction";
 import DashboardDataCollection from "./DashboardDataCollection";
 import PageContainer from "@/components/scaffolding/containers/PageContainer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,7 +23,7 @@ const tabs = [
   },
   {
     value: "renders",
-    label: "Asset Creation",
+    label: "Content production",
     icon: Clapperboard,
   },
   {
@@ -82,7 +82,7 @@ export default function DashboardTabs() {
         </TabsContent>
 
         <TabsContent value="renders" className="mt-0">
-          <DashboardAssetCreation />
+          <DashboardContentProduction />
         </TabsContent>
 
         <TabsContent value="collection" className="mt-0">

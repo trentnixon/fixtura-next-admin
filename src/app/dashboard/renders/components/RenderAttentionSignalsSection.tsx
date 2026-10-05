@@ -13,7 +13,7 @@ const SIGNALS = [
       "Creator flags on download rows (hasError or errorHandler). Open Audit → pick a render → Downloads tab.",
     href: "/dashboard/renders/download-quality-control",
     icon: Download,
-    cta: "Download QC",
+    cta: "Download attention",
   },
   {
     id: "integrity",
@@ -76,7 +76,7 @@ export function RenderAttentionSignalsSection() {
           href="/dashboard/renders/download-quality-control"
           className="font-medium text-primary underline-offset-2 hover:underline"
         >
-          Download QC
+          Download attention
         </Link>{" "}
         connects when CMS deploys the quality-queue endpoint.
       </p>

@@ -26,7 +26,7 @@ import { NAVIGATION_TOKENS } from "./navigationTokens";
 const sectionTabExamples = [
   { value: "overview", label: "Overview", icon: LayoutDashboard },
   { value: "financials", label: "Financials", icon: DollarSign },
-  { value: "assets", label: "Asset Creation", icon: Clapperboard },
+  { value: "assets", label: "Content production", icon: Clapperboard },
   { value: "collection", label: "Data Collection", icon: Database },
 ] as const;
 

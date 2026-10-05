@@ -34,7 +34,7 @@ export default function DownloadHeader({ download }: DownloadHeaderProps) {
         )}
         <Button variant="outline" size="sm" asChild>
           <Link href="/dashboard/renders/download-quality-control">
-            Fleet download QC
+            Download attention
           </Link>
         </Button>
       </div>

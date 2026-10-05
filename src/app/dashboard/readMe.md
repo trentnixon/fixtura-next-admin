@@ -25,7 +25,6 @@ Competition management pages:
 Shared dashboard components:
 
 - `LiveOverview.tsx`: Live data overview component
-- `SchedulerRollupData.tsx`: Scheduler data aggregation component
 
 ### downloads/
 

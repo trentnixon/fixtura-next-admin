@@ -395,7 +395,7 @@ export default function LiveOverview() {
             href="/dashboard?tab=renders"
             trailingIcon="external"
           >
-            Asset Creation
+            Content production
           </DashboardLinkButton>
         }
         footer={
@@ -449,7 +449,7 @@ export default function LiveOverview() {
                   href="/dashboard?tab=renders"
                   trailingIcon="external"
                 >
-                  Asset Creation
+                  Content production
                 </DashboardLinkButton>
               }
             >

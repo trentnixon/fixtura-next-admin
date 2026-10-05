@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
@@ -10,6 +11,7 @@ export type WorkspaceMetricTile = {
   label: string;
   value: string;
   meta: string;
+  href?: string;
   isLoading?: boolean;
   metaTone?: "default" | "warning" | "critical";
 };
@@ -67,32 +69,54 @@ export function OverviewDataWorkspace({
           "md:divide-x md:divide-y-0"
         )}
       >
-        {metrics.map((tile) => (
-          <div className="px-4 py-4" key={tile.id}>
-            <div className="text-xs font-medium text-muted-foreground">
-              {tile.label}
-            </div>
-            {tile.isLoading ? (
-              <Skeleton className="mt-2 h-8 w-16" />
-            ) : (
-              <div className="mt-1 text-2xl font-bold leading-none text-slate-950">
-                {tile.value}
+        {metrics.map((tile) => {
+          const body = (
+            <>
+              <div className="text-xs font-medium text-muted-foreground">
+                {tile.label}
               </div>
-            )}
-            <div
-              className={cn(
-                "mt-2 text-xs",
-                tile.metaTone === "critical" && "font-medium text-red-700",
-                tile.metaTone === "warning" && "font-medium text-amber-800",
-                !tile.metaTone || tile.metaTone === "default"
-                  ? "text-slate-500"
-                  : null
+              {tile.isLoading ? (
+                <Skeleton className="mt-2 h-8 w-16" />
+              ) : (
+                <div className="mt-1 text-2xl font-bold leading-none text-slate-950">
+                  {tile.value}
+                </div>
               )}
-            >
-              {tile.meta}
+              {tile.meta ? (
+                <div
+                  className={cn(
+                    "mt-2 text-xs",
+                    tile.metaTone === "critical" && "font-medium text-red-700",
+                    tile.metaTone === "warning" && "font-medium text-amber-800",
+                    !tile.metaTone || tile.metaTone === "default"
+                      ? "text-slate-500"
+                      : null
+                  )}
+                >
+                  {tile.meta}
+                </div>
+              ) : null}
+            </>
+          );
+
+          if (tile.href) {
+            return (
+              <Link
+                key={tile.id}
+                href={tile.href}
+                className="block px-4 py-4 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
+              >
+                {body}
+              </Link>
+            );
+          }
+
+          return (
+            <div className="px-4 py-4" key={tile.id}>
+              {body}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {footer ? (

@@ -5,12 +5,12 @@ import { RendersWorkspaceShell } from "../components/RendersWorkspaceShell";
 export default function DownloadQualityControlPage() {
   return (
     <RendersWorkspaceShell
-      title="Download quality control"
+      title="Download attention"
       byLine="Renders · download attention"
       byLineBottom="Fleet triage for download output failures. Integrity audit and pipeline failures use separate views."
       headerActions={
-        <DashboardLinkButton href="/dashboard/schedulers" trailingIcon="external">
-          Schedulers
+        <DashboardLinkButton href="/dashboard/renders" trailingIcon="external">
+          Renders
         </DashboardLinkButton>
       }
     >

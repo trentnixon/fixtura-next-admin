@@ -15,6 +15,7 @@ This folder contains scheduler management pages and components for the Fixtura A
   - `schedulerBarChartByDays.tsx`: Bar chart component for scheduler data by days
   - `SchedulerRenderingTable.tsx`: Table component for scheduler rendering information
   - `SchedulerRollupData.tsx`: Rollup data component for scheduler statistics
+  - `SchedulerWorkspaceTabs.tsx`: Schedule, Live Queue, and Analytics tabs. Reads and writes the `tab` query.
 
 ## Relations
 

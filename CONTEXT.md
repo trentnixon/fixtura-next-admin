@@ -42,6 +42,10 @@ _Avoid_: Bill, payment request, invoice request
 
 ### Content production
 
+**Content production**:
+The admin category for a client's scheduled renders — Scheduler, Render, and Download attention.
+_Avoid_: Asset creation
+
 **Scheduler**:
 Recurring render schedule configuration for a client — when renders should run.
 _Avoid_: Render

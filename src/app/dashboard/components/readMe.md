@@ -4,9 +4,9 @@ Shared dashboard tab components and live overview widgets for the Fixtura Admin 
 
 ## Files
 
-- `DashboardTabs.tsx`: Operations tab shell (`navigation.tabs.section-default`) — Overview, Financials, Asset Creation, Data Collection
+- `DashboardTabs.tsx`: Operations tab shell (`navigation.tabs.section-default`) — Overview, Financials, Content production, Data Collection
 - `DashboardFinancials.tsx`: Financial snapshot tab
-- `DashboardAssetCreation.tsx`: Render pipeline tab
+- `content-production/DashboardContentProduction.tsx`: Content production pulse — due-render accuracy, today's queue, download attention
 - `DashboardDataCollection.tsx`: Data refresh and scraper tab
 - `LiveOverview.tsx`: Overview tab — live ops metrics and conditional action queues
 - `live-snapshot/`: Overview subcomponents
@@ -18,7 +18,6 @@ Shared dashboard tab components and live overview widgets for the Fixtura Admin 
   - `NotificationHealthAttentionSummary.tsx`: 7-day notification failure summary
   - `AccountFleetOverviewCards.tsx`: Fleet account mix (`card.base.comparison`)
   - `DashboardLinkButton.tsx`: Cross-page nav CTAs (`action.button.site-navigation`)
-- `SchedulerRollupData.tsx`: Scheduler rollup metrics (legacy/shared)
 
 ## Tabber pattern
 
@@ -38,7 +37,7 @@ Nested account sections use `navigation.tabs.section-inverse` — see account de
 - `./financials/`
 - `./account-health/`
 - `./data-collection/`
-- `./asset-creation/`
+- `./content-production/`
 
 ## Relations
 

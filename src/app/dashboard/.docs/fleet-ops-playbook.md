@@ -1,6 +1,6 @@
 # Fleet operations playbook (admin)
 
-Quick actions for items on **Dashboard Overview**, **Data Collection**, **Asset Creation**, and **`/dashboard/accounts`**.
+Quick actions for items on **Dashboard Overview**, **Data Collection**, **Content production**, and **`/dashboard/accounts`**.
 
 ---
 

@@ -107,7 +107,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         isActive: true,
       },
       {
-        title: "Downloads",
+        title: "Download attention",
         url: "/dashboard/renders/download-quality-control",
         icon: Download,
         isActive: true,
@@ -291,7 +291,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent className="gap-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <NavMain items={data.mainNav} title="Main" />
         <NavMain items={data.accountsNav} title="Accounts" />
-        <NavMain items={data.renderNav} title="Renders" />
+        <NavMain items={data.renderNav} title="Content production" />
         <NavMain items={data.sportsDataNav} title="Sports Data" />
         <NavMain items={data.assetNav} title="Assets" />
         <NavMain items={data.financialNav} title="Financial" />
