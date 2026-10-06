@@ -136,12 +136,6 @@ export interface AccountSummary {
       id: number;
       mediaLibraryCount: number;
     }[];
-    longevityAndRetention: {
-      id: number;
-      createdAt: string;
-      updatedAt: string;
-      deliveryAddress: string;
-    }[];
   };
   BarChartData: {
     accountTypesBarChart: { name: string; value: number }[];
@@ -162,5 +156,11 @@ export interface AccountSummary {
       active: number;
       expired: number;
     };
+    longevityAndRetention: {
+      id: number;
+      createdAt: string;
+      updatedAt: string;
+      deliveryAddress?: string;
+    }[];
   };
 }

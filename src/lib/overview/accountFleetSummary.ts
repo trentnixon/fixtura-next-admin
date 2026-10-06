@@ -2,7 +2,7 @@ import type { AccountSummary } from "@/types/account";
 import type { AccountLookupItem } from "@/types/adminAccountLookup";
 import { getAccountPagePath } from "@/lib/account-health/accountRoutes";
 
-export const ACCOUNT_SIGNUP_WINDOW_DAYS = 7;
+export const ACCOUNT_SIGNUP_WINDOW_DAYS = 30;
 export const ACCOUNT_SIGNUP_LIST_LIMIT = 5;
 
 const SPORT_LABELS = ["Cricket", "AFL", "Netball"] as const;
@@ -52,7 +52,10 @@ type SportCounts = {
   Netball?: number;
 };
 
-type LongevityRow = AccountSummary["Totals"]["longevityAndRetention"][number];
+export type AccountLongevityRow =
+  AccountSummary["AdditionalMetrics"]["longevityAndRetention"][number];
+
+type LongevityRow = AccountLongevityRow;
 
 export function formatSportMixBreakdown(counts: SportCounts | undefined): string {
   return `${counts?.Cricket ?? 0} Cricket · ${counts?.AFL ?? 0} AFL · ${counts?.Netball ?? 0} Netball`;
@@ -115,17 +118,55 @@ function resolveSignupAccountHref(
   return "/dashboard/accounts";
 }
 
+function resolveSignupOrganisationName(
+  lookup: AccountLookupItem | undefined
+): string | null {
+  if (!lookup) {
+    return null;
+  }
+
+  const organisations =
+    lookup.account_type === "Association"
+      ? lookup.associations
+      : lookup.account_type === "Club"
+        ? lookup.clubs
+        : [...lookup.associations, ...lookup.clubs];
+
+  const names = organisations
+    .map((organisation) => organisation.name?.trim() ?? "")
+    .filter((name) => name.length > 0);
+
+  if (names.length === 0) {
+    return null;
+  }
+
+  return names.join(", ");
+}
+
+function resolveSignupPersonName(
+  row: LongevityRow,
+  lookup: AccountLookupItem | undefined
+): string | null {
+  const firstName = lookup?.FirstName?.trim();
+  if (firstName) {
+    return firstName;
+  }
+  const deliveryAddress = row.deliveryAddress?.trim();
+  if (deliveryAddress) {
+    return deliveryAddress;
+  }
+  return null;
+}
+
 function resolveSignupLabel(
   row: LongevityRow,
   lookup: AccountLookupItem | undefined
 ): string {
-  if (lookup?.FirstName?.trim()) {
-    return lookup.FirstName.trim();
-  }
-  if (row.deliveryAddress?.trim()) {
-    return row.deliveryAddress.trim();
-  }
-  return `Account #${row.id}`;
+  return (
+    resolveSignupOrganisationName(lookup) ??
+    resolveSignupPersonName(row, lookup) ??
+    `Account #${row.id}`
+  );
 }
 
 function resolveSignupMeta(
@@ -133,7 +174,10 @@ function resolveSignupMeta(
   lookup: AccountLookupItem | undefined,
   nowMs: number
 ): string {
+  const organisation = resolveSignupOrganisationName(lookup);
+  const person = resolveSignupPersonName(row, lookup);
   const parts = [
+    organisation && person ? person : null,
     lookup?.account_type ?? null,
     lookup?.Sport ?? null,
     formatSignupRelativeAge(row.createdAt, nowMs),
@@ -143,7 +187,7 @@ function resolveSignupMeta(
 }
 
 export function getRecentAccountSignupItems(
-  longevity: AccountSummary["Totals"]["longevityAndRetention"] | undefined,
+  longevity: AccountLongevityRow[] | undefined,
   lookupById: Map<number, AccountLookupItem> = new Map(),
   options?: {
     windowDays?: number;
@@ -194,7 +238,7 @@ export function getRecentAccountSignupItems(
 }
 
 export function buildAccountSignupSummary(
-  longevity: AccountSummary["Totals"]["longevityAndRetention"] | undefined,
+  longevity: AccountLongevityRow[] | undefined,
   lookupById: Map<number, AccountLookupItem> = new Map(),
   options?: { windowDays?: number; limit?: number; nowMs?: number }
 ): AccountSignupSummary {
@@ -229,7 +273,7 @@ export function buildAccountSignupSummary(
 }
 
 export function countRecentAccountSignups(
-  longevity: AccountSummary["Totals"]["longevityAndRetention"] | undefined,
+  longevity: AccountLongevityRow[] | undefined,
   windowDays = ACCOUNT_SIGNUP_WINDOW_DAYS,
   nowMs = Date.now()
 ): number {
@@ -239,6 +283,13 @@ export function countRecentAccountSignups(
   }).total;
 }
 
+export function readAccountLongevityRows(
+  summary: AccountSummary | null | undefined
+): AccountLongevityRow[] {
+  const rows = summary?.AdditionalMetrics?.longevityAndRetention;
+  return Array.isArray(rows) ? rows : [];
+}
+
 export function buildAccountFleetOverview(
   summary: AccountSummary["Totals"] | undefined,
   options?: {
@@ -246,6 +297,7 @@ export function buildAccountFleetOverview(
     nowMs?: number;
     lookupById?: Map<number, AccountLookupItem>;
     signupListLimit?: number;
+    longevityAndRetention?: AccountLongevityRow[];
   }
 ): AccountFleetOverviewModel | null {
   if (!summary) {
@@ -266,7 +318,7 @@ export function buildAccountFleetOverview(
 
   return {
     totalAccounts,
-    signups: buildAccountSignupSummary(summary.longevityAndRetention, lookupById, {
+    signups: buildAccountSignupSummary(options?.longevityAndRetention, lookupById, {
       windowDays,
       nowMs,
       limit: options?.signupListLimit ?? ACCOUNT_SIGNUP_LIST_LIMIT,

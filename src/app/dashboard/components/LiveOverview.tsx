@@ -31,7 +31,11 @@ import {
   getStuckRenderingAttentionFromInProgress,
   STUCK_RENDERING_POLICY_DESCRIPTION,
 } from "@/lib/scheduler/renderAttention";
-import { buildAccountFleetOverview, buildAccountLookupMap } from "@/lib/overview/accountFleetSummary";
+import {
+  buildAccountFleetOverview,
+  buildAccountLookupMap,
+  readAccountLongevityRows,
+} from "@/lib/overview/accountFleetSummary";
 import {
   countContactFormActionQueue,
   countUnhandledRerenderRequests,
@@ -194,8 +198,9 @@ export default function LiveOverview() {
     () =>
       buildAccountFleetOverview(accountSummary?.data?.Totals, {
         lookupById: accountLookupById,
+        longevityAndRetention: readAccountLongevityRows(accountSummary?.data),
       }),
-    [accountSummary?.data?.Totals, accountLookupById]
+    [accountSummary?.data, accountLookupById]
   );
 
   const stuckRenderingCount = stuckRenderingItems.length;

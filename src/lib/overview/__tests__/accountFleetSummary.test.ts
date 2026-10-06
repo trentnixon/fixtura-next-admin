@@ -9,6 +9,7 @@ import {
   formatSignupRelativeAge,
   formatSportMixBreakdown,
   getRecentAccountSignupItems,
+  readAccountLongevityRows,
 } from "@/lib/overview/accountFleetSummary";
 
 function totals(
@@ -29,7 +30,6 @@ function totals(
     inactiveFreeTierCount: 0,
     isSetupCount: { true: 0, false: 0 },
     mediaLibraryUsage: [],
-    longevityAndRetention: [],
     ...overrides,
   };
 }
@@ -48,7 +48,7 @@ function lookup(
     hasActiveOrder: false,
     daysLeftOnSubscription: null,
     account_type: "Club",
-    clubs: [],
+    clubs: [{ id: 1, name: "Harbour Cricket Club" }],
     associations: [],
     logo: null,
     email: "club@example.com",
@@ -112,10 +112,11 @@ describe("getRecentAccountSignupItems", () => {
 
     expect(items).toHaveLength(1);
     expect(items[0]).toMatchObject({
-      label: "New Club",
+      label: "Harbour Cricket Club",
       accountType: "Club",
       href: "/dashboard/accounts/club/99",
     });
+    expect(items[0]?.meta).toContain("New Club");
     expect(items[0]?.meta).toContain("Club");
     expect(items[0]?.meta).toContain("Signed up yesterday");
   });
@@ -140,7 +141,16 @@ describe("buildAccountSignupSummary", () => {
         },
       ],
       new Map([
-        [1, lookup({ id: 1, FirstName: "Assoc", account_type: "Association" })],
+        [
+          1,
+          lookup({
+            id: 1,
+            FirstName: "Trent",
+            account_type: "Association",
+            clubs: [],
+            associations: [{ id: 4, name: "Metro Cricket" }],
+          }),
+        ],
         [2, lookup({ id: 2, FirstName: "Club", account_type: "Club" })],
       ]),
       { nowMs }
@@ -149,6 +159,71 @@ describe("buildAccountSignupSummary", () => {
     expect(summary.total).toBe(2);
     expect(summary.associationCount).toBe(1);
     expect(summary.clubCount).toBe(1);
+    expect(summary.items[0]).toMatchObject({
+      label: "Metro Cricket",
+    });
+    expect(summary.items[0]?.meta).toContain("Trent");
+  });
+});
+
+describe("readAccountLongevityRows", () => {
+  it("reads signup dates from AdditionalMetrics", () => {
+    const rows = readAccountLongevityRows({
+      Totals: totals(),
+      BarChartData: {
+        accountTypesBarChart: [],
+        sportsCountBarChart: [],
+        engagementMetricsBarChart: [],
+        schedulingDayCountBarChart: [],
+        trialInstanceStatusBarChart: [],
+      },
+      AdditionalMetrics: {
+        activeOrderCount: 0,
+        activeFreeTierCount: 0,
+        inactiveFreeTierCount: 0,
+        isSetupCount: { true: 0, false: 0 },
+        trialInstanceStatus: { active: 0, expired: 0 },
+        longevityAndRetention: [
+          {
+            id: 7,
+            createdAt: "2026-10-04T00:00:00.000Z",
+            updatedAt: "2026-10-04T00:00:00.000Z",
+          },
+        ],
+      },
+    });
+
+    expect(rows.map((row) => row.id)).toEqual([7]);
+  });
+
+  it("returns no rows when AdditionalMetrics omits signup dates", () => {
+    expect(readAccountLongevityRows(undefined)).toEqual([]);
+  });
+});
+
+describe("buildAccountSignupSummary window", () => {
+  it("keeps signups from the last 30 days and drops older ones", () => {
+    const nowMs = Date.parse("2026-10-06T12:00:00.000Z");
+    const summary = buildAccountSignupSummary(
+      [
+        {
+          id: 1,
+          createdAt: "2026-09-10T12:00:00.000Z",
+          updatedAt: "2026-09-10T12:00:00.000Z",
+        },
+        {
+          id: 2,
+          createdAt: "2026-09-01T12:00:00.000Z",
+          updatedAt: "2026-09-01T12:00:00.000Z",
+        },
+      ],
+      new Map(),
+      { nowMs }
+    );
+
+    expect(summary.windowDays).toBe(30);
+    expect(summary.total).toBe(1);
+    expect(summary.items.map((item) => item.id)).toEqual([1]);
   });
 });
 
@@ -158,22 +233,18 @@ describe("buildAccountFleetOverview", () => {
   });
 
   it("builds fleet cards and a signup summary", () => {
-    const model = buildAccountFleetOverview(
-      totals({
-        longevityAndRetention: [
-          {
-            id: 99,
-            createdAt: "2026-09-07T12:00:00.000Z",
-            updatedAt: "2026-09-07T12:00:00.000Z",
-            deliveryAddress: "new@example.com",
-          },
-        ],
-      }),
-      {
-        nowMs: Date.parse("2026-09-08T12:00:00.000Z"),
-        lookupById: new Map([[99, lookup()]]),
-      }
-    );
+    const model = buildAccountFleetOverview(totals(), {
+      nowMs: Date.parse("2026-09-08T12:00:00.000Z"),
+      lookupById: new Map([[99, lookup()]]),
+      longevityAndRetention: [
+        {
+          id: 99,
+          createdAt: "2026-09-07T12:00:00.000Z",
+          updatedAt: "2026-09-07T12:00:00.000Z",
+          deliveryAddress: "new@example.com",
+        },
+      ],
+    });
 
     expect(model?.totalAccounts).toBe(5);
     expect(model?.cards).toHaveLength(2);

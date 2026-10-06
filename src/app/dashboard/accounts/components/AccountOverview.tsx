@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Building2, Clock, Trophy, Users } from "lucide-react";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
@@ -10,7 +11,12 @@ import {
 } from "@/app/dashboard/components/live-snapshot/AccountFleetOverviewCards";
 import { OverviewRecordPanel } from "@/app/dashboard/components/live-snapshot/OverviewRecordPanel";
 import { useAccountSummaryQuery } from "@/hooks/accounts/useAccountSummaryQuery";
-import { buildAccountFleetOverview } from "@/lib/overview/accountFleetSummary";
+import { useAccountsQuery } from "@/hooks/accounts/useAccountsQuery";
+import {
+  buildAccountFleetOverview,
+  buildAccountLookupMap,
+  readAccountLongevityRows,
+} from "@/lib/overview/accountFleetSummary";
 
 type CompactMetric = {
   label: string;
@@ -37,6 +43,21 @@ export default function AccountOverview({
   const showSignups = sections.includes("signups");
   const { data, isLoading, isError, error, refetch } =
     useAccountSummaryQuery();
+  const { data: accountsLookup } = useAccountsQuery();
+  const accountLookupById = useMemo(() => {
+    if (!accountsLookup) {
+      return new Map();
+    }
+
+    return buildAccountLookupMap([
+      ...accountsLookup.clubs.active,
+      ...accountsLookup.clubs.inactive,
+      ...accountsLookup.associations.active,
+      ...accountsLookup.associations.inactive,
+      ...accountsLookup.undefined.active,
+      ...accountsLookup.undefined.inactive,
+    ]);
+  }, [accountsLookup]);
 
   if (isLoading) {
     return (
@@ -81,7 +102,10 @@ export default function AccountOverview({
   const setupRate =
     totalAccounts > 0 ? Math.round((setupComplete / totalAccounts) * 100) : 0;
 
-  const accountFleetOverview = buildAccountFleetOverview(summary);
+  const accountFleetOverview = buildAccountFleetOverview(summary, {
+    lookupById: accountLookupById,
+    longevityAndRetention: readAccountLongevityRows(data?.data),
+  });
   if (!accountFleetOverview) {
     return (
       <EmptyState
