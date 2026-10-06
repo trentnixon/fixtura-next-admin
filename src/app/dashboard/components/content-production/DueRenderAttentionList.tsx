@@ -33,7 +33,9 @@ export function DueRenderAttentionList({
   return (
     <div className="max-h-96 overflow-y-auto rounded-md border border-slate-200">
       {rows.map((row) => {
-        const when = `${formatSydneyDayLabel(row.dateKey)} ${row.scheduledTime}`;
+        const when = [formatSydneyDayLabel(row.dateKey), row.scheduledTime]
+          .filter(Boolean)
+          .join(" ");
         const outcome = OUTCOME[row.outcome];
 
         return (

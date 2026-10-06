@@ -78,6 +78,29 @@ describe("buildContentProductionSummary", () => {
     );
   });
 
+  it("says the window finished when every due render is done", () => {
+    const summary = buildContentProductionSummary({
+      accuracy: {
+        kind: "scored",
+        percent: 100,
+        processed: 2,
+        due: 2,
+        inProgress: 0,
+        missed: 0,
+        failed: 0,
+        upcoming: 0,
+      },
+      renderingCount: 0,
+      queuedCount: 0,
+      downloadAttentionTotal: 0,
+      attentionCount: 0,
+    });
+
+    expect(summary.emptyAttentionMessage).toBe(
+      "Every due render in these 7 Sydney days finished.",
+    );
+  });
+
   it("shows download attention as unavailable when the total is missing", () => {
     const summary = buildContentProductionSummary({
       accuracy: { kind: "upcoming", upcoming: 3 },

@@ -39,6 +39,20 @@ function accuracyValue(accuracy: DueRenderAccuracy): string {
   return `${accuracy.percent}%`;
 }
 
+function emptyAttentionMessage(
+  accuracy: DueRenderAccuracy | null,
+  attentionCount: number,
+): string | null {
+  if (attentionCount > 0) return null;
+  if (accuracy?.kind === "scored") {
+    return "Every due render in these 7 Sydney days finished.";
+  }
+  if (accuracy?.kind === "upcoming") {
+    return "Nothing has come up yet in these 7 Sydney days.";
+  }
+  return "Nothing fell in these 7 Sydney days.";
+}
+
 function accuracyTile(accuracy: DueRenderAccuracy | null): { value: string; meta: string } {
   if (accuracy == null) return { value: "—", meta: "Unavailable" };
   return { value: accuracyValue(accuracy), meta: "7 Sydney days" };
@@ -93,9 +107,6 @@ export function buildContentProductionSummary(input: {
     chartHeaderHref: CONTENT_PRODUCTION_SCHEDULERS_HREF,
     needsALookHref: CONTENT_PRODUCTION_SCHEDULERS_HREF,
     attentionCount: input.attentionCount,
-    emptyAttentionMessage:
-      input.attentionCount === 0
-        ? "Nothing fell in these 7 Sydney days."
-        : null,
+    emptyAttentionMessage: emptyAttentionMessage(input.accuracy, input.attentionCount),
   };
 }
