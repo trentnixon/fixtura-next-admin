@@ -17,7 +17,15 @@ export async function fetchSchedulerById(
       {
         populate: {
           renders: {
-            populate: ["downloads", "ai_articles"],
+            sort: ["createdAt:desc"],
+            populate: {
+              downloads: {
+                fields: ["Name", "UserErrorMessage", "hasError"],
+              },
+              ai_articles: {
+                fields: ["Name"],
+              },
+            },
           },
           days_of_the_week: true,
           account: {

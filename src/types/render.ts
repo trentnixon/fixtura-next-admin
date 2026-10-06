@@ -28,8 +28,9 @@ export interface RenderAttributes {
   EmailSent: boolean;
   forceRerenderEmail: boolean;
   hasTeamRosterEmail: boolean;
+  createdAt?: string;
   updatedAt: string;
-  publishedAt: string;
+  publishedAt: string | null;
   isCreatingRoster: boolean;
   downloads: {
     data: Download[];

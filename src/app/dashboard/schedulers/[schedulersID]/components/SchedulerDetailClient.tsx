@@ -15,6 +15,7 @@ import {
   siteNavigationGroupItemClass,
   siteNavigationGroupShellClass,
 } from "@/lib/actions/siteNavigationButtonStyles";
+import { formatSydneyScheduleTime } from "@/lib/scheduler/schedulerRenderHistory";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { useGlobalContext } from "@/components/providers/GlobalContext";
@@ -24,7 +25,7 @@ import TableOfRenders from "./TableofRenders";
 function resolveAccountType(
   name: string | undefined,
 ): "club" | "association" | null {
-  const normalized = name?.toLowerCase();
+  const normalized = name?.trim().toLowerCase();
   if (normalized === "club" || normalized === "association") {
     return normalized;
   }
@@ -46,9 +47,9 @@ export default function SchedulerDetailClient() {
     useSchedulerByID(schedulerId);
 
   const account = data?.attributes.account?.data;
-  const accountType = resolveAccountType(
-    account?.attributes.account_type?.data?.attributes?.Name,
-  );
+  const accountTypeName =
+    account?.attributes.account_type?.data?.attributes?.Name?.trim() || null;
+  const accountType = resolveAccountType(accountTypeName ?? undefined);
   const accountHref =
     account && accountType
       ? getAccountPagePath(account.id, accountType)
@@ -66,9 +67,11 @@ export default function SchedulerDetailClient() {
     }
     if (accountType) {
       parts.push(accountType === "club" ? "Club" : "Association");
+    } else if (accountTypeName) {
+      parts.push(accountTypeName);
     }
     return parts.join(" · ");
-  }, [account?.attributes.Sport, accountType, schedulerId]);
+  }, [account?.attributes.Sport, accountType, accountTypeName, schedulerId]);
 
   if (isLoading) {
     return (
@@ -111,7 +114,7 @@ export default function SchedulerDetailClient() {
 
   const scheduleDay =
     data.attributes.days_of_the_week?.data?.attributes?.Name ?? "Not set";
-  const scheduleTime = data.attributes.Time?.slice(0, 5) ?? "--:--";
+  const scheduleTime = formatSydneyScheduleTime(data.attributes.Time);
 
   return (
     <>
@@ -142,6 +145,22 @@ export default function SchedulerDetailClient() {
               asChild
             >
               <Link href={accountHref}>Account</Link>
+            </Button>
+          ) : account ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className={groupedItemClass(true)}
+              disabled
+              title={
+                accountTypeName
+                  ? `No account page for type ${accountTypeName}`
+                  : "This scheduler has an account, but no account type"
+              }
+            >
+              {accountTypeName
+                ? `No page for ${accountTypeName}`
+                : "No account page"}
             </Button>
           ) : null}
           <Button
