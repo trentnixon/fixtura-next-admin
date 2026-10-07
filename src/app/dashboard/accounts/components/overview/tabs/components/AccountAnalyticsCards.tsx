@@ -16,6 +16,7 @@ import SubscriptionStatusCard from "./SubscriptionStatusCard";
 import OrderHistoryTable from "./OrderHistoryTable";
 import TrialHistory from "./TrialHistory";
 import TrialSummaryCards from "./TrialSummaryCards";
+import RemoveFreeTrialButton from "./RemoveFreeTrialButton";
 
 const FINANCIAL_CHILD_TABS = [
   { id: "subscription", label: "Subscription", icon: Ticket },
@@ -41,37 +42,12 @@ export default function AccountAnalyticsCards({
     error: analyticsError,
   } = useAccountAnalytics(accountId.toString());
 
-  if (isAnalyticsLoading) {
-    return (
-      <LoadingState variant="skeleton" message="Loading account analytics...">
-        <Skeleton className="h-64 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </LoadingState>
-    );
-  }
+  const status = renderAnalyticsStatus({
+    isLoading: isAnalyticsLoading,
+    error: analyticsError,
+    hasData: Boolean(analyticsData),
+  });
 
-  if (analyticsError) {
-    return (
-      <ErrorState
-        error={analyticsError}
-        title="Error Loading Analytics"
-        variant="card"
-      />
-    );
-  }
-
-  if (!analyticsData) {
-    return (
-      <EmptyState
-        title="Account Analytics"
-        description="No analytics data available. Unable to load analytics for this account. Please try again later."
-        variant="card"
-      />
-    );
-  }
-
-  // Check if account has an active order/subscription
-  // Show "Create Invoice" button only if there's no active subscription
   const hasActiveOrder = analyticsData?.currentSubscription?.isActive || false;
 
   return (
@@ -98,24 +74,75 @@ export default function AccountAnalyticsCards({
       </TabsList>
 
       <TabsContent value="subscription" className="mt-0 space-y-6">
-        {!hasActiveOrder && (
-          <div className="flex justify-end">
-            <Button variant="primary" asChild>
-              <Link href={`/dashboard/orders/create/${accountId}`}>
-                Create Invoice
-              </Link>
-            </Button>
-          </div>
-        )}
+        {status ?? (
+          <>
+            {!hasActiveOrder && (
+              <div className="flex justify-end">
+                <Button variant="primary" asChild>
+                  <Link href={`/dashboard/orders/create/${accountId}`}>
+                    Create Invoice
+                  </Link>
+                </Button>
+              </div>
+            )}
 
-        <SubscriptionStatusCard analytics={analyticsData} />
-        <OrderHistoryTable analytics={analyticsData} />
+            <SubscriptionStatusCard analytics={analyticsData} />
+            <OrderHistoryTable analytics={analyticsData} />
+          </>
+        )}
       </TabsContent>
 
       <TabsContent value="trials" className="mt-0 space-y-6">
-        <TrialSummaryCards analytics={analyticsData} />
-        <TrialHistory analytics={analyticsData} />
+        <RemoveFreeTrialButton clientId={accountId} />
+        {status ??
+          (analyticsData ? (
+            <>
+              <TrialSummaryCards analytics={analyticsData} />
+              <TrialHistory analytics={analyticsData} />
+            </>
+          ) : null)}
       </TabsContent>
     </Tabs>
   );
+}
+
+function renderAnalyticsStatus({
+  isLoading,
+  error,
+  hasData,
+}: {
+  isLoading: boolean;
+  error: Error | null;
+  hasData: boolean;
+}) {
+  if (isLoading) {
+    return (
+      <LoadingState variant="skeleton" message="Loading account analytics...">
+        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </LoadingState>
+    );
+  }
+
+  if (error) {
+    return (
+      <ErrorState
+        error={error}
+        title="Error Loading Analytics"
+        variant="card"
+      />
+    );
+  }
+
+  if (!hasData) {
+    return (
+      <EmptyState
+        title="Account Analytics"
+        description="No analytics data available. Unable to load analytics for this account. Please try again later."
+        variant="card"
+      />
+    );
+  }
+
+  return null;
 }

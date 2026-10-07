@@ -22,6 +22,7 @@ import {
   logFetchStart,
   logUnexpectedError,
 } from "./utils/accountAnalyticsLogger";
+import { mapCurrentSubscription } from "./mapCurrentSubscription";
 
 /**
  * Fetches account-specific analytics from the Order Analytics API
@@ -68,6 +69,9 @@ export async function fetchAccountAnalytics(
 
     // Extract trial history from orders
     const trialOrders = filterTrialOrders(orders);
+    const currentSubscription = mapCurrentSubscription(
+      rawData.currentSubscription,
+    );
 
     // Transform the data to match our AccountAnalytics type
     const transformedData: AccountAnalytics = {
@@ -104,19 +108,15 @@ export async function fetchAccountAnalytics(
         }),
       },
       subscriptionTimeline: {
-        currentSubscription:
-          rawData.currentSubscription &&
-          rawData.currentSubscription.tier &&
-          rawData.currentSubscription.startDate &&
-          rawData.currentSubscription.endDate
-            ? {
-                tier: rawData.currentSubscription.tier,
-                startDate: rawData.currentSubscription.startDate,
-                endDate: rawData.currentSubscription.endDate,
-                isActive: rawData.currentSubscription.status === "Active",
-                autoRenew: !rawData.currentSubscription.cancelAtPeriodEnd,
-              }
-            : null,
+        currentSubscription: currentSubscription
+          ? {
+              tier: currentSubscription.tier,
+              startDate: currentSubscription.startDate,
+              endDate: currentSubscription.endDate,
+              isActive: currentSubscription.isActive,
+              autoRenew: currentSubscription.autoRenew,
+            }
+          : null,
         subscriptionHistory: (rawData.subscriptionTimeline || []).map(
           (timeline: RawSubscriptionTimelineEvent) => ({
             date: timeline.date || "",
@@ -209,21 +209,7 @@ export async function fetchAccountAnalytics(
             ? "poor"
             : "critical",
       },
-      currentSubscription:
-        rawData.currentSubscription &&
-        rawData.currentSubscription.tier &&
-        rawData.currentSubscription.status &&
-        rawData.currentSubscription.startDate &&
-        rawData.currentSubscription.endDate
-          ? {
-              tier: rawData.currentSubscription.tier,
-              status: rawData.currentSubscription.status,
-              startDate: rawData.currentSubscription.startDate,
-              endDate: rawData.currentSubscription.endDate,
-              isActive: rawData.currentSubscription.status === "Active",
-              autoRenew: !rawData.currentSubscription.cancelAtPeriodEnd,
-            }
-          : null,
+      currentSubscription,
       financialSummary: {
         totalLifetimeValue: rawData.financialSummary?.lifetimeValue || 0,
         monthlyRecurringRevenue: rawData.currentSubscription?.price || 0,

@@ -32,6 +32,10 @@ _Avoid_: Association client
 The active billing and subscription instance for a client — tier, service dates, payment state, and Stripe linkage.
 _Avoid_: Subscription (as a separate entity), invoice (when meaning the billing record itself)
 
+**Free trial**:
+A no-charge trial attached to the client's club or association: a trial record and a zero-total Order with checkout status trialing. One free trial covers that club or association, even when more than one client is linked to it.
+_Avoid_: Wipe, subscription, trial history
+
 **Invoice Request**:
 A staff workflow ticket for manual invoicing. It may link to an Order but is not the billing record itself. Managed in `/dashboard/orders/invoices`.
 _Avoid_: Invoice, order
