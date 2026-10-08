@@ -6,8 +6,10 @@ import CompetitionsTab from "./tabs/competitions";
 import GradesTab from "./tabs/grades";
 import DataTab from "./tabs/Data";
 import AccountAnalyticsCards from "./tabs/components/AccountAnalyticsCards";
+import AccountFixturesTab from "./tabs/fixtures";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
+import { EmptyState } from "@/components/ui-library";
 import {
   sectionTabListClass,
   sectionTabTriggerClass,
@@ -32,6 +34,16 @@ const TAB_LABELS = [
   { id: "fixtures", label: "Fixtures", icon: CalendarDays },
 ] as const;
 
+function organisationIdForFixtures(
+  account: fixturaContentHubAccountDetails,
+): number | null {
+  const id = account.accountOrganisationDetails?.id;
+  if (typeof id !== "number" || !Number.isFinite(id) || id <= 0) {
+    return null;
+  }
+  return id;
+}
+
 function renderTabContent(
   tabId: string,
   accountData: fixturaContentHubAccountDetails,
@@ -48,12 +60,23 @@ function renderTabContent(
       return <CompetitionsTab />;
     case "grades":
       return <GradesTab />;
-    case "fixtures":
-      return (
-        <SectionContainer title="Fixtures" variant="compact">
-          <p className="text-sm text-muted-foreground">Coming soon: Fixtures</p>
-        </SectionContainer>
-      );
+    case "fixtures": {
+      const organisationId = organisationIdForFixtures(accountData);
+      if (organisationId === null) {
+        return (
+          <SectionContainer title="Fixtures" variant="compact">
+            <EmptyState
+              variant="minimal"
+              description="Account organization details are missing. Cannot load fixtures."
+            />
+          </SectionContainer>
+        );
+      }
+      if (accountData.account_type === 1) {
+        return <AccountFixturesTab clubId={organisationId} />;
+      }
+      return <AccountFixturesTab associationId={organisationId} />;
+    }
     case "data":
       return <DataTab accountId={accountId} />;
     default:
