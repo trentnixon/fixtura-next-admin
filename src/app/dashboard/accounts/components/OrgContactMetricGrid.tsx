@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export type OrgContactMetricItem = {
   icon: LucideIcon;
@@ -9,11 +10,20 @@ export type OrgContactMetricItem = {
 
 type OrgContactMetricGridProps = {
   metrics: OrgContactMetricItem[];
+  className?: string;
 };
 
-export function OrgContactMetricGrid({ metrics }: OrgContactMetricGridProps) {
+export function OrgContactMetricGrid({
+  metrics,
+  className,
+}: OrgContactMetricGridProps) {
   return (
-    <div className="mb-4 grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
+    <div
+      className={cn(
+        "mb-4 grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4",
+        className,
+      )}
+    >
       {metrics.map((metric) => {
         const Icon = metric.icon;
 

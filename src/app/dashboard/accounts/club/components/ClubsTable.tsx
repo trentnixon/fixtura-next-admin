@@ -3,8 +3,7 @@
 import { useAccountsQuery } from "@/hooks/accounts/useAccountsQuery";
 import { AccountTable } from "@/components/modules/tables/AccountTable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import AccountStats from "@/app/dashboard/accounts/components/AccountStats";
-import ClubEmails from "./clubEmails";
+import ClubSnapshotCoverage from "./ClubSnapshotCoverage";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
@@ -12,19 +11,13 @@ import {
   sectionTabListClass,
   sectionTabTriggerClass,
 } from "@/lib/actions/siteNavigationButtonStyles";
-import {
-  AlertTriangle,
-  CheckCircle2,
-  LayoutDashboard,
-  Mail,
-} from "lucide-react";
+import { AlertTriangle, CheckCircle2, LayoutDashboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const CLUB_TABS = [
   { value: "snapshot", label: "Club Snapshot", icon: LayoutDashboard },
   { value: "active", label: "Active", icon: CheckCircle2 },
   { value: "inactive", label: "Inactive", icon: AlertTriangle },
-  { value: "emails", label: "Contacts", icon: Mail },
 ] as const;
 
 export default function DisplayClubsTable() {
@@ -72,10 +65,10 @@ export default function DisplayClubsTable() {
       <TabsContent value="snapshot">
         <SectionContainer
           title="Club Snapshot"
-          description="Subscription coverage, setup status, and account mix"
+          description="Fixtura accounts first, then the wider club directory."
           variant="compact"
         >
-          <AccountStats accounts={allClubs} />
+          <ClubSnapshotCoverage accounts={allClubs} />
         </SectionContainer>
       </TabsContent>
 
@@ -107,9 +100,6 @@ export default function DisplayClubsTable() {
         </SectionContainer>
       </TabsContent>
 
-      <TabsContent value="emails">
-        <ClubEmails initialFilter="active" hideAllFilter />
-      </TabsContent>
     </Tabs>
   );
 }

@@ -9,7 +9,7 @@ export default function AssociationsPage() {
       <CreatePageTitle
         title="Association Accounts"
         byLine="Operational account directory for association subscriptions"
-        byLineBottom="Subscription status, contacts, setup state, and account actions"
+        byLineBottom="Subscription status, setup, contact coverage, and account actions"
       />
       <PageContainer padding="xs" spacing="lg">
         <AccountsBreadcrumbHeader currentPage="Association accounts" />

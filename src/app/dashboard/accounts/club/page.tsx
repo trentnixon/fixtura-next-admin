@@ -9,7 +9,7 @@ export default function ClubsPage() {
       <CreatePageTitle
         title="Club Accounts"
         byLine="Operational account directory for club subscriptions"
-        byLineBottom="Subscription status, contacts, setup state, and account actions"
+        byLineBottom="Subscription status, setup, contact coverage, and account actions"
       />
       <PageContainer padding="xs" spacing="lg">
         <AccountsBreadcrumbHeader currentPage="Club accounts" />

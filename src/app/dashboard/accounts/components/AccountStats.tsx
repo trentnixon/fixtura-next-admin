@@ -33,9 +33,20 @@ import {
 
 interface AccountStatsProps {
   accounts: AccountLookupItem[];
+  /** Render the metric row, every chart, or one chart. Defaults to both. */
+  part?:
+    | "all"
+    | "metrics"
+    | "charts"
+    | "subscription"
+    | "sport"
+    | "expiration";
 }
 
-export default function AccountStats({ accounts }: AccountStatsProps) {
+export default function AccountStats({
+  accounts,
+  part = "all",
+}: AccountStatsProps) {
   const stats = useMemo(() => {
     const total = accounts.length;
     const active = accounts.filter((account) => account.hasActiveOrder).length;
@@ -162,118 +173,133 @@ export default function AccountStats({ accounts }: AccountStatsProps) {
     },
   ];
 
+  const showMetrics = part === "all" || part === "metrics";
+  const showSubscription =
+    part === "all" || part === "charts" || part === "subscription";
+  const showSport = part === "all" || part === "charts" || part === "sport";
+  const showExpiration =
+    part === "all" || part === "charts" || part === "expiration";
+  const stackCharts = part === "all" || part === "charts";
+
+  const subscriptionChart = (
+    <ChartCard
+      title="Subscription Status"
+      description="Active vs inactive subscriptions"
+      icon={PieChartIcon}
+      chartConfig={pieChartConfig}
+      chartClassName="h-[250px]"
+    >
+      <PieChart>
+        <Pie
+          data={subscriptionPieData}
+          cx="50%"
+          cy="50%"
+          labelLine={false}
+          label={({ name, percent }) =>
+            `${name}: ${(percent * 100).toFixed(0)}%`
+          }
+          outerRadius={76}
+          fill="#8884d8"
+          dataKey="value"
+        >
+          {subscriptionPieData.map((entry) => (
+            <Cell key={entry.name} fill={entry.color} />
+          ))}
+        </Pie>
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <ChartLegend content={<ChartLegendContent />} />
+      </PieChart>
+    </ChartCard>
+  );
+
+  const sportChart = (
+    <ChartCard
+      title="Accounts by Sport"
+      description="Account count by sport"
+      icon={BarChart3}
+      chartConfig={sportBarChartConfig}
+      chartClassName="h-[250px]"
+    >
+      <BarChart data={sportBarData}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+        <XAxis dataKey="sport" tickLine={false} axisLine={false} tickMargin={8} />
+        <YAxis tickLine={false} axisLine={false} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="count" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ChartCard>
+  );
+
+  const expirationChart = (
+    <ChartCard
+      title="Expiration Timeline"
+      description="Active accounts grouped by days remaining"
+      icon={Calendar}
+      chartConfig={expirationTimelineChartConfig}
+      chartClassName="h-[250px]"
+    >
+      <BarChart data={expirationTimelineData}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+        <XAxis
+          dataKey="period"
+          tickLine={false}
+          axisLine={false}
+          tickMargin={8}
+        />
+        <YAxis tickLine={false} axisLine={false} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="count" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ChartCard>
+  );
+
+  const charts = (
+    <>
+      {showSubscription ? subscriptionChart : null}
+      {showSport ? sportChart : null}
+      {showExpiration ? expirationChart : null}
+    </>
+  );
+
   return (
     <div className="space-y-5">
-      <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
-        {metricItems.map((item) => {
-          const Icon = item.icon;
+      {showMetrics ? (
+        <div className="grid overflow-hidden rounded-md border border-slate-200 bg-white sm:grid-cols-2 lg:grid-cols-4">
+          {metricItems.map((item) => {
+            const Icon = item.icon;
 
-          return (
-            <div
-              key={item.label}
-              className="flex items-center gap-3 border-b border-slate-200 px-4 py-3 last:border-b-0 sm:[&:nth-last-child(-n+2)]:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0"
-            >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600">
-                <Icon className="h-4 w-4" />
-              </div>
-              <div className="min-w-0">
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  {item.label}
+            return (
+              <div
+                key={item.label}
+                className="flex items-center gap-3 border-b border-slate-200 px-4 py-3 last:border-b-0 sm:[&:nth-last-child(-n+2)]:border-b-0 lg:border-b-0 lg:border-r lg:last:border-r-0"
+              >
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-slate-100 text-slate-600">
+                  <Icon className="h-4 w-4" />
                 </div>
-                <div className="mt-0.5 flex items-baseline gap-2">
-                  <span className="text-lg font-semibold text-slate-950">
-                    {item.value}
-                  </span>
-                  <span className="truncate text-xs text-muted-foreground">
-                    {item.detail}
-                  </span>
+                <div className="min-w-0">
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                    {item.label}
+                  </div>
+                  <div className="mt-0.5 flex items-baseline gap-2">
+                    <span className="text-lg font-semibold text-slate-950">
+                      {item.value}
+                    </span>
+                    <span className="truncate text-xs text-muted-foreground">
+                      {item.detail}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <ChartCard
-          title="Subscription Status"
-          description="Active vs inactive subscriptions"
-          icon={PieChartIcon}
-          chartConfig={pieChartConfig}
-          chartClassName="h-[250px]"
-        >
-          <PieChart>
-            <Pie
-              data={subscriptionPieData}
-              cx="50%"
-              cy="50%"
-              labelLine={false}
-              label={({ name, percent }) =>
-                `${name}: ${(percent * 100).toFixed(0)}%`
-              }
-              outerRadius={76}
-              fill="#8884d8"
-              dataKey="value"
-            >
-              {subscriptionPieData.map((entry) => (
-                <Cell key={entry.name} fill={entry.color} />
-              ))}
-            </Pie>
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <ChartLegend content={<ChartLegendContent />} />
-          </PieChart>
-        </ChartCard>
-
-        <ChartCard
-          title="Accounts by Sport"
-          description="Account count by sport"
-          icon={BarChart3}
-          chartConfig={sportBarChartConfig}
-          chartClassName="h-[250px]"
-        >
-          <BarChart data={sportBarData}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="sport"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-            />
-            <YAxis tickLine={false} axisLine={false} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar
-              dataKey="count"
-              fill="hsl(var(--chart-1))"
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
-        </ChartCard>
-
-        <ChartCard
-          title="Expiration Timeline"
-          description="Active accounts grouped by days remaining"
-          icon={Calendar}
-          chartConfig={expirationTimelineChartConfig}
-          chartClassName="h-[250px]"
-        >
-          <BarChart data={expirationTimelineData}>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="period"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-            />
-            <YAxis tickLine={false} axisLine={false} />
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar
-              dataKey="count"
-              fill="hsl(var(--chart-2))"
-              radius={[4, 4, 0, 0]}
-            />
-          </BarChart>
-        </ChartCard>
-      </div>
+      {stackCharts ? (
+        <div className="grid gap-6 lg:grid-cols-3">{charts}</div>
+      ) : (
+        charts
+      )}
     </div>
   );
 }
