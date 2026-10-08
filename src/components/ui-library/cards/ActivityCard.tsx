@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 export type ActivityCardItem = {
+  id?: string | number;
   icon: LucideIcon;
   label: string;
   meta: string;
@@ -35,11 +36,14 @@ export default function ActivityCard({
         </div>
       </CardHeader>
       <CardContent className="space-y-3 px-4 pb-4 pt-0">
-        {items.map((item) => {
+        {items.map((item, index) => {
           const Icon = item.icon;
 
           return (
-            <div className="flex items-center gap-3" key={item.label}>
+            <div
+              className="flex items-center gap-3"
+              key={item.id ?? `${item.label}-${index}`}
+            >
               <div
                 className={cn(
                   "rounded-md p-1.5",

@@ -3,6 +3,7 @@
 import AccountOverviewPanel from "./AccountOverviewPanel";
 import RendersTab from "./tabs/renders";
 import CompetitionsTab from "./tabs/competitions";
+import GradesTab from "./tabs/grades";
 import DataTab from "./tabs/Data";
 import AccountAnalyticsCards from "./tabs/components/AccountAnalyticsCards";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -46,11 +47,7 @@ function renderTabContent(
     case "competitions":
       return <CompetitionsTab />;
     case "grades":
-      return (
-        <SectionContainer title="Grades" variant="compact">
-          <p className="text-sm text-muted-foreground">Coming soon: Grades</p>
-        </SectionContainer>
-      );
+      return <GradesTab />;
     case "fixtures":
       return (
         <SectionContainer title="Fixtures" variant="compact">

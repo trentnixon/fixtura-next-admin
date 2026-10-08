@@ -45,6 +45,7 @@ export default function OrderHistorySummaryCards({
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 3)
     .map((order) => ({
+      id: order.id,
       icon: Receipt,
       label: `${order.subscriptionTier} · $${(order.amount / 100).toLocaleString(
         "en-AU",

@@ -14,7 +14,10 @@ import {
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { AccountFleetOverviewModel } from "@/lib/overview/accountFleetSummary";
+import type {
+  AccountFleetOverviewModel,
+  AccountFleetTypeCard,
+} from "@/lib/overview/accountFleetSummary";
 import { siteNavigationCtaClass } from "@/lib/actions/siteNavigationButtonStyles";
 import { cn } from "@/lib/utils";
 
@@ -39,7 +42,7 @@ interface AccountFleetOverviewCardsProps {
   className?: string;
 }
 
-function NewSignupsCard({
+function NewSignupsColumnCard({
   signups,
   totalAccounts,
   showFooterAction = true,
@@ -48,6 +51,135 @@ function NewSignupsCard({
   totalAccounts: number;
   showFooterAction?: boolean;
 }) {
+  const hasSignups = signups.total > 0;
+
+  return (
+    <Card
+      className={cn(
+        "border-slate-200 shadow-sm",
+        hasSignups && "border-emerald-200 bg-emerald-50/40"
+      )}
+    >
+      <CardHeader className="p-4 pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div
+              className={cn(
+                "rounded-md p-2",
+                hasSignups
+                  ? "bg-emerald-100 text-emerald-700"
+                  : "bg-slate-100 text-slate-600"
+              )}
+            >
+              <UserPlus className="h-4 w-4" />
+            </div>
+            <div>
+              <CardTitle className="text-base">New signups</CardTitle>
+              <div
+                className={cn(
+                  "mt-1 text-2xl font-bold leading-none",
+                  hasSignups ? "text-emerald-800" : "text-slate-700"
+                )}
+              >
+                {signups.total.toLocaleString()}
+              </div>
+            </div>
+          </div>
+          <Badge
+            variant="outline"
+            className={cn(
+              hasSignups
+                ? "border-emerald-300 bg-emerald-100 text-emerald-900"
+                : "border-slate-200 bg-white text-slate-700"
+            )}
+          >
+            Last {signups.windowDays} days
+          </Badge>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-2 px-4 pb-4 pt-0">
+        <div className="flex items-center justify-between rounded-md bg-white/80 px-3 py-2 ring-1 ring-slate-200">
+          <span className="text-sm text-slate-600">Associations</span>
+          <span className="text-sm font-semibold text-violet-700">
+            {signups.associationCount.toLocaleString()}
+          </span>
+        </div>
+        <div className="flex items-center justify-between rounded-md bg-white/80 px-3 py-2 ring-1 ring-slate-200">
+          <span className="text-sm text-slate-600">Clubs</span>
+          <span className="text-sm font-semibold text-blue-700">
+            {signups.clubCount.toLocaleString()}
+          </span>
+        </div>
+        {hasSignups ? (
+          signups.items.map((item) => (
+            <Link
+              key={item.id}
+              href={item.href}
+              className="flex items-center gap-3 rounded-md bg-white/80 px-3 py-2 ring-1 ring-slate-200 transition hover:bg-white hover:ring-emerald-200"
+            >
+              <div className={cn("rounded-md p-1.5", item.tone)}>
+                <Sparkles className="h-3.5 w-3.5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-sm font-medium text-slate-900">
+                  {item.label}
+                </div>
+                <div className="truncate text-xs text-muted-foreground">
+                  {item.meta}
+                </div>
+              </div>
+            </Link>
+          ))
+        ) : (
+          <div className="rounded-md border border-dashed border-slate-200 bg-white/70 px-4 py-6 text-center">
+            <p className="text-sm font-medium text-slate-700">
+              No new accounts in the last {signups.windowDays} days
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {totalAccounts.toLocaleString()} accounts in the fleet overall
+            </p>
+          </div>
+        )}
+      </CardContent>
+
+      {showFooterAction ? (
+        <CardFooter className="justify-end px-4 pb-4 pt-0">
+          <Button
+            size="sm"
+            variant="ghost"
+            className={siteNavigationCtaClass}
+            asChild
+          >
+            <Link href="/dashboard/accounts">Open accounts</Link>
+          </Button>
+        </CardFooter>
+      ) : null}
+    </Card>
+  );
+}
+
+function NewSignupsCard({
+  signups,
+  totalAccounts,
+  showFooterAction = true,
+  layout = "banner",
+}: {
+  signups: AccountFleetOverviewModel["signups"];
+  totalAccounts: number;
+  showFooterAction?: boolean;
+  layout?: "banner" | "column";
+}) {
+  if (layout === "column") {
+    return (
+      <NewSignupsColumnCard
+        signups={signups}
+        totalAccounts={totalAccounts}
+        showFooterAction={showFooterAction}
+      />
+    );
+  }
+
   const hasSignups = signups.total > 0;
 
   return (
@@ -164,6 +296,67 @@ function NewSignupsCard({
   );
 }
 
+function FleetTypeCard({ card }: { card: AccountFleetTypeCard }) {
+  const meta = CARD_META[card.id];
+  const Icon = meta.icon;
+
+  return (
+    <Card className="border-slate-200 shadow-sm">
+      <CardHeader className="p-4 pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className={cn("rounded-md p-2", meta.iconTone)}>
+              <Icon className="h-4 w-4" />
+            </div>
+            <div>
+              <CardTitle className="text-base">{card.title}</CardTitle>
+              <div
+                className={cn(
+                  "mt-1 text-2xl font-bold leading-none",
+                  meta.valueTone
+                )}
+              >
+                {card.total.toLocaleString()}
+              </div>
+            </div>
+          </div>
+          <Badge
+            className="border-transparent bg-slate-100 px-2 py-0.5 text-slate-700"
+            variant="outline"
+          >
+            {card.fleetShareLabel}
+          </Badge>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-2 px-4 pb-4 pt-0">
+        {card.sportRows.map((row) => (
+          <div
+            key={row.label}
+            className="flex items-center justify-between rounded-md bg-slate-50 px-3 py-2"
+          >
+            <span className="text-sm text-slate-600">{row.label}</span>
+            <span className={cn("text-sm font-semibold", row.valueTone)}>
+              {row.value}
+            </span>
+          </div>
+        ))}
+      </CardContent>
+
+      <CardFooter className="justify-end px-4 pb-4 pt-0">
+        <Button
+          size="sm"
+          variant="ghost"
+          className={siteNavigationCtaClass}
+          asChild
+        >
+          <Link href={card.href}>{card.actionLabel}</Link>
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
+
 /**
  * Association and club fleet type cards.
  */
@@ -176,68 +369,9 @@ export function AccountFleetTypeCards({
 }) {
   return (
     <div className={cn("grid grid-cols-1 gap-3 lg:grid-cols-2", className)}>
-      {model.cards.map((card) => {
-        const meta = CARD_META[card.id];
-        const Icon = meta.icon;
-
-        return (
-          <Card key={card.id} className="border-slate-200 shadow-sm">
-            <CardHeader className="p-4 pb-3">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <div className={cn("rounded-md p-2", meta.iconTone)}>
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-base">{card.title}</CardTitle>
-                    <div
-                      className={cn(
-                        "mt-1 text-2xl font-bold leading-none",
-                        meta.valueTone
-                      )}
-                    >
-                      {card.total.toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-                <Badge
-                  className="border-transparent bg-slate-100 px-2 py-0.5 text-slate-700"
-                  variant="outline"
-                >
-                  {card.fleetShareLabel}
-                </Badge>
-              </div>
-            </CardHeader>
-
-            <CardContent className="space-y-2 px-4 pb-4 pt-0">
-              {card.sportRows.map((row) => (
-                <div
-                  key={row.label}
-                  className="flex items-center justify-between rounded-md bg-slate-50 px-3 py-2"
-                >
-                  <span className="text-sm text-slate-600">{row.label}</span>
-                  <span
-                    className={cn("text-sm font-semibold", row.valueTone)}
-                  >
-                    {row.value}
-                  </span>
-                </div>
-              ))}
-            </CardContent>
-
-            <CardFooter className="justify-end px-4 pb-4 pt-0">
-              <Button
-                size="sm"
-                variant="ghost"
-                className={siteNavigationCtaClass}
-                asChild
-              >
-                <Link href={card.href}>{card.actionLabel}</Link>
-              </Button>
-            </CardFooter>
-          </Card>
-        );
-      })}
+      {model.cards.map((card) => (
+        <FleetTypeCard key={card.id} card={card} />
+      ))}
     </div>
   );
 }
@@ -259,7 +393,7 @@ export function AccountNewSignupsCard({
 }
 
 /**
- * Association and club fleet cards plus a prominent new-signups activity card.
+ * Associations, clubs, and new signups in one three-column row.
  */
 export function AccountFleetOverviewCards({
   model,
@@ -271,11 +405,11 @@ export function AccountFleetOverviewCards({
   if (isLoading) {
     return (
       <LoadingState variant="skeleton" className={className}>
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+          <Skeleton className="h-52 w-full" />
           <Skeleton className="h-52 w-full" />
           <Skeleton className="h-52 w-full" />
         </div>
-        <Skeleton className="h-64 w-full" />
       </LoadingState>
     );
   }
@@ -297,9 +431,15 @@ export function AccountFleetOverviewCards({
   }
 
   return (
-    <div className={cn("space-y-3", className)}>
-      <AccountFleetTypeCards model={model} />
-      <AccountNewSignupsCard model={model} />
+    <div className={cn("grid grid-cols-1 items-start gap-3 lg:grid-cols-3", className)}>
+      {model.cards.map((card) => (
+        <FleetTypeCard key={card.id} card={card} />
+      ))}
+      <NewSignupsCard
+        signups={model.signups}
+        totalAccounts={model.totalAccounts}
+        layout="column"
+      />
     </div>
   );
 }

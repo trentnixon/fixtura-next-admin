@@ -23,9 +23,9 @@ import { DataRefreshAttentionPanel } from "./account-health/DataRefreshAttention
 import { useLiveOverviewRefreshToast } from "./live-snapshot/useLiveOverviewRefreshToast";
 import { DashboardLinkButton } from "./live-snapshot/DashboardLinkButton";
 import { StuckRenderingAttentionList } from "./live-snapshot/StuckRenderingAttentionList";
-import { RerenderRequestAttentionList } from "./live-snapshot/RerenderRequestAttentionList";
-import { ContactFormAttentionList } from "./live-snapshot/ContactFormAttentionList";
 import { NotificationHealthAttentionSummary } from "./live-snapshot/NotificationHealthAttentionSummary";
+import { OverviewNotifications } from "./live-snapshot/OverviewNotifications";
+import { useAdminInvoicesData } from "@/hooks/orders/useAdminInvoices";
 import { AccountFleetOverviewCards } from "./live-snapshot/AccountFleetOverviewCards";
 import {
   getStuckRenderingAttentionFromInProgress,
@@ -39,7 +39,6 @@ import {
 import {
   countContactFormActionQueue,
   countUnhandledRerenderRequests,
-  countUnseenContactSubmissions,
   countVisibleOverviewPanels,
   formatRenderSystemStatus,
   getContactFormActionQueue,
@@ -130,6 +129,25 @@ export default function LiveOverview() {
   } = useContactFormSubmissionsData();
 
   const {
+    items: newInvoiceItems,
+    total: newInvoiceTotal,
+    isLoading: newInvoicesLoading,
+    isError: newInvoicesError,
+    error: newInvoicesQueryError,
+    refetch: refetchInvoices,
+    isFetching: newInvoicesFetching,
+  } = useAdminInvoicesData(
+    {
+      preset: "new",
+      page: 1,
+      pageSize: 5,
+      sort: "submittedAt",
+      sortDir: "desc",
+    },
+    { refetchInterval: LIVE_OVERVIEW_REFETCH_MS }
+  );
+
+  const {
     data: notificationHealth,
     isLoading: notificationLoading,
     isError: notificationError,
@@ -206,7 +224,6 @@ export default function LiveOverview() {
   const stuckRenderingCount = stuckRenderingItems.length;
   const unhandledRerenderCount = countUnhandledRerenderRequests(rerenderRequests);
   const contactActionCount = countContactFormActionQueue(contactSubmissions);
-  const unseenContactCount = countUnseenContactSubmissions(contactSubmissions);
 
   const errorSyncCount = attentionRuns.filter(
     (run) => run.severity === "error"
@@ -223,6 +240,7 @@ export default function LiveOverview() {
     (healthFetching && !healthLoading) ||
     (rerenderFetching && !rerenderLoading) ||
     (contactFetching && !contactLoading) ||
+    (newInvoicesFetching && !newInvoicesLoading) ||
     (notificationFetching && !notificationLoading) ||
     (telemetryFetching && !telemetryLoading);
 
@@ -360,14 +378,6 @@ export default function LiveOverview() {
     hiddenActiveSyncCount > 0 ||
     activeRunsTruncated;
 
-  const showRerenderSection =
-    rerenderLoading ||
-    rerenderError ||
-    unhandledRerenderItems.length > 0;
-
-  const showContactSection =
-    contactLoading || contactError || contactActionItems.length > 0;
-
   const showNotificationSection =
     notificationLoading ||
     notificationError ||
@@ -381,13 +391,49 @@ export default function LiveOverview() {
   const overviewPanelCount = countVisibleOverviewPanels([
     showStuckRenderingSection,
     showAttentionSection,
-    showRerenderSection,
-    showContactSection,
     showNotificationSection,
   ]);
 
   return (
     <div className="space-y-6">
+      <OverviewNotifications
+        emails={{
+          items: contactActionItems,
+          total: contactActionCount,
+          isLoading: contactLoading,
+          error: contactError
+            ? contactQueryError instanceof Error
+              ? contactQueryError
+              : new Error(String(contactQueryError))
+            : null,
+          onRetry: () => refetchContact(),
+        }}
+        rerenders={{
+          items: unhandledRerenderItems,
+          total: unhandledRerenderCount,
+          isLoading: rerenderLoading,
+          error: rerenderError
+            ? rerenderQueryError instanceof Error
+              ? rerenderQueryError
+              : new Error(String(rerenderQueryError))
+            : null,
+          onRetry: () => refetchRerender(),
+        }}
+        invoices={{
+          items: newInvoiceItems,
+          total: newInvoiceTotal,
+          isLoading: newInvoicesLoading,
+          error: newInvoicesError
+            ? newInvoicesQueryError instanceof Error
+              ? newInvoicesQueryError
+              : new Error(String(newInvoicesQueryError))
+            : null,
+          onRetry: () => {
+            void refetchInvoices();
+          },
+        }}
+      />
+
       <OverviewDataWorkspace
         title="Today's operations"
         description="Render queue, fleet health, and data sync across the fleet"
@@ -513,73 +559,6 @@ export default function LiveOverview() {
                 onRetry={() => refetchHealth()}
                 embedded
                 layout="rows"
-              />
-            </OverviewRecordPanel>
-          ) : null}
-
-          {showRerenderSection ? (
-            <OverviewRecordPanel
-              title="Re-render requests"
-              description="CMS requests waiting for admin handling"
-              badge={
-                unhandledRerenderCount > 0 ? (
-                  <Badge variant="outline" className="border-amber-300 bg-amber-50">
-                    {unhandledRerenderCount} unhandled
-                  </Badge>
-                ) : null
-              }
-              action={
-                <DashboardLinkButton href="/dashboard/rerender-requests">
-                  View all
-                </DashboardLinkButton>
-              }
-            >
-              <RerenderRequestAttentionList
-                items={unhandledRerenderItems}
-                isLoading={rerenderLoading}
-                error={
-                  rerenderError
-                    ? rerenderQueryError instanceof Error
-                      ? rerenderQueryError
-                      : new Error(String(rerenderQueryError))
-                    : null
-                }
-                onRetry={() => refetchRerender()}
-              />
-            </OverviewRecordPanel>
-          ) : null}
-
-          {showContactSection ? (
-            <OverviewRecordPanel
-              title="Contact submissions"
-              description="Unseen or unacknowledged messages from the public form"
-              badge={
-                contactActionCount > 0 ? (
-                  <Badge variant="outline">
-                    {unseenContactCount} unseen
-                    {contactActionCount !== unseenContactCount
-                      ? ` · ${contactActionCount} in queue`
-                      : ""}
-                  </Badge>
-                ) : null
-              }
-              action={
-                <DashboardLinkButton href="/dashboard/contact">
-                  Inbox
-                </DashboardLinkButton>
-              }
-            >
-              <ContactFormAttentionList
-                items={contactActionItems}
-                isLoading={contactLoading}
-                error={
-                  contactError
-                    ? contactQueryError instanceof Error
-                      ? contactQueryError
-                      : new Error(String(contactQueryError))
-                    : null
-                }
-                onRetry={() => refetchContact()}
               />
             </OverviewRecordPanel>
           ) : null}
