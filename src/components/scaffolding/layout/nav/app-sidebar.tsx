@@ -8,6 +8,7 @@ import {
   Building2,
   Network,
   CalendarClock,
+  ClipboardCheck,
   FileCode,
   Download,
   Trophy,
@@ -104,6 +105,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         title: "Renders",
         url: "/dashboard/renders",
         icon: FileCode,
+        isActive: true,
+      },
+      {
+        title: "Readiness check",
+        url: "/dashboard/readiness",
+        icon: ClipboardCheck,
         isActive: true,
       },
       {

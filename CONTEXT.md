@@ -47,12 +47,20 @@ _Avoid_: Bill, payment request, invoice request
 ### Content production
 
 **Content production**:
-The admin category for a client's scheduled renders — Scheduler, Render, and Download attention.
+The admin category for a client's scheduled renders: Scheduler, Render, Download attention, and readiness before a Render.
 _Avoid_: Asset creation
 
 **Scheduler**:
-Recurring render schedule configuration for a client — when renders should run.
+Recurring render schedule configuration for a client. It decides when renders should run.
 _Avoid_: Render
+
+**Generation date**:
+The Sydney calendar date that selects which Fixtures readiness considers. For a scheduled check it is the date of a Scheduler occurrence. For a manual check it is the date staff select.
+_Avoid_: Delivery date
+
+**Scheduler occurrence**:
+One Scheduler due for a client on a generation date.
+_Avoid_: Render, delivery
 
 **Render**:
 One content-generation execution for a client, producing downloads and AI articles from fixtures and results.
@@ -63,8 +71,20 @@ An on-demand orchestration pipeline: scrape results, validate fixtures, then pro
 _Avoid_: Render
 
 **Download**:
-A render output file — video, image, ladder, scorecard, or other produced content.
+A render output file: video, image, ladder, scorecard, or other produced content.
 _Avoid_: Asset (when meaning render output)
+
+**Expected Download**:
+An output a Render would produce from an eligible Asset for a generation date, grouped by that Asset's own rules. A Readiness check does not count these.
+_Avoid_: Asset, content item, optional Asset
+
+**Readiness check**:
+A staff-started result scrape before a client's scheduled generation. It writes Fixture results and reports which Fixtures are a problem. It does not call Creator, create a Render or Downloads, or notify the client.
+_Avoid_: Account Asset Run, asset run, Render
+
+**Readiness report**:
+A stored outcome of a Readiness check. This check does not save one. The score stays on the screen for the client and date staff chose.
+_Avoid_: Render, Download
 
 **Download attention**:
 Operational triage state for a download output row: failed Creator flags, structured errors, in-progress processing, or ambiguous legacy combinations. Used in the Renders workspace (not member Content Hub).
