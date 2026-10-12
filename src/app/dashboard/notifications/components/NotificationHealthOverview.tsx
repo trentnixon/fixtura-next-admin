@@ -112,7 +112,7 @@ export function NotificationHealthOverview({
               label: "Most common message",
               value: topMessage.message,
               meta: `${topMessage.count.toLocaleString()} occurrences`,
-              href: issueHref({ message: topMessage.message }),
+              href: issueHref({ search: topMessage.message }),
               icon: CircleAlert,
               tone: "bg-error-50 text-error-700",
             }
@@ -132,7 +132,6 @@ export function NotificationHealthOverview({
               label: "Most affected service",
               value: topService.key,
               meta: `${topService.count.toLocaleString()} notifications`,
-              href: issueHref({ service: topService.key }),
               icon: Target,
               tone: "bg-info-50 text-info-700",
             }
@@ -438,14 +437,13 @@ export function NotificationHealthOverview({
 
                 {data.issues.selectorDriftCount > 0 && issuesLinkQuery ? (
                   <DashboardLinkButton
-                    href={buildNotificationIssuesHref(issuesLinkQuery, {
-                      selectorDrift: true,
-                    })}
+                    href={buildNotificationIssuesHref(issuesLinkQuery)}
                     className="w-full justify-center"
                     trailingIcon="arrow"
                   >
-                    Review {data.issues.selectorDriftCount.toLocaleString()}{" "}
-                    selector drift signals
+                    Open issues inbox (
+                    {data.issues.selectorDriftCount.toLocaleString()} selector
+                    drift signals in range)
                   </DashboardLinkButton>
                 ) : null}
               </div>

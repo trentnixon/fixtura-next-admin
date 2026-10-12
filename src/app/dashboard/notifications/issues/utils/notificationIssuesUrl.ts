@@ -5,10 +5,8 @@ import type {
 } from "@/types/notificationIssues";
 
 const PRESET_DAYS = [7, 14, 30, 60] as const;
-const PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
 
 export const NOTIFICATION_ISSUES_DEFAULT_DAYS: NotificationHealthPresetDays = 7;
-export const NOTIFICATION_ISSUES_DEFAULT_PAGE_SIZE = 50;
 
 export type NotificationIssuesSearchParamsInput = Record<
   string,
@@ -30,22 +28,13 @@ function parsePresetDays(
   return NOTIFICATION_ISSUES_DEFAULT_DAYS;
 }
 
-function parsePositiveInt(
-  raw: string | undefined,
-  fallback: number,
-  max?: number,
-): number {
-  const n = Number(raw);
-  if (!Number.isFinite(n) || n < 1) return fallback;
-  if (max != null && n > max) return max;
-  return Math.floor(n);
-}
-
 function parseBool(raw: string | undefined): boolean | undefined {
   if (raw === "true") return true;
   if (raw === "false") return false;
   return undefined;
 }
+
+export type IssueCardToneFilter = "failure" | "warning";
 
 export interface ParsedNotificationIssuesSearch {
   params: FetchNotificationIssuesParams;
@@ -53,8 +42,8 @@ export interface ParsedNotificationIssuesSearch {
   queryEnabled: boolean;
   /** True when URL uses createdAt_* instead of days preset. */
   customRange: boolean;
-  /** Whether CMS artifact batch load is requested (default true). */
-  includeArtifacts: boolean;
+  /** Client-only filter matching Failure / Warning on cards. */
+  cardTone?: IssueCardToneFilter;
 }
 
 /**
@@ -82,35 +71,22 @@ export function parseNotificationIssuesSearchParams(
     !customRange || (Boolean(createdAt_gte) && Boolean(createdAt_lte));
 
   const retryable = parseBool(firstParam(searchParams.retryable));
-  const selectorDrift = parseBool(firstParam(searchParams.selectorDrift));
-  const artifactsParam = firstParam(searchParams.includeArtifacts);
-  /** Screenshots on by default; pass `includeArtifacts=false` to skip CMS artifact batch load. */
-  const includeArtifacts = artifactsParam !== "false";
+  const toneRaw = firstParam(searchParams.tone);
+  const cardTone: IssueCardToneFilter | undefined =
+    toneRaw === "failure" || toneRaw === "warning" ? toneRaw : undefined;
 
   const params: FetchNotificationIssuesParams = {
     ...windowParams,
     scope: firstParam(searchParams.scope),
-    service: firstParam(searchParams.service),
-    queueName: firstParam(searchParams.queueName),
-    kind: firstParam(searchParams.kind),
     step: firstParam(searchParams.step),
-    issueScope: firstParam(searchParams.issueScope),
     search: firstParam(searchParams.search)?.trim() || undefined,
-    message: firstParam(searchParams.message),
     jobId: firstParam(searchParams.jobId),
     runId: firstParam(searchParams.runId),
-    page: parsePositiveInt(firstParam(searchParams.page), 1),
-    pageSize: parsePositiveInt(
-      firstParam(searchParams.pageSize),
-      NOTIFICATION_ISSUES_DEFAULT_PAGE_SIZE,
-      200,
-    ),
+    includeArtifacts: true,
     ...(retryable !== undefined ? { retryable } : {}),
-    ...(selectorDrift !== undefined ? { selectorDrift } : {}),
-    ...(includeArtifacts ? { includeArtifacts: true } : {}),
   };
 
-  return { params, queryEnabled, customRange, includeArtifacts };
+  return { params, queryEnabled, customRange, cardTone };
 }
 
 export function buildNotificationIssuesQuery(
@@ -144,4 +120,3 @@ export function buildNotificationIssuesHref(
   return `/dashboard/notifications/issues${qs ? `?${qs}` : ""}`;
 }
 
-export { PAGE_SIZE_OPTIONS as NOTIFICATION_ISSUES_PAGE_SIZE_OPTIONS };

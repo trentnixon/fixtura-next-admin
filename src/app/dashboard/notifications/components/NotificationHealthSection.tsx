@@ -260,7 +260,9 @@ export function NotificationHealthDetailPanels({
   }));
   const sums = data.metricsSums;
 
-  const hrefFor = (filter: string): ((key: string) => string) | undefined =>
+  const hrefFor = (
+    filter: "step" | "scope" | "search",
+  ): ((key: string) => string) | undefined =>
     issuesLinkQuery
       ? (key) => buildNotificationIssuesHref(issuesLinkQuery, { [filter]: key })
       : undefined;
@@ -330,7 +332,6 @@ export function NotificationHealthDetailPanels({
                 barClassName="bg-info-100/80"
                 countBadgeClassName="border-info-200 bg-info-50 text-info-800"
                 emptyMessage="No service data"
-                getRowHref={hrefFor("service")}
               />
               <RankedPanel
                 title="Queues"
@@ -339,7 +340,6 @@ export function NotificationHealthDetailPanels({
                 barClassName="bg-violet-100/80"
                 countBadgeClassName="border-violet-200 bg-violet-50 text-violet-800"
                 emptyMessage="No queue data"
-                getRowHref={hrefFor("queueName")}
               />
             </div>
           </TabsContent>
@@ -362,7 +362,6 @@ export function NotificationHealthDetailPanels({
                 barClassName="bg-cyan-100/80"
                 countBadgeClassName="border-cyan-200 bg-cyan-50 text-cyan-800"
                 emptyMessage="No issue-scope data"
-                getRowHref={hrefFor("issueScope")}
               />
             </div>
           </TabsContent>
@@ -376,7 +375,6 @@ export function NotificationHealthDetailPanels({
                 barClassName="bg-indigo-100/80"
                 countBadgeClassName="border-indigo-200 bg-indigo-50 text-indigo-800"
                 emptyMessage="No notification-kind data"
-                getRowHref={hrefFor("kind")}
               />
               <RankedPanel
                 title="Issue severity"
@@ -397,7 +395,7 @@ export function NotificationHealthDetailPanels({
               barClassName="bg-rose-100/80"
               countBadgeClassName="border-rose-200 bg-rose-50 text-rose-800"
               emptyMessage="No failure messages"
-              getRowHref={hrefFor("message")}
+              getRowHref={hrefFor("search")}
             />
           </TabsContent>
         </Tabs>

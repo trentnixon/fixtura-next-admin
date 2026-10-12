@@ -6,7 +6,7 @@ import type {
   NotificationIssuesData,
   NotificationIssuesMeta,
 } from "@/types/notificationIssues";
-import { fetchNotificationIssues } from "@/lib/services/data-collection/fetchNotificationIssues";
+import { fetchAllNotificationIssues } from "@/lib/services/data-collection/fetchNotificationIssues";
 
 const DEFAULT_STALE_TIME = 60 * 1000; // 1 minute
 
@@ -37,7 +37,7 @@ export function useNotificationIssues(
 
   const queryResult = useQuery({
     queryKey: ["notificationIssues", params] as const,
-    queryFn: () => fetchNotificationIssues(params),
+    queryFn: () => fetchAllNotificationIssues(params),
     enabled,
     staleTime: DEFAULT_STALE_TIME,
     retry: 2,

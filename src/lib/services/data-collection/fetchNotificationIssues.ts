@@ -107,3 +107,50 @@ export async function fetchNotificationIssues(
     throw new Error(extractErrorMessage(error));
   }
 }
+
+const FETCH_ALL_PAGE_SIZE = MAX_PAGE_SIZE;
+/** Safety cap: 50 × 200 issue rows per filter set. */
+const FETCH_ALL_MAX_PAGES = 50;
+
+/**
+ * Loads every issue row for the filter set (CMS max 200 rows per request).
+ * Screenshots are always requested for the media grid.
+ */
+export async function fetchAllNotificationIssues(
+  params: FetchNotificationIssuesParams,
+): Promise<NotificationIssuesResponse> {
+  const pageParams: FetchNotificationIssuesParams = {
+    ...params,
+    page: 1,
+    pageSize: FETCH_ALL_PAGE_SIZE,
+    includeArtifacts: true,
+  };
+
+  const first = await fetchNotificationIssues(pageParams);
+  const pageCount = first.data.pagination.pageCount;
+  if (pageCount <= 1) {
+    return first;
+  }
+
+  const issues = [...first.data.issues];
+  const lastPage = Math.min(pageCount, FETCH_ALL_MAX_PAGES);
+
+  for (let page = 2; page <= lastPage; page++) {
+    const next = await fetchNotificationIssues({ ...pageParams, page });
+    issues.push(...next.data.issues);
+  }
+
+  return {
+    data: {
+      ...first.data,
+      issues,
+      pagination: {
+        ...first.data.pagination,
+        page: 1,
+        pageCount: 1,
+        pageSize: issues.length,
+      },
+    },
+    meta: first.meta,
+  };
+}

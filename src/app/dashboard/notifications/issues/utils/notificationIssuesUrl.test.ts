@@ -9,46 +9,42 @@ describe("notificationIssuesUrl", () => {
     expect(
       buildNotificationIssuesHref(
         { days: 14 },
-        { service: "scraper", queueName: "grades" },
+        { step: "post_extraction_validation", scope: "fixtures" },
       ),
     ).toBe(
-      "/dashboard/notifications/issues?days=14&service=scraper&queueName=grades",
+      "/dashboard/notifications/issues?days=14&step=post_extraction_validation&scope=fixtures",
     );
   });
 
-  it("passes health breakdown dimensions into the issues request", () => {
+  it("passes card-context filters into the issues request", () => {
     const result = parseNotificationIssuesSearchParams({
       days: "30",
       service: "scraper",
       scope: "fixtures",
       queueName: "fixture-results",
-      kind: "job.completed",
-      issueScope: "fixture",
+      step: "navigate",
+      tone: "failure",
     });
 
     expect(result.params).toMatchObject({
       mode: "preset",
       days: 30,
-      service: "scraper",
       scope: "fixtures",
-      queueName: "fixture-results",
-      kind: "job.completed",
-      issueScope: "fixture",
+      step: "navigate",
     });
+    expect(result.cardTone).toBe("failure");
   });
 
-  it("keeps global search distinct from the legacy message filter", () => {
+  it("trims search to match the message shown on cards", () => {
     const result = parseNotificationIssuesSearchParams({
       days: "7",
       search: "  Eastern Eagles  ",
-      message: "timeout",
     });
 
     expect(result.params).toMatchObject({
       mode: "preset",
       days: 7,
       search: "Eastern Eagles",
-      message: "timeout",
     });
   });
 

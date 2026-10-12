@@ -1,26 +1,48 @@
 import type { BadgeProps } from "@/components/ui/badge";
 import type { NotificationIssueArtifact } from "@/types/notificationIssues";
 import { truncateMiddle } from "@/app/dashboard/data/utils/formatScraperJobDisplay";
+/** Relative time for issue cards (always “… ago”, never a second calendar date). */
+export function formatIssueRelative(iso: string | null): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  const diffMs = Math.max(0, Date.now() - d.getTime());
+  const diffMinutes = Math.floor(diffMs / 60_000);
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffMinutes < 1) return "just now";
+  if (diffHours < 1) {
+    return `${diffMinutes} minute${diffMinutes !== 1 ? "s" : ""} ago`;
+  }
+  if (diffDays < 1) {
+    return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
+  }
+  return `${diffDays} day${diffDays !== 1 ? "s" : ""} ago`;
+}
 
 export function formatIssueWhen(iso: string | null): {
   label: string;
   title: string;
+  relative: string;
 } {
   if (!iso) {
-    return { label: "—", title: "" };
+    return { label: "—", title: "", relative: "" };
   }
   try {
     const d = new Date(iso);
     return {
-      label: d.toLocaleDateString("en-AU", {
+      label: d.toLocaleString("en-AU", {
         day: "numeric",
         month: "short",
         year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
       }),
-      title: d.toLocaleString(),
+      title: d.toLocaleString("en-AU"),
+      relative: formatIssueRelative(iso),
     };
   } catch {
-    return { label: iso, title: iso };
+    return { label: iso, title: iso, relative: "" };
   }
 }
 

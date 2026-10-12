@@ -67,7 +67,7 @@ function cmsFixtureUrl(base: string, gameId: number): string | null {
 
 export function TeamFixtures({ team, cmsFixtureBase }: TeamFixturesProps) {
   const teamName = team.TopLineData?.teamName?.trim() ?? "";
-  const games = team.gameMetaData ?? [];
+  const games = useMemo(() => team.gameMetaData ?? [], [team.gameMetaData]);
   const sport = team.association?.Sport?.trim() || "Unknown sport";
 
   const grouped = useMemo(() => {
