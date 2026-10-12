@@ -7,9 +7,9 @@ This folder contains team management pages and components for the Fixtura Admin 
 - `page.tsx`: Main teams listing page with search and display functionality
 - `[teamID]/page.tsx`: Individual team detail page
 - `[teamID]/components/`: Team detail components:
-  - `Fixtures.tsx`: Component for displaying team fixtures
-  - `Overview.tsx`: Component for displaying team overview information
-  - `UpcomingGames.tsx`: Component for displaying upcoming games
+  - `TeamSnapshot.tsx`: Snapshot, club, and contacts for one team
+  - `TeamFixtures.tsx`: Scheduled and completed fixture table
+  - `teamFixtureModel.ts`: Fixture grouping, opposition, score, and PlayHQ url helpers
 - `components/`: Shared team components:
   - `displayTeams.tsx`: Component for displaying team information
   - `searchForTeam.tsx`: Component for team search functionality
@@ -32,7 +32,7 @@ This folder contains team management pages and components for the Fixtura Admin 
 
 ## Patterns
 
-- **Page Structure**: Consistent page structure using CreatePage and CreatePageTitle components
+- **Page Structure**: Team detail uses CreatePageTitle, PageContainer, and section tabs. The list page still uses CreatePage.
 - **Dynamic Routing**: Uses Next.js dynamic routing with [teamID] parameter
 - **Component Organization**: Domain-specific components for team management
 - **Data Integration**: Integration with custom hooks for team data fetching

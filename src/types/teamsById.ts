@@ -86,6 +86,9 @@ export type GameMetaData = {
   isFinished: boolean;
   dayOne: string;
   finalDaysPlay: string;
+  Homescores?: string | null;
+  Awayscores?: string | null;
+  ResultStatement?: string | null;
 };
 
 export type TeamData = {

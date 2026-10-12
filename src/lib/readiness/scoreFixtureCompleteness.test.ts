@@ -10,11 +10,15 @@ function fixture(
   return {
     id: 1,
     status: "Final",
-    isFinished: true,
+    date: "2026-10-04",
     homeTeam: "Riverside",
     awayTeam: "Harbour",
-    scorecardUrl: "https://playhq.com/game-centre/1",
-    hasScorecards: true,
+    location: "Riverside Oval",
+    homeScore: "250",
+    awayScore: "180",
+    tossResult: "bat",
+    tossWinner: "Riverside",
+    hasPlayerData: true,
     ...overrides,
   };
 }
@@ -29,71 +33,68 @@ describe("scoreFixtureCompleteness", () => {
     });
   });
 
-  it("scores a complete set at 100 percent", () => {
-    expect(scoreFixtureCompleteness([fixture({ id: 4 }), fixture({ id: 5 })])).toEqual({
-      percentage: 100,
-      completeCount: 2,
-      totalCount: 2,
-      findings: [],
-    });
-  });
-
-  it("calls out a finished fixture with no scorecards", () => {
-    expect(
-      scoreFixtureCompleteness([fixture({ id: 8, hasScorecards: false })]),
-    ).toEqual({
-      percentage: 0,
-      completeCount: 0,
-      totalCount: 1,
-      findings: [{ fixtureId: 8, reason: "finished without scorecards" }],
-    });
-  });
-
-  it("calls out a missing scorecard URL", () => {
-    expect(
-      scoreFixtureCompleteness([fixture({ id: 9, scorecardUrl: "  " })]),
-    ).toEqual({
-      percentage: 0,
-      completeCount: 0,
-      totalCount: 1,
-      findings: [{ fixtureId: 9, reason: "missing scorecard URL" }],
-    });
-  });
-
-  it("calls out a missing team", () => {
-    expect(
-      scoreFixtureCompleteness([fixture({ id: 3, awayTeam: null })]),
-    ).toEqual({
-      percentage: 0,
-      completeCount: 0,
-      totalCount: 1,
-      findings: [{ fixtureId: 3, reason: "missing team" }],
-    });
-  });
-
-  it("does not require scorecards when the fixture is not finished", () => {
-    expect(
-      scoreFixtureCompleteness([
-        fixture({
-          id: 12,
-          status: "Upcoming",
-          isFinished: false,
-          hasScorecards: false,
-        }),
-      ]),
-    ).toEqual({
+  it("scores a results fixture with every meta field at 100 percent", () => {
+    expect(scoreFixtureCompleteness([fixture({ id: 4 })])).toEqual({
       percentage: 100,
       completeCount: 1,
       totalCount: 1,
-      findings: [],
+      findings: [{ fixtureId: 4, percentage: 100, reason: null }],
     });
   });
 
-  it("counts complete fixtures against the whole set", () => {
+  it("scores a scheduled fixture with no result at 0", () => {
+    expect(
+      scoreFixtureCompleteness([
+        fixture({
+          id: 8,
+          status: "Scheduled",
+          homeScore: null,
+          awayScore: null,
+          tossResult: null,
+          tossWinner: null,
+          hasPlayerData: false,
+        }),
+      ]),
+    ).toEqual({
+      percentage: 0,
+      completeCount: 0,
+      totalCount: 1,
+      findings: [{ fixtureId: 8, percentage: 0, reason: "not final" }],
+    });
+  });
+
+  it("stays at 0 when the status is final and the score is missing", () => {
+    expect(
+      scoreFixtureCompleteness([
+        fixture({ id: 9, homeScore: null, awayScore: "  " }),
+      ]).findings[0],
+    ).toEqual({ fixtureId: 9, percentage: 0, reason: "no score" });
+  });
+
+  it("scores the meta fields once a final status and a score are present", () => {
+    const scored = scoreFixtureCompleteness([
+      fixture({
+        id: 3,
+        location: null,
+        tossResult: null,
+        tossWinner: null,
+        hasPlayerData: false,
+      }),
+    ]);
+    expect(scored.findings[0]?.percentage).toBe(50);
+    expect(scored.findings[0]?.reason).toBe("missing location");
+  });
+
+  it("averages every results fixture", () => {
     expect(
       scoreFixtureCompleteness([
         fixture({ id: 1 }),
-        fixture({ id: 2, scorecardUrl: null }),
+        fixture({
+          id: 2,
+          status: "Scheduled",
+          homeScore: null,
+          awayScore: null,
+        }),
       ]).percentage,
     ).toBe(50);
   });

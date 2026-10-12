@@ -6,6 +6,11 @@ import { toFixtureDisplayText } from "@/app/dashboard/fixtures/_components/_util
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  ReadinessAccountPicker,
+  type ReadinessOrgType,
+} from "./ReadinessAccountPicker";
+import { ReadinessFixtureTable } from "./ReadinessFixtureTable";
 import { useAccountQuery } from "@/hooks/accounts/useAccountQuery";
 import { useCompetitionClubDrilldown } from "@/hooks/competitions/useCompetitionClubDrilldown";
 import { useSchedulerQuery } from "@/hooks/scheduler/useSchedulerQuery";
@@ -13,8 +18,11 @@ import { triggerResultSingleScrape } from "@/lib/services/data-collection/trigge
 import { fetchFixtureDetails } from "@/lib/services/fixtures/fetchFixtureDetails";
 import { fetchSingleFixtureDetail } from "@/lib/services/fixtures/fetchSingleFixtureDetail";
 import {
-  chosenDateIsOutsideWindow,
-  fixturesOnChosenDate,
+  fixturesInReadinessWindow,
+  listCoversReadinessWindow,
+  readinessWindow,
+  splitFixturesByPlayDay,
+  sydneyToday,
   sydneyWeekday,
 } from "@/lib/readiness/fixtureDateWindow";
 import {
@@ -76,18 +84,63 @@ function fixturesForClub(
   return kept;
 }
 
+function groundText(
+  ground: SingleFixtureDetailResponse["fixture"]["venue"]["ground"],
+): string | null {
+  if (typeof ground === "string") return ground;
+  if (ground && typeof ground === "object") return ground.text ?? null;
+  return null;
+}
+
+function recordedScore(total: string | null | undefined, innings: string | null | undefined) {
+  if (total != null && total.trim() !== "") return total;
+  if (innings != null && innings.trim() !== "") return innings;
+  return null;
+}
+
+function scorecardHasPlayer(
+  scorecards: SingleFixtureDetailResponse["fixture"]["matchDetails"]["scorecards"],
+): boolean {
+  if (scorecards == null) return false;
+  for (const card of Object.values(scorecards)) {
+    const players = [
+      ...("batting" in card && Array.isArray(card.batting) ? card.batting : []),
+      ...("bowling" in card && Array.isArray(card.bowling) ? card.bowling : []),
+    ];
+    if (
+      players.some((player) => {
+        const name = player.name ?? player.player ?? "";
+        return name.trim() !== "";
+      })
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function toCompletenessInput(
   detail: SingleFixtureDetailResponse,
 ): FixtureCompletenessInput {
-  const cards = detail.fixture.matchDetails.scorecards;
+  const fixture = detail.fixture;
   return {
-    id: detail.fixture.id,
-    status: detail.fixture.status,
-    isFinished: detail.fixture.isFinished,
-    homeTeam: detail.fixture.teams.home.name,
-    awayTeam: detail.fixture.teams.away.name,
-    scorecardUrl: detail.fixture.matchDetails.urlToScoreCard,
-    hasScorecards: cards != null && Object.keys(cards).length > 0,
+    id: fixture.id,
+    status: fixture.status,
+    date: fixture.dates?.date ?? null,
+    homeTeam: fixture.teams?.home?.name ?? null,
+    awayTeam: fixture.teams?.away?.name ?? null,
+    location: groundText(fixture.venue?.ground),
+    homeScore: recordedScore(
+      fixture.teams?.home?.scores?.total,
+      fixture.teams?.home?.scores?.firstInnings,
+    ),
+    awayScore: recordedScore(
+      fixture.teams?.away?.scores?.total,
+      fixture.teams?.away?.scores?.firstInnings,
+    ),
+    tossResult: fixture.matchDetails?.tossResult ?? null,
+    tossWinner: fixture.matchDetails?.tossWinner ?? null,
+    hasPlayerData: scorecardHasPlayer(fixture.matchDetails?.scorecards),
   };
 }
 
@@ -105,23 +158,16 @@ function ScoreBlock({
         {score.percentage == null ? "No fixtures" : `${score.percentage}%`}
       </p>
       <p className="text-sm text-muted-foreground">
-        {score.completeCount} complete of {score.totalCount}
+        Average of {score.totalCount} results fixtures. {score.completeCount} at
+        100%.
       </p>
-      {score.findings.length > 0 ? (
-        <ul className="space-y-1 text-sm">
-          {score.findings.map((finding) => (
-            <li key={`${label}-${finding.fixtureId}`}>
-              Fixture {finding.fixtureId}: {finding.reason}
-            </li>
-          ))}
-        </ul>
-      ) : null}
     </section>
   );
 }
 
 export function ReadinessCheckWorkspace() {
-  const [accountInput, setAccountInput] = useState("");
+  const [step, setStep] = useState(0);
+  const [orgType, setOrgType] = useState<ReadinessOrgType | null>(null);
   const [accountId, setAccountId] = useState("");
   const [chosenDate, setChosenDate] = useState("");
   const [loadId, setLoadId] = useState(0);
@@ -202,16 +248,16 @@ export function ReadinessCheckWorkspace() {
     return collected;
   }, [associationFixtures.data, gradeQueries]);
 
-  const dated = chosenDate
-    ? fixturesOnChosenDate(summaries, chosenDate)
+  const fixtureWindow =
+    chosenDate.length === 10 ? readinessWindow(chosenDate) : null;
+  const windowFixtures = fixtureWindow
+    ? fixturesInReadinessWindow(summaries, chosenDate)
     : [];
-  const outsideWindow =
-    chosenDate.length > 0 &&
-    chosenDateIsOutsideWindow(chosenDate, ranges) &&
-    dated.length === 0;
+  const listMissesWindow =
+    fixtureWindow != null && !listCoversReadinessWindow(fixtureWindow, ranges);
 
   const detailQueries = useQueries({
-    queries: dated.map((fixture) => ({
+    queries: windowFixtures.map((fixture) => ({
       queryKey: ["readiness-fixture-detail", loadId, fixture.id] as const,
       queryFn: () => fetchSingleFixtureDetail(fixture.id),
       staleTime: Infinity,
@@ -222,9 +268,17 @@ export function ReadinessCheckWorkspace() {
   const loadedDetails = detailQueries.flatMap((query) =>
     query.data ? [query.data] : [],
   );
+  const resultIds = new Set(
+    splitFixturesByPlayDay(windowFixtures, sydneyToday()).results.map(
+      (fixture) => fixture.id,
+    ),
+  );
+  const resultDetails = loadedDetails.filter((detail) =>
+    resultIds.has(detail.fixture.id),
+  );
   const beforeScore =
-    dated.length > 0 && loadedDetails.length === dated.length
-      ? scoreFixtureCompleteness(loadedDetails.map(toCompletenessInput))
+    resultIds.size > 0 && resultDetails.length === resultIds.size
+      ? scoreFixtureCompleteness(resultDetails.map(toCompletenessInput))
       : null;
 
   const listsLoading =
@@ -238,7 +292,7 @@ export function ReadinessCheckWorkspace() {
     setScraping(true);
     setAfterScore(null);
     const rows = await Promise.all(
-      dated.map(async (fixture) => {
+      windowFixtures.map(async (fixture) => {
         try {
           const result = await triggerResultSingleScrape({
             cmsFixtureId: fixture.id,
@@ -264,19 +318,20 @@ export function ReadinessCheckWorkspace() {
   async function scoreAgain() {
     setReloadError(null);
     const results = await Promise.allSettled(
-      dated.map((fixture) => fetchSingleFixtureDetail(fixture.id)),
+      windowFixtures.map((fixture) => fetchSingleFixtureDetail(fixture.id)),
     );
     const failed = results.filter((result) => result.status === "rejected");
     if (failed.length > 0) {
       setReloadError(
-        `Could not reload ${failed.length} of ${dated.length} fixtures.`,
+        `Could not reload ${failed.length} of ${windowFixtures.length} fixtures.`,
       );
       return;
     }
     const details = results.flatMap((result) =>
       result.status === "fulfilled" ? [result.value] : [],
     );
-    setAfterScore(scoreFixtureCompleteness(details.map(toCompletenessInput)));
+    const resultDetails = details.filter((detail) => resultIds.has(detail.fixture.id));
+    setAfterScore(scoreFixtureCompleteness(resultDetails.map(toCompletenessInput)));
   }
 
   const weekday =
@@ -286,33 +341,64 @@ export function ReadinessCheckWorkspace() {
     scheduledDay != null &&
     weekday.toLowerCase() === scheduledDay.toLowerCase();
 
+  function selectAccount(nextAccountId: string) {
+    setAccountId(nextAccountId);
+    setLoadId((value) => value + 1);
+    setScrapeRows([]);
+    setReloadError(null);
+    setAfterScore(null);
+  }
+
+  function chooseOrgType(next: ReadinessOrgType) {
+    setOrgType(next);
+  }
+
+  const steps = ["Date", "Organisation type", "Organisation", "Results"] as const;
+  const canContinue =
+    step === 0
+      ? chosenDate.length === 10
+      : step === 1
+        ? orgType != null
+        : step === 2
+          ? accountId !== ""
+          : false;
+
   return (
     <div className="space-y-6">
-      <form
-        className="flex flex-wrap items-end gap-3"
-        onSubmit={(event) => {
-          event.preventDefault();
-          setAccountId(accountInput.trim());
-          setLoadId((value) => value + 1);
-          setScrapeRows([]);
-          setReloadError(null);
-          setAfterScore(null);
-        }}
-      >
-        <div className="space-y-1">
-          <Label htmlFor="readiness-account">Client id</Label>
-          <Input
-            id="readiness-account"
-            inputMode="numeric"
-            value={accountInput}
-            onChange={(event) => setAccountInput(event.target.value)}
-          />
-        </div>
+      <ol className="flex flex-wrap gap-2">
+        {steps.map((label, index) => {
+          const current = index === step;
+          const done = index < step;
+          return (
+            <li key={label}>
+              <button
+                type="button"
+                disabled={index > step}
+                onClick={() => {
+                  if (index < step) setStep(index);
+                }}
+                className={
+                  current
+                    ? "rounded-full bg-sidebar px-3 py-1 text-sm text-white"
+                    : done
+                      ? "rounded-full px-3 py-1 text-sm text-sidebar underline"
+                      : "rounded-full px-3 py-1 text-sm text-muted-foreground"
+                }
+              >
+                {index + 1}. {label}
+              </button>
+            </li>
+          );
+        })}
+      </ol>
+
+      {step === 0 ? (
         <div className="space-y-1">
           <Label htmlFor="readiness-date">Date</Label>
           <Input
             id="readiness-date"
             type="date"
+            className="max-w-xs"
             value={chosenDate}
             onChange={(event) => {
               setChosenDate(event.target.value);
@@ -322,17 +408,53 @@ export function ReadinessCheckWorkspace() {
               setAfterScore(null);
             }}
           />
+          {fixtureWindow ? (
+            <p className="text-xs text-muted-foreground">
+              Fixtures from {fixtureWindow.start} to {fixtureWindow.end}. Two
+              weeks before this date and one week after.
+            </p>
+          ) : null}
         </div>
-        <Button type="submit" disabled={accountInput.trim() === ""}>
-          Load fixtures
+      ) : null}
+
+      {step === 1 || step === 2 ? (
+        <ReadinessAccountPicker
+          view={step === 1 ? "type" : "accounts"}
+          orgType={orgType}
+          onOrgTypeChange={chooseOrgType}
+          selectedAccountId={accountId}
+          onSelect={selectAccount}
+        />
+      ) : null}
+
+      {step < 3 ? (
+        <div className="flex gap-2">
+          {step > 0 ? (
+            <Button type="button" variant="outline" onClick={() => setStep(step - 1)}>
+              Back
+            </Button>
+          ) : null}
+          <Button type="button" onClick={() => setStep(step + 1)} disabled={!canContinue}>
+            Next
+          </Button>
+        </div>
+      ) : (
+        <Button type="button" variant="outline" onClick={() => setStep(2)}>
+          Back
         </Button>
-      </form>
+      )}
+
+      {step === 3 ? (
+      <div className="space-y-6">
 
       {account ? (
         <p className="text-sm">
           {account.accountOrganisationDetails?.Name ?? "Client"}{" "}
           {isClub ? "club" : isAssociation ? "association" : "client"}
-          {scheduledDay ? `. Scheduled day: ${scheduledDay}.` : null}
+          {fixtureWindow
+            ? `. Fixtures from ${fixtureWindow.start} to ${fixtureWindow.end}.`
+            : null}
+          {scheduledDay ? ` Scheduled day: ${scheduledDay}.` : null}
           {onScheduledDay
             ? " This date is the client's scheduled day."
             : null}
@@ -351,22 +473,29 @@ export function ReadinessCheckWorkspace() {
         <p className="text-sm">Could not load every fixture in this set.</p>
       ) : null}
 
-      {outsideWindow ? (
+      {listMissesWindow && fixtureWindow ? (
         <p className="text-sm">
-          The fixture list does not cover {chosenDate}.
+          The fixture list does not cover {fixtureWindow.start} to{" "}
+          {fixtureWindow.end}.
         </p>
       ) : null}
 
-      {!outsideWindow && accountId && chosenDate && !listsLoading && dated.length === 0 ? (
-        <p className="text-sm">No fixtures on {chosenDate}.</p>
+      {!listMissesWindow &&
+      accountId &&
+      fixtureWindow &&
+      !listsLoading &&
+      windowFixtures.length === 0 ? (
+        <p className="text-sm">
+          No fixtures from {fixtureWindow.start} to {fixtureWindow.end}.
+        </p>
       ) : null}
 
-      {beforeScore ? <ScoreBlock label="Before scrape" score={beforeScore} /> : null}
+      {beforeScore ? <ScoreBlock label="Results before scrape" score={beforeScore} /> : null}
 
-      {dated.length > 0 ? (
+      {windowFixtures.length > 0 ? (
         <div className="flex gap-2">
           <Button type="button" onClick={() => void scrapeAll()} disabled={scraping}>
-            {scraping ? "Scraping…" : `Scrape all ${dated.length} fixtures`}
+            {scraping ? "Scraping…" : `Scrape all ${windowFixtures.length} fixtures`}
           </Button>
           <Button
             type="button"
@@ -381,18 +510,22 @@ export function ReadinessCheckWorkspace() {
 
       {reloadError ? <p className="text-sm">{reloadError}</p> : null}
 
-      {scrapeRows.length > 0 ? (
-        <ul className="space-y-1 text-sm">
-          {scrapeRows.map((row) => (
-            <li key={row.fixtureId}>
-              Fixture {row.fixtureId}: {row.accepted ? "Queued" : "Rejected"}.{" "}
-              {row.message}
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      {afterScore ? <ScoreBlock label="Results after reload" score={afterScore} /> : null}
 
-      {afterScore ? <ScoreBlock label="After reload" score={afterScore} /> : null}
+      {windowFixtures.length > 0 ? (
+        <ReadinessFixtureTable
+          fixtures={windowFixtures}
+          beforeScore={
+            resultDetails.length > 0
+              ? scoreFixtureCompleteness(resultDetails.map(toCompletenessInput))
+              : null
+          }
+          afterScore={afterScore}
+          scrapeRows={scrapeRows}
+        />
+      ) : null}
+      </div>
+      ) : null}
     </div>
   );
 }

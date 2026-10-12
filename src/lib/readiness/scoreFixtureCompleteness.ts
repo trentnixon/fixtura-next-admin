@@ -1,22 +1,21 @@
 export type FixtureCompletenessInput = {
   id: number;
   status: string | null;
-  isFinished: boolean;
+  date: string | null;
   homeTeam: string | null;
   awayTeam: string | null;
-  scorecardUrl: string | null;
-  hasScorecards: boolean;
+  location: string | null;
+  homeScore: string | null;
+  awayScore: string | null;
+  tossResult: string | null;
+  tossWinner: string | null;
+  hasPlayerData: boolean;
 };
-
-export type FixtureCompletenessReason =
-  | "missing status"
-  | "missing team"
-  | "missing scorecard URL"
-  | "finished without scorecards";
 
 export type FixtureCompletenessFinding = {
   fixtureId: number;
-  reason: FixtureCompletenessReason;
+  percentage: number;
+  reason: string | null;
 };
 
 export type FixtureCompletenessScore = {
@@ -30,18 +29,50 @@ function filled(value: string | null): boolean {
   return value != null && value.trim() !== "";
 }
 
-function reasonFor(
-  fixture: FixtureCompletenessInput,
-): FixtureCompletenessReason | null {
-  if (!filled(fixture.status)) return "missing status";
-  if (!filled(fixture.homeTeam) || !filled(fixture.awayTeam)) {
-    return "missing team";
+function isFinalStatus(status: string | null): boolean {
+  const value = status?.trim().toLowerCase() ?? "";
+  return value === "final" || value === "completed" || value === "finished";
+}
+
+function hasScore(fixture: FixtureCompletenessInput): boolean {
+  return filled(fixture.homeScore) || filled(fixture.awayScore);
+}
+
+const metaChecks: {
+  reason: string;
+  present: (fixture: FixtureCompletenessInput) => boolean;
+}[] = [
+  { reason: "not final", present: (fixture) => isFinalStatus(fixture.status) },
+  { reason: "no score", present: hasScore },
+  { reason: "missing date", present: (fixture) => filled(fixture.date) },
+  { reason: "missing team", present: (fixture) => filled(fixture.homeTeam) && filled(fixture.awayTeam) },
+  { reason: "missing location", present: (fixture) => filled(fixture.location) },
+  { reason: "missing toss", present: (fixture) => filled(fixture.tossResult) },
+  { reason: "missing toss winner", present: (fixture) => filled(fixture.tossWinner) },
+  { reason: "missing player data", present: (fixture) => fixture.hasPlayerData },
+];
+
+function scoreResultFixture(fixture: FixtureCompletenessInput): FixtureCompletenessFinding {
+  const checks = metaChecks.map((check) => ({
+    reason: check.reason,
+    present: check.present(fixture),
+  }));
+  const included = checks[0]?.present === true && checks[1]?.present === true;
+  if (!included) {
+    return {
+      fixtureId: fixture.id,
+      percentage: 0,
+      reason: checks.find((check) => !check.present)?.reason ?? "not final",
+    };
   }
-  if (!filled(fixture.scorecardUrl)) return "missing scorecard URL";
-  if (fixture.isFinished && !fixture.hasScorecards) {
-    return "finished without scorecards";
-  }
-  return null;
+
+  const presentCount = checks.filter((check) => check.present).length;
+  const percentage = Math.round((presentCount / checks.length) * 100);
+  return {
+    fixtureId: fixture.id,
+    percentage,
+    reason: checks.find((check) => !check.present)?.reason ?? null,
+  };
 }
 
 export function scoreFixtureCompleteness(
@@ -56,17 +87,14 @@ export function scoreFixtureCompleteness(
     };
   }
 
-  const findings: FixtureCompletenessFinding[] = [];
-  for (const fixture of fixtures) {
-    const reason = reasonFor(fixture);
-    if (reason) findings.push({ fixtureId: fixture.id, reason });
-  }
-
-  const completeCount = fixtures.length - findings.length;
+  const findings = fixtures.map(scoreResultFixture);
+  const percentage = Math.round(
+    findings.reduce((sum, finding) => sum + finding.percentage, 0) / findings.length,
+  );
   return {
-    percentage: Math.round((completeCount / fixtures.length) * 100),
-    completeCount,
-    totalCount: fixtures.length,
+    percentage,
+    completeCount: findings.filter((finding) => finding.percentage === 100).length,
+    totalCount: findings.length,
     findings,
   };
 }

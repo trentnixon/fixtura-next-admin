@@ -1,103 +1,166 @@
 "use client";
 
-import { S } from "@/components/type/type";
-import { P } from "@/components/type/type";
-import { DatabaseIcon } from "lucide-react";
-import { ExternalLinkIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useTeamByID } from "@/hooks/teams/useTeamsByID";
+import { useMemo } from "react";
 import { useParams } from "next/navigation";
-import { Badge } from "@/components/ui/badge";
-import { daysFromToday } from "@/lib/utils";
-import Link from "next/link";
+import { CalendarDays, Gauge } from "lucide-react";
+
 import { useGlobalContext } from "@/components/providers/GlobalContext";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import FixturesTab from "./components/Fixtures";
-import OverviewTab from "./components/Overview";
-import UpcomingGames from "./components/UpcomingGames";
-import CreatePage from "@/components/scaffolding/containers/createPage";
 import CreatePageTitle from "@/components/scaffolding/containers/createPageTitle";
+import PageContainer from "@/components/scaffolding/containers/PageContainer";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ErrorState, LoadingState } from "@/components/ui-library";
+import { useTeamByID } from "@/hooks/teams/useTeamsByID";
+import {
+  sectionTabListClass,
+  sectionTabTriggerClass,
+} from "@/lib/actions/siteNavigationButtonStyles";
+import { daysFromToday } from "@/lib/utils";
+import { TeamFixtures } from "./components/TeamFixtures";
+import { TeamSnapshot } from "./components/TeamSnapshot";
+import { formatStoredDate } from "./components/teamFixtureModel";
 
-// TODO: Add team page
+const teamDetailTabs = [
+  { value: "snapshot", label: "Snapshot", icon: Gauge },
+  { value: "fixtures", label: "Fixtures", icon: CalendarDays },
+] as const;
+
+function parseTeamId(value: string | string[] | undefined): number | null {
+  const raw = Array.isArray(value) ? value[0] : value;
+  if (!raw) return null;
+  const parsed = Number.parseInt(raw, 10);
+  if (!Number.isFinite(parsed) || parsed <= 0) return null;
+  return parsed;
+}
+
+function toError(error: unknown): Error {
+  if (error instanceof Error) return error;
+  if (typeof error === "string" && error.trim()) return new Error(error);
+  return new Error("Failed to load team");
+}
+
 export default function TeamPage() {
-  const { teamID } = useParams();
-  const { data, isLoading, isError } = useTeamByID(Number(teamID));
+  const params = useParams<{ teamID: string }>();
+  const teamId = useMemo(() => parseTeamId(params?.teamID), [params?.teamID]);
   const { strapiLocation } = useGlobalContext();
-  const team = data;
+  const { data: team, isLoading, isError, error, refetch } = useTeamByID(
+    teamId ?? 0,
+  );
 
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error:</div>;
+  if (!teamId) {
+    return (
+      <>
+        <CreatePageTitle
+          title="Team"
+          byLine="Invalid team ID"
+          byLineBottom="The route expects a numeric team ID."
+        />
+        <PageContainer padding="md" spacing="lg">
+          <ErrorState
+            error={
+              new Error("Invalid team ID. The route expects a numeric ID.")
+            }
+            onRetry={() => window.location.reload()}
+          />
+        </PageContainer>
+      </>
+    );
+  }
+
+  if (isLoading && !team) {
+    return (
+      <>
+        <CreatePageTitle
+          title="Team"
+          byLine={`Team ID: ${teamId}`}
+          byLineBottom="Loading team data..."
+        />
+        <PageContainer padding="md" spacing="lg">
+          <LoadingState message="Loading team..." />
+        </PageContainer>
+      </>
+    );
+  }
+
+  if (isError || !team) {
+    return (
+      <>
+        <CreatePageTitle
+          title="Team"
+          byLine={`Team ID: ${teamId}`}
+          byLineBottom="Error loading team data"
+        />
+        <PageContainer padding="md" spacing="lg">
+          <ErrorState
+            error={toError(error)}
+            onRetry={() => {
+              void refetch();
+            }}
+          />
+        </PageContainer>
+      </>
+    );
+  }
+
+  const clubName = team.club?.Name?.trim() || "Club not linked";
+  const competitionName =
+    team.competition?.competitionName?.trim() || "Competition not linked";
+  const gradeName = team.grades?.gradeName?.trim() || "Grade not linked";
+  const season = team.competition?.season?.trim() || "Season not set";
+  const logo = team.club?.ParentLogo || team.association?.ParentLogo || undefined;
+  const cmsUrl =
+    team.TopLineData.id > 0
+      ? `${strapiLocation.team}${team.TopLineData.id}`
+      : null;
+  const daysSinceUpdate = team.TopLineData.updatedAt
+    ? daysFromToday(team.TopLineData.updatedAt)
+    : null;
 
   return (
-    <CreatePage>
+    <>
       <CreatePageTitle
-        title={team?.TopLineData?.teamName || ""}
-        byLine={team?.competition?.competitionName || ""}
-        image={team?.association?.ParentLogo || ""}
-        byLineBottom={team?.competition?.season || ""}
+        title={team.TopLineData.teamName?.trim() || "Team"}
+        byLine={`${clubName} • ${competitionName}`}
+        byLineBottom={`${gradeName} • ${season} • Last synced ${formatStoredDate(team.TopLineData.updatedAt)}`}
+        image={logo}
       />
-
-      <div className="flex flex-row gap-2 items-center justify-between">
-        <P>
-          <strong>Age Group:</strong> {team?.TopLineData?.age} |{" "}
-          <strong>Games Played:</strong> {team?.TopLineData?.gamesPlayed} |{" "}
-          <strong>Gender:</strong> {team?.TopLineData?.gender}
-        </P>
-
-        <div className="flex flex-row gap-2 items-center">
-          <Link
-            href={`https://www.playhq.com${team?.TopLineData?.href}` || ""}
-            target="_blank">
-            <Button variant="outline">
-              <ExternalLinkIcon size="16" />
-            </Button>
-          </Link>
-          <Link
-            href={`${strapiLocation.team}${team?.TopLineData?.teamID}`}
-            target="_blank"
-            rel="noopener noreferrer">
-            <Button variant="outline">
-              <DatabaseIcon size="16" />
-            </Button>
-          </Link>
-          <Badge variant="outline" className={`bg-blue-500 text-white`}>
-            <S className="text-xs text-white ">
-              Updated{" "}
-              {team?.TopLineData?.updatedAt &&
-                daysFromToday(team?.TopLineData?.updatedAt)}
-              Days Ago
-            </S>
-          </Badge>
-
-          <Badge
-            variant="outline"
-            className={`${
-              team?.competition?.status === "Active"
-                ? "bg-green-500"
-                : "bg-red-500"
-            } text-white`}>
-            {team?.competition?.status === "Active" ? "Active" : "Not Active"}
-          </Badge>
-        </div>
-      </div>
-
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-          <TabsTrigger value="completed">Completed</TabsTrigger>
-        </TabsList>
-        <TabsContent value="overview">
-          <OverviewTab />
-        </TabsContent>
-        <TabsContent value="upcoming">
-          <UpcomingGames />
-        </TabsContent>
-
-        <TabsContent value="completed">
-          <FixturesTab />
-        </TabsContent>
-      </Tabs>
-    </CreatePage>
+      <PageContainer padding="xs" spacing="lg">
+        <Tabs defaultValue="snapshot" className="w-full min-w-0 max-w-full">
+          <div className="pb-8">
+            <TabsList variant="primary" className={sectionTabListClass}>
+              {teamDetailTabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    variant="section"
+                    className={sectionTabTriggerClass}
+                  >
+                    <Icon
+                      className="h-4 w-4 shrink-0 text-current"
+                      aria-hidden
+                    />
+                    {tab.label}
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </div>
+          <TabsContent value="snapshot" className="mt-0 space-y-6">
+            <TeamSnapshot
+              team={team}
+              cmsUrl={cmsUrl}
+              daysSinceUpdate={daysSinceUpdate}
+            />
+          </TabsContent>
+          <TabsContent value="fixtures" className="mt-0">
+            <TeamFixtures
+              team={team}
+              cmsFixtureBase={strapiLocation.fixture.cricket}
+            />
+          </TabsContent>
+        </Tabs>
+      </PageContainer>
+    </>
   );
 }

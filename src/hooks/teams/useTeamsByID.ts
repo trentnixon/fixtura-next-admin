@@ -7,10 +7,11 @@ export function useTeamByID(teamID: number): {
   isLoading: boolean;
   isError: boolean;
   error: unknown;
+  refetch: () => Promise<unknown>;
 } {
   return useQuery<TeamData>({
     queryKey: ["team", teamID],
     queryFn: () => fetchTeamById(teamID),
-    enabled: teamID > 0, // Prevent query from running with empty IDs
+    enabled: teamID > 0,
   });
 }
