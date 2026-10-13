@@ -5,7 +5,7 @@ import type { OrgContactListingRow } from "@/types/orgContactListing";
 import {
   countClubDirectoryCoverage,
   linkedClubIds,
-} from "./clubSnapshotCoverage";
+} from "./clubSnapshotCoverageCounts";
 
 function account(
   overrides: Partial<AccountLookupItem> & Pick<AccountLookupItem, "id">,

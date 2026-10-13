@@ -28,7 +28,7 @@ import {
   countAssociationAccountSummary,
   countAssociationContactCoverage,
   linkedAssociationIds,
-} from "./associationSnapshotCoverage";
+} from "./associationSnapshotCoverageCounts";
 
 type AssociationSnapshotCoverageProps = {
   accounts: AccountLookupItem[];

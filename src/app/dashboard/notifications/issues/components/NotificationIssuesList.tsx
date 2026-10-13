@@ -27,8 +27,10 @@ import {
   countGroupedRuns,
   groupNotificationIssues,
   issueGroupCardTone,
+  type FailureIssueGroup,
   type IssueCardTone,
   type IssueRunRef,
+  type WarningIssueGroup,
 } from "../utils/notificationIssueGroups";
 import {
   formatIssueUrl,
@@ -43,14 +45,7 @@ interface NotificationIssuesListProps {
   cardToneFilter?: IssueCardToneFilter;
 }
 
-type MediaCardGroup = {
-  key: string;
-  step: string | null;
-  message: string;
-  primaryRun: IssueRunRef;
-  otherRuns: IssueRunRef[];
-  representativeRow: NotificationIssueRow;
-};
+type MediaCardGroup = FailureIssueGroup | WarningIssueGroup;
 
 function runRefHref(ref: IssueRunRef): string | null {
   const jobId = ref.jobId;

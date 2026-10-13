@@ -31,7 +31,7 @@ import {
 import {
   countClubDirectoryCoverage,
   linkedClubIds,
-} from "./clubSnapshotCoverage";
+} from "./clubSnapshotCoverageCounts";
 
 const CLUB_INSIGHT_SPORTS = [
   "Cricket",

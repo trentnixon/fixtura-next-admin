@@ -7,7 +7,7 @@ import {
   countAssociationAccountSummary,
   countAssociationContactCoverage,
   linkedAssociationIds,
-} from "./associationSnapshotCoverage";
+} from "./associationSnapshotCoverageCounts";
 
 function account(
   overrides: Partial<AccountLookupItem> & Pick<AccountLookupItem, "id">,

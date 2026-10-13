@@ -73,9 +73,11 @@ function renderTabContent(
         );
       }
       if (accountData.account_type === 1) {
-        return <AccountFixturesTab clubId={organisationId} />;
+        return <AccountFixturesTab kind="club" clubId={organisationId} />;
       }
-      return <AccountFixturesTab associationId={organisationId} />;
+      return (
+        <AccountFixturesTab kind="association" associationId={organisationId} />
+      );
     }
     case "data":
       return <DataTab accountId={accountId} />;

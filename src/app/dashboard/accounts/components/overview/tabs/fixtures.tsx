@@ -53,11 +53,11 @@ type FixtureSortField = "date" | "round" | "status";
 type SortDirection = "asc" | "desc";
 
 type AccountFixturesTabProps =
-  | { associationId: number; clubId?: never }
-  | { clubId: number; associationId?: never };
+  | { kind: "association"; associationId: number }
+  | { kind: "club"; clubId: number };
 
 export default function AccountFixturesTab(props: AccountFixturesTabProps) {
-  if ("clubId" in props) {
+  if (props.kind === "club") {
     return <ClubFixturesTab clubId={props.clubId} />;
   }
   return <AssociationFixturesTab associationId={props.associationId} />;
