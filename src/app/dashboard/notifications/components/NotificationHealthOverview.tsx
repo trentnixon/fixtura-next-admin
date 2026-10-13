@@ -8,7 +8,6 @@ import {
   ArrowRight,
   Bell,
   Bug,
-  CalendarDays,
   CircleAlert,
   ListFilter,
   RefreshCw,
@@ -16,7 +15,6 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { Line, LineChart, XAxis, YAxis, CartesianGrid } from "recharts";
-import ChartSummaryStats from "@/components/modules/charts/ChartSummaryStats";
 import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
 import {
   OverviewDataWorkspace,
@@ -32,7 +30,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import ErrorState from "@/components/ui-library/states/ErrorState";
-import LoadingState from "@/components/ui-library/states/LoadingState";
 import { cn } from "@/lib/utils";
 import type {
   NotificationHealthData,
@@ -140,7 +137,17 @@ export function NotificationHealthOverview({
     : [];
 
   const metrics = useMemo((): WorkspaceMetricTile[] => {
-    if (!data) return [];
+    if (!data) {
+      const waitingMeta = queryEnabled
+        ? "Loading the selected range"
+        : "Choose both dates";
+      return [
+        { id: "fatal", label: "Fatal notifications", value: "—", meta: waitingMeta, isLoading },
+        { id: "issues", label: "Issue rows", value: "—", meta: waitingMeta, isLoading },
+        { id: "fixtures", label: "Fixtures failed", value: "—", meta: waitingMeta, isLoading },
+        { id: "error-rate", label: "Weighted error rate", value: "—", meta: waitingMeta, isLoading },
+      ];
+    }
     return [
       {
         id: "fatal",
@@ -167,86 +174,131 @@ export function NotificationHealthOverview({
         meta: `${data.issues.selectorDriftCount.toLocaleString()} selector drift signals`,
       },
     ];
-  }, [data, issueCount, notificationCount]);
+  }, [data, isLoading, issueCount, notificationCount, queryEnabled]);
 
   const presetSegmentOptions = PRESET_OPTIONS.map((option) => ({
     value: String(option.value),
     label: `${option.value}d`,
   }));
 
+  const windowLabel = data
+    ? `${new Date(data.window.from).toLocaleDateString()} – ${new Date(data.window.to).toLocaleDateString()}`
+    : "Selected range";
+
+  const rangeControls = (
+    <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+      <div className="flex shrink-0 items-center gap-2">
+        <Switch
+          id="notification-health-custom"
+          checked={customRange}
+          onCheckedChange={onCustomRangeChange}
+        />
+        <Label htmlFor="notification-health-custom" className="text-sm">
+          Custom range
+        </Label>
+      </div>
+
+      {!customRange ? (
+        <LabeledSegmentedControl
+          label="Period"
+          value={String(presetDays)}
+          onValueChange={(value) =>
+            onPresetDaysChange(Number(value) as NotificationHealthPresetDays)
+          }
+          options={presetSegmentOptions}
+          className="min-w-0 shrink-0"
+          shellClassName="h-auto shrink-0 rounded-full"
+          ariaLabel="Notification period"
+        />
+      ) : (
+        <div className="flex flex-wrap items-center gap-2">
+          <Input
+            id="nh-from"
+            type="date"
+            value={dateFrom}
+            onChange={(event) => onDateFromChange(event.target.value)}
+            aria-label="From (UTC)"
+            className="w-auto"
+          />
+          <span className="text-sm text-muted-foreground">–</span>
+          <Input
+            id="nh-to"
+            type="date"
+            value={dateTo}
+            onChange={(event) => onDateToChange(event.target.value)}
+            aria-label="To (UTC)"
+            className="w-auto"
+          />
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div id="notification-health" className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 lg:flex-row lg:flex-wrap lg:items-center">
-        <div className="flex shrink-0 items-center gap-2">
-          <Switch
-            id="notification-health-custom"
-            checked={customRange}
-            onCheckedChange={onCustomRangeChange}
-          />
-          <Label htmlFor="notification-health-custom" className="text-sm">
-            Custom range
-          </Label>
-        </div>
-
-        {!customRange ? (
-          <LabeledSegmentedControl
-            label="Period"
-            value={String(presetDays)}
-            onValueChange={(value) =>
-              onPresetDaysChange(Number(value) as NotificationHealthPresetDays)
-            }
-            options={presetSegmentOptions}
-            className="min-w-0 shrink-0"
-            shellClassName="h-auto shrink-0 rounded-full"
-            ariaLabel="Notification period"
-          />
-        ) : (
-          <div className="flex flex-wrap items-center gap-2">
-            <Input
-              id="nh-from"
-              type="date"
-              value={dateFrom}
-              onChange={(event) => onDateFromChange(event.target.value)}
-              aria-label="From (UTC)"
-              className="w-auto rounded-full border-transparent bg-white shadow-none"
-            />
-            <span className="text-sm text-muted-foreground">–</span>
-            <Input
-              id="nh-to"
-              type="date"
-              value={dateTo}
-              onChange={(event) => onDateToChange(event.target.value)}
-              aria-label="To (UTC)"
-              className="w-auto rounded-full border-transparent bg-white shadow-none"
-            />
-          </div>
-        )}
-
-        <div className="flex flex-wrap items-center gap-2 lg:ml-auto">
-          {issuesLinkQuery ? (
-            <DashboardLinkButton
-              href={buildNotificationIssuesHref(issuesLinkQuery)}
-              icon={ListFilter}
-              trailingIcon="arrow"
-            >
-              View issues
-            </DashboardLinkButton>
-          ) : null}
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => refetch()}
-            disabled={isFetching || !queryEnabled}
-            className="gap-2 rounded-full border-slate-200 bg-white text-slate-700 shadow-none hover:bg-slate-100 hover:text-slate-900"
+    <div id="notification-health" className="flex flex-col gap-6">
+      <div className="flex flex-col gap-3">
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {issuesLinkQuery ? (
+          <DashboardLinkButton
+            href={buildNotificationIssuesHref(issuesLinkQuery)}
+            icon={ListFilter}
+            trailingIcon="arrow"
           >
-            <RefreshCw
-              className={cn("h-4 w-4", isFetching && "animate-spin")}
-            />
-            Refresh
-          </Button>
-        </div>
+            View issues
+          </DashboardLinkButton>
+        ) : null}
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => refetch()}
+          disabled={isFetching || !queryEnabled}
+          className="gap-2"
+        >
+          <RefreshCw className={cn("h-4 w-4", isFetching && "animate-spin")} />
+          Refresh
+        </Button>
+      </div>
+
+      <OverviewDataWorkspace
+        title="Failure snapshot"
+        description={
+          data
+            ? `${windowLabel} · ${notificationCount.toLocaleString()} notifications`
+            : "Scrape failures for the selected range"
+        }
+        icon={Bell}
+        badge={
+          data ? (
+            data.notifications.fatalCount > 0 ? (
+              <Badge
+                variant="outline"
+                className="border-error-200 bg-error-50 text-error-800"
+              >
+                {data.notifications.fatalCount.toLocaleString()} fatal
+              </Badge>
+            ) : (
+              <Badge
+                variant="outline"
+                className="border-slate-200 bg-slate-50 text-slate-700"
+              >
+                {data.notifications.nonFatalCount.toLocaleString()} non-fatal
+              </Badge>
+            )
+          ) : null
+        }
+        action={rangeControls}
+        metrics={metrics}
+        columns={4}
+        footer={
+          <span className="text-xs text-muted-foreground">
+            {data
+              ? `${formatRate(data.rates.avgErrorRate)} average row error rate`
+              : "Adjust the range to refresh this snapshot"}
+          </span>
+        }
+      />
       </div>
 
       {!queryEnabled && customRange ? (
@@ -270,10 +322,6 @@ export function NotificationHealthOverview({
         </div>
       ) : null}
 
-      {isLoading ? (
-        <LoadingState message="Loading notification health…" />
-      ) : null}
-
       {error && !isLoading ? (
         <ErrorState
           title="Could not load notification health"
@@ -295,25 +343,10 @@ export function NotificationHealthOverview({
               }
             >
               {timelineData.length > 0 ? (
-                <div className="space-y-4">
-                  <ChartSummaryStats
-                    stats={[
-                      {
-                        icon: CalendarDays,
-                        label: "Date range",
-                        value: `${new Date(data.window.from).toLocaleDateString()} – ${new Date(data.window.to).toLocaleDateString()}`,
-                      },
-                      {
-                        icon: Bell,
-                        label: "Notifications",
-                        value: notificationCount.toLocaleString(),
-                      },
-                    ]}
-                  />
-                  <ChartContainer
-                    config={NOTIFICATION_HEALTH_CHART_CONFIG}
-                    className="h-[320px] w-full"
-                  >
+                <ChartContainer
+                  config={NOTIFICATION_HEALTH_CHART_CONFIG}
+                  className="h-[320px] w-full"
+                >
                     <LineChart
                       data={timelineData}
                       margin={{ top: 5, right: 10, left: 0, bottom: 0 }}
@@ -369,7 +402,6 @@ export function NotificationHealthOverview({
                       />
                     </LineChart>
                   </ChartContainer>
-                </div>
               ) : (
                 <EmptyState
                   variant="minimal"
@@ -449,36 +481,6 @@ export function NotificationHealthOverview({
               </div>
             </OverviewRecordPanel>
           </div>
-
-          <OverviewDataWorkspace
-            title="Failure snapshot"
-            description={`${new Date(data.window.from).toLocaleDateString()} – ${new Date(data.window.to).toLocaleDateString()} · ${notificationCount.toLocaleString()} notifications`}
-            icon={Bell}
-            badge={
-              data.notifications.fatalCount > 0 ? (
-                <Badge
-                  variant="outline"
-                  className="border-error-200 bg-error-50 text-error-800"
-                >
-                  {data.notifications.fatalCount.toLocaleString()} fatal
-                </Badge>
-              ) : (
-                <Badge
-                  variant="outline"
-                  className="border-slate-200 bg-slate-50 text-slate-700"
-                >
-                  {data.notifications.nonFatalCount.toLocaleString()} non-fatal
-                </Badge>
-              )
-            }
-            metrics={metrics}
-            columns={4}
-            footer={
-              <span className="text-xs text-muted-foreground">
-                {formatRate(data.rates.avgErrorRate)} average row error rate
-              </span>
-            }
-          />
         </>
       ) : null}
     </div>

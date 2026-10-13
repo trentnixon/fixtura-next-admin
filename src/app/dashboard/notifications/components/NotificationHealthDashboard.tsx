@@ -9,6 +9,7 @@ import type {
 import type { NotificationIssuesLinkQuery } from "@/types/notificationIssues";
 import { NotificationHealthOverview } from "./NotificationHealthOverview";
 import { NotificationHealthDetailPanels } from "./NotificationHealthSection";
+import { NotificationIssueTypeCharts } from "./NotificationIssueTypeCharts";
 import { toInputDate } from "./notificationHealthUi";
 
 export function NotificationHealthDashboard() {
@@ -70,6 +71,8 @@ export function NotificationHealthDashboard() {
         isFetching={isFetching}
         issuesLinkQuery={issuesLinkQuery}
       />
+
+      <NotificationIssueTypeCharts params={params} enabled={queryEnabled} />
 
       {data && !isLoading ? (
         <NotificationHealthDetailPanels

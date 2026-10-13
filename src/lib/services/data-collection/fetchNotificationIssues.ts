@@ -114,16 +114,17 @@ const FETCH_ALL_MAX_PAGES = 50;
 
 /**
  * Loads every issue row for the filter set (CMS max 200 rows per request).
- * Screenshots are always requested for the media grid.
+ * Screenshots are included unless `includeArtifacts` is set false.
  */
 export async function fetchAllNotificationIssues(
   params: FetchNotificationIssuesParams,
+  options?: { includeArtifacts?: boolean },
 ): Promise<NotificationIssuesResponse> {
   const pageParams: FetchNotificationIssuesParams = {
     ...params,
     page: 1,
     pageSize: FETCH_ALL_PAGE_SIZE,
-    includeArtifacts: true,
+    includeArtifacts: options?.includeArtifacts ?? true,
   };
 
   const first = await fetchNotificationIssues(pageParams);

@@ -16,8 +16,8 @@ export default async function NotificationsPage() {
     <>
       <CreatePageTitle
         title="Notification health"
-        byLine="System failure intelligence"
-        byLineBottom="Failure volume, issue patterns, affected services, and scraper context"
+        byLine="Scrape failures"
+        byLineBottom="Volume, issue types, and where they show up"
       >
         <DashboardLinkButton
           href="/dashboard?tab=collection"
@@ -26,7 +26,7 @@ export default async function NotificationsPage() {
           Dashboard
         </DashboardLinkButton>
       </CreatePageTitle>
-      <PageContainer padding="xs" spacing="lg">
+      <PageContainer padding="xs" spacing="md">
         <NotificationHealthDashboard />
       </PageContainer>
     </>

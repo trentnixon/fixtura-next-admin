@@ -25,6 +25,8 @@ export interface UseNotificationIssuesOptions {
   params: FetchNotificationIssuesParams;
   /** When false, the query does not run (e.g. custom range missing dates). */
   enabled?: boolean;
+  /** Inbox loads screenshots. Trend charts skip them. */
+  includeArtifacts?: boolean;
 }
 
 /**
@@ -33,11 +35,11 @@ export interface UseNotificationIssuesOptions {
 export function useNotificationIssues(
   options: UseNotificationIssuesOptions
 ): UseNotificationIssuesResult {
-  const { params, enabled = true } = options;
+  const { params, enabled = true, includeArtifacts = true } = options;
 
   const queryResult = useQuery({
-    queryKey: ["notificationIssues", params] as const,
-    queryFn: () => fetchAllNotificationIssues(params),
+    queryKey: ["notificationIssues", params, includeArtifacts] as const,
+    queryFn: () => fetchAllNotificationIssues(params, { includeArtifacts }),
     enabled,
     staleTime: DEFAULT_STALE_TIME,
     retry: 2,
