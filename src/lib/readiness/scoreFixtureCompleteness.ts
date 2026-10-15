@@ -29,9 +29,18 @@ function filled(value: string | null): boolean {
   return value != null && value.trim() !== "";
 }
 
-function isFinalStatus(status: string | null): boolean {
-  const value = status?.trim().toLowerCase() ?? "";
-  return value === "final" || value === "completed" || value === "finished";
+const RESULT_STATUSES = new Set([
+  "final",
+  "stumps",
+  "in progress",
+  "abandoned",
+  "cancelled",
+  "canceled",
+]);
+
+function isResultStatus(status: string | null): boolean {
+  const value = status?.trim().toLowerCase().replace(/\s+/g, " ") ?? "";
+  return RESULT_STATUSES.has(value);
 }
 
 function hasScore(fixture: FixtureCompletenessInput): boolean {
@@ -42,7 +51,7 @@ const metaChecks: {
   reason: string;
   present: (fixture: FixtureCompletenessInput) => boolean;
 }[] = [
-  { reason: "not final", present: (fixture) => isFinalStatus(fixture.status) },
+  { reason: "unexpected status", present: (fixture) => isResultStatus(fixture.status) },
   { reason: "no score", present: hasScore },
   { reason: "missing date", present: (fixture) => filled(fixture.date) },
   { reason: "missing team", present: (fixture) => filled(fixture.homeTeam) && filled(fixture.awayTeam) },
@@ -62,7 +71,7 @@ function scoreResultFixture(fixture: FixtureCompletenessInput): FixtureCompleten
     return {
       fixtureId: fixture.id,
       percentage: 0,
-      reason: checks.find((check) => !check.present)?.reason ?? "not final",
+      reason: checks.find((check) => !check.present)?.reason ?? "unexpected status",
     };
   }
 

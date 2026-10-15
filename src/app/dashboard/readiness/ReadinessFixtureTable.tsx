@@ -1,15 +1,24 @@
 "use client";
 
-import { useMemo } from "react";
-import Link from "next/link";
-import { CalendarDays, History } from "lucide-react";
-import { formatDate } from "@/app/dashboard/fixtures/_components/_utils/dateUtils";
+import { useMemo, useState } from "react";
+import { CalendarDays, History, Search } from "lucide-react";
+import { format } from "date-fns";
+import { toFixtureDisplayText } from "@/app/dashboard/fixtures/_components/_utils/fixtureDisplayText";
 import {
   getTeamsDisplay,
   groupByGrade,
 } from "@/app/dashboard/fixtures/_components/_utils/fixtureUtils";
-import { getStatusBadge } from "@/app/dashboard/fixtures/_components/_utils/statusUtils";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import EmptyState from "@/components/ui-library/states/EmptyState";
 import {
   Table,
   TableBody,
@@ -26,15 +35,109 @@ import {
 import {
   splitFixturesByPlayDay,
   sydneyToday,
+  readinessPlayDay,
 } from "@/lib/readiness/fixtureDateWindow";
 import type { FixtureCompletenessScore } from "@/lib/readiness/scoreFixtureCompleteness";
+import type { SingleFixtureDetailResponse } from "@/types/fixtureDetail";
 import type { FixtureSummary } from "@/types/fixtureInsights";
+import {
+  FixtureDataButton,
+  ReadinessFixtureDataDialog,
+} from "@/app/dashboard/readiness/ReadinessFixtureDataDialog";
+import TriggerResultSingleScrapeButton from "@/app/dashboard/fixtures/[id]/_components/TriggerResultSingleScrapeButton";
+import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
 
-type ScrapeRow = {
-  fixtureId: number;
-  accepted: boolean;
-  message: string;
-};
+const ALL = "all";
+
+function statusLabel(status: FixtureSummary["status"]): string {
+  return toFixtureDisplayText(status, "Unknown");
+}
+
+function matchesFilters(
+  fixture: FixtureSummary,
+  filter: {
+    teamQuery: string;
+    competitionId: string;
+    gradeId: string;
+    status: string;
+  },
+) {
+  if (
+    filter.competitionId !== ALL &&
+    String(fixture.competition?.id ?? "") !== filter.competitionId
+  ) {
+    return false;
+  }
+  if (filter.gradeId !== ALL && String(fixture.grade?.id ?? "") !== filter.gradeId) {
+    return false;
+  }
+  if (filter.status !== ALL && statusLabel(fixture.status) !== filter.status) {
+    return false;
+  }
+  const needle = filter.teamQuery.trim().toLowerCase();
+  if (!needle) return true;
+  const home = toFixtureDisplayText(fixture.teams?.home, "").toLowerCase();
+  const away = toFixtureDisplayText(fixture.teams?.away, "").toLowerCase();
+  return home.includes(needle) || away.includes(needle);
+}
+
+function namedOptions(
+  fixtures: FixtureSummary[],
+  read: (fixture: FixtureSummary) => { id: number; name: string } | null,
+) {
+  const byId = new Map<string, string>();
+  for (const fixture of fixtures) {
+    const item = read(fixture);
+    if (!item) continue;
+    byId.set(String(item.id), item.name);
+  }
+  return [...byId.entries()].sort((left, right) =>
+    left[1].localeCompare(right[1], "en"),
+  );
+}
+
+function formatDayMonth(isoDate: string | null): string {
+  if (!isoDate) return "No date";
+  const [year, month, day] = isoDate.slice(0, 10).split("-").map(Number);
+  if (!year || !month || !day) return "No date";
+  return format(new Date(year, month - 1, day), "MMM d");
+}
+
+function datesInGrade(fixtures: FixtureSummary[]) {
+  const order: string[] = [];
+  const byDate = new Map<string, FixtureSummary[]>();
+  for (const fixture of fixtures) {
+    const key = fixture.date?.slice(0, 10) ?? "";
+    const existing = byDate.get(key);
+    if (existing) {
+      existing.push(fixture);
+      continue;
+    }
+    order.push(key);
+    byDate.set(key, [fixture]);
+  }
+  return order.map((key) => ({
+    key,
+    label: formatDayMonth(key || null),
+    fixtures: byDate.get(key) ?? [],
+  }));
+}
+
+function typesOnDate(fixtures: FixtureSummary[]) {
+  const byType = new Map<string, FixtureSummary[]>();
+  for (const fixture of fixtures) {
+    const label = toFixtureDisplayText(fixture.type);
+    const existing = byType.get(label);
+    if (existing) {
+      existing.push(fixture);
+      continue;
+    }
+    byType.set(label, [fixture]);
+  }
+  return [...byType.entries()]
+    .sort(([left], [right]) => left.localeCompare(right, "en"))
+    .map(([label, grouped]) => ({ label, fixtures: grouped }));
+}
 
 function resultLabel(finding: { percentage: number; reason: string | null } | undefined) {
   if (!finding) return "—";
@@ -44,73 +147,205 @@ function resultLabel(finding: { percentage: number; reason: string | null } | un
     : `${finding.percentage}%`;
 }
 
+function unexpectedStatus(finding: { reason: string | null } | undefined) {
+  return finding?.reason === "unexpected status";
+}
+
 export function ReadinessFixtureTable({
   fixtures,
+  details,
   beforeScore,
-  afterScore,
-  scrapeRows,
 }: {
   fixtures: FixtureSummary[];
+  details: SingleFixtureDetailResponse[];
   beforeScore: FixtureCompletenessScore | null;
-  afterScore: FixtureCompletenessScore | null;
-  scrapeRows: ScrapeRow[];
 }) {
+  const [teamQuery, setTeamQuery] = useState("");
+  const [competitionId, setCompetitionId] = useState(ALL);
+  const [gradeId, setGradeId] = useState(ALL);
+  const [status, setStatus] = useState(ALL);
+  const [openFixtureId, setOpenFixtureId] = useState<number | null>(null);
+
+  const competitions = useMemo(
+    () => namedOptions(fixtures, (fixture) => fixture.competition),
+    [fixtures],
+  );
+  const grades = useMemo(() => {
+    const source =
+      competitionId === ALL
+        ? fixtures
+        : fixtures.filter(
+            (fixture) => String(fixture.competition?.id ?? "") === competitionId,
+          );
+    return namedOptions(source, (fixture) => fixture.grade);
+  }, [competitionId, fixtures]);
+  const statuses = useMemo(() => {
+    const labels = new Set(fixtures.map((fixture) => statusLabel(fixture.status)));
+    return [...labels].sort((left, right) => left.localeCompare(right, "en"));
+  }, [fixtures]);
+
+  const detailsById = useMemo(() => {
+    const byId = new Map<number, SingleFixtureDetailResponse>();
+    for (const detail of details) byId.set(detail.fixture.id, detail);
+    return byId;
+  }, [details]);
+  const scheduled = useMemo(
+    () =>
+      fixtures.map((fixture) => {
+        const day = readinessPlayDay(fixture.date, detailsById.get(fixture.id)?.fixture);
+        if (day == null || day === fixture.date) return fixture;
+        return { ...fixture, date: day };
+      }),
+    [detailsById, fixtures],
+  );
+
   const grouped = useMemo(() => {
-    const split = splitFixturesByPlayDay(fixtures, sydneyToday());
+    const split = splitFixturesByPlayDay(scheduled, sydneyToday());
     const byDate = (left: FixtureSummary, right: FixtureSummary) =>
       (left.date ?? "").localeCompare(right.date ?? "");
+    const filtered = scheduled.filter((fixture) =>
+      matchesFilters(fixture, { teamQuery, competitionId, gradeId, status }),
+    );
+    const filteredSplit = splitFixturesByPlayDay(filtered, sydneyToday());
     return {
       upcoming: [...split.upcoming].sort(byDate),
       results: [...split.results].sort((left, right) => byDate(right, left)),
+      filteredUpcoming: [...filteredSplit.upcoming].sort(byDate),
+      filteredResults: [...filteredSplit.results].sort((left, right) =>
+        byDate(right, left),
+      ),
     };
-  }, [fixtures]);
+  }, [competitionId, gradeId, scheduled, status, teamQuery]);
   const beforeById = useMemo(() => {
     const byId = new Map<number, { percentage: number; reason: string | null }>();
     for (const finding of beforeScore?.findings ?? []) byId.set(finding.fixtureId, finding);
     return byId;
   }, [beforeScore]);
-  const afterById = useMemo(() => {
-    const byId = new Map<number, { percentage: number; reason: string | null }>();
-    for (const finding of afterScore?.findings ?? []) byId.set(finding.fixtureId, finding);
-    return byId;
-  }, [afterScore]);
-  const scrapes = useMemo(() => {
-    const byId = new Map<number, ScrapeRow>();
-    for (const row of scrapeRows) byId.set(row.fixtureId, row);
-    return byId;
-  }, [scrapeRows]);
+  const openFixture =
+    fixtures.find((fixture) => fixture.id === openFixtureId) ?? null;
 
   return (
-    <Tabs defaultValue="results" className="space-y-4">
-      <TabsList variant="primary" className={sectionTabListClass}>
-        <TabsTrigger value="upcoming" variant="section" className={sectionTabTriggerClass}>
-          <CalendarDays className="h-4 w-4 shrink-0 text-current" aria-hidden />
-          Upcoming ({grouped.upcoming.length})
-        </TabsTrigger>
-        <TabsTrigger value="results" variant="section" className={sectionTabTriggerClass}>
-          <History className="h-4 w-4 shrink-0 text-current" aria-hidden />
-          Results ({grouped.results.length})
-        </TabsTrigger>
-      </TabsList>
-      <TabsContent value="upcoming" className="mt-0">
-        <FixtureRows
-          fixtures={grouped.upcoming}
-          emptyLabel="No upcoming fixtures."
-          beforeById={beforeById}
-          afterById={afterById}
-          scrapes={scrapes}
+    <div className="space-y-4">
+      <ReadinessFixtureDataDialog
+        fixture={openFixture}
+        detail={openFixtureId == null ? null : detailsById.get(openFixtureId) ?? null}
+        open={openFixtureId != null}
+        onOpenChange={(open) => {
+          if (!open) setOpenFixtureId(null);
+        }}
+      />
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="readiness-team-find">Team</Label>
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              id="readiness-team-find"
+              className="pl-8"
+              value={teamQuery}
+              placeholder="Search a team name"
+              onChange={(event) => setTeamQuery(event.target.value)}
+            />
+          </div>
+        </div>
+        <FilterSelect
+          label="Competition"
+          value={competitionId}
+          allLabel="All competitions"
+          options={competitions.map(([id, name]) => ({ id, name }))}
+          onChange={(next) => {
+            setCompetitionId(next);
+            setGradeId(ALL);
+          }}
         />
-      </TabsContent>
-      <TabsContent value="results" className="mt-0">
-        <FixtureRows
-          fixtures={grouped.results}
-          emptyLabel="No results fixtures."
-          beforeById={beforeById}
-          afterById={afterById}
-          scrapes={scrapes}
+        <FilterSelect
+          label="Grade"
+          value={gradeId}
+          allLabel="All grades"
+          options={grades.map(([id, name]) => ({ id, name }))}
+          onChange={setGradeId}
         />
-      </TabsContent>
-    </Tabs>
+        <FilterSelect
+          label="Status"
+          value={status}
+          allLabel="All statuses"
+          options={statuses.map((label) => ({ id: label, name: label }))}
+          onChange={setStatus}
+        />
+      </div>
+      <Tabs defaultValue="results" className="space-y-4">
+        <TabsList variant="primary" className={sectionTabListClass}>
+          <TabsTrigger value="upcoming" variant="section" className={sectionTabTriggerClass}>
+            <CalendarDays className="h-4 w-4 shrink-0 text-current" aria-hidden />
+            Upcoming ({grouped.filteredUpcoming.length})
+          </TabsTrigger>
+          <TabsTrigger value="results" variant="section" className={sectionTabTriggerClass}>
+            <History className="h-4 w-4 shrink-0 text-current" aria-hidden />
+            Results ({grouped.filteredResults.length})
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="upcoming" className="mt-0">
+          <FixtureRows
+            fixtures={grouped.filteredUpcoming}
+            emptyLabel={
+              grouped.upcoming.length === 0
+                ? "No upcoming fixtures."
+                : "No fixtures match these filters."
+            }
+            beforeById={beforeById}
+            detailsById={detailsById}
+            onOpenData={setOpenFixtureId}
+          />
+        </TabsContent>
+        <TabsContent value="results" className="mt-0">
+          <FixtureRows
+            fixtures={grouped.filteredResults}
+            emptyLabel={
+              grouped.results.length === 0
+                ? "No results fixtures."
+                : "No fixtures match these filters."
+            }
+            beforeById={beforeById}
+            detailsById={detailsById}
+            onOpenData={setOpenFixtureId}
+          />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function FilterSelect({
+  label,
+  value,
+  allLabel,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  allLabel: string;
+  options: { id: string; name: string }[];
+  onChange: (value: string) => void;
+}) {
+  const fieldId = `readiness-filter-${label.toLowerCase()}`;
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={fieldId}>{label}</Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger id={fieldId}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL}>{allLabel}</SelectItem>
+          {options.map((option) => (
+            <SelectItem key={option.id} value={option.id}>
+              {option.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
   );
 }
 
@@ -118,31 +353,27 @@ function FixtureRows({
   fixtures,
   emptyLabel,
   beforeById,
-  afterById,
-  scrapes,
+  detailsById,
+  onOpenData,
 }: {
   fixtures: FixtureSummary[];
   emptyLabel: string;
   beforeById: Map<number, { percentage: number; reason: string | null }>;
-  afterById: Map<number, { percentage: number; reason: string | null }>;
-  scrapes: Map<number, ScrapeRow>;
+  detailsById: Map<number, SingleFixtureDetailResponse>;
+  onOpenData: (fixtureId: number) => void;
 }) {
   if (fixtures.length === 0) {
-    return <p className="text-sm">{emptyLabel}</p>;
+    return <EmptyState variant="minimal" title={emptyLabel} />;
   }
 
   return (
-    <div className="max-h-[32rem] overflow-auto">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Date</TableHead>
             <TableHead>Fixture</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Before</TableHead>
-            <TableHead>Scrape</TableHead>
-            <TableHead>After</TableHead>
-            <TableHead className="text-right">Open</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -151,9 +382,9 @@ function FixtureRows({
             .flatMap(([gradeName, gradeFixtures]) => [
               <TableRow
                 key={`${gradeName}-header`}
-                className="bg-slate-50/80 hover:bg-slate-50/80"
+                className="bg-slate-200 hover:bg-slate-200"
               >
-                <TableCell colSpan={7} className="py-2">
+                <TableCell colSpan={4} className="py-2">
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-medium text-slate-900">
                       {gradeName}
@@ -165,43 +396,81 @@ function FixtureRows({
                   </div>
                 </TableCell>
               </TableRow>,
-              ...gradeFixtures.map((fixture) => {
-                const scrape = scrapes.get(fixture.id);
-                return (
-              <TableRow key={fixture.id}>
-                <TableCell className="whitespace-nowrap">
-                  {formatDate(fixture.date)}
-                </TableCell>
-                <TableCell>
-                  <p className="text-sm font-medium">{getTeamsDisplay(fixture)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {fixture.competition?.name ?? "Competition unknown"}
-                  </p>
-                </TableCell>
-                <TableCell>{getStatusBadge(fixture.status)}</TableCell>
-                <TableCell>{resultLabel(beforeById.get(fixture.id))}</TableCell>
-                <TableCell>
-                  {scrape
-                    ? scrape.accepted
-                      ? "Queued"
-                      : `Rejected. ${scrape.message}`
-                    : "—"}
-                </TableCell>
-                <TableCell>{resultLabel(afterById.get(fixture.id))}</TableCell>
-                <TableCell className="text-right">
-                  <Link
-                    href={`/dashboard/fixtures/${fixture.id}`}
-                    className="text-sm underline"
+              ...datesInGrade(gradeFixtures).flatMap((dateGroup) => [
+                <TableRow
+                  key={`${gradeName}-${dateGroup.key}-date`}
+                  className="bg-slate-100 hover:bg-slate-100"
+                >
+                  <TableCell colSpan={4} className="py-1.5 pl-6">
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs font-medium text-slate-600">
+                        {dateGroup.label}
+                      </div>
+                      <Badge variant="outline">
+                        {dateGroup.fixtures.length}
+                      </Badge>
+                    </div>
+                  </TableCell>
+                </TableRow>,
+                ...typesOnDate(dateGroup.fixtures).flatMap((typeGroup) => [
+                  <TableRow
+                    key={`${gradeName}-${dateGroup.key}-${typeGroup.label}-type`}
+                    className="bg-slate-50 hover:bg-slate-50"
                   >
-                    Open
-                  </Link>
-                </TableCell>
-              </TableRow>
-                );
-              }),
+                    <TableCell colSpan={4} className="py-1.5 pl-10">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs font-medium text-slate-600">
+                          {typeGroup.label}
+                        </div>
+                        <Badge variant="outline">
+                          {typeGroup.fixtures.length}
+                        </Badge>
+                      </div>
+                    </TableCell>
+                  </TableRow>,
+                  ...typeGroup.fixtures.map((fixture) => {
+                    const finding = beforeById.get(fixture.id);
+                    const alert = unexpectedStatus(finding);
+                    const alertStyle = alert
+                      ? { backgroundColor: "#fecaca" }
+                      : undefined;
+                    return (
+                  <TableRow key={fixture.id} style={alertStyle}>
+                    <TableCell style={alertStyle}>
+                      <p className="text-sm font-medium">{getTeamsDisplay(fixture)}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {toFixtureDisplayText(fixture.round, "—")}
+                      </p>
+                    </TableCell>
+                    <TableCell style={alertStyle}>
+                      <Badge variant="outline">{statusLabel(fixture.status)}</Badge>
+                    </TableCell>
+                    <TableCell style={alertStyle}>{resultLabel(finding)}</TableCell>
+                    <TableCell className="text-right" style={alertStyle}>
+                      <div className="flex items-center justify-end gap-3">
+                        <TriggerResultSingleScrapeButton
+                          fixtureId={fixture.id}
+                          scorecardUrl={
+                            detailsById.get(fixture.id)?.fixture.matchDetails
+                              ?.urlToScoreCard ?? null
+                          }
+                        />
+                        <FixtureDataButton onClick={() => onOpenData(fixture.id)} />
+                        <DashboardLinkButton
+                          href={`/dashboard/fixtures/${fixture.id}`}
+                          trailingIcon="arrow"
+                        >
+                          View
+                        </DashboardLinkButton>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                    );
+                  }),
+                ]),
+              ]),
             ])}
         </TableBody>
       </Table>
-    </div>
   );
 }

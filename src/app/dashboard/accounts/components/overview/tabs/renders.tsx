@@ -13,6 +13,8 @@ import SchedulerCostTable from "@/app/dashboard/budget/components/SchedulerCostT
 import RenderCharts from "./components/RenderCharts";
 import AccountAssetRunPanel from "../../account-asset-run/AccountAssetRunPanel";
 import { RenderActivitySection } from "@/app/dashboard/components/account-asset-run/RenderActivitySection";
+import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
+import { sydneyToday } from "@/lib/readiness/fixtureDateWindow";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   sectionTabListInverseClass,
@@ -68,6 +70,15 @@ export default function RendersTab({
 
   const accountOrgType =
     accountData?.account_type === 1 ? "club" : "association";
+  const readinessType =
+    accountData?.account_type === 1
+      ? "Club"
+      : accountData?.account_type === 2
+        ? "Association"
+        : null;
+  const readinessHref = readinessType
+    ? `/dashboard/readiness?date=${sydneyToday()}&step=3&type=${readinessType}&account=${accountId}`
+    : null;
 
   return (
     <Tabs defaultValue="runs" className="col-span-12 w-full">
@@ -93,6 +104,13 @@ export default function RendersTab({
       </TabsList>
 
       <TabsContent value="runs" className="mt-0 space-y-4">
+        {readinessHref ? (
+          <div className="flex justify-end">
+            <DashboardLinkButton href={readinessHref} trailingIcon="arrow">
+              Fixture readiness
+            </DashboardLinkButton>
+          </div>
+        ) : null}
         <AccountAssetRunPanel
           accountId={accountId}
           accountType={accountOrgType}

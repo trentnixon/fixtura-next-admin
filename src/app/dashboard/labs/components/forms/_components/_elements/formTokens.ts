@@ -14,6 +14,9 @@ export const FORM_TOKENS = {
     basic: "form.textarea.basic",
     withLabel: "form.textarea.with-label",
   },
+  datePicker: {
+    basic: "form.date-picker.basic",
+  },
   select: {
     basic: "form.select.basic",
     withLabel: "form.select.with-label",

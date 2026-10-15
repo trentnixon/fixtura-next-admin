@@ -367,7 +367,7 @@ Shape:
 Use:
 
 - `container.pattern.form-workspace`
-- form inputs and selects
+- form inputs, `form.date-picker.basic`, and selects
 - status/feedback for validation and save states
 - footer actions
 

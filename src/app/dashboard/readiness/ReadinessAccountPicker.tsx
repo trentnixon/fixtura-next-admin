@@ -1,9 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Building2, CheckCircle2, Search, Users } from "lucide-react";
 import { SubscriptionBadge } from "@/components/modules/tables/SubscriptionBadge";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -14,6 +20,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import MetricGrid from "@/components/ui-library/metrics/MetricGrid";
+import EmptyState from "@/components/ui-library/states/EmptyState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import LoadingState from "@/components/ui-library/states/LoadingState";
 import { useAccountsQuery } from "@/hooks/accounts/useAccountsQuery";
@@ -85,19 +93,68 @@ export function ReadinessAccountPicker({
   }
 
   if (view === "type") {
+    const options = [
+      {
+        type: "Club" as const,
+        description: "Fixtures for this club's teams.",
+        icon: Users,
+      },
+      {
+        type: "Association" as const,
+        description: "Fixtures across the association.",
+        icon: Building2,
+      },
+    ];
+
     return (
-      <div className="flex gap-2">
-        {(["Club", "Association"] as const).map((type) => (
-          <Button
-            key={type}
-            type="button"
-            variant={orgType === type ? "default" : "outline"}
-            onClick={() => chooseType(type)}
-          >
-            {type}
-          </Button>
-        ))}
-      </div>
+      <MetricGrid columns={2}>
+        {options.map((option) => {
+          const selected = orgType === option.type;
+          const Icon = option.icon;
+          return (
+            <Card
+              key={option.type}
+              role="button"
+              tabIndex={0}
+              aria-pressed={selected}
+              onClick={() => chooseType(option.type)}
+              onKeyDown={(event) => {
+                if (event.key !== "Enter" && event.key !== " ") return;
+                event.preventDefault();
+                chooseType(option.type);
+              }}
+              className={cn(
+                "cursor-pointer transition hover:border-brandPrimary-300 hover:shadow-md",
+                selected && "border-brandPrimary-300 bg-brandPrimary-50 shadow-md",
+              )}
+            >
+              <CardHeader className="p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={cn(
+                        "rounded-md p-2",
+                        selected
+                          ? "bg-brandPrimary-100 text-brandPrimary-800"
+                          : "bg-slate-100 text-slate-600",
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="space-y-1">
+                      <CardTitle className="text-base">{option.type}</CardTitle>
+                      <CardDescription>{option.description}</CardDescription>
+                    </div>
+                  </div>
+                  {selected ? (
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 text-brandPrimary-700" />
+                  ) : null}
+                </div>
+              </CardHeader>
+            </Card>
+          );
+        })}
+      </MetricGrid>
     );
   }
 
@@ -105,14 +162,18 @@ export function ReadinessAccountPicker({
 
   return (
     <div className="space-y-3">
-          <div className="max-w-sm space-y-1">
+          <div className="max-w-sm space-y-1.5">
             <Label htmlFor="readiness-account-find">Find an account</Label>
-            <Input
-              id="readiness-account-find"
-              value={query}
-              placeholder="Name, organisation, or id"
-              onChange={(event) => setQuery(event.target.value)}
-            />
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="readiness-account-find"
+                className="pl-8"
+                value={query}
+                placeholder="Name, organisation, or id"
+                onChange={(event) => setQuery(event.target.value)}
+              />
+            </div>
           </div>
 
           {accountsQuery.isLoading ? (
@@ -132,11 +193,20 @@ export function ReadinessAccountPicker({
           ) : null}
 
           {accountsQuery.data && accounts.length === 0 ? (
-            <p className="text-sm">
-              {query.trim()
-                ? `No ${orgType.toLowerCase()} accounts match.`
-                : `No ${orgType.toLowerCase()} accounts.`}
-            </p>
+            <EmptyState
+              variant="card"
+              title={
+                query.trim()
+                  ? `No ${orgType.toLowerCase()} accounts match`
+                  : `No ${orgType.toLowerCase()} accounts`
+              }
+              description={
+                query.trim()
+                  ? "Try another name, organisation, or account id."
+                  : "None are available for this organisation type."
+              }
+              icon={<Search className="h-12 w-12 text-muted-foreground" />}
+            />
           ) : null}
 
           {accounts.length > 0 ? (

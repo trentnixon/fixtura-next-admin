@@ -59,7 +59,7 @@ describe("scoreFixtureCompleteness", () => {
       percentage: 0,
       completeCount: 0,
       totalCount: 1,
-      findings: [{ fixtureId: 8, percentage: 0, reason: "not final" }],
+      findings: [{ fixtureId: 8, percentage: 0, reason: "unexpected status" }],
     });
   });
 
@@ -83,6 +83,25 @@ describe("scoreFixtureCompleteness", () => {
     ]);
     expect(scored.findings[0]?.percentage).toBe(50);
     expect(scored.findings[0]?.reason).toBe("missing location");
+  });
+
+  it.each(["Final", "Stumps", "In Progress", "Abandoned", "Cancelled"])(
+    "accepts %s as a result status",
+    (status) => {
+      expect(scoreFixtureCompleteness([fixture({ id: 11, status })]).findings[0]).toEqual({
+        fixtureId: 11,
+        percentage: 100,
+        reason: null,
+      });
+    },
+  );
+
+  it("stays at 0 when stumps has no score", () => {
+    expect(
+      scoreFixtureCompleteness([
+        fixture({ id: 12, status: "Stumps", homeScore: null, awayScore: null }),
+      ]).findings[0],
+    ).toEqual({ fixtureId: 12, percentage: 0, reason: "no score" });
   });
 
   it("averages every results fixture", () => {

@@ -1,6 +1,7 @@
 "use client";
 
 import TextInputsShowcase from "./_elements/TextInputsShowcase";
+import DatePickerShowcase from "./_elements/DatePickerShowcase";
 import TextareaShowcase from "./_elements/TextareaShowcase";
 import SelectShowcase from "./_elements/SelectShowcase";
 import SegmentedControlShowcase from "./_elements/SegmentedControlShowcase";
@@ -18,6 +19,7 @@ export default function FormsShowcase() {
   return (
     <>
       <TextInputsShowcase />
+      <DatePickerShowcase />
       <TextareaShowcase />
       <SelectShowcase />
       <SegmentedControlShowcase />

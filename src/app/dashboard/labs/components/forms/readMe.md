@@ -1,6 +1,6 @@
 # Folder Overview
 
-Forms showcase page for inputs, selects, checkboxes, switches, and composed form patterns with LLM reference tokens.
+Forms showcase page for inputs, date picker, selects, checkboxes, switches, and composed form patterns with LLM reference tokens.
 
 ## Guide reference
 
@@ -22,6 +22,7 @@ Tokens follow the pattern `form.{component}.{variant}` (e.g. `form.input.basic`,
 - `_components/FormsShowcase.tsx`: Orchestrates all form showcases
 - `_components/_elements/`:
   - `TextInputsShowcase.tsx`
+  - `DatePickerShowcase.tsx`
   - `TextareaShowcase.tsx`
   - `SelectShowcase.tsx`
   - `SegmentedControlShowcase.tsx`

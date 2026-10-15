@@ -42,6 +42,15 @@ export default function UsageGuidelinesShowcase() {
         </div>
 
         <div>
+          <h4 className="font-semibold text-foreground mb-2">Date Picker</h4>
+          <ul className="list-disc list-inside space-y-1 ml-2">
+            <li>Use `DatePicker` for a single calendar date instead of a native date input</li>
+            <li>Store the value as `YYYY-MM-DD`</li>
+            <li>Token: `form.date-picker.basic`</li>
+          </ul>
+        </div>
+
+        <div>
           <h4 className="font-semibold text-foreground mb-2">Select Components</h4>
           <ul className="list-disc list-inside space-y-1 ml-2">
             <li>Use for single selection from a list</li>

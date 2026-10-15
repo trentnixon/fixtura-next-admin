@@ -1,19 +1,38 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQueries, useQuery } from "@tanstack/react-query";
+import {
+  Building2,
+  CalendarClock,
+  CalendarDays,
+  CheckCircle2,
+  ClipboardCheck,
+  Gauge,
+  Users,
+} from "lucide-react";
+import { formatDate } from "@/app/dashboard/fixtures/_components/_utils/dateUtils";
 import { toFixtureDisplayText } from "@/app/dashboard/fixtures/_components/_utils/fixtureDisplayText";
+import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
+import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
+import { ComparisonCard } from "@/components/ui-library/cards";
+import CompactKpiCard from "@/components/ui-library/cards/CompactKpiCard";
+import MetricGrid from "@/components/ui-library/metrics/MetricGrid";
+import EmptyState from "@/components/ui-library/states/EmptyState";
+import ErrorState from "@/components/ui-library/states/ErrorState";
+import LoadingState from "@/components/ui-library/states/LoadingState";
 import {
   ReadinessAccountPicker,
   type ReadinessOrgType,
 } from "./ReadinessAccountPicker";
 import { ReadinessFixtureTable } from "./ReadinessFixtureTable";
+import { ReadinessWizardSteps } from "./ReadinessWizardSteps";
 import { useAccountQuery } from "@/hooks/accounts/useAccountQuery";
 import { useCompetitionClubDrilldown } from "@/hooks/competitions/useCompetitionClubDrilldown";
-import { useSchedulerQuery } from "@/hooks/scheduler/useSchedulerQuery";
 import { triggerResultSingleScrape } from "@/lib/services/data-collection/triggerResultSingleScrape";
 import { fetchFixtureDetails } from "@/lib/services/fixtures/fetchFixtureDetails";
 import { fetchSingleFixtureDetail } from "@/lib/services/fixtures/fetchSingleFixtureDetail";
@@ -22,9 +41,11 @@ import {
   listCoversReadinessWindow,
   readinessWindow,
   splitFixturesByPlayDay,
+  standardReadinessWindow,
   sydneyToday,
-  sydneyWeekday,
+  readinessPlayDay,
 } from "@/lib/readiness/fixtureDateWindow";
+import { scorecardHasPlayer } from "@/lib/readiness/scorecardHasPlayer";
 import {
   scoreFixtureCompleteness,
   type FixtureCompletenessInput,
@@ -33,12 +54,6 @@ import {
 import type { CompetitionClubDrilldownResponse } from "@/types/competitionClubDrilldown";
 import type { SingleFixtureDetailResponse } from "@/types/fixtureDetail";
 import type { FixtureDetailsResponse, FixtureSummary } from "@/types/fixtureInsights";
-
-type ScrapeRow = {
-  fixtureId: number;
-  accepted: boolean;
-  message: string;
-};
 
 function teamNamesByGrade(
   drilldown: CompetitionClubDrilldownResponse | undefined,
@@ -98,27 +113,6 @@ function recordedScore(total: string | null | undefined, innings: string | null 
   return null;
 }
 
-function scorecardHasPlayer(
-  scorecards: SingleFixtureDetailResponse["fixture"]["matchDetails"]["scorecards"],
-): boolean {
-  if (scorecards == null) return false;
-  for (const card of Object.values(scorecards)) {
-    const players = [
-      ...("batting" in card && Array.isArray(card.batting) ? card.batting : []),
-      ...("bowling" in card && Array.isArray(card.bowling) ? card.bowling : []),
-    ];
-    if (
-      players.some((player) => {
-        const name = player.name ?? player.player ?? "";
-        return name.trim() !== "";
-      })
-    ) {
-      return true;
-    }
-  }
-  return false;
-}
-
 function toCompletenessInput(
   detail: SingleFixtureDetailResponse,
 ): FixtureCompletenessInput {
@@ -144,49 +138,74 @@ function toCompletenessInput(
   };
 }
 
-function ScoreBlock({
-  label,
-  score,
-}: {
-  label: string;
-  score: FixtureCompletenessScore;
-}) {
-  return (
-    <section className="space-y-2">
-      <h2 className="text-sm font-medium">{label}</h2>
-      <p className="text-2xl">
-        {score.percentage == null ? "No fixtures" : `${score.percentage}%`}
-      </p>
-      <p className="text-sm text-muted-foreground">
-        Average of {score.totalCount} results fixtures. {score.completeCount} at
-        100%.
-      </p>
-    </section>
-  );
+function percentLabel(score: FixtureCompletenessScore | null) {
+  if (!score || score.percentage == null) return "—";
+  return `${score.percentage}%`;
+}
+
+function sectionIcon(icon: ReactNode, tone: string) {
+  return <div className={`rounded-md p-1.5 ${tone}`}>{icon}</div>;
+}
+
+function parseDate(value: string | null): string {
+  if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  return sydneyToday();
+}
+
+function parseOrgType(value: string | null): ReadinessOrgType | null {
+  if (value === "Club" || value === "Association") return value;
+  return null;
+}
+
+function parseAccountId(value: string | null): string {
+  if (value && /^\d+$/.test(value)) return value;
+  return "";
+}
+
+function parseStep(value: string | null): number {
+  const step = Number(value);
+  if (!Number.isInteger(step) || step < 0 || step > 3) return 0;
+  return step;
+}
+
+function clampStep(
+  step: number,
+  date: string,
+  orgType: ReadinessOrgType | null,
+  accountId: string,
+) {
+  if (step >= 1 && date.length !== 10) return 0;
+  if (step >= 2 && orgType == null) return 1;
+  if (step >= 3 && accountId === "") return 2;
+  return step;
 }
 
 export function ReadinessCheckWorkspace() {
-  const [step, setStep] = useState(0);
-  const [orgType, setOrgType] = useState<ReadinessOrgType | null>(null);
-  const [accountId, setAccountId] = useState("");
-  const [chosenDate, setChosenDate] = useState("");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const chosenDate = parseDate(searchParams.get("date"));
+  const orgType = parseOrgType(searchParams.get("type"));
+  const accountId = parseAccountId(searchParams.get("account"));
+  const step = clampStep(
+    parseStep(searchParams.get("step")),
+    chosenDate,
+    orgType,
+    accountId,
+  );
+  const wizard = useRef({ step, chosenDate, orgType, accountId });
+  wizard.current = { step, chosenDate, orgType, accountId };
   const [loadId, setLoadId] = useState(0);
   const [scraping, setScraping] = useState(false);
-  const [scrapeRows, setScrapeRows] = useState<ScrapeRow[]>([]);
   const [reloadError, setReloadError] = useState<string | null>(null);
   const [afterScore, setAfterScore] = useState<FixtureCompletenessScore | null>(
     null,
   );
-
   const accountQuery = useAccountQuery(accountId);
   const account = accountQuery.data?.data;
   const organisationId = account?.accountOrganisationDetails?.id;
   const isClub = account?.account_type === 1;
   const isAssociation = account?.account_type === 2;
-  const schedulerQuery = useSchedulerQuery(account?.scheduler?.id ?? 0);
-  const scheduledDay =
-    schedulerQuery.data?.attributes.days_of_the_week?.data?.attributes.Name ??
-    null;
 
   const associationFixtures = useQuery({
     queryKey: ["fixture-details", { association: organisationId }],
@@ -250,6 +269,8 @@ export function ReadinessCheckWorkspace() {
 
   const fixtureWindow =
     chosenDate.length === 10 ? readinessWindow(chosenDate) : null;
+  const standardWindow =
+    chosenDate.length === 10 ? standardReadinessWindow(chosenDate) : null;
   const windowFixtures = fixtureWindow
     ? fixturesInReadinessWindow(summaries, chosenDate)
     : [];
@@ -268,8 +289,14 @@ export function ReadinessCheckWorkspace() {
   const loadedDetails = detailQueries.flatMap((query) =>
     query.data ? [query.data] : [],
   );
+  const detailById = new Map(loadedDetails.map((detail) => [detail.fixture.id, detail]));
+  const scheduledFixtures = windowFixtures.map((fixture) => {
+    const day = readinessPlayDay(fixture.date, detailById.get(fixture.id)?.fixture);
+    if (day == null || day === fixture.date) return fixture;
+    return { ...fixture, date: day };
+  });
   const resultIds = new Set(
-    splitFixturesByPlayDay(windowFixtures, sydneyToday()).results.map(
+    splitFixturesByPlayDay(scheduledFixtures, sydneyToday()).results.map(
       (fixture) => fixture.id,
     ),
   );
@@ -291,28 +318,27 @@ export function ReadinessCheckWorkspace() {
   async function scrapeAll() {
     setScraping(true);
     setAfterScore(null);
-    const rows = await Promise.all(
-      windowFixtures.map(async (fixture) => {
-        try {
-          const result = await triggerResultSingleScrape({
-            cmsFixtureId: fixture.id,
-          });
-          return {
-            fixtureId: fixture.id,
-            accepted: true,
-            message: result.message || "Queued",
-          };
-        } catch (error) {
-          return {
-            fixtureId: fixture.id,
-            accepted: false,
-            message: error instanceof Error ? error.message : "Rejected",
-          };
-        }
-      }),
-    );
-    setScrapeRows(rows);
-    setScraping(false);
+    setReloadError(null);
+    try {
+      const accepted = await Promise.all(
+        windowFixtures.map(async (fixture) => {
+          try {
+            await triggerResultSingleScrape({ cmsFixtureId: fixture.id });
+            return true;
+          } catch {
+            return false;
+          }
+        }),
+      );
+      const rejected = accepted.filter((ok) => !ok).length;
+      if (rejected > 0) {
+        setReloadError(
+          `Could not queue ${rejected} of ${windowFixtures.length} scrapes.`,
+        );
+      }
+    } finally {
+      setScraping(false);
+    }
   }
 
   async function scoreAgain() {
@@ -334,26 +360,75 @@ export function ReadinessCheckWorkspace() {
     setAfterScore(scoreFixtureCompleteness(resultDetails.map(toCompletenessInput)));
   }
 
-  const weekday =
-    chosenDate.length === 10 ? sydneyWeekday(chosenDate) : null;
-  const onScheduledDay =
-    weekday != null &&
-    scheduledDay != null &&
-    weekday.toLowerCase() === scheduledDay.toLowerCase();
+  function commit(patch: {
+    step?: number;
+    chosenDate?: string;
+    orgType?: ReadinessOrgType | null;
+    accountId?: string;
+  }) {
+    const next = { ...wizard.current, ...patch };
+    const nextStep = clampStep(
+      next.step,
+      next.chosenDate,
+      next.orgType,
+      next.accountId,
+    );
+    wizard.current = { ...next, step: nextStep };
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("date", next.chosenDate);
+    if (next.orgType) params.set("type", next.orgType);
+    else params.delete("type");
+    if (next.accountId) params.set("account", next.accountId);
+    else params.delete("account");
+    if (nextStep > 0) params.set("step", String(nextStep));
+    else params.delete("step");
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  }
+
+  function chooseDate(nextDate: string) {
+    if (nextDate === chosenDate) return;
+    commit({ chosenDate: nextDate });
+    setLoadId((value) => value + 1);
+    setReloadError(null);
+    setAfterScore(null);
+  }
 
   function selectAccount(nextAccountId: string) {
-    setAccountId(nextAccountId);
+    commit({ accountId: nextAccountId });
     setLoadId((value) => value + 1);
-    setScrapeRows([]);
     setReloadError(null);
     setAfterScore(null);
   }
 
   function chooseOrgType(next: ReadinessOrgType) {
-    setOrgType(next);
+    commit({ orgType: next, accountId: "" });
   }
 
-  const steps = ["Date", "Organisation type", "Organisation", "Results"] as const;
+  const organisationName =
+    account?.accountOrganisationDetails?.Name ?? "Client";
+  const wizardSteps = [
+    {
+      label: "Date",
+      summary: chosenDate.length === 10 ? formatDate(chosenDate) : null,
+      icon: CalendarDays,
+    },
+    {
+      label: "Organisation type",
+      summary: orgType,
+      icon: Building2,
+    },
+    {
+      label: "Organisation",
+      summary: account ? organisationName : accountId ? "Selected" : null,
+      icon: Users,
+    },
+    {
+      label: "Results",
+      summary: null,
+      icon: ClipboardCheck,
+    },
+  ];
   const canContinue =
     step === 0
       ? chosenDate.length === 10
@@ -362,170 +437,313 @@ export function ReadinessCheckWorkspace() {
         : step === 2
           ? accountId !== ""
           : false;
+  const stepCopy = [
+    {
+      title: "Choose a date",
+      description:
+        "Most fixtures are included from 7 days before this date through 7 days after it. Only Two Day+ fixtures use the 14 days before this date.",
+      icon: sectionIcon(
+        <CalendarDays className="h-4 w-4" />,
+        "bg-blue-50 text-blue-700",
+      ),
+    },
+    {
+      title: "Organisation type",
+      description:
+        "Club and association accounts load their fixture lists differently.",
+      icon: sectionIcon(
+        <Building2 className="h-4 w-4" />,
+        "bg-violet-50 text-violet-700",
+      ),
+    },
+    {
+      title: "Choose an organisation",
+      description: orgType
+        ? `Search ${orgType.toLowerCase()} accounts by name, organisation, sport, or id.`
+        : "Search by name, organisation, sport, or id.",
+      icon: sectionIcon(
+        <Users className="h-4 w-4" />,
+        "bg-sky-50 text-sky-700",
+      ),
+    },
+    {
+      title: account ? organisationName : "Results",
+      description:
+        fixtureWindow && standardWindow
+          ? `Most fixtures from ${formatDate(standardWindow.start)} to ${formatDate(fixtureWindow.end)}. Two Day+ from ${formatDate(fixtureWindow.start)}.`
+          : "Scores and scrape actions for this window.",
+      icon: sectionIcon(
+        <ClipboardCheck className="h-4 w-4" />,
+        "bg-emerald-50 text-emerald-700",
+      ),
+    },
+  ] as const;
+  const currentStep = stepCopy[step] ?? stepCopy[0];
+  const showEmptyWindow =
+    !listMissesWindow &&
+    accountId !== "" &&
+    fixtureWindow != null &&
+    !listsLoading &&
+    windowFixtures.length === 0;
 
   return (
     <div className="space-y-6">
-      <ol className="flex flex-wrap gap-2">
-        {steps.map((label, index) => {
-          const current = index === step;
-          const done = index < step;
-          return (
-            <li key={label}>
-              <button
-                type="button"
-                disabled={index > step}
-                onClick={() => {
-                  if (index < step) setStep(index);
-                }}
-                className={
-                  current
-                    ? "rounded-full bg-sidebar px-3 py-1 text-sm text-white"
-                    : done
-                      ? "rounded-full px-3 py-1 text-sm text-sidebar underline"
-                      : "rounded-full px-3 py-1 text-sm text-muted-foreground"
-                }
-              >
-                {index + 1}. {label}
-              </button>
-            </li>
-          );
-        })}
-      </ol>
-
-      {step === 0 ? (
-        <div className="space-y-1">
-          <Label htmlFor="readiness-date">Date</Label>
-          <Input
-            id="readiness-date"
-            type="date"
-            className="max-w-xs"
-            value={chosenDate}
-            onChange={(event) => {
-              setChosenDate(event.target.value);
-              setLoadId((value) => value + 1);
-              setScrapeRows([]);
-              setReloadError(null);
-              setAfterScore(null);
-            }}
-          />
-          {fixtureWindow ? (
-            <p className="text-xs text-muted-foreground">
-              Fixtures from {fixtureWindow.start} to {fixtureWindow.end}. Two
-              weeks before this date and one week after.
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-
-      {step === 1 || step === 2 ? (
-        <ReadinessAccountPicker
-          view={step === 1 ? "type" : "accounts"}
-          orgType={orgType}
-          onOrgTypeChange={chooseOrgType}
-          selectedAccountId={accountId}
-          onSelect={selectAccount}
+      <ElementContainer border padding="md">
+        <ReadinessWizardSteps
+          steps={wizardSteps}
+          current={step}
+          onStep={(index) => commit({ step: index })}
         />
-      ) : null}
+      </ElementContainer>
 
-      {step < 3 ? (
-        <div className="flex gap-2">
+      <SectionContainer
+        title={currentStep.title}
+        description={currentStep.description}
+        icon={currentStep.icon}
+      >
+        {step === 0 ? (
+          <div className="flex flex-col items-center gap-3">
+            <Label htmlFor="readiness-date">Date</Label>
+            <DatePicker
+              id="readiness-date"
+              value={chosenDate}
+              today={sydneyToday()}
+              placeholder="Pick a date"
+              onChange={chooseDate}
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => chooseDate(sydneyToday())}
+            >
+              Use today&apos;s date
+            </Button>
+          </div>
+        ) : null}
+
+        {step === 0 && fixtureWindow && standardWindow ? (
+          <MetricGrid columns={3}>
+            <CompactKpiCard
+              label="Most fixtures from"
+              value={formatDate(standardWindow.start)}
+              icon={<CalendarDays className="h-4 w-4" />}
+              iconClassName="bg-blue-50 text-blue-700"
+              progressClassName="bg-blue-500"
+            />
+            <CompactKpiCard
+              label="Two Day+ from"
+              value={formatDate(fixtureWindow.start)}
+              icon={<CalendarDays className="h-4 w-4" />}
+              iconClassName="bg-violet-50 text-violet-700"
+              progressClassName="bg-violet-500"
+            />
+            <CompactKpiCard
+              label="Through"
+              value={formatDate(fixtureWindow.end)}
+              icon={<CalendarClock className="h-4 w-4" />}
+              iconClassName="bg-sky-50 text-sky-700"
+              progressClassName="bg-sky-500"
+            />
+          </MetricGrid>
+        ) : null}
+
+        {step === 1 || step === 2 ? (
+          <ReadinessAccountPicker
+            view={step === 1 ? "type" : "accounts"}
+            orgType={orgType}
+            onOrgTypeChange={chooseOrgType}
+            selectedAccountId={accountId}
+            onSelect={selectAccount}
+          />
+        ) : null}
+
+        {step === 3 && listsLoading && !beforeScore ? (
+          <LoadingState message="Loading fixtures..." />
+        ) : null}
+
+        {step === 3 && accountQuery.isError ? (
+          <ErrorState
+            variant="card"
+            title="Could not load that client"
+            error={
+              accountQuery.error instanceof Error
+                ? accountQuery.error
+                : "The account request failed."
+            }
+            onRetry={() => void accountQuery.refetch()}
+          />
+        ) : null}
+
+        {step === 3 && account && !isClub && !isAssociation ? (
+          <ErrorState
+            variant="card"
+            title="Unsupported client"
+            description="This client is not a club or an association."
+          />
+        ) : null}
+
+        {step === 3 && detailQueries.some((query) => query.isError) ? (
+          <ErrorState
+            variant="minimal"
+            title="Fixture load failed"
+            description="Could not load every fixture in this set."
+          />
+        ) : null}
+
+        {step === 3 && listMissesWindow && fixtureWindow ? (
+          <ErrorState
+            variant="card"
+            title="Fixture list is shorter than this window"
+            description={`The loaded list does not cover ${formatDate(fixtureWindow.start)} to ${formatDate(fixtureWindow.end)}.`}
+          />
+        ) : null}
+
+        {step === 3 && showEmptyWindow && fixtureWindow ? (
+          <EmptyState
+            variant="card"
+            title="No fixtures in this window"
+            description={`Nothing from ${formatDate(fixtureWindow.start)} to ${formatDate(fixtureWindow.end)}.`}
+            icon={<CalendarDays className="h-12 w-12 text-muted-foreground" />}
+          />
+        ) : null}
+
+        {step === 3 && beforeScore ? (
+          <MetricGrid columns={3}>
+            <CompactKpiCard
+              label="Results completeness"
+              value={percentLabel(beforeScore)}
+              badge="Before scrape"
+              progressPercent={beforeScore.percentage ?? 0}
+              icon={<Gauge className="h-4 w-4" />}
+              iconClassName="bg-indigo-50 text-indigo-700"
+              progressClassName="bg-indigo-500"
+            />
+            <CompactKpiCard
+              label="Complete results"
+              value={String(beforeScore.completeCount)}
+              badge={`of ${beforeScore.totalCount}`}
+              progressPercent={
+                beforeScore.totalCount === 0
+                  ? 0
+                  : (beforeScore.completeCount / beforeScore.totalCount) * 100
+              }
+              icon={<CheckCircle2 className="h-4 w-4" />}
+              iconClassName="bg-emerald-50 text-emerald-700"
+              progressClassName="bg-emerald-500"
+            />
+            <CompactKpiCard
+              label="Fixtures in window"
+              value={String(windowFixtures.length)}
+              icon={<CalendarDays className="h-4 w-4" />}
+              iconClassName="bg-sky-50 text-sky-700"
+              progressClassName="bg-sky-500"
+            />
+          </MetricGrid>
+        ) : null}
+
+        {step === 3 && beforeScore && afterScore ? (
+          <ComparisonCard
+            title="Before and after reload"
+            description="Average completeness of results fixtures."
+            icon={<Gauge className="h-4 w-4" />}
+            rows={[
+              {
+                label: "Before scrape",
+                value: percentLabel(beforeScore),
+              },
+              {
+                label: "After reload",
+                value: percentLabel(afterScore),
+                tone:
+                  (afterScore.percentage ?? 0) > (beforeScore.percentage ?? 0)
+                    ? "text-emerald-700"
+                    : undefined,
+              },
+              {
+                label: "Complete before",
+                value: String(beforeScore.completeCount),
+              },
+              {
+                label: "Complete after",
+                value: String(afterScore.completeCount),
+                tone:
+                  afterScore.completeCount > beforeScore.completeCount
+                    ? "text-emerald-700"
+                    : undefined,
+              },
+            ]}
+          />
+        ) : null}
+
+        {step === 3 && reloadError ? (
+          <ErrorState variant="minimal" description={reloadError} />
+        ) : null}
+
+        {step === 3 && windowFixtures.length > 0 ? (
+          <ElementContainer
+            title="Fixtures"
+            subtitle="Upcoming games and results in this window."
+            border
+            padding="md"
+          >
+            <ReadinessFixtureTable
+              fixtures={windowFixtures}
+              details={loadedDetails}
+              beforeScore={
+                resultDetails.length > 0
+                  ? scoreFixtureCompleteness(
+                      resultDetails.map(toCompletenessInput),
+                    )
+                  : null
+              }
+            />
+          </ElementContainer>
+        ) : null}
+
+        <div className="flex flex-col gap-2 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-end">
           {step > 0 ? (
-            <Button type="button" variant="outline" onClick={() => setStep(step - 1)}>
+            <Button
+              type="button"
+              variant="secondary"
+              className="sm:mr-auto"
+              onClick={() => commit({ step: step - 1 })}
+            >
               Back
             </Button>
           ) : null}
-          <Button type="button" onClick={() => setStep(step + 1)} disabled={!canContinue}>
-            Next
-          </Button>
+          {step < 3 ? (
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => commit({ step: step + 1 })}
+              disabled={!canContinue}
+            >
+              Next
+            </Button>
+          ) : windowFixtures.length > 0 ? (
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => void scoreAgain()}
+                disabled={scraping}
+              >
+                Score again
+              </Button>
+              <Button
+                type="button"
+                variant="accent"
+                onClick={() => void scrapeAll()}
+                disabled={scraping}
+              >
+                {scraping
+                  ? "Scraping…"
+                  : `Scrape all ${windowFixtures.length} fixtures`}
+              </Button>
+            </div>
+          ) : null}
         </div>
-      ) : (
-        <Button type="button" variant="outline" onClick={() => setStep(2)}>
-          Back
-        </Button>
-      )}
-
-      {step === 3 ? (
-      <div className="space-y-6">
-
-      {account ? (
-        <p className="text-sm">
-          {account.accountOrganisationDetails?.Name ?? "Client"}{" "}
-          {isClub ? "club" : isAssociation ? "association" : "client"}
-          {fixtureWindow
-            ? `. Fixtures from ${fixtureWindow.start} to ${fixtureWindow.end}.`
-            : null}
-          {scheduledDay ? ` Scheduled day: ${scheduledDay}.` : null}
-          {onScheduledDay
-            ? " This date is the client's scheduled day."
-            : null}
-        </p>
-      ) : null}
-
-      {accountQuery.isError ? (
-        <p className="text-sm">Could not load that client.</p>
-      ) : null}
-
-      {account && !isClub && !isAssociation ? (
-        <p className="text-sm">This client is not a club or an association.</p>
-      ) : null}
-
-      {detailQueries.some((query) => query.isError) ? (
-        <p className="text-sm">Could not load every fixture in this set.</p>
-      ) : null}
-
-      {listMissesWindow && fixtureWindow ? (
-        <p className="text-sm">
-          The fixture list does not cover {fixtureWindow.start} to{" "}
-          {fixtureWindow.end}.
-        </p>
-      ) : null}
-
-      {!listMissesWindow &&
-      accountId &&
-      fixtureWindow &&
-      !listsLoading &&
-      windowFixtures.length === 0 ? (
-        <p className="text-sm">
-          No fixtures from {fixtureWindow.start} to {fixtureWindow.end}.
-        </p>
-      ) : null}
-
-      {beforeScore ? <ScoreBlock label="Results before scrape" score={beforeScore} /> : null}
-
-      {windowFixtures.length > 0 ? (
-        <div className="flex gap-2">
-          <Button type="button" onClick={() => void scrapeAll()} disabled={scraping}>
-            {scraping ? "Scraping…" : `Scrape all ${windowFixtures.length} fixtures`}
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => void scoreAgain()}
-            disabled={scraping}
-          >
-            Score again
-          </Button>
-        </div>
-      ) : null}
-
-      {reloadError ? <p className="text-sm">{reloadError}</p> : null}
-
-      {afterScore ? <ScoreBlock label="Results after reload" score={afterScore} /> : null}
-
-      {windowFixtures.length > 0 ? (
-        <ReadinessFixtureTable
-          fixtures={windowFixtures}
-          beforeScore={
-            resultDetails.length > 0
-              ? scoreFixtureCompleteness(resultDetails.map(toCompletenessInput))
-              : null
-          }
-          afterScore={afterScore}
-          scrapeRows={scrapeRows}
-        />
-      ) : null}
-      </div>
-      ) : null}
+      </SectionContainer>
     </div>
   );
 }
