@@ -18,6 +18,14 @@ import ElementContainer from "@/components/scaffolding/containers/ElementContain
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { ComparisonCard } from "@/components/ui-library/cards";
 import CompactKpiCard from "@/components/ui-library/cards/CompactKpiCard";
@@ -197,6 +205,7 @@ export function ReadinessCheckWorkspace() {
   wizard.current = { step, chosenDate, orgType, accountId };
   const [loadId, setLoadId] = useState(0);
   const [scraping, setScraping] = useState(false);
+  const [confirmScrape, setConfirmScrape] = useState(false);
   const [reloadError, setReloadError] = useState<string | null>(null);
   const [afterScore, setAfterScore] = useState<FixtureCompletenessScore | null>(
     null,
@@ -295,11 +304,11 @@ export function ReadinessCheckWorkspace() {
     if (day == null || day === fixture.date) return fixture;
     return { ...fixture, date: day };
   });
-  const resultIds = new Set(
-    splitFixturesByPlayDay(scheduledFixtures, sydneyToday()).results.map(
-      (fixture) => fixture.id,
-    ),
-  );
+  const resultFixtures = splitFixturesByPlayDay(
+    scheduledFixtures,
+    sydneyToday(),
+  ).results;
+  const resultIds = new Set(resultFixtures.map((fixture) => fixture.id));
   const resultDetails = loadedDetails.filter((detail) =>
     resultIds.has(detail.fixture.id),
   );
@@ -321,7 +330,7 @@ export function ReadinessCheckWorkspace() {
     setReloadError(null);
     try {
       const accepted = await Promise.all(
-        windowFixtures.map(async (fixture) => {
+        resultFixtures.map(async (fixture) => {
           try {
             await triggerResultSingleScrape({ cmsFixtureId: fixture.id });
             return true;
@@ -333,7 +342,7 @@ export function ReadinessCheckWorkspace() {
       const rejected = accepted.filter((ok) => !ok).length;
       if (rejected > 0) {
         setReloadError(
-          `Could not queue ${rejected} of ${windowFixtures.length} scrapes.`,
+          `Could not queue ${rejected} of ${resultFixtures.length} scrapes.`,
         );
       }
     } finally {
@@ -733,13 +742,54 @@ export function ReadinessCheckWorkspace() {
               <Button
                 type="button"
                 variant="accent"
-                onClick={() => void scrapeAll()}
-                disabled={scraping}
+                onClick={() => setConfirmScrape(true)}
+                disabled={scraping || resultFixtures.length === 0}
               >
                 {scraping
                   ? "Scraping…"
-                  : `Scrape all ${windowFixtures.length} fixtures`}
+                  : `Scrape all ${resultFixtures.length} results`}
               </Button>
+              <Dialog
+                open={confirmScrape}
+                onOpenChange={(open) => {
+                  if (scraping) return;
+                  setConfirmScrape(open);
+                }}
+              >
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Confirm result scrape</DialogTitle>
+                    <DialogDescription>
+                      This queues a PlayHQ result scrape for{" "}
+                      {resultFixtures.length} results. Upcoming fixtures are
+                      left alone. Each fixture is its own job, and scrape plus
+                      ingest often takes about 30–60 seconds.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => setConfirmScrape(false)}
+                      disabled={scraping}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="accent"
+                      disabled={scraping || resultFixtures.length === 0}
+                      onClick={() => {
+                        void scrapeAll().then(() => setConfirmScrape(false));
+                      }}
+                    >
+                      {scraping
+                        ? "Scraping…"
+                        : `Scrape ${resultFixtures.length} results`}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
           ) : null}
         </div>
