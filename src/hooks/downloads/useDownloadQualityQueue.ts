@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import {
   buildDownloadQcWindow,
-  type DownloadQcQueueScope,
   type DownloadQcWindowPreset,
 } from "@/lib/downloads/downloadQualityControlParams";
 import { fetchDownloadQualityQueue } from "@/lib/services/downloads/fetchDownloadQualityQueue";
@@ -15,7 +14,6 @@ export type UseDownloadQualityQueueInput = {
   windowPreset: DownloadQcWindowPreset;
   page: number;
   pageSize?: number;
-  scope: DownloadQcQueueScope;
 };
 
 export function useDownloadQualityQueue(
@@ -23,14 +21,13 @@ export function useDownloadQualityQueue(
   options?: { enabled?: boolean },
 ) {
   const enabled = options?.enabled ?? true;
-  const { windowPreset, page, pageSize = 25, scope } = input;
+  const { windowPreset, page, pageSize = 25 } = input;
 
   return useQuery({
     queryKey: [
       "downloads",
       "qualityQueue",
       windowPreset,
-      scope,
       page,
       pageSize,
     ] as const,
@@ -41,7 +38,7 @@ export function useDownloadQualityQueue(
         to,
         page,
         pageSize,
-        needsAttention: scope === "needs_attention",
+        needsAttention: true,
       });
     },
     enabled,

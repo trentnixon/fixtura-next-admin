@@ -47,6 +47,7 @@ import {
   summarizeNotificationHealthAttention,
 } from "@/lib/overview/overviewActionQueues";
 import type { WorkspaceMetricTile } from "./live-snapshot/OverviewDataWorkspace";
+import { RecentDownloadsWidget } from "./content-production/RecentDownloadsWidget";
 
 const UNAVAILABLE = "—";
 const UNAVAILABLE_META = "Unavailable";
@@ -396,43 +397,47 @@ export default function LiveOverview() {
 
   return (
     <div className="space-y-6">
-      <OverviewNotifications
-        emails={{
-          items: contactActionItems,
-          total: contactActionCount,
-          isLoading: contactLoading,
-          error: contactError
-            ? contactQueryError instanceof Error
-              ? contactQueryError
-              : new Error(String(contactQueryError))
-            : null,
-          onRetry: () => refetchContact(),
-        }}
-        rerenders={{
-          items: unhandledRerenderItems,
-          total: unhandledRerenderCount,
-          isLoading: rerenderLoading,
-          error: rerenderError
-            ? rerenderQueryError instanceof Error
-              ? rerenderQueryError
-              : new Error(String(rerenderQueryError))
-            : null,
-          onRetry: () => refetchRerender(),
-        }}
-        invoices={{
-          items: newInvoiceItems,
-          total: newInvoiceTotal,
-          isLoading: newInvoicesLoading,
-          error: newInvoicesError
-            ? newInvoicesQueryError instanceof Error
-              ? newInvoicesQueryError
-              : new Error(String(newInvoicesQueryError))
-            : null,
-          onRetry: () => {
-            void refetchInvoices();
-          },
-        }}
-      />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:items-start">
+        <OverviewNotifications
+          className="h-full"
+          emails={{
+            items: contactActionItems,
+            total: contactActionCount,
+            isLoading: contactLoading,
+            error: contactError
+              ? contactQueryError instanceof Error
+                ? contactQueryError
+                : new Error(String(contactQueryError))
+              : null,
+            onRetry: () => refetchContact(),
+          }}
+          rerenders={{
+            items: unhandledRerenderItems,
+            total: unhandledRerenderCount,
+            isLoading: rerenderLoading,
+            error: rerenderError
+              ? rerenderQueryError instanceof Error
+                ? rerenderQueryError
+                : new Error(String(rerenderQueryError))
+              : null,
+            onRetry: () => refetchRerender(),
+          }}
+          invoices={{
+            items: newInvoiceItems,
+            total: newInvoiceTotal,
+            isLoading: newInvoicesLoading,
+            error: newInvoicesError
+              ? newInvoicesQueryError instanceof Error
+                ? newInvoicesQueryError
+                : new Error(String(newInvoicesQueryError))
+              : null,
+            onRetry: () => {
+              void refetchInvoices();
+            },
+          }}
+        />
+        <RecentDownloadsWidget className="h-full" />
+      </div>
 
       <OverviewDataWorkspace
         title="Today's operations"

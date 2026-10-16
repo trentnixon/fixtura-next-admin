@@ -3,6 +3,7 @@ import {
   downloadAttentionLabel,
   type DownloadAttentionBucket,
 } from "@/lib/downloads/downloadAttention";
+import { downloadStatusLabel } from "@/lib/downloads/downloadStatusTimeline";
 import { cn } from "@/lib/utils";
 
 const BUCKET_CLASS: Record<DownloadAttentionBucket, string> = {
@@ -15,16 +16,23 @@ const BUCKET_CLASS: Record<DownloadAttentionBucket, string> = {
 export function DownloadAttentionBadge({
   bucket,
   className,
+  labelMode = "attention",
 }: {
   bucket: DownloadAttentionBucket;
   className?: string;
+  labelMode?: "attention" | "status";
 }) {
+  const label =
+    labelMode === "status"
+      ? downloadStatusLabel(bucket)
+      : downloadAttentionLabel(bucket);
+
   return (
     <Badge
       variant="outline"
       className={cn("capitalize", BUCKET_CLASS[bucket], className)}
     >
-      {downloadAttentionLabel(bucket)}
+      {label}
     </Badge>
   );
 }

@@ -7,8 +7,6 @@ import {
   Users,
   Building2,
   Network,
-  CalendarClock,
-  ClipboardCheck,
   FileCode,
   Download,
   Trophy,
@@ -94,30 +92,30 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         isActive: false,
       },
     ],
-    renderNav: [
+    contentProductionNav: [
       {
-        title: "Schedulers",
-        url: "/dashboard/schedulers",
-        icon: CalendarClock,
-        isActive: true,
-      },
-      {
-        title: "Renders",
+        title: "Render",
         url: "/dashboard/renders",
         icon: FileCode,
         isActive: true,
+        items: [
+          { title: "Schedulers", url: "/dashboard/schedulers" },
+          { title: "Renders", url: "/dashboard/renders" },
+          { title: "Readiness check", url: "/dashboard/readiness" },
+        ],
       },
       {
-        title: "Readiness check",
-        url: "/dashboard/readiness",
-        icon: ClipboardCheck,
-        isActive: true,
-      },
-      {
-        title: "Download attention",
-        url: "/dashboard/renders/download-quality-control",
+        title: "Downloads",
+        url: "/dashboard/renders/downloads",
         icon: Download,
         isActive: true,
+        items: [
+          { title: "Downloads", url: "/dashboard/renders/downloads" },
+          {
+            title: "Download attention",
+            url: "/dashboard/renders/download-quality-control",
+          },
+        ],
       },
     ],
     sportsDataNav: [
@@ -298,7 +296,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent className="gap-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         <NavMain items={data.mainNav} title="Main" />
         <NavMain items={data.accountsNav} title="Accounts" />
-        <NavMain items={data.renderNav} title="Content production" />
+        <NavMain items={data.contentProductionNav} title="Content production" />
         <NavMain items={data.sportsDataNav} title="Sports Data" />
         <NavMain items={data.assetNav} title="Assets" />
         <NavMain items={data.financialNav} title="Financial" />

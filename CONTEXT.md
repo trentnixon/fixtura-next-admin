@@ -90,6 +90,18 @@ _Avoid_: Render, Download
 Operational triage state for a download output row: failed Creator flags, structured errors, in-progress processing, or ambiguous legacy combinations. Used in the Renders workspace (not member Content Hub).
 _Avoid_: Quality control (prefer this term in product copy), failed render
 
+**Download status**:
+Failed, In progress, Done, or Unknown for one Download, derived from Creator flags on that row. Used on the fleet Downloads timeline (not Download attention triage).
+_Avoid_: Rendered item, quality, created
+
+**Done**:
+A Download that has finished processing and `hasError` is false.
+_Avoid_: OK, complete, published
+
+**Unknown**:
+A Download that has finished processing with `hasError` null and an empty `errorHandler`. Ambiguous legacy row; not a failure and not still processing.
+_Avoid_: Done
+
 **Download output failure**:
 A download row marked failed by Creator (`hasError` true) or carrying non-empty structured `errorHandler` entries.
 _Avoid_: Render failure, pipeline failure

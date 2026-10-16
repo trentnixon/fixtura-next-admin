@@ -21,11 +21,21 @@ import {
   SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
 
+function isPathActiveForNavUrl(pathname: string, url: string): boolean {
+  if (pathname === url) {
+    return true;
+  }
+  if (url === "/dashboard/renders") {
+    return /^\/dashboard\/renders\/\d+(?:\/|$)/.test(pathname);
+  }
+  return pathname.startsWith(`${url}/`);
+}
+
 export function NavMain({
   items,
   title,
 }: {
-  title: string;
+  title?: string;
   items: {
     title: string;
     url: string;
@@ -44,13 +54,7 @@ export function NavMain({
     if (!pathname) {
       return false;
     }
-    if (pathname === item.url) {
-      return true;
-    }
-    if (item.url === "/dashboard/renders") {
-      return /^\/dashboard\/renders\/\d+/.test(pathname);
-    }
-    return pathname.startsWith(`${item.url}/`);
+    return isPathActiveForNavUrl(pathname, item.url);
   }
 
   function getActiveSubItemUrl(
@@ -60,9 +64,8 @@ export function NavMain({
       return null;
     }
 
-    const matches = subItems.filter(
-      (subItem) =>
-        pathname === subItem.url || pathname.startsWith(`${subItem.url}/`)
+    const matches = subItems.filter((subItem) =>
+      isPathActiveForNavUrl(pathname, subItem.url),
     );
 
     if (matches.length === 0) {
@@ -74,13 +77,14 @@ export function NavMain({
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>{title}</SidebarGroupLabel>
+      {title ? <SidebarGroupLabel>{title}</SidebarGroupLabel> : null}
       <SidebarMenu>
         {items.map((item) => {
           // Determine if this item or its children match the current path
-          const isCurrent =
-            isNavItemActive(item) ||
-            item.items?.some((subItem) => pathname?.startsWith(subItem.url));
+          const activeSubItemUrl = getActiveSubItemUrl(item.items);
+          const isCurrent = item.items?.length
+            ? activeSubItemUrl != null || isNavItemActive(item)
+            : isNavItemActive(item);
 
           return (
             <Collapsible key={item.title} asChild defaultOpen={isCurrent}>

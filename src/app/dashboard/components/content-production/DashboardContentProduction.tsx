@@ -58,7 +58,6 @@ export default function DashboardContentProduction() {
     windowPreset: "7d",
     page: 1,
     pageSize: 1,
-    scope: "needs_attention",
   });
 
   const breakdown = useMemo(() => {

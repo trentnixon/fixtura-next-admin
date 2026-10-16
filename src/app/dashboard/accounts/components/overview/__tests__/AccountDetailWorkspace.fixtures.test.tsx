@@ -41,6 +41,19 @@ const gradeCalls = vi.hoisted(() => ({
   filters: [] as Array<{ grade?: number; association?: number } | undefined>,
 }));
 
+const readinessAnchor = vi.hoisted(() => ({
+  today: "2026-10-11",
+}));
+
+vi.mock("@/lib/readiness/fixtureDateWindow", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/readiness/fixtureDateWindow")>();
+  return {
+    ...actual,
+    sydneyToday: () => readinessAnchor.today,
+  };
+});
+
 vi.mock("@/hooks/competitions/useCompetitionClubDrilldown", () => ({
   useCompetitionClubDrilldown: (clubId?: number) => {
     drilldownCalls.ids.push(clubId);
@@ -627,5 +640,131 @@ describe("association client fixtures tab", () => {
       screen.getByText("Account organization details are missing. Cannot load fixtures."),
     ).toBeInTheDocument();
     expect(fixtureCalls.filters).toEqual([]);
+  });
+
+  it("shows fixtures outside the render window in Show all", async () => {
+    fixtureState.current = {
+      ...fixtureState.current,
+      refetch: fixtureState.refetch,
+      data: response([
+        fixture({
+          id: 100,
+          date: "2026-01-15",
+          teams: { home: "Far Reds", away: "Far Greens" },
+        }),
+      ]),
+    };
+    renderWorkspace(client(2));
+    await openFixtures();
+
+    expect(screen.getByText("Far Reds vs Far Greens")).toBeInTheDocument();
+  });
+
+  it("filters to the readiness render window in Show render", async () => {
+    fixtureState.current = {
+      ...fixtureState.current,
+      refetch: fixtureState.refetch,
+      data: response([
+        fixture({
+          id: 201,
+          date: "2026-09-27",
+          type: "Two Day+",
+          teams: { home: "Long Reds", away: "Long Greens" },
+        }),
+        fixture({
+          id: 202,
+          date: "2026-09-27",
+          type: "One Day",
+          teams: { home: "Short Reds", away: "Short Greens" },
+        }),
+        fixture({
+          id: 203,
+          date: "2026-10-04",
+          type: "T20",
+          teams: { home: "Near Reds", away: "Near Greens" },
+        }),
+        fixture({
+          id: 204,
+          date: "2026-10-19",
+          type: "One Day",
+          teams: { home: "Future Reds", away: "Future Greens" },
+        }),
+      ]),
+    };
+    renderWorkspace(client(2));
+    const user = await openFixtures();
+
+    await user.click(screen.getByRole("tab", { name: "Show render" }));
+
+    expect(screen.getByText("Long Reds vs Long Greens")).toBeInTheDocument();
+    expect(screen.getByText("Near Reds vs Near Greens")).toBeInTheDocument();
+    expect(screen.queryByText("Short Reds vs Short Greens")).not.toBeInTheDocument();
+    expect(screen.queryByText("Future Reds vs Future Greens")).not.toBeInTheDocument();
+  });
+
+  it("narrows fixtures with From and To in Show all and after Show render", async () => {
+    fixtureState.current = {
+      ...fixtureState.current,
+      refetch: fixtureState.refetch,
+      data: response([
+        fixture({
+          id: 301,
+          date: "2026-10-01",
+          teams: { home: "Early Reds", away: "Early Greens" },
+        }),
+        fixture({
+          id: 302,
+          date: "2026-10-10",
+          teams: { home: "Mid Reds", away: "Mid Greens" },
+        }),
+        fixture({
+          id: 303,
+          date: "2026-10-15",
+          teams: { home: "Late Reds", away: "Late Greens" },
+        }),
+      ]),
+    };
+    renderWorkspace(client(2));
+    const user = await openFixtures();
+
+    await user.type(screen.getByLabelText("From"), "2026-10-05");
+    await user.type(screen.getByLabelText("To"), "2026-10-12");
+
+    expect(screen.getByText("Mid Reds vs Mid Greens")).toBeInTheDocument();
+    expect(screen.queryByText("Early Reds vs Early Greens")).not.toBeInTheDocument();
+    expect(screen.queryByText("Late Reds vs Late Greens")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Show render" }));
+
+    expect(screen.getByText("Mid Reds vs Mid Greens")).toBeInTheDocument();
+    expect(screen.queryByText("Late Reds vs Late Greens")).not.toBeInTheDocument();
+  });
+
+  it("hides undated fixtures when From or To is set", async () => {
+    fixtureState.current = {
+      ...fixtureState.current,
+      refetch: fixtureState.refetch,
+      data: response([
+        fixture({
+          id: 401,
+          date: null,
+          teams: { home: "Ghost Reds", away: "Ghost Greens" },
+        }),
+        fixture({
+          id: 402,
+          date: "2026-10-10",
+          teams: { home: "Dated Reds", away: "Dated Greens" },
+        }),
+      ]),
+    };
+    renderWorkspace(client(2));
+    const user = await openFixtures();
+
+    expect(screen.getByText("Ghost Reds vs Ghost Greens")).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText("From"), "2026-10-01");
+
+    expect(screen.queryByText("Ghost Reds vs Ghost Greens")).not.toBeInTheDocument();
+    expect(screen.getByText("Dated Reds vs Dated Greens")).toBeInTheDocument();
   });
 });

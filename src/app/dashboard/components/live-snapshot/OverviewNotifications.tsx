@@ -63,6 +63,7 @@ interface QueueState<T> {
 }
 
 interface OverviewNotificationsProps {
+  className?: string;
   emails: QueueState<ContactFormSubmission>;
   rerenders: QueueState<RerenderRequest>;
   invoices: QueueState<AdminInvoiceListRow>;
@@ -85,6 +86,7 @@ function QueueCount({ count }: { count: number }) {
  * Overview notifications — emails, re-render requests, and new invoice requests.
  */
 export function OverviewNotifications({
+  className,
   emails,
   rerenders,
   invoices,
@@ -97,6 +99,7 @@ export function OverviewNotifications({
 
   return (
     <OverviewRecordPanel
+      className={className}
       title="Notifications"
       description={active.description}
       badge={

@@ -35,9 +35,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ErrorState } from "@/components/ui-library";
+import { LabeledSegmentedControl } from "@/components/ui-library/forms/LabeledSegmentedControl";
+import { Input } from "@/components/ui/input";
 import { useCompetitionClubDrilldown } from "@/hooks/competitions/useCompetitionClubDrilldown";
 import { useFixtureDetails } from "@/hooks/fixtures/useFixtureDetails";
 import { fetchFixtureDetails } from "@/lib/services/fixtures/fetchFixtureDetails";
+import {
+  fixturesInReadinessWindow,
+  sydneyToday,
+} from "@/lib/readiness/fixtureDateWindow";
 import {
   segmentedControlLabelClass,
   segmentedControlRowClass,
@@ -51,6 +57,7 @@ import type {
 
 type FixtureSortField = "date" | "round" | "status";
 type SortDirection = "asc" | "desc";
+type FixtureScopeFilter = "all" | "render";
 
 type AccountFixturesTabProps =
   | { kind: "association"; associationId: number }
@@ -152,6 +159,9 @@ function FixtureList({
   const [teamSearchQuery, setTeamSearchQuery] = useState("");
   const [selectedGrade, setSelectedGrade] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
+  const [scopeFilter, setScopeFilter] = useState<FixtureScopeFilter>("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [sortField, setSortField] = useState<FixtureSortField | null>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection | null>(
     "asc",
@@ -165,12 +175,26 @@ function FixtureList({
           teamSearchQuery,
           selectedGrade,
           dateFilter,
+          scopeFilter,
+          dateFrom,
+          dateTo,
           today: new Date(),
+          readinessAnchor: sydneyToday(),
         }),
         sortField,
         sortDirection,
       ),
-    [fixtures, teamSearchQuery, selectedGrade, dateFilter, sortField, sortDirection],
+    [
+      fixtures,
+      teamSearchQuery,
+      selectedGrade,
+      dateFilter,
+      scopeFilter,
+      dateFrom,
+      dateTo,
+      sortField,
+      sortDirection,
+    ],
   );
   const groupedFixtures = useMemo(
     () => groupByGrade(visibleFixtures),
@@ -228,6 +252,12 @@ function FixtureList({
             fixtureCount={fixtures.length}
             dateFilter={dateFilter}
             onDateFilter={setDateFilter}
+            scopeFilter={scopeFilter}
+            onScopeFilter={setScopeFilter}
+            dateFrom={dateFrom}
+            onDateFrom={setDateFrom}
+            dateTo={dateTo}
+            onDateTo={setDateTo}
           />
           {visibleFixtures.length === 0 ? (
             <p className="py-8 text-center text-sm text-muted-foreground">
@@ -260,6 +290,12 @@ function FixtureFilters({
   fixtureCount,
   dateFilter,
   onDateFilter,
+  scopeFilter,
+  onScopeFilter,
+  dateFrom,
+  onDateFrom,
+  dateTo,
+  onDateTo,
 }: {
   teamSearchQuery: string;
   onTeamSearchQuery: (value: string) => void;
@@ -269,9 +305,15 @@ function FixtureFilters({
   fixtureCount: number;
   dateFilter: string;
   onDateFilter: (value: string) => void;
+  scopeFilter: FixtureScopeFilter;
+  onScopeFilter: (value: FixtureScopeFilter) => void;
+  dateFrom: string;
+  onDateFrom: (value: string) => void;
+  dateTo: string;
+  onDateTo: (value: string) => void;
 }) {
   return (
-    <div className="flex min-w-0 flex-1 flex-col gap-3 rounded-full border border-slate-200 bg-slate-50/60 px-4 py-2 md:flex-row md:flex-wrap md:items-center">
+    <div className="flex min-w-0 flex-1 flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50/60 px-4 py-2 md:flex-row md:flex-wrap md:items-center">
       <SearchInput
         value={teamSearchQuery}
         onChange={onTeamSearchQuery}
@@ -319,6 +361,41 @@ function FixtureFilters({
             <SelectItem value="today">Today</SelectItem>
           </SelectContent>
         </Select>
+      </div>
+      <LabeledSegmentedControl
+        label="Include"
+        value={scopeFilter}
+        onValueChange={(value) => onScopeFilter(value as FixtureScopeFilter)}
+        options={[
+          { value: "all", label: "Show all" },
+          { value: "render", label: "Show render" },
+        ]}
+        ariaLabel="Fixture scope"
+        className="shrink-0"
+      />
+      <div className={cn(segmentedControlRowClass, "shrink-0")}>
+        <label htmlFor="account-fixture-date-from" className={segmentedControlLabelClass}>
+          From
+        </label>
+        <Input
+          id="account-fixture-date-from"
+          type="date"
+          value={dateFrom}
+          onChange={(event) => onDateFrom(event.target.value)}
+          className="h-9 w-[150px] rounded-full border-transparent bg-white shadow-none"
+        />
+      </div>
+      <div className={cn(segmentedControlRowClass, "shrink-0")}>
+        <label htmlFor="account-fixture-date-to" className={segmentedControlLabelClass}>
+          To
+        </label>
+        <Input
+          id="account-fixture-date-to"
+          type="date"
+          value={dateTo}
+          onChange={(event) => onDateTo(event.target.value)}
+          className="h-9 w-[150px] rounded-full border-transparent bg-white shadow-none"
+        />
       </div>
     </div>
   );
@@ -437,11 +514,15 @@ function filterFixtures(
     teamSearchQuery: string;
     selectedGrade: string;
     dateFilter: string;
+    scopeFilter: FixtureScopeFilter;
+    dateFrom: string;
+    dateTo: string;
     today: Date;
+    readinessAnchor: string;
   },
 ) {
   const query = filters.teamSearchQuery.trim().toLowerCase();
-  return fixtures.filter((fixture) => {
+  let filtered = fixtures.filter((fixture) => {
     if (filters.selectedGrade !== "all" && fixture.grade?.name !== filters.selectedGrade) {
       return false;
     }
@@ -450,6 +531,31 @@ function filterFixtures(
     }
     return matchesWhen(fixture, filters.dateFilter, filters.today);
   });
+
+  if (filters.scopeFilter === "render") {
+    filtered = fixturesInReadinessWindow(filtered, filters.readinessAnchor);
+  }
+
+  if (filters.dateFrom || filters.dateTo) {
+    filtered = filtered.filter((fixture) =>
+      matchesCalendarRange(fixture, filters.dateFrom, filters.dateTo),
+    );
+  }
+
+  return filtered;
+}
+
+function matchesCalendarRange(
+  fixture: FixtureSummary,
+  dateFrom: string,
+  dateTo: string,
+) {
+  if (!dateFrom && !dateTo) return true;
+  if (!fixture.date) return false;
+  const day = fixture.date.slice(0, 10);
+  if (dateFrom && day < dateFrom) return false;
+  if (dateTo && day > dateTo) return false;
+  return true;
 }
 
 function matchesWhen(fixture: FixtureSummary, dateFilter: string, today: Date) {

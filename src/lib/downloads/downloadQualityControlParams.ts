@@ -26,8 +26,6 @@ export function buildDownloadQcWindow(preset: DownloadQcWindowPreset): {
   };
 }
 
-export type DownloadQcQueueScope = "needs_attention" | "all";
-
 export type DownloadQcGroupBy =
   | "none"
   | "groupingCategory"
