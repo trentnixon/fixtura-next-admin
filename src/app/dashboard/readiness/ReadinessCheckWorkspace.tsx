@@ -205,7 +205,9 @@ export function ReadinessCheckWorkspace() {
   wizard.current = { step, chosenDate, orgType, accountId };
   const [loadId, setLoadId] = useState(0);
   const [scraping, setScraping] = useState(false);
-  const [confirmScrape, setConfirmScrape] = useState(false);
+  const [confirmScrape, setConfirmScrape] = useState<"all" | "incomplete" | null>(
+    null,
+  );
   const [reloadError, setReloadError] = useState<string | null>(null);
   const [afterScore, setAfterScore] = useState<FixtureCompletenessScore | null>(
     null,
@@ -316,6 +318,16 @@ export function ReadinessCheckWorkspace() {
     resultIds.size > 0 && resultDetails.length === resultIds.size
       ? scoreFixtureCompleteness(resultDetails.map(toCompletenessInput))
       : null;
+  const incompleteIds = new Set(
+    (beforeScore?.findings ?? [])
+      .filter((finding) => finding.percentage !== 100)
+      .map((finding) => finding.fixtureId),
+  );
+  const incompleteFixtures = resultFixtures.filter((fixture) =>
+    incompleteIds.has(fixture.id),
+  );
+  const scrapeTargets =
+    confirmScrape === "incomplete" ? incompleteFixtures : resultFixtures;
 
   const listsLoading =
     accountQuery.isFetching ||
@@ -324,13 +336,13 @@ export function ReadinessCheckWorkspace() {
     gradeQueries.some((query) => query.isFetching) ||
     detailQueries.some((query) => query.isFetching);
 
-  async function scrapeAll() {
+  async function scrapeFixtures(fixtures: FixtureSummary[]) {
     setScraping(true);
     setAfterScore(null);
     setReloadError(null);
     try {
       const accepted = await Promise.all(
-        resultFixtures.map(async (fixture) => {
+        fixtures.map(async (fixture) => {
           try {
             await triggerResultSingleScrape({ cmsFixtureId: fixture.id });
             return true;
@@ -342,7 +354,7 @@ export function ReadinessCheckWorkspace() {
       const rejected = accepted.filter((ok) => !ok).length;
       if (rejected > 0) {
         setReloadError(
-          `Could not queue ${rejected} of ${resultFixtures.length} scrapes.`,
+          `Could not queue ${rejected} of ${fixtures.length} scrapes.`,
         );
       }
     } finally {
@@ -730,7 +742,7 @@ export function ReadinessCheckWorkspace() {
               Next
             </Button>
           ) : windowFixtures.length > 0 ? (
-            <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
               <Button
                 type="button"
                 variant="secondary"
@@ -741,36 +753,49 @@ export function ReadinessCheckWorkspace() {
               </Button>
               <Button
                 type="button"
+                variant="primary"
+                onClick={() => setConfirmScrape("incomplete")}
+                disabled={
+                  scraping || beforeScore == null || incompleteFixtures.length === 0
+                }
+              >
+                {scraping && confirmScrape === "incomplete"
+                  ? "Scraping…"
+                  : `Scrape ${incompleteFixtures.length} not at 100%`}
+              </Button>
+              <Button
+                type="button"
                 variant="accent"
-                onClick={() => setConfirmScrape(true)}
+                onClick={() => setConfirmScrape("all")}
                 disabled={scraping || resultFixtures.length === 0}
               >
-                {scraping
+                {scraping && confirmScrape === "all"
                   ? "Scraping…"
                   : `Scrape all ${resultFixtures.length} results`}
               </Button>
               <Dialog
-                open={confirmScrape}
+                open={confirmScrape != null}
                 onOpenChange={(open) => {
                   if (scraping) return;
-                  setConfirmScrape(open);
+                  if (!open) setConfirmScrape(null);
                 }}
               >
                 <DialogContent>
                   <DialogHeader>
                     <DialogTitle>Confirm result scrape</DialogTitle>
                     <DialogDescription>
-                      This queues a PlayHQ result scrape for{" "}
-                      {resultFixtures.length} results. Upcoming fixtures are
-                      left alone. Each fixture is its own job, and scrape plus
-                      ingest often takes about 30–60 seconds.
+                      {confirmScrape === "incomplete"
+                        ? `This queues a PlayHQ result scrape for ${scrapeTargets.length} results that are not at 100%. Results already at 100% are left alone.`
+                        : `This queues a PlayHQ result scrape for ${scrapeTargets.length} results. Upcoming fixtures are left alone.`}{" "}
+                      Each fixture is its own job, and scrape plus ingest often
+                      takes about 30–60 seconds.
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
                     <Button
                       type="button"
                       variant="secondary"
-                      onClick={() => setConfirmScrape(false)}
+                      onClick={() => setConfirmScrape(null)}
                       disabled={scraping}
                     >
                       Cancel
@@ -778,14 +803,17 @@ export function ReadinessCheckWorkspace() {
                     <Button
                       type="button"
                       variant="accent"
-                      disabled={scraping || resultFixtures.length === 0}
+                      disabled={scraping || scrapeTargets.length === 0}
                       onClick={() => {
-                        void scrapeAll().then(() => setConfirmScrape(false));
+                        const targets = scrapeTargets;
+                        void scrapeFixtures(targets).then(() =>
+                          setConfirmScrape(null),
+                        );
                       }}
                     >
                       {scraping
                         ? "Scraping…"
-                        : `Scrape ${resultFixtures.length} results`}
+                        : `Scrape ${scrapeTargets.length} results`}
                     </Button>
                   </DialogFooter>
                 </DialogContent>
