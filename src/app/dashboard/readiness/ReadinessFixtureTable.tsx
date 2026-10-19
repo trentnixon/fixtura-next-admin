@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { CalendarDays, History, Search } from "lucide-react";
+import { CalendarDays, History, RefreshCw, Search } from "lucide-react";
 import { format } from "date-fns";
 import { toFixtureDisplayText } from "@/app/dashboard/fixtures/_components/_utils/fixtureDisplayText";
 import {
@@ -9,6 +9,7 @@ import {
   groupByGrade,
 } from "@/app/dashboard/fixtures/_components/_utils/fixtureUtils";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -35,16 +36,14 @@ import {
 import {
   splitFixturesByPlayDay,
   sydneyToday,
-  readinessPlayDay,
 } from "@/lib/readiness/fixtureDateWindow";
 import type { FixtureCompletenessScore } from "@/lib/readiness/scoreFixtureCompleteness";
-import type { SingleFixtureDetailResponse } from "@/types/fixtureDetail";
 import type { FixtureSummary } from "@/types/fixtureInsights";
 import {
   FixtureDataButton,
   ReadinessFixtureDataDialog,
 } from "@/app/dashboard/readiness/ReadinessFixtureDataDialog";
-import TriggerResultSingleScrapeButton from "@/app/dashboard/fixtures/[id]/_components/TriggerResultSingleScrapeButton";
+import { ResultSingleScrapeConfirmDialog } from "@/app/dashboard/fixtures/[id]/_components/TriggerResultSingleScrapeButton";
 import { DashboardLinkButton } from "@/app/dashboard/components/live-snapshot/DashboardLinkButton";
 
 const ALL = "all";
@@ -153,11 +152,9 @@ function unexpectedStatus(finding: { reason: string | null } | undefined) {
 
 export function ReadinessFixtureTable({
   fixtures,
-  details,
   beforeScore,
 }: {
   fixtures: FixtureSummary[];
-  details: SingleFixtureDetailResponse[];
   beforeScore: FixtureCompletenessScore | null;
 }) {
   const [teamQuery, setTeamQuery] = useState("");
@@ -165,6 +162,7 @@ export function ReadinessFixtureTable({
   const [gradeId, setGradeId] = useState(ALL);
   const [status, setStatus] = useState(ALL);
   const [openFixtureId, setOpenFixtureId] = useState<number | null>(null);
+  const [scrapeFixtureId, setScrapeFixtureId] = useState<number | null>(null);
 
   const competitions = useMemo(
     () => namedOptions(fixtures, (fixture) => fixture.competition),
@@ -184,26 +182,11 @@ export function ReadinessFixtureTable({
     return [...labels].sort((left, right) => left.localeCompare(right, "en"));
   }, [fixtures]);
 
-  const detailsById = useMemo(() => {
-    const byId = new Map<number, SingleFixtureDetailResponse>();
-    for (const detail of details) byId.set(detail.fixture.id, detail);
-    return byId;
-  }, [details]);
-  const scheduled = useMemo(
-    () =>
-      fixtures.map((fixture) => {
-        const day = readinessPlayDay(fixture.date, detailsById.get(fixture.id)?.fixture);
-        if (day == null || day === fixture.date) return fixture;
-        return { ...fixture, date: day };
-      }),
-    [detailsById, fixtures],
-  );
-
   const grouped = useMemo(() => {
-    const split = splitFixturesByPlayDay(scheduled, sydneyToday());
+    const split = splitFixturesByPlayDay(fixtures, sydneyToday());
     const byDate = (left: FixtureSummary, right: FixtureSummary) =>
       (left.date ?? "").localeCompare(right.date ?? "");
-    const filtered = scheduled.filter((fixture) =>
+    const filtered = fixtures.filter((fixture) =>
       matchesFilters(fixture, { teamQuery, competitionId, gradeId, status }),
     );
     const filteredSplit = splitFixturesByPlayDay(filtered, sydneyToday());
@@ -215,7 +198,7 @@ export function ReadinessFixtureTable({
         byDate(right, left),
       ),
     };
-  }, [competitionId, gradeId, scheduled, status, teamQuery]);
+  }, [competitionId, fixtures, gradeId, status, teamQuery]);
   const beforeById = useMemo(() => {
     const byId = new Map<number, { percentage: number; reason: string | null }>();
     for (const finding of beforeScore?.findings ?? []) byId.set(finding.fixtureId, finding);
@@ -228,11 +211,17 @@ export function ReadinessFixtureTable({
     <div className="space-y-4">
       <ReadinessFixtureDataDialog
         fixture={openFixture}
-        detail={openFixtureId == null ? null : detailsById.get(openFixtureId) ?? null}
         open={openFixtureId != null}
         onOpenChange={(open) => {
           if (!open) setOpenFixtureId(null);
         }}
+      />
+      <ResultSingleScrapeConfirmDialog
+        open={scrapeFixtureId != null}
+        onOpenChange={(open) => {
+          if (!open) setScrapeFixtureId(null);
+        }}
+        fixtureId={scrapeFixtureId ?? 0}
       />
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-1.5">
@@ -293,8 +282,8 @@ export function ReadinessFixtureTable({
                 : "No fixtures match these filters."
             }
             beforeById={beforeById}
-            detailsById={detailsById}
             onOpenData={setOpenFixtureId}
+            onScrape={setScrapeFixtureId}
           />
         </TabsContent>
         <TabsContent value="results" className="mt-0">
@@ -306,8 +295,8 @@ export function ReadinessFixtureTable({
                 : "No fixtures match these filters."
             }
             beforeById={beforeById}
-            detailsById={detailsById}
             onOpenData={setOpenFixtureId}
+            onScrape={setScrapeFixtureId}
           />
         </TabsContent>
       </Tabs>
@@ -353,14 +342,14 @@ function FixtureRows({
   fixtures,
   emptyLabel,
   beforeById,
-  detailsById,
   onOpenData,
+  onScrape,
 }: {
   fixtures: FixtureSummary[];
   emptyLabel: string;
   beforeById: Map<number, { percentage: number; reason: string | null }>;
-  detailsById: Map<number, SingleFixtureDetailResponse>;
   onOpenData: (fixtureId: number) => void;
+  onScrape: (fixtureId: number) => void;
 }) {
   if (fixtures.length === 0) {
     return <EmptyState variant="minimal" title={emptyLabel} />;
@@ -448,13 +437,15 @@ function FixtureRows({
                     <TableCell style={alertStyle}>{resultLabel(finding)}</TableCell>
                     <TableCell className="text-right" style={alertStyle}>
                       <div className="flex items-center justify-end gap-3">
-                        <TriggerResultSingleScrapeButton
-                          fixtureId={fixture.id}
-                          scorecardUrl={
-                            detailsById.get(fixture.id)?.fixture.matchDetails
-                              ?.urlToScoreCard ?? null
-                          }
-                        />
+                        <Button
+                          type="button"
+                          variant="accent"
+                          size="sm"
+                          onClick={() => onScrape(fixture.id)}
+                        >
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          Scrape result
+                        </Button>
                         <FixtureDataButton onClick={() => onOpenData(fixture.id)} />
                         <DashboardLinkButton
                           href={`/dashboard/fixtures/${fixture.id}`}

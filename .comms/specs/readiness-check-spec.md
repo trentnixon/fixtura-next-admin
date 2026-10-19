@@ -4,15 +4,15 @@ Staff only see Fixture result problems when the real generation runs. They need 
 
 ## Solution
 
-A Readiness check loads the Fixtures Admin can already load for that organisation, keeps the ones from 14 days before the chosen date through 7 days after it, and scores their status and metadata. It then sends the existing single-Fixture result scrape for every Fixture in that set. When staff load the Fixtures again, the same score runs a second time. The score stays on the screen. Nothing is stored. Creator is not called. No Render, Downloads, or other assets are created. The client is not notified.
+A Readiness check asks CMS for the Fixtures of one Club or one Association on a Sydney generation date. CMS decides which Fixtures are in. Admin scores the ones whose start day is today or earlier, then sends the existing single-Fixture result scrape for those results. When staff load the Fixtures again, the same score runs a second time. The score stays on the screen. Nothing is stored. Creator is not called. No Render, Downloads, or other assets are created. The client is not notified.
 
 ## User Stories
 
 1. As a staff member, I want to choose an association client and a date, so that I can check the Fixtures for that Association from two weeks before that date through one week after it.
 2. As a staff member, I want to choose a club client and a date, so that I can check the Fixtures that club plays in that same span.
-3. As a staff member, I want the club list to include only Fixtures where one of that club's teams is home or away, so that other clubs' games in the same grade are not scored.
-4. As a staff member, I want the association list to include the stored Fixtures for that Association, so that the check matches the Fixtures tab.
-5. As a staff member, I want Fixtures outside the two weeks before the date and the week after it left out of the score, so that the result is the generation window.
+3. As a staff member, I want the club list to include only Fixtures CMS linked to that club, so that other clubs' games in the same grade are not scored.
+4. As a staff member, I want the association list to be the Fixtures CMS returns for that Association, so that the check is not the account Fixtures tab.
+5. As a staff member, I want a Fixture kept when CMS returned it, even if its start day sits outside the span, so that a Two Day+ match still being played is scored.
 6. As a staff member, I want a clear empty state when that window has no Fixtures, so that I do not read an empty window as a perfect score.
 7. As a staff member, I want a percentage of Fixtures that meet the completeness schema, so that I can see how ready the day is before generation.
 8. As a staff member, I want each Fixture that fails the schema listed with a reason, so that I know what is wrong.
@@ -23,7 +23,7 @@ A Readiness check loads the Fixtures Admin can already load for that organisatio
 13. As a staff member, I want the scrape to use the existing single-Fixture result scrape, so that CMS behaviour does not change.
 14. As a staff member, I want to see which scrape requests were accepted and which were rejected, so that a failed enqueue is not mistaken for a complete Fixture.
 15. As a staff member, I want one rejected scrape to leave the other Fixtures in the set still requested, so that one bad Fixture does not stop the rest.
-16. As a staff member, I want to load the Fixtures again after the scrapes have run, so that the second score uses the results CMS wrote back.
+16. As a staff member, I want to load the Fixtures again from the same route after the scrapes have run, so that the second score uses the results CMS wrote back.
 17. As a staff member, I want the second score to use the same schema as the first, so that the before and after numbers mean the same thing.
 18. As a staff member, I want the before and after percentages both visible, so that I can see whether the scrape improved the day.
 19. As a staff member, I want the score to disappear when I leave the screen, so that an old check is not treated as a saved report.
@@ -36,30 +36,31 @@ A Readiness check loads the Fixtures Admin can already load for that organisatio
 26. As a staff member, I want the account asset-run action left unused, so that a full scrape-and-render is not started by mistake.
 27. As a staff member, I want the grade batch result scrape left unused, so that a grade's last 14 days are not scraped in place of this date's Fixtures.
 28. As a staff member, I want a Fixture the list route did not return to be absent, so that games never stored are not invented as missing.
-29. As a staff member, I want a window the Fixture list CMS already returns does not cover to show that the list does not cover that span, so that I do not score a silent empty window as zero Fixtures.
+29. As a staff member, I want an empty Fixture list to be an empty window, so that I do not read a missing list as zero Fixtures that are complete.
 30. As a staff member, I want the screen to keep working if I run the check twice, so that a second pass just loads and scores again.
 
 ## Implementation Decisions
 
-- Admin owns the check. CMS routes and CMS behaviour stay as they are.
-- The Fixture set for an association client is the existing association Fixture list. The Fixture set for a club client is the existing club Fixture-tab rule: grades that club plays in, kept only when one of its teams is home or away. The organisation id is the scraped organisation id, not the client id in the route.
-- The chosen date is the anchor. Admin keeps Fixture dates already returned that fall from 14 days before that date through 7 days after it, including both ends. The list route is not given a new date parameter.
-- Completeness is one pure function. It receives the Fixture details for the already chosen set and returns a percentage plus one finding per Fixture that fails. The screen calls it on the first load and again after a reload. It does not scrape and it does not store.
-- Results fixtures are scored on their own. A results fixture is included in the form only when its status is Final and a score is recorded. Each included fixture then has a metadata percentage across date, teams, location, toss, toss winner, and player data. A fixture that fails the Final or score check scores 0. The headline percentage is the average of every results fixture. An empty results set has no percentage. Upcoming has its own scope and is not in this score yet.
-- Every Fixture id in the set is sent to the existing single-Fixture result scrape, including Fixtures the score marked complete. The grade batch result scrape is not used. The account asset-run trigger is not used.
-- The scrape call only confirms that the job was accepted. The second score is a new load of Fixture details, run when staff ask again after the scrapes have had time to write. A rejected enqueue is shown on that Fixture and does not remove it from the score.
+- The Fixture set is `GET /game-meta-data/admin/readiness-fixtures`. The id is the Club or Association row on the account, not the client id in the route. Account type `1` sends `club`. Account type `2` sends `association`. The page query `type` does not change the call.
+- CMS decides membership. Admin does not cut `fixtures[].date` against the window. That date is the Sydney start day. The group header and the upcoming/results split both use it. A date after Sydney today is upcoming. Every other Fixture is a result and is scored. The last stored day does not move a started match to upcoming.
+- Completeness is one pure function. It receives the result rows already chosen and returns a percentage plus one finding per Fixture that fails. The screen calls it on the first load and again after a reload of the same route. It does not scrape and it does not store.
+- Results fixtures are scored on their own. A results fixture is included in the form only when its status is Final and a score is recorded. Each included fixture then has a metadata percentage across date, teams, location, toss, toss winner, and player data. A fixture that fails the Final or score check scores 0. The headline percentage is the average of every results fixture. An empty results set has no percentage. Upcoming has its own scope and is not in this score yet. Player data is the boolean CMS sends. The recorded score is the total, or the first innings when the total is blank.
+- Every result Fixture id is sent to the existing single-Fixture result scrape, including Fixtures the score marked complete. The row scrape sends the fixture id only. The grade batch result scrape is not used. The account asset-run trigger is not used. Opening a row still loads the single Fixture.
+- The scrape call only confirms that the job was accepted. The second score is a new load of this route, run when staff ask again after the scrapes have had time to write. It must not reuse the first response. A rejected enqueue is shown and does not remove that Fixture from the score.
 - The before score and the after score are both shown. Leaving the screen drops them. There is no saved Readiness report.
 - A client has one scheduled day a week. The screen can name that day. Choosing another date still loads, scores, and scrapes.
+- The account Fixtures tab still uses the grade list and the team-name match.
 
 ## Testing Decisions
 
-- A good test asserts the score and the findings for a set of Fixture details. It does not assert how the screen is built, and it does not call CMS.
-- Test the completeness function only. Cover an empty set, a complete set, a finished Fixture with no scorecards, a missing scorecard URL, a missing team, and an unfinished Fixture with no scorecards.
+- A good test asserts the prepared set and the score for fixture-shaped inputs. It does not assert how the screen is built, and it does not call CMS.
+- Test the preparation function: a past start day is a result even when the last day is later, a future start day is upcoming and unscored, and a missing total uses the first innings.
+- Test the completeness function. Cover an empty set, a complete set, a finished Fixture with no scorecards, a missing team, and an unfinished Fixture with no scorecards.
 - Prior art is the due-render accuracy tests and the Content production summary tests: pure functions, fixture-shaped inputs, no network.
 
 ## Out of Scope
 
-- Any CMS change, including a new route, a date parameter, a stored report, or a change to scrape behaviour.
+- Changing the account Fixtures tab.
 - Calling Creator, creating a Render, creating Downloads or other assets, or notifying the client.
 - The account asset-run trigger and the grade or competition batch result scrape.
 - Scoring expected Downloads, write-ups, or roster posters.
@@ -69,5 +70,6 @@ A Readiness check loads the Fixtures Admin can already load for that organisatio
 ## Further Notes
 
 - The recorded decision is ADR 0004: the check scrapes results before the scheduled run and does not render.
+- ADR 0005: the Fixture set comes from CMS. Admin does not cut the start day against the window. The either-end rule stays in the CMS repo.
 - The Creator reply in the content-readiness note describes how production groups Fixtures. This check does not use that path.
 - Glossary: Client, Club client, Association client, Club, Association, Fixture, Scheduler, Render, Download, Readiness check. The score on the screen is not a stored Readiness report.

@@ -1,5 +1,8 @@
 "use client";
 
+"use client";
+
+import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { getTeamsDisplay } from "@/app/dashboard/fixtures/_components/_utils/fixtureUtils";
 import { toFixtureDisplayText } from "@/app/dashboard/fixtures/_components/_utils/fixtureDisplayText";
@@ -13,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import type { FixtureSummary } from "@/types/fixtureInsights";
 import type { SingleFixtureDetailResponse } from "@/types/fixtureDetail";
+import { fetchSingleFixtureDetail } from "@/lib/services/fixtures/fetchSingleFixtureDetail";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -535,15 +539,19 @@ function DetailBody({
 
 export function ReadinessFixtureDataDialog({
   fixture,
-  detail,
   open,
   onOpenChange,
 }: {
   fixture: FixtureSummary | null;
-  detail: SingleFixtureDetailResponse | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
+  const detailQuery = useQuery({
+    queryKey: ["readiness-open-fixture", fixture?.id],
+    queryFn: () => fetchSingleFixtureDetail(fixture?.id ?? 0),
+    enabled: open && fixture != null,
+  });
+  const detail = detailQuery.data ?? null;
   const description = fixture
     ? [fixture.competition?.name, fixture.grade?.name, `Fixture ${fixture.id}`]
         .filter((part) => part != null && part !== "")
@@ -560,6 +568,12 @@ export function ReadinessFixtureDataDialog({
         <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
           {fixture && detail ? (
             <DetailBody fixture={fixture} detail={detail} />
+          ) : fixture && detailQuery.isError ? (
+            <p className="text-sm text-muted-foreground">
+              {detailQuery.error instanceof Error
+                ? detailQuery.error.message
+                : "Could not load this fixture."}
+            </p>
           ) : fixture ? (
             <div className="space-y-3">
               <Panel title="Fixture">

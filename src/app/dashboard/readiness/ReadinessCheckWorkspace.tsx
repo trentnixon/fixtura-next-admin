@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
   Building2,
   CalendarClock,
@@ -13,7 +13,6 @@ import {
   Users,
 } from "lucide-react";
 import { formatDate } from "@/app/dashboard/fixtures/_components/_utils/dateUtils";
-import { toFixtureDisplayText } from "@/app/dashboard/fixtures/_components/_utils/fixtureDisplayText";
 import ElementContainer from "@/components/scaffolding/containers/ElementContainer";
 import SectionContainer from "@/components/scaffolding/containers/SectionContainer";
 import { Button } from "@/components/ui/button";
@@ -40,109 +39,50 @@ import {
 import { ReadinessFixtureTable } from "./ReadinessFixtureTable";
 import { ReadinessWizardSteps } from "./ReadinessWizardSteps";
 import { useAccountQuery } from "@/hooks/accounts/useAccountQuery";
-import { useCompetitionClubDrilldown } from "@/hooks/competitions/useCompetitionClubDrilldown";
 import { triggerResultSingleScrape } from "@/lib/services/data-collection/triggerResultSingleScrape";
-import { fetchFixtureDetails } from "@/lib/services/fixtures/fetchFixtureDetails";
-import { fetchSingleFixtureDetail } from "@/lib/services/fixtures/fetchSingleFixtureDetail";
+import { fetchReadinessFixtures } from "@/lib/services/fixtures/fetchReadinessFixtures";
 import {
-  fixturesInReadinessWindow,
-  listCoversReadinessWindow,
   readinessWindow,
-  splitFixturesByPlayDay,
   standardReadinessWindow,
   sydneyToday,
-  readinessPlayDay,
 } from "@/lib/readiness/fixtureDateWindow";
-import { scorecardHasPlayer } from "@/lib/readiness/scorecardHasPlayer";
+import {
+  prepareReadinessFixtures,
+  type ReadinessFixture,
+} from "@/lib/readiness/prepareReadinessFixtures";
 import {
   scoreFixtureCompleteness,
-  type FixtureCompletenessInput,
   type FixtureCompletenessScore,
 } from "@/lib/readiness/scoreFixtureCompleteness";
-import type { CompetitionClubDrilldownResponse } from "@/types/competitionClubDrilldown";
-import type { SingleFixtureDetailResponse } from "@/types/fixtureDetail";
-import type { FixtureDetailsResponse, FixtureSummary } from "@/types/fixtureInsights";
+import type { FixtureSummary } from "@/types/fixtureInsights";
 
-function teamNamesByGrade(
-  drilldown: CompetitionClubDrilldownResponse | undefined,
-  clubId: number,
-) {
-  const namesByGrade = new Map<number, Set<string>>();
-  if (!drilldown) return namesByGrade;
-  for (const competition of drilldown.competitions) {
-    for (const grade of competition.grades) {
-      for (const team of grade.teams) {
-        if (team.club?.id != null && team.club.id !== clubId) continue;
-        const name = team.name.trim().toLowerCase();
-        if (!name) continue;
-        const names = namesByGrade.get(grade.id) ?? new Set<string>();
-        names.add(name);
-        namesByGrade.set(grade.id, names);
-      }
-    }
-  }
-  return namesByGrade;
-}
-
-function fixturesForClub(
-  responses: FixtureDetailsResponse[],
-  namesByGrade: Map<number, Set<string>>,
-) {
-  const seen = new Set<number>();
-  const kept: FixtureSummary[] = [];
-  for (const response of responses) {
-    for (const fixture of response.data.fixtures) {
-      if (seen.has(fixture.id)) continue;
-      const gradeId = fixture.grade?.id;
-      if (gradeId == null) continue;
-      const names = namesByGrade.get(gradeId);
-      if (!names) continue;
-      const home = toFixtureDisplayText(fixture.teams?.home, "").toLowerCase();
-      const away = toFixtureDisplayText(fixture.teams?.away, "").toLowerCase();
-      if (!names.has(home) && !names.has(away)) continue;
-      seen.add(fixture.id);
-      kept.push(fixture);
-    }
-  }
-  return kept;
-}
-
-function groundText(
-  ground: SingleFixtureDetailResponse["fixture"]["venue"]["ground"],
-): string | null {
-  if (typeof ground === "string") return ground;
-  if (ground && typeof ground === "object") return ground.text ?? null;
+function organisationTypeForAccount(accountType: number | undefined) {
+  if (accountType === 1) return "club" as const;
+  if (accountType === 2) return "association" as const;
   return null;
 }
 
-function recordedScore(total: string | null | undefined, innings: string | null | undefined) {
-  if (total != null && total.trim() !== "") return total;
-  if (innings != null && innings.trim() !== "") return innings;
-  return null;
+function namedRelation(
+  value: { id: number; name: string | null } | null,
+): { id: number; name: string } | null {
+  if (!value) return null;
+  return { id: value.id, name: value.name ?? "" };
 }
 
-function toCompletenessInput(
-  detail: SingleFixtureDetailResponse,
-): FixtureCompletenessInput {
-  const fixture = detail.fixture;
+function toTableFixture(fixture: ReadinessFixture): FixtureSummary {
   return {
     id: fixture.id,
+    date: fixture.date,
+    round: fixture.round,
     status: fixture.status,
-    date: fixture.dates?.date ?? null,
-    homeTeam: fixture.teams?.home?.name ?? null,
-    awayTeam: fixture.teams?.away?.name ?? null,
-    location: groundText(fixture.venue?.ground),
-    homeScore: recordedScore(
-      fixture.teams?.home?.scores?.total,
-      fixture.teams?.home?.scores?.firstInnings,
-    ),
-    awayScore: recordedScore(
-      fixture.teams?.away?.scores?.total,
-      fixture.teams?.away?.scores?.firstInnings,
-    ),
-    tossResult: fixture.matchDetails?.tossResult ?? null,
-    tossWinner: fixture.matchDetails?.tossWinner ?? null,
-    hasPlayerData: scorecardHasPlayer(fixture.matchDetails?.scorecards),
+    type: fixture.type,
+    teams: {
+      home: fixture.teams.home,
+      away: fixture.teams.away,
+    },
+    grade: namedRelation(fixture.grade),
+    competition: namedRelation(fixture.competition),
+    association: namedRelation(fixture.association),
   };
 }
 
@@ -203,121 +143,79 @@ export function ReadinessCheckWorkspace() {
   );
   const wizard = useRef({ step, chosenDate, orgType, accountId });
   wizard.current = { step, chosenDate, orgType, accountId };
-  const [loadId, setLoadId] = useState(0);
   const [scraping, setScraping] = useState(false);
   const [confirmScrape, setConfirmScrape] = useState<"all" | "incomplete" | null>(
     null,
   );
   const [reloadError, setReloadError] = useState<string | null>(null);
-  const [afterScore, setAfterScore] = useState<FixtureCompletenessScore | null>(
-    null,
-  );
+  const [scores, setScores] = useState<{
+    key: string;
+    before: FixtureCompletenessScore | null;
+    after: FixtureCompletenessScore | null;
+  }>({ key: "", before: null, after: null });
   const accountQuery = useAccountQuery(accountId);
   const account = accountQuery.data?.data;
   const organisationId = account?.accountOrganisationDetails?.id;
-  const isClub = account?.account_type === 1;
-  const isAssociation = account?.account_type === 2;
+  const organisationType = organisationTypeForAccount(account?.account_type);
+  const isClub = organisationType === "club";
+  const isAssociation = organisationType === "association";
+  const checkKey = `${organisationId ?? ""}:${organisationType ?? ""}:${chosenDate}`;
+  const activeScores =
+    scores.key === checkKey ? scores : { key: checkKey, before: null, after: null };
+  if (scores.key !== checkKey) {
+    setScores(activeScores);
+  }
 
-  const associationFixtures = useQuery({
-    queryKey: ["fixture-details", { association: organisationId }],
+  const readinessQuery = useQuery({
+    queryKey: ["readiness-fixtures", organisationId, organisationType, chosenDate],
     queryFn: () => {
-      if (typeof organisationId !== "number") {
+      if (typeof organisationId !== "number" || organisationType == null) {
         throw new Error("Organisation id is required");
       }
-      return fetchFixtureDetails({ association: organisationId });
+      return fetchReadinessFixtures({
+        organisationId,
+        organisationType,
+        date: chosenDate,
+      });
     },
-    enabled: isAssociation && typeof organisationId === "number",
-    staleTime: 2 * 60 * 1000,
-  });
-  const drilldown = useCompetitionClubDrilldown(
-    isClub ? organisationId : undefined,
-  );
-  const namesByGrade = useMemo(
-    () =>
-      isClub && organisationId
-        ? teamNamesByGrade(drilldown.data, organisationId)
-        : new Map<number, Set<string>>(),
-    [drilldown.data, isClub, organisationId],
-  );
-  const gradeIds = useMemo(
-    () => Array.from(namesByGrade.keys()),
-    [namesByGrade],
-  );
-  const gradeQueries = useQueries({
-    queries: gradeIds.map((gradeId) => ({
-      queryKey: ["fixture-details", { grade: gradeId }] as const,
-      queryFn: () => fetchFixtureDetails({ grade: gradeId }),
-      enabled: isClub,
-      staleTime: 2 * 60 * 1000,
-    })),
+    enabled:
+      step === 3 &&
+      typeof organisationId === "number" &&
+      organisationType != null &&
+      chosenDate.length === 10,
   });
 
-  const summaries = useMemo(() => {
-    if (isAssociation) return associationFixtures.data?.data?.fixtures ?? [];
-    if (!isClub) return [];
-    const responses = gradeQueries.flatMap((query) =>
-      query.data ? [query.data] : [],
-    );
-    return fixturesForClub(responses, namesByGrade);
-  }, [
-    associationFixtures.data,
-    gradeQueries,
-    isAssociation,
-    isClub,
-    namesByGrade,
-  ]);
+  const prepared = useMemo(() => {
+    const fixtures = readinessQuery.data?.data.fixtures;
+    if (!fixtures) return null;
+    return prepareReadinessFixtures(fixtures, sydneyToday());
+  }, [readinessQuery.data]);
 
-  const ranges = useMemo(() => {
-    const collected: { start: string; end: string }[] = [];
-    const associationRange = associationFixtures.data?.data?.meta?.dateRange;
-    if (associationRange) collected.push(associationRange);
-    for (const query of gradeQueries) {
-      const range = query.data?.data?.meta?.dateRange;
-      if (range) collected.push(range);
-    }
-    return collected;
-  }, [associationFixtures.data, gradeQueries]);
+  useEffect(() => {
+    if (!prepared || prepared.results.length === 0) return;
+    setScores((current) => {
+      if (current.key !== checkKey || current.before || current.after) return current;
+      return {
+        ...current,
+        before: scoreFixtureCompleteness(prepared.scoreInputs),
+      };
+    });
+  }, [checkKey, prepared]);
 
   const fixtureWindow =
     chosenDate.length === 10 ? readinessWindow(chosenDate) : null;
   const standardWindow =
     chosenDate.length === 10 ? standardReadinessWindow(chosenDate) : null;
-  const windowFixtures = fixtureWindow
-    ? fixturesInReadinessWindow(summaries, chosenDate)
-    : [];
-  const listMissesWindow =
-    fixtureWindow != null && !listCoversReadinessWindow(fixtureWindow, ranges);
-
-  const detailQueries = useQueries({
-    queries: windowFixtures.map((fixture) => ({
-      queryKey: ["readiness-fixture-detail", loadId, fixture.id] as const,
-      queryFn: () => fetchSingleFixtureDetail(fixture.id),
-      staleTime: Infinity,
-      refetchOnWindowFocus: false,
-    })),
-  });
-
-  const loadedDetails = detailQueries.flatMap((query) =>
-    query.data ? [query.data] : [],
+  const tableFixtures = useMemo(
+    () => (readinessQuery.data?.data.fixtures ?? []).map(toTableFixture),
+    [readinessQuery.data],
   );
-  const detailById = new Map(loadedDetails.map((detail) => [detail.fixture.id, detail]));
-  const scheduledFixtures = windowFixtures.map((fixture) => {
-    const day = readinessPlayDay(fixture.date, detailById.get(fixture.id)?.fixture);
-    if (day == null || day === fixture.date) return fixture;
-    return { ...fixture, date: day };
-  });
-  const resultFixtures = splitFixturesByPlayDay(
-    scheduledFixtures,
-    sydneyToday(),
-  ).results;
-  const resultIds = new Set(resultFixtures.map((fixture) => fixture.id));
-  const resultDetails = loadedDetails.filter((detail) =>
-    resultIds.has(detail.fixture.id),
+  const resultFixtures = useMemo(
+    () => (prepared?.results ?? []).map(toTableFixture),
+    [prepared],
   );
-  const beforeScore =
-    resultIds.size > 0 && resultDetails.length === resultIds.size
-      ? scoreFixtureCompleteness(resultDetails.map(toCompletenessInput))
-      : null;
+  const beforeScore = activeScores.before;
+  const afterScore = activeScores.after;
   const incompleteIds = new Set(
     (beforeScore?.findings ?? [])
       .filter((finding) => finding.percentage !== 100)
@@ -329,16 +227,13 @@ export function ReadinessCheckWorkspace() {
   const scrapeTargets =
     confirmScrape === "incomplete" ? incompleteFixtures : resultFixtures;
 
-  const listsLoading =
-    accountQuery.isFetching ||
-    associationFixtures.isFetching ||
-    drilldown.isFetching ||
-    gradeQueries.some((query) => query.isFetching) ||
-    detailQueries.some((query) => query.isFetching);
+  const listsLoading = accountQuery.isFetching || readinessQuery.isFetching;
 
   async function scrapeFixtures(fixtures: FixtureSummary[]) {
     setScraping(true);
-    setAfterScore(null);
+    setScores((current) =>
+      current.key === checkKey ? { ...current, after: null } : current,
+    );
     setReloadError(null);
     try {
       const accepted = await Promise.all(
@@ -364,21 +259,20 @@ export function ReadinessCheckWorkspace() {
 
   async function scoreAgain() {
     setReloadError(null);
-    const results = await Promise.allSettled(
-      windowFixtures.map((fixture) => fetchSingleFixtureDetail(fixture.id)),
-    );
-    const failed = results.filter((result) => result.status === "rejected");
-    if (failed.length > 0) {
-      setReloadError(
-        `Could not reload ${failed.length} of ${windowFixtures.length} fixtures.`,
-      );
+    const result = await readinessQuery.refetch();
+    if (result.isError || !result.data) {
+      setReloadError("Could not reload fixtures.");
       return;
     }
-    const details = results.flatMap((result) =>
-      result.status === "fulfilled" ? [result.value] : [],
+    const next = prepareReadinessFixtures(
+      result.data.data.fixtures,
+      sydneyToday(),
     );
-    const resultDetails = details.filter((detail) => resultIds.has(detail.fixture.id));
-    setAfterScore(scoreFixtureCompleteness(resultDetails.map(toCompletenessInput)));
+    setScores((current) => ({
+      key: checkKey,
+      before: current.key === checkKey ? current.before : null,
+      after: scoreFixtureCompleteness(next.scoreInputs),
+    }));
   }
 
   function commit(patch: {
@@ -410,16 +304,12 @@ export function ReadinessCheckWorkspace() {
   function chooseDate(nextDate: string) {
     if (nextDate === chosenDate) return;
     commit({ chosenDate: nextDate });
-    setLoadId((value) => value + 1);
     setReloadError(null);
-    setAfterScore(null);
   }
 
   function selectAccount(nextAccountId: string) {
     commit({ accountId: nextAccountId });
-    setLoadId((value) => value + 1);
     setReloadError(null);
-    setAfterScore(null);
   }
 
   function chooseOrgType(next: ReadinessOrgType) {
@@ -471,7 +361,7 @@ export function ReadinessCheckWorkspace() {
     {
       title: "Organisation type",
       description:
-        "Club and association accounts load their fixture lists differently.",
+        "A club account and an association account use the same check. The account type chooses club or association.",
       icon: sectionIcon(
         <Building2 className="h-4 w-4" />,
         "bg-violet-50 text-violet-700",
@@ -491,7 +381,7 @@ export function ReadinessCheckWorkspace() {
       title: account ? organisationName : "Results",
       description:
         fixtureWindow && standardWindow
-          ? `Most fixtures from ${formatDate(standardWindow.start)} to ${formatDate(fixtureWindow.end)}. Two Day+ from ${formatDate(fixtureWindow.start)}.`
+          ? `Most fixtures from ${formatDate(standardWindow.start)} to ${formatDate(fixtureWindow.end)}. Two Day+ from ${formatDate(fixtureWindow.start)}. The group header is the start day and can sit outside that span.`
           : "Scores and scrape actions for this window.",
       icon: sectionIcon(
         <ClipboardCheck className="h-4 w-4" />,
@@ -501,11 +391,12 @@ export function ReadinessCheckWorkspace() {
   ] as const;
   const currentStep = stepCopy[step] ?? stepCopy[0];
   const showEmptyWindow =
-    !listMissesWindow &&
     accountId !== "" &&
+    organisationType != null &&
     fixtureWindow != null &&
-    !listsLoading &&
-    windowFixtures.length === 0;
+    readinessQuery.isSuccess &&
+    !readinessQuery.isFetching &&
+    tableFixtures.length === 0;
 
   return (
     <div className="space-y-6">
@@ -603,19 +494,16 @@ export function ReadinessCheckWorkspace() {
           />
         ) : null}
 
-        {step === 3 && detailQueries.some((query) => query.isError) ? (
+        {step === 3 && readinessQuery.isError ? (
           <ErrorState
             variant="minimal"
             title="Fixture load failed"
-            description="Could not load every fixture in this set."
-          />
-        ) : null}
-
-        {step === 3 && listMissesWindow && fixtureWindow ? (
-          <ErrorState
-            variant="card"
-            title="Fixture list is shorter than this window"
-            description={`The loaded list does not cover ${formatDate(fixtureWindow.start)} to ${formatDate(fixtureWindow.end)}.`}
+            error={
+              readinessQuery.error instanceof Error
+                ? readinessQuery.error
+                : "Could not load fixtures."
+            }
+            onRetry={() => void readinessQuery.refetch()}
           />
         ) : null}
 
@@ -654,7 +542,7 @@ export function ReadinessCheckWorkspace() {
             />
             <CompactKpiCard
               label="Fixtures in window"
-              value={String(windowFixtures.length)}
+              value={String(tableFixtures.length)}
               icon={<CalendarDays className="h-4 w-4" />}
               iconClassName="bg-sky-50 text-sky-700"
               progressClassName="bg-sky-500"
@@ -700,7 +588,7 @@ export function ReadinessCheckWorkspace() {
           <ErrorState variant="minimal" description={reloadError} />
         ) : null}
 
-        {step === 3 && windowFixtures.length > 0 ? (
+        {step === 3 && tableFixtures.length > 0 ? (
           <ElementContainer
             title="Fixtures"
             subtitle="Upcoming games and results in this window."
@@ -708,15 +596,8 @@ export function ReadinessCheckWorkspace() {
             padding="md"
           >
             <ReadinessFixtureTable
-              fixtures={windowFixtures}
-              details={loadedDetails}
-              beforeScore={
-                resultDetails.length > 0
-                  ? scoreFixtureCompleteness(
-                      resultDetails.map(toCompletenessInput),
-                    )
-                  : null
-              }
+              fixtures={tableFixtures}
+              beforeScore={beforeScore}
             />
           </ElementContainer>
         ) : null}
@@ -741,7 +622,7 @@ export function ReadinessCheckWorkspace() {
             >
               Next
             </Button>
-          ) : windowFixtures.length > 0 ? (
+          ) : tableFixtures.length > 0 ? (
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
               <Button
                 type="button"
