@@ -60,6 +60,14 @@ export interface DownloadAttributes {
         Icon?: string;
         Blurb?: string;
         Sport?: string;
+        asset_type?: {
+          data: {
+            id: number;
+            attributes: {
+              Name: string;
+            };
+          } | null;
+        };
       };
     };
   };

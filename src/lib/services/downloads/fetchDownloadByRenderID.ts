@@ -16,50 +16,106 @@ import axiosInstance from "@/lib/axios";
 import { AxiosError } from "axios";
 import qs from "qs";
 
-import { Download, DownloadResponse } from "@/types/download";
+import { Download } from "@/types/download";
 
-// Define the return type of the API response
+const RENDER_DOWNLOADS_PAGE_SIZE = 100;
+const RENDER_DOWNLOADS_MAX_PAGES = 20;
+
+const DOWNLOAD_FIELDS = [
+  "Name",
+  "hasBeenProcessed",
+  "hasError",
+  "forceRerender",
+  "CompletionTime",
+  "DisplayCost",
+  "assetLinkID",
+  "grouping_category",
+  "UserErrorMessage",
+  "errorHandler",
+  "errorEmailSentToAdmin",
+  "updatedAt",
+  "downloads",
+];
+
+type DownloadPageResponse = {
+  data: Download[];
+  meta?: {
+    pagination?: {
+      page: number;
+      pageSize: number;
+      pageCount: number;
+      total: number;
+    };
+  };
+};
+
+function downloadPageQuery(renderId: string, page: number): string {
+  return qs.stringify(
+    {
+      publicationState: "preview",
+      filters: {
+        render: {
+          id: {
+            $eq: renderId,
+          },
+        },
+      },
+      populate: {
+        asset_category: true,
+        asset: {
+          populate: ["asset_type"],
+        },
+      },
+      fields: DOWNLOAD_FIELDS,
+      pagination: {
+        page,
+        pageSize: RENDER_DOWNLOADS_PAGE_SIZE,
+      },
+      sort: ["grouping_category:asc", "id:asc"],
+    },
+    { encodeValuesOnly: true },
+  );
+}
+
+function uniqueDownloads(pages: DownloadPageResponse[]): Download[] {
+  const seen = new Set<number>();
+  const downloads: Download[] = [];
+  for (const page of pages) {
+    for (const download of page.data ?? []) {
+      if (seen.has(download.id)) continue;
+      seen.add(download.id);
+      downloads.push(download);
+    }
+  }
+  return downloads;
+}
 
 export async function fetchDownloadByRenderId(
   renderId: string
 ): Promise<Download[]> {
   try {
-    // Build query parameters using qs
-    const query = qs.stringify(
-      {
-        publicationState: "preview",
-        filters: {
-          render: {
-            id: {
-              $eq: renderId,
-            },
-          },
-        },
-        populate: ["asset_category", "asset"],
-        fields: [
-          "Name",
-          "hasBeenProcessed",
-          "hasError",
-          "forceRerender",
-          "CompletionTime",
-          "DisplayCost",
-          "assetLinkID",
-          "grouping_category",
-          "UserErrorMessage",
-          "errorHandler",
-          "errorEmailSentToAdmin",
-          "updatedAt",
-          "downloads",
-        ],
-      },
-      { encodeValuesOnly: true } // Serialize parameters for Strapi
+    const first = await axiosInstance.get<DownloadPageResponse>(
+      `/downloads?${downloadPageQuery(renderId, 1)}`,
     );
+    const reportedPages = first.data.meta?.pagination?.pageCount ?? 1;
+    const pageCount = Math.min(
+      Math.max(reportedPages, 1),
+      RENDER_DOWNLOADS_MAX_PAGES,
+    );
+    const pages = [first.data];
 
-    // Send GET request with query string
-    const response = await axiosInstance.get<DownloadResponse>(
-      `/downloads?${query}`
-    );
-    return response.data.data; // Return the actual `Download` objects
+    if (pageCount > 1) {
+      const rest = await Promise.all(
+        Array.from({ length: pageCount - 1 }, (_, index) =>
+          axiosInstance.get<DownloadPageResponse>(
+            `/downloads?${downloadPageQuery(renderId, index + 2)}`,
+          ),
+        ),
+      );
+      pages.push(...rest.map((response) => response.data));
+    }
+
+    return uniqueDownloads(pages);
   } catch (error: any) {
     if (error instanceof AxiosError) {
       // Axios-specific error handling

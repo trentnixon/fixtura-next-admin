@@ -38,7 +38,14 @@ import {
   resolveDownloadPrimaryErrorMessage,
   type DownloadAttentionFilter,
 } from "@/lib/downloads/downloadAttention";
+import {
+  assetTypeFromRef,
+  assetTypeRefFromDownload,
+  groupByAssetType,
+} from "@/lib/downloads/groupDownloadsByAssetType";
 import type { Download } from "@/types/download";
+
+const ALL_ASSET_TYPES = "all";
 
 const ATTENTION_FILTERS: { value: DownloadAttentionFilter; label: string }[] = [
   { value: "all", label: "All" },
@@ -64,6 +71,17 @@ function groupBy<T>(
   );
 }
 
+function resolveDownloadAssetType(download: Download) {
+  const asset = download.attributes.asset?.data?.attributes;
+  return assetTypeFromRef(
+    assetTypeRefFromDownload({
+      compositionId: asset?.CompositionID,
+      assetTypeName: asset?.asset_type?.data?.attributes?.Name,
+      assetName: asset?.Name,
+    }),
+  );
+}
+
 function attentionInputFromDownload(download: Download) {
   const { hasError, hasBeenProcessed, errorHandler } = download.attributes;
   return { hasError, hasBeenProcessed, errorHandler };
@@ -74,6 +92,8 @@ export default function TableDownloads() {
   const renderId = renderID as string;
   const { strapiLocation } = useGlobalContext();
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedAssetType, setSelectedAssetType] =
+    useState<string>(ALL_ASSET_TYPES);
   const [attentionFilter, setAttentionFilter] =
     useState<DownloadAttentionFilter>("all");
 
@@ -104,13 +124,42 @@ export default function TableDownloads() {
     [filteredDownloads],
   );
 
+  const assetTypeOptions = useMemo(() => {
+    const inCategory = (data ?? []).filter(
+      (download) =>
+        (download.attributes.grouping_category || "Uncategorized") ===
+        selectedCategory,
+    );
+    return groupByAssetType(inCategory, (download) => {
+      const asset = download.attributes.asset?.data?.attributes;
+      return assetTypeRefFromDownload({
+        compositionId: asset?.CompositionID,
+        assetTypeName: asset?.asset_type?.data?.attributes?.Name,
+        assetName: asset?.Name,
+      });
+    }).map((group) => ({
+      key: group.key,
+      label: group.label,
+      count: group.items.length,
+    }));
+  }, [data, selectedCategory]);
+
   useEffect(() => {
-    const categoryKeys = Object.keys(groupedByCategory);
+    const categoryKeys = Object.keys(groupedByCategory).sort((a, b) =>
+      a.localeCompare(b),
+    );
     if (categoryKeys.length === 0) return;
     if (!categoryKeys.includes(selectedCategory)) {
       setSelectedCategory(categoryKeys[0]);
     }
   }, [groupedByCategory, selectedCategory]);
+
+  useEffect(() => {
+    if (selectedAssetType === ALL_ASSET_TYPES) return;
+    if (!assetTypeOptions.some((option) => option.key === selectedAssetType)) {
+      setSelectedAssetType(ALL_ASSET_TYPES);
+    }
+  }, [assetTypeOptions, selectedAssetType]);
 
   if (isLoading) {
     return <LoadingState message="Loading downloads…" />;
@@ -143,6 +192,9 @@ export default function TableDownloads() {
         <FilterBar
           selectedCategory={selectedCategory}
           onCategoryChange={setSelectedCategory}
+          selectedAssetType={selectedAssetType}
+          onAssetTypeChange={setSelectedAssetType}
+          assetTypeOptions={assetTypeOptions}
           attentionFilter={attentionFilter}
           onAttentionFilterChange={setAttentionFilter}
           allDownloads={data}
@@ -150,7 +202,7 @@ export default function TableDownloads() {
         <EmptyState
           variant="card"
           title="No downloads match this filter"
-          description="Try another attention filter or show all downloads."
+          description="Try another attention filter, asset type, or grade."
         />
       </div>
     );
@@ -161,6 +213,9 @@ export default function TableDownloads() {
       <FilterBar
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
+        selectedAssetType={selectedAssetType}
+        onAssetTypeChange={setSelectedAssetType}
+        assetTypeOptions={assetTypeOptions}
         attentionFilter={attentionFilter}
         onAttentionFilterChange={setAttentionFilter}
         allDownloads={data}
@@ -169,7 +224,26 @@ export default function TableDownloads() {
       {Object.keys(groupedByCategory).length > 0 && selectedCategory !== "all"
         ? Object.entries(groupedByCategory)
             .filter(([category]) => selectedCategory === category)
-            .map(([category, downloads]) => (
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([category, downloads]) => {
+              const visibleDownloads = downloads.filter((download) => {
+                if (selectedAssetType === ALL_ASSET_TYPES) return true;
+                return (
+                  resolveDownloadAssetType(download).key === selectedAssetType
+                );
+              });
+              const assetGroups = groupByAssetType(
+                visibleDownloads,
+                (download) => {
+                  const asset = download.attributes.asset?.data?.attributes;
+                  return assetTypeRefFromDownload({
+                    compositionId: asset?.CompositionID,
+                    assetTypeName: asset?.asset_type?.data?.attributes?.Name,
+                    assetName: asset?.Name,
+                  });
+                },
+              );
+              return (
               <ElementContainer
                 key={category}
                 title={category}
@@ -177,6 +251,18 @@ export default function TableDownloads() {
                 padding="none"
                 margin="lg"
               >
+                {assetGroups.length === 0 ? (
+                  <p className="text-sm text-slate-500">
+                    No downloads for this asset type in this grade.
+                  </p>
+                ) : assetGroups.map((group) => (
+                  <div key={group.key} className="mb-8 last:mb-0">
+                    <p className="mb-2 text-sm font-semibold text-slate-800">
+                      {group.label}
+                      <span className="ml-2 font-normal text-slate-500">
+                        {group.items.length}
+                      </span>
+                    </p>
                 <Table>
                   <TableHeader>
                     <TableRow className="bg-slate-50 hover:bg-slate-50">
@@ -190,7 +276,7 @@ export default function TableDownloads() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {downloads.map((download) => {
+                    {group.items.map((download) => {
                       const bucket = classifyDownloadAttention(
                         attentionInputFromDownload(download),
                       );
@@ -328,8 +414,11 @@ export default function TableDownloads() {
                     })}
                   </TableBody>
                 </Table>
+                  </div>
+                ))}
               </ElementContainer>
-            ))
+              );
+            })
         : null}
     </div>
   );
@@ -338,12 +427,18 @@ export default function TableDownloads() {
 function FilterBar({
   selectedCategory,
   onCategoryChange,
+  selectedAssetType,
+  onAssetTypeChange,
+  assetTypeOptions,
   attentionFilter,
   onAttentionFilterChange,
   allDownloads,
 }: {
   selectedCategory: string;
   onCategoryChange: (value: string) => void;
+  selectedAssetType: string;
+  onAssetTypeChange: (value: string) => void;
+  assetTypeOptions: { key: string; label: string; count: number }[];
   attentionFilter: DownloadAttentionFilter;
   onAttentionFilterChange: (value: DownloadAttentionFilter) => void;
   allDownloads: Download[];
@@ -384,9 +479,27 @@ function FilterBar({
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(categoriesFromAll).map(([category, items]) => (
+              {Object.entries(categoriesFromAll)
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([category, items]) => (
                 <SelectItem key={category} value={category}>
                   {category} ({items.length})
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex items-center gap-2">
+          <Label>Asset type:</Label>
+          <Select value={selectedAssetType} onValueChange={onAssetTypeChange}>
+            <SelectTrigger className="w-[240px]">
+              <SelectValue placeholder="All asset types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_ASSET_TYPES}>All asset types</SelectItem>
+              {assetTypeOptions.map((option) => (
+                <SelectItem key={option.key} value={option.key}>
+                  {option.label} ({option.count})
                 </SelectItem>
               ))}
             </SelectContent>
