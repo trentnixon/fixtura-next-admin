@@ -9,7 +9,6 @@ import {
   CircleDollarSign,
   ClipboardCheck,
   ExternalLink,
-  FileDown,
   Gauge,
   Layers,
   Trophy,
@@ -56,7 +55,6 @@ import DeleteRenderButton from "@/app/dashboard/accounts/components/actions/butt
 const renderTabs = [
   { value: "snapshot", label: "Snapshot", icon: Gauge },
   { value: "cost", label: "Cost", icon: CircleDollarSign },
-  { value: "downloads", label: "Downloads", icon: FileDown },
   { value: "gameResults", label: "Game results", icon: Trophy },
   { value: "upcomingGames", label: "Upcoming games", icon: CalendarDays },
   { value: "grades", label: "Grades", icon: Layers },
@@ -270,22 +268,21 @@ export default function RenderDetailClient() {
           </div>
 
           <TabsContent value="snapshot" className="mt-0">
-            <RenderOverview />
+            <div className="space-y-6">
+              <RenderOverview />
+              <OverviewRecordPanel
+                title="Downloads"
+                description="Generated assets and downloadable files for this render"
+              >
+                <TableDownloads />
+              </OverviewRecordPanel>
+            </div>
           </TabsContent>
 
           <TabsContent value="cost" className="mt-0">
             {renderIdNumber ? (
               <RenderCostBreakdown renderId={renderIdNumber} />
             ) : null}
-          </TabsContent>
-
-          <TabsContent value="downloads" className="mt-0">
-            <OverviewRecordPanel
-              title="Downloads"
-              description="Generated assets and downloadable files for this render"
-            >
-              <TableDownloads />
-            </OverviewRecordPanel>
           </TabsContent>
 
           <TabsContent value="gameResults" className="mt-0">
