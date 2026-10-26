@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { useGradeInRender } from "@/hooks/grades/useGradeInRender";
 import { useParams } from "next/navigation";
 import {
@@ -10,6 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useRendersQuery } from "@/hooks/renders/useRendersQuery";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -18,9 +26,36 @@ import LoadingState from "@/components/ui-library/states/LoadingState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
 import EmptyState from "@/components/ui-library/states/EmptyState";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/type/titles";
+import type { GradesInRender } from "@/types/gradesInRender";
+
+const ALL = "all";
+const EMPTY_GRADES: GradesInRender[] = [];
+
+type GradeField = "ageGroup" | "gender" | "daysPlayed";
+
+function gradeField(grade: GradesInRender, field: GradeField): string {
+  const value = grade.attributes.grade.data.attributes[field]?.trim();
+  return value || "Unknown";
+}
+
+function optionCounts(
+  grades: GradesInRender[],
+  field: GradeField,
+): [string, number][] {
+  const counts = new Map<string, number>();
+  for (const grade of grades) {
+    const value = gradeField(grade, field);
+    counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
+  return [...counts.entries()].sort(([a], [b]) => a.localeCompare(b));
+}
 
 export default function TableGrades() {
   const { renderID } = useParams();
+  const [ageGroup, setAgeGroup] = useState(ALL);
+  const [gender, setGender] = useState(ALL);
+  const [daysPlayed, setDaysPlayed] = useState(ALL);
 
   // Fetch render details, including grade IDs
   const {
@@ -39,6 +74,67 @@ export default function TableGrades() {
     error: gradeError,
     refetch: refetchGrades,
   } = useGradeInRender(gradeIDs);
+
+  const grades = gradeData ?? EMPTY_GRADES;
+
+  const ageOptions = useMemo(
+    () => optionCounts(grades, "ageGroup"),
+    [grades],
+  );
+  const afterAge = useMemo(
+    () =>
+      grades.filter(
+        (grade) => ageGroup === ALL || gradeField(grade, "ageGroup") === ageGroup,
+      ),
+    [ageGroup, grades],
+  );
+  const genderOptions = useMemo(
+    () => optionCounts(afterAge, "gender"),
+    [afterAge],
+  );
+  const afterGender = useMemo(
+    () =>
+      afterAge.filter(
+        (grade) => gender === ALL || gradeField(grade, "gender") === gender,
+      ),
+    [afterAge, gender],
+  );
+  const daysOptions = useMemo(
+    () => optionCounts(afterGender, "daysPlayed"),
+    [afterGender],
+  );
+  const visibleGrades = useMemo(
+    () =>
+      afterGender.filter(
+        (grade) =>
+          daysPlayed === ALL || gradeField(grade, "daysPlayed") === daysPlayed,
+      ),
+    [afterGender, daysPlayed],
+  );
+
+  useEffect(() => {
+    if (
+      ageGroup !== ALL &&
+      !ageOptions.some(([value]) => value === ageGroup)
+    ) {
+      setAgeGroup(ALL);
+    }
+  }, [ageGroup, ageOptions]);
+
+  useEffect(() => {
+    if (gender !== ALL && !genderOptions.some(([value]) => value === gender)) {
+      setGender(ALL);
+    }
+  }, [gender, genderOptions]);
+
+  useEffect(() => {
+    if (
+      daysPlayed !== ALL &&
+      !daysOptions.some(([value]) => value === daysPlayed)
+    ) {
+      setDaysPlayed(ALL);
+    }
+  }, [daysPlayed, daysOptions]);
 
   // UI: Loading State - Render query loading
   if (isRenderLoading) {
@@ -87,6 +183,33 @@ export default function TableGrades() {
 
   return (
     <div className="space-y-4">
+      <div className="flex flex-wrap items-center gap-3">
+        <GradeFilter
+          label="Age group"
+          value={ageGroup}
+          onChange={setAgeGroup}
+          options={ageOptions}
+        />
+        <GradeFilter
+          label="Gender"
+          value={gender}
+          onChange={setGender}
+          options={genderOptions}
+        />
+        <GradeFilter
+          label="Days played"
+          value={daysPlayed}
+          onChange={setDaysPlayed}
+          options={daysOptions}
+        />
+      </div>
+      {visibleGrades.length === 0 ? (
+        <EmptyState
+          variant="card"
+          title="No grades match these filters"
+          description="Try another age group, gender, or days played."
+        />
+      ) : (
       <Table>
         <TableHeader>
           <TableRow className="bg-slate-50 hover:bg-slate-50">
@@ -98,7 +221,7 @@ export default function TableGrades() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {gradeData.map((grade) => {
+          {visibleGrades.map((grade) => {
             const { id, attributes } = grade;
             const { gradeName, daysPlayed, gender, ageGroup } =
               attributes.grade.data.attributes || {};
@@ -140,6 +263,38 @@ export default function TableGrades() {
           })}
         </TableBody>
       </Table>
+      )}
+    </div>
+  );
+}
+
+function GradeFilter({
+  label,
+  value,
+  onChange,
+  options,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: [string, number][];
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <Label>{label}:</Label>
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="w-[200px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL}>All</SelectItem>
+          {options.map(([option, count]) => (
+            <SelectItem key={option} value={option}>
+              {option} ({count})
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

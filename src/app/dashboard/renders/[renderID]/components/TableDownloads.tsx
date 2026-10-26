@@ -85,6 +85,21 @@ function attentionInputFromDownload(download: Download) {
   return { hasError, hasBeenProcessed, errorHandler };
 }
 
+type DownloadFileLink = {
+  url: string;
+};
+
+function isDownloadFileLink(value: unknown): value is DownloadFileLink {
+  if (typeof value !== "object" || value === null) return false;
+  if (!("url" in value)) return false;
+  return typeof value.url === "string" && value.url.length > 0;
+}
+
+function downloadFileLinks(downloads: unknown): DownloadFileLink[] {
+  if (!Array.isArray(downloads)) return [];
+  return downloads.filter(isDownloadFileLink);
+}
+
 export default function TableDownloads() {
   const { renderID } = useParams();
   const renderId = renderID as string;
@@ -258,6 +273,7 @@ export default function TableDownloads() {
                       <TableHead className="w-[36rem]">Output</TableHead>
                       <TableHead className="w-32 text-right">Attention</TableHead>
                       <TableHead className="text-right">Error detail</TableHead>
+                      <TableHead className="w-28">Files</TableHead>
                       <TableHead className="w-52 text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -266,7 +282,7 @@ export default function TableDownloads() {
                       <Fragment key={group.key}>
                         <TableRow className="bg-slate-100 hover:bg-slate-100">
                           <TableCell
-                            colSpan={4}
+                            colSpan={5}
                             className="py-2 text-sm font-semibold text-slate-800"
                           >
                             {group.label}
@@ -300,6 +316,9 @@ export default function TableDownloads() {
                           : assetType === "IMAGE" || assetType === "PHOTO"
                             ? "border-green-200 bg-green-50 text-green-700"
                             : "border-slate-200 bg-slate-50 text-slate-700";
+                      const fileList = downloadFileLinks(
+                        download.attributes.downloads,
+                      );
 
                       return (
                         <TableRow key={download.id}>
@@ -350,6 +369,27 @@ export default function TableDownloads() {
                               <p className="mt-1 text-xs text-muted-foreground">
                                 Admin email sent
                               </p>
+                            )}
+                          </TableCell>
+                          <TableCell className="align-top">
+                            {fileList.length > 0 ? (
+                              <div className="flex flex-col items-start gap-1">
+                                {fileList.map((file, index) => (
+                                  <a
+                                    key={`${download.id}-file-${index}`}
+                                    href={file.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm font-medium text-blue-600 hover:underline"
+                                  >
+                                    Open file
+                                  </a>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">
+                                —
+                              </span>
                             )}
                           </TableCell>
                           <TableCell className="text-right align-top">

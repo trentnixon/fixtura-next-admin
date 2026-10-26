@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useParams } from "next/navigation";
-import { Clock, Database, FileDown, Layers } from "lucide-react";
+import { Database } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import EmptyState from "@/components/ui-library/states/EmptyState";
 import ErrorState from "@/components/ui-library/states/ErrorState";
@@ -132,22 +132,6 @@ export default function RenderOverview() {
         badge={statusBadge}
         metrics={metrics}
         columns={4}
-        footer={
-          <span className="inline-flex flex-wrap items-center gap-x-3 text-muted-foreground">
-            <span className="inline-flex items-center gap-1">
-              <FileDown className="h-3.5 w-3.5" aria-hidden />
-              Generated assets
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Clock className="h-3.5 w-3.5" aria-hidden />
-              Fixture coverage
-            </span>
-            <span className="inline-flex items-center gap-1">
-              <Layers className="h-3.5 w-3.5" aria-hidden />
-              Grade scope
-            </span>
-          </span>
-        }
       />
     </div>
   );
