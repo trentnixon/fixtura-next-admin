@@ -11,11 +11,10 @@ import {
   sectionTabListClass,
   sectionTabTriggerClass,
 } from "@/lib/actions/siteNavigationButtonStyles";
-import { AlertTriangle, CheckCircle2, LayoutDashboard } from "lucide-react";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const CLUB_TABS = [
-  { value: "snapshot", label: "Club Snapshot", icon: LayoutDashboard },
   { value: "active", label: "Active", icon: CheckCircle2 },
   { value: "inactive", label: "Inactive", icon: AlertTriangle },
 ] as const;
@@ -43,7 +42,7 @@ export default function DisplayClubsTable() {
   const allClubs = [...activeClubs, ...inactiveClubs];
 
   return (
-    <Tabs defaultValue="snapshot" className="space-y-4">
+    <Tabs defaultValue="active" className="space-y-4">
       <TabsList variant="primary" className={cn(sectionTabListClass, "mb-4")}>
         {CLUB_TABS.map(({ value, label, icon: Icon }) => (
           <TabsTrigger
@@ -55,24 +54,12 @@ export default function DisplayClubsTable() {
             <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden />
             {value === "active"
               ? `${label} (${activeClubs.length})`
-              : value === "inactive"
-                ? `${label} (${inactiveClubs.length})`
-                : label}
+              : `${label} (${inactiveClubs.length})`}
           </TabsTrigger>
         ))}
       </TabsList>
 
-      <TabsContent value="snapshot">
-        <SectionContainer
-          title="Club Snapshot"
-          description="Fixtura accounts first, then the wider club directory."
-          variant="compact"
-        >
-          <ClubSnapshotCoverage accounts={allClubs} />
-        </SectionContainer>
-      </TabsContent>
-
-      <TabsContent value="active">
+      <TabsContent value="active" className="space-y-6">
         <SectionContainer
           title="Active Club Accounts"
           description="Club accounts with current subscriptions, last data sync, and last render"
@@ -83,6 +70,14 @@ export default function DisplayClubsTable() {
             emptyMessage="No clubs with active subscriptions available."
             showFleetOpsColumn
           />
+        </SectionContainer>
+
+        <SectionContainer
+          title="Club Snapshot"
+          description="Fixtura accounts first, then the wider club directory."
+          variant="compact"
+        >
+          <ClubSnapshotCoverage accounts={allClubs} />
         </SectionContainer>
       </TabsContent>
 

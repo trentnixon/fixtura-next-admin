@@ -11,11 +11,10 @@ import {
   sectionTabListClass,
   sectionTabTriggerClass,
 } from "@/lib/actions/siteNavigationButtonStyles";
-import { AlertTriangle, CheckCircle2, LayoutDashboard } from "lucide-react";
+import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ASSOCIATION_TABS = [
-  { value: "snapshot", label: "Association Snapshot", icon: LayoutDashboard },
   { value: "active", label: "Active", icon: CheckCircle2 },
   { value: "inactive", label: "Inactive", icon: AlertTriangle },
 ] as const;
@@ -46,7 +45,7 @@ export default function DisplayAssociationsTable() {
   const allAssociations = [...activeAssociations, ...inactiveAssociations];
 
   return (
-    <Tabs defaultValue="snapshot" className="space-y-4">
+    <Tabs defaultValue="active" className="space-y-4">
       <TabsList variant="primary" className={cn(sectionTabListClass, "mb-4")}>
         {ASSOCIATION_TABS.map(({ value, label, icon: Icon }) => (
           <TabsTrigger
@@ -58,23 +57,12 @@ export default function DisplayAssociationsTable() {
             <Icon className="h-4 w-4 shrink-0 text-current" aria-hidden />
             {value === "active"
               ? `${label} (${activeAssociations.length})`
-              : value === "inactive"
-                ? `${label} (${inactiveAssociations.length})`
-                : label}
+              : `${label} (${inactiveAssociations.length})`}
           </TabsTrigger>
         ))}
       </TabsList>
 
-      <TabsContent value="snapshot">
-        <SectionContainer
-          title="Association Snapshot"
-          description="Fixtura accounts first, then the wider association directory."
-        >
-          <AssociationSnapshotCoverage accounts={allAssociations} />
-        </SectionContainer>
-      </TabsContent>
-
-      <TabsContent value="active">
+      <TabsContent value="active" className="space-y-6">
         <SectionContainer
           title="Active Association Accounts"
           description="Association accounts with current subscriptions, last data sync, and last render."
@@ -84,6 +72,13 @@ export default function DisplayAssociationsTable() {
             emptyMessage="No associations with active subscriptions available."
             showFleetOpsColumn
           />
+        </SectionContainer>
+
+        <SectionContainer
+          title="Association Snapshot"
+          description="Fixtura accounts first, then the wider association directory."
+        >
+          <AssociationSnapshotCoverage accounts={allAssociations} />
         </SectionContainer>
       </TabsContent>
 

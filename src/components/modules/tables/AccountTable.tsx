@@ -43,6 +43,9 @@ import EmptyState from "@/components/ui-library/states/EmptyState";
 import { formatHealthTimestampNoYear } from "@/lib/account-health/formatHealthTimestamp";
 import { SubscriptionBadge } from "./SubscriptionBadge";
 
+const ACCOUNT_TABLE_PAGE_SIZE_OPTIONS = [25, 50, 100] as const;
+const DEFAULT_ACCOUNT_TABLE_PAGE_SIZE = 100;
+
 interface AccountsTableProps {
   accounts: AccountLookupItem[];
   emptyMessage: string;
@@ -158,6 +161,13 @@ type SortField =
   | null;
 type SortDirection = "asc" | "desc" | null;
 
+const DEFAULT_SORT_FIELD: SortField = "lastRender";
+const DEFAULT_SORT_DIRECTION: Exclude<SortDirection, null> = "desc";
+
+function isDefaultSort(field: SortField, direction: SortDirection): boolean {
+  return field === DEFAULT_SORT_FIELD && direction === DEFAULT_SORT_DIRECTION;
+}
+
 export function AccountTable({
   accounts,
   emptyMessage,
@@ -170,10 +180,13 @@ export function AccountTable({
   const [sportFilter, setSportFilter] = useState<string>("all");
   const [clubFilter, setClubFilter] = useState<string>("all");
   const [associationFilter, setAssociationFilter] = useState<string>("all");
-  const [sortField, setSortField] = useState<SortField>(null);
-  const [sortDirection, setSortDirection] = useState<SortDirection>(null);
+  const [sortField, setSortField] = useState<SortField>(DEFAULT_SORT_FIELD);
+  const [sortDirection, setSortDirection] =
+    useState<SortDirection>(DEFAULT_SORT_DIRECTION);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(
+    DEFAULT_ACCOUNT_TABLE_PAGE_SIZE,
+  );
 
   const isAssociationRoute = pathname.split("/").pop() === "association";
   const accountType = isAssociationRoute ? "association" : "club";
@@ -332,8 +345,8 @@ export function AccountTable({
     setSportFilter("all");
     setClubFilter("all");
     setAssociationFilter("all");
-    setSortField(null);
-    setSortDirection(null);
+    setSortField(DEFAULT_SORT_FIELD);
+    setSortDirection(DEFAULT_SORT_DIRECTION);
     setCurrentPage(1);
   };
 
@@ -342,7 +355,7 @@ export function AccountTable({
     sportFilter !== "all" ||
     clubFilter !== "all" ||
     associationFilter !== "all" ||
-    sortField;
+    !isDefaultSort(sortField, sortDirection);
 
   const handleNavigate = (accountId: number) => {
     router.push(`/dashboard/accounts/${accountType}/${accountId}`);
@@ -443,6 +456,29 @@ export function AccountTable({
             </SelectContent>
           </Select>
         )}
+
+        <Select
+          value={itemsPerPage.toString()}
+          onValueChange={(value) => {
+            setItemsPerPage(Number(value));
+            setCurrentPage(1);
+          }}
+        >
+          <SelectTrigger
+            id="account-table-page-size"
+            aria-label="Rows per page"
+            className="w-full rounded-full bg-white lg:w-[120px]"
+          >
+            <SelectValue placeholder="Rows per page" />
+          </SelectTrigger>
+          <SelectContent>
+            {ACCOUNT_TABLE_PAGE_SIZE_OPTIONS.map((option) => (
+              <SelectItem key={option} value={option.toString()}>
+                {option} rows
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         {hasActiveFilters && (
           <Button
