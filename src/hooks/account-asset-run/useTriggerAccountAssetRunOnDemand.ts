@@ -12,6 +12,7 @@ import type {
   AccountAssetRunTriggerMode,
 } from "@/types/accountAssetRun";
 import { getAccountAssetTriggerReasonLabel } from "@/lib/account-asset-run/triggerReasonLabels";
+import { getGlobalV22GuardBlockedWithoutResultItem } from "@/lib/account-asset-run/globalV22Guard";
 
 export type TriggerAccountAssetRunOnDemandVars = {
   accountId: number;
@@ -44,7 +45,27 @@ export function useTriggerAccountAssetRunOnDemand(): UseMutationResult<
 
       if (payload.status === "queued") {
         const runId = payload.run.id;
-        toast.success(`Asset run queued — Run #${runId}`);
+        const guardOnRun = getGlobalV22GuardBlockedWithoutResultItem(
+          payload.run.items ?? [],
+          payload.run.summary
+        );
+        const advancedBlocked =
+          payload.advanced?.status === "global_v22_guard_blocked";
+
+        if (guardOnRun || advancedBlocked) {
+          const blockingId =
+            guardOnRun?.blockingRunId ??
+            (payload.advanced?.status === "global_v22_guard_blocked"
+              ? payload.advanced.blockingRunId
+              : undefined);
+          toast.warning(
+            blockingId
+              ? `Run queued, but result scrape is blocked globally — monitor run #${blockingId}.`
+              : "Run queued, but global v2.2 result scrape did not start on this run."
+          );
+        } else {
+          toast.success(`Asset run queued — Run #${runId}`);
+        }
         queryClient.invalidateQueries({
           queryKey: ["accountAssetRun", "run", runId],
         });

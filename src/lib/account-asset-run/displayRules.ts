@@ -6,6 +6,7 @@ import type {
   AccountAssetRunStatus,
 } from "@/types/accountAssetRun";
 import { getAccountAssetRunScopeLabel } from "@/lib/account-asset-run/scopeLabels";
+import { getGlobalV22GuardBlockedWithoutResultItem } from "@/lib/account-asset-run/globalV22Guard";
 
 /** Canonical workflow step order for display */
 export const ASSET_RUN_SCOPE_ORDER: AccountAssetRunItemScope[] = [
@@ -135,15 +136,27 @@ export function deriveBlockingItem(
   if (isAssetRunTerminal(run.status)) return null;
 
   const items = run.items ?? [];
-  const scopeHint = RUN_STATUS_TO_SCOPE[run.status];
-  if (scopeHint) {
+  const guard = getGlobalV22GuardBlockedWithoutResultItem(items, run.summary);
+  const hasResultItem = items.some((i) => i.scope === "result_batch_scrape");
+
+  let scopeHint = RUN_STATUS_TO_SCOPE[run.status];
+  if (
+    guard &&
+    !hasResultItem &&
+    scopeHint === "result_batch_scrape"
+  ) {
+    scopeHint = undefined;
+  }
+
+  const scopeHintResolved = scopeHint;
+  if (scopeHintResolved) {
     const byStatus = items.find(
       (i) =>
-        i.scope === scopeHint &&
+        i.scope === scopeHintResolved &&
         ACTIVE_ITEM_STATUSES.includes(i.status as AccountAssetRunItemStatus)
     );
     if (byStatus) return byStatus;
-    const byScope = items.find((i) => i.scope === scopeHint);
+    const byScope = items.find((i) => i.scope === scopeHintResolved);
     if (byScope && byScope.status !== "completed" && byScope.status !== "skipped") {
       return byScope;
     }

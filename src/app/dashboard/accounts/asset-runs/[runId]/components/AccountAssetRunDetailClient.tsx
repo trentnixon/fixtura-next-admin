@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { AccountAssetRunTimeline } from "@/app/dashboard/accounts/components/account-asset-run/run-detail/AccountAssetRunTimeline";
 import { AccountAssetRunSummaryStrip } from "@/app/dashboard/accounts/components/account-asset-run/run-detail/AccountAssetRunSummaryStrip";
 import { AccountAssetRunBlockingCard } from "@/app/dashboard/accounts/components/account-asset-run/run-detail/AccountAssetRunBlockingCard";
+import { AccountAssetRunGlobalV22GuardBanner } from "@/app/dashboard/accounts/components/account-asset-run/run-detail/AccountAssetRunGlobalV22GuardBanner";
 import { AccountAssetRunStepsTable } from "@/app/dashboard/accounts/components/account-asset-run/run-detail/AccountAssetRunStepsTable";
 import {
   assetRunActionButtonClass,
@@ -30,6 +31,7 @@ import {
   isAssetRunActive,
   sortAssetRunItems,
 } from "@/lib/account-asset-run/displayRules";
+import { getGlobalV22GuardBlockedWithoutResultItem } from "@/lib/account-asset-run/globalV22Guard";
 import { getAccountPagePath } from "@/lib/account-health/accountRoutes";
 import type { AccountAssetRunAccountOrgType } from "@/lib/account-asset-run/accountRoutes";
 import { cn } from "@/lib/utils";
@@ -147,6 +149,10 @@ export function AccountAssetRunDetailClient({
   }
 
   const sortedItems = sortAssetRunItems(run.items ?? []);
+  const globalV22Guard = getGlobalV22GuardBlockedWithoutResultItem(
+    sortedItems,
+    run.summary
+  );
   const blockingItem = deriveBlockingItem(run);
   const summaryMeta = getAssetRunSummaryMeta(run.summary);
   const org = accountDetailsData?.data?.accountOrganisationDetails;
@@ -253,8 +259,19 @@ export function AccountAssetRunDetailClient({
 
         {blockingItem && <AccountAssetRunBlockingCard item={blockingItem} />}
 
+        {globalV22Guard && (
+          <AccountAssetRunGlobalV22GuardBanner
+            guard={globalV22Guard}
+            accountId={run.accountId}
+            accountType={accountTypeFromSearch}
+          />
+        )}
+
         <AccountAssetRunStepsTable
           items={sortedItems}
+          summary={run.summary}
+          accountId={run.accountId}
+          accountType={accountTypeFromSearch}
           variant="full"
           run={run}
           isLive={liveRun}

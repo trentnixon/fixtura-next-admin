@@ -46,6 +46,16 @@ export type AccountAssetRunItem = {
   resultSummary: Record<string, unknown> | null;
 };
 
+/** Persisted on run.summary when global v2.2 result scrape slot is held elsewhere */
+export type GlobalV22GuardBlocked = {
+  at: string;
+  reason: string;
+  matchReason?: string;
+  blockingRunId: number;
+  blockingRunKey?: string;
+  blockingRunStatus?: string;
+};
+
 export type AccountAssetRunDetail = {
   id: number;
   accountId: number;
@@ -118,6 +128,7 @@ export type AccountAssetRunAdvancedStatus =
   | { status: "waiting_result_scrape" }
   | { status: "waiting_remove_fixtures" }
   | { status: "waiting_asset_creation" }
+  | { status: "global_v22_guard_blocked"; blockingRunId?: number; message?: string }
   | { status: "completed" }
   | { status: "failed"; reason?: string }
   | { status: "noop" };

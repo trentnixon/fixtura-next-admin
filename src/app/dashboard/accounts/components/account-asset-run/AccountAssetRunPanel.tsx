@@ -20,6 +20,7 @@ import {
   isAssetRunActive,
   sortAssetRunItems,
 } from "@/lib/account-asset-run/displayRules";
+import { getGlobalV22GuardBlockedWithoutResultItem } from "@/lib/account-asset-run/globalV22Guard";
 import type { AccountAssetRunDetail } from "@/types/accountAssetRun";
 import {
   getAccountAssetRunDetailHref,
@@ -28,6 +29,7 @@ import {
 import { assetRunPageStatusBadgeClass } from "@/app/dashboard/accounts/components/account-asset-run/run-detail/assetRunPageStyles";
 import { cn } from "@/lib/utils";
 import { AccountAssetRunTimeline } from "@/app/dashboard/accounts/components/account-asset-run/run-detail/AccountAssetRunTimeline";
+import { AccountAssetRunGlobalV22GuardBanner } from "@/app/dashboard/accounts/components/account-asset-run/run-detail/AccountAssetRunGlobalV22GuardBanner";
 import { AccountAssetRunStepsTable } from "@/app/dashboard/accounts/components/account-asset-run/run-detail/AccountAssetRunStepsTable";
 import { ArrowRightIcon, ExternalLinkIcon } from "lucide-react";
 
@@ -44,6 +46,12 @@ export default function AccountAssetRunPanel({
     useAccountAssetRunLatest(accountId);
 
   const latest = data?.data ?? null;
+  const latestGlobalV22Guard = latest
+    ? getGlobalV22GuardBlockedWithoutResultItem(
+        latest.items ?? [],
+        latest.summary
+      )
+    : null;
   const liveRun = latest !== null && isAssetRunActive(latest.status);
   const nowMs = useLiveRunClock(liveRun);
 
@@ -106,6 +114,15 @@ export default function AccountAssetRunPanel({
           <>
             <PanelBlockingLine run={latest} />
 
+            {latestGlobalV22Guard && (
+              <AccountAssetRunGlobalV22GuardBanner
+                guard={latestGlobalV22Guard}
+                accountId={accountId}
+                accountType={accountType}
+                className="mb-4"
+              />
+            )}
+
             <AccountAssetRunTimeline
               className="mb-6"
               showHeading={false}
@@ -129,6 +146,9 @@ export default function AccountAssetRunPanel({
                 <div className="rounded-md border overflow-x-auto">
                   <AccountAssetRunStepsTable
                     items={sortAssetRunItems(latest.items ?? [])}
+                    summary={latest.summary}
+                    accountId={accountId}
+                    accountType={accountType}
                     variant="compact"
                     run={latest}
                     isLive={liveRun}

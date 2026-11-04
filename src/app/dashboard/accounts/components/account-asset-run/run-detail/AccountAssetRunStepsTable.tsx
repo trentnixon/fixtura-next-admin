@@ -19,6 +19,16 @@ import {
   formatAssetRunStepStart,
 } from "@/lib/account-asset-run/duration";
 import { getAccountAssetRunScopeLabel } from "@/lib/account-asset-run/scopeLabels";
+import {
+  buildAssetRunDisplaySteps,
+  formatGlobalV22GuardReason,
+} from "@/lib/account-asset-run/globalV22Guard";
+import Link from "next/link";
+import {
+  getAccountAssetRunDetailHref,
+  type AccountAssetRunAccountOrgType,
+} from "@/lib/account-asset-run/accountRoutes";
+import type { GlobalV22GuardBlocked } from "@/types/accountAssetRun";
 import { cn } from "@/lib/utils";
 import type {
   AccountAssetRunDetail,
@@ -43,6 +53,9 @@ function formatResultSummary(summary: Record<string, unknown> | null): string | 
 
 interface AccountAssetRunStepsTableProps {
   items: AccountAssetRunItem[];
+  summary?: Record<string, unknown> | null;
+  accountId?: number;
+  accountType?: AccountAssetRunAccountOrgType | null;
   /** Full detail table vs compact panel preview */
   variant?: "full" | "compact";
   maxCompactRows?: number;
@@ -56,6 +69,9 @@ interface AccountAssetRunStepsTableProps {
 
 export function AccountAssetRunStepsTable({
   items,
+  summary = null,
+  accountId,
+  accountType = null,
   variant = "full",
   maxCompactRows = 6,
   run = null,
@@ -63,12 +79,20 @@ export function AccountAssetRunStepsTable({
   nowMs,
 }: AccountAssetRunStepsTableProps) {
   const compact = variant === "compact";
-  const displayItems = compact ? items.slice(0, maxCompactRows) : items;
+
+  const displaySteps = useMemo(
+    () => buildAssetRunDisplaySteps(items, summary),
+    [items, summary]
+  );
+
+  const displayStepsForTable = compact
+    ? displaySteps.slice(0, maxCompactRows)
+    : displaySteps;
 
   const stepTimings = useMemo(() => {
     if (!run) return new Map();
-    return buildAssetRunStepTimings(displayItems, run, { isLive, nowMs });
-  }, [displayItems, run, isLive, nowMs]);
+    return buildAssetRunStepTimings(items, run, { isLive, nowMs });
+  }, [items, run, isLive, nowMs]);
 
   const hasInferredTimings = useMemo(
     () => [...stepTimings.values()].some((timing) => timing.inferred),
@@ -108,7 +132,7 @@ export function AccountAssetRunStepsTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {displayItems.length === 0 ? (
+          {displayStepsForTable.length === 0 ? (
             <TableRow>
               <TableCell
                 colSpan={compact ? 3 : 7}
@@ -120,14 +144,24 @@ export function AccountAssetRunStepsTable({
               </TableCell>
             </TableRow>
           ) : (
-            displayItems.map((item) => (
-              <AccountAssetRunStepRow
-                key={item.id}
-                item={item}
-                compact={compact}
-                timing={stepTimings.get(item.id)}
-              />
-            ))
+            displayStepsForTable.map((step) =>
+              step.kind === "item" ? (
+                <AccountAssetRunStepRow
+                  key={step.item.id}
+                  item={step.item}
+                  compact={compact}
+                  timing={stepTimings.get(step.item.id)}
+                />
+              ) : (
+                <AccountAssetRunGuardBlockedStepRow
+                  key={`guard-blocked-${step.guard.blockingRunId}`}
+                  guard={step.guard}
+                  compact={compact}
+                  accountId={accountId}
+                  accountType={accountType}
+                />
+              )
+            )
           )}
         </TableBody>
       </Table>
@@ -266,6 +300,102 @@ function AccountAssetRunStepRow({
             </div>
           ) : (
             <span className="text-muted-foreground">—</span>
+          )}
+        </TableCell>
+      )}
+    </TableRow>
+  );
+}
+
+function AccountAssetRunGuardBlockedStepRow({
+  guard,
+  compact,
+  accountId,
+  accountType,
+}: {
+  guard: GlobalV22GuardBlocked;
+  compact: boolean;
+  accountId?: number;
+  accountType?: AccountAssetRunAccountOrgType | null;
+}) {
+  const scopeLabel = getAccountAssetRunScopeLabel("result_batch_scrape");
+  const stepIndex = getAssetRunStepIndex("result_batch_scrape");
+  const reasonLabel = formatGlobalV22GuardReason(guard.reason);
+  const blockingHref =
+    accountId != null && accountId > 0
+      ? getAccountAssetRunDetailHref(
+          guard.blockingRunId,
+          accountId,
+          accountType ?? undefined
+        )
+      : null;
+
+  return (
+    <TableRow className={cn(assetRunTableRowHoverClass, "bg-brandWarning-50/40")}>
+      <TableCell className="py-3 align-top">
+        <div className="flex items-start gap-3">
+          <div
+            className={cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border text-sm font-semibold tabular-nums",
+              "border-brandWarning-300 bg-brandWarning-100 text-brandWarning-900",
+            )}
+          >
+            {stepIndex}
+          </div>
+          <div className="min-w-0">
+            <div className="text-sm font-medium text-slate-900">{scopeLabel}</div>
+            {!compact && (
+              <p className="mt-1 text-xs text-brandWarning-900">
+                Skipped — global v2.2 guard
+              </p>
+            )}
+          </div>
+        </div>
+      </TableCell>
+
+      {!compact && (
+        <TableCell className="whitespace-nowrap py-3 align-top text-sm text-muted-foreground">
+          —
+        </TableCell>
+      )}
+
+      {!compact && (
+        <TableCell className="whitespace-nowrap py-3 align-top text-sm text-muted-foreground">
+          —
+        </TableCell>
+      )}
+
+      <TableCell className="whitespace-nowrap py-3 align-top text-sm text-muted-foreground">
+        —
+      </TableCell>
+
+      {!compact && (
+        <TableCell className="py-3 align-top text-sm text-muted-foreground">—</TableCell>
+      )}
+
+      <TableCell className="py-3 align-top">
+        <Badge
+          variant="outline"
+          className={cn("capitalize", assetRunItemStatusBadgeClass("guard_blocked"))}
+        >
+          Blocked (guard)
+        </Badge>
+      </TableCell>
+
+      {!compact && (
+        <TableCell className="max-w-[320px] py-3 align-top text-sm">
+          <p className="text-xs text-brandWarning-950">{reasonLabel}</p>
+          {blockingHref ? (
+            <Link
+              href={blockingHref}
+              className="mt-1 inline-block text-xs font-medium text-brandSecondary-800 underline underline-offset-2"
+            >
+              Blocking run #{guard.blockingRunId}
+            </Link>
+          ) : (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Blocking run #{guard.blockingRunId}
+            </p>
           )}
         </TableCell>
       )}

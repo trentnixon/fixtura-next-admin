@@ -119,6 +119,8 @@ export function assetRunItemStatusBadgeClass(
       return "border-brandInfo-300 bg-brandInfo-50 text-brandInfo-800";
     case "skipped":
       return "border-brandPrimary-200 bg-brandPrimary-50 text-brandPrimary-600";
+    case "guard_blocked":
+      return "border-brandWarning-300 bg-brandWarning-50 text-brandWarning-900";
     default:
       return "border-brandPrimary-200 bg-brandPrimary-50 text-brandPrimary-700";
   }
